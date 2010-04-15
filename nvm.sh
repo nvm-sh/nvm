@@ -18,11 +18,12 @@ nvm()
       echo "Node Version Manager"
       echo
       echo "Usage:"
+      echo "    nvm help            (Show this message)"
       echo "    nvm install version (Download and install a released version)"
-      echo "    nvm use version     (Set this version in the PATH)"
-      echo "    nvm list            (Show all installed versions)"
       echo "    nvm clone           (Clone and install HEAD version)"
       echo "    nvm update          (Pull and rebuild HEAD version)"
+      echo "    nvm list            (Show all installed versions)"
+      echo "    nvm use version     (Set this version in the PATH)"
       echo
       echo "Example:"
       echo "    nvm install v0.1.91"
