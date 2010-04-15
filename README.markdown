@@ -2,7 +2,9 @@
 
 ## Installation
 
-To install create a folder somewhere in your filesystem with the nvm.sh file inside it.  I put mine in a folder called `.nvn`.
+First you'll need to make sure your system has a c++ compiler.  For OSX XCode will work, for Ubuntu, the build-essential package works.  You'll also need `git` if you want to track HEAD.
+
+To install create a folder somewhere in your filesystem with the nvm.sh file inside it.  I put mine in a folder called `.nvm`.
 
 Then add three lines to your bash profile:
 
