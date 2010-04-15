@@ -21,6 +21,7 @@ nvm()
 			echo "Usage:"
 			echo "    nvm install version"
 			echo "    nvm use version"
+			echo "    nvm list"
 			echo
 		;;
 		"install" )
@@ -48,6 +49,10 @@ nvm()
 			# TODO: Remove old nvm paths before adding this one
 			PATH="$NVM_DIR/$2/bin:$PATH"
 			echo "Now using node $2"
+		;;
+		"list" )
+		  # TODO: put a star by the current active one if possible
+			ls "$NVM_DIR" | grep -v src
 		;;
 		* )
 			nvm help
