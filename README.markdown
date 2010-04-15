@@ -4,7 +4,11 @@
 
 First you'll need to make sure your system has a c++ compiler.  For OSX, XCode will work, for Ubuntu, the build-essential package works.  You'll also need `git` if you want to track HEAD.
 
-To install create a folder somewhere in your filesystem with the nvm.sh file inside it.  I put mine in a folder called `.nvm`.
+To install create a folder somewhere in your filesystem with the "`nvm.sh`" file inside it.  I put mine in a folder called "`.nvm`".
+
+Or if you have `git` installed, then just clone it:
+
+    git clone git://gist.github.com/367305.git ~/.nvm
 
 Then add three lines to your bash profile:
 

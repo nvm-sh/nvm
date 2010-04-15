@@ -87,7 +87,7 @@ nvm()
         return;
       fi
       # TODO: put a star by the current active one if possible
-      ls "$NVM_DIR" | grep -v src | grep -v nvm.sh
+      ls "$NVM_DIR" | grep -v src | grep -v nvm.sh | grep -v README.markdown
     ;;
     * )
       nvm help
