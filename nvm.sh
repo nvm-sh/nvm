@@ -5,8 +5,6 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
-NVM_DIR=$HOME/.nvm
-
 nvm()
 {
   START=`pwd`
@@ -18,18 +16,51 @@ nvm()
     "help" )
       echo
       echo "Node Version Manager"
+      echo
       echo "Usage:"
-      echo "    nvm install version"
-      echo "    nvm use version"
-      echo "    nvm list"
+      echo "    nvm install version (Download and install a released version)"
+      echo "    nvm use version     (Set this version in the PATH)"
+      echo "    nvm list            (Show all installed versions)"
+      echo "    nvm clone           (Clone and install HEAD version)"
+      echo "    nvm update          (Pull and rebuild HEAD version)"
+      echo
+      echo "Example:"
+      echo "    nvm install v0.1.91"
       echo
     ;;
-    "install" )
-      if [ $# -lt 2 ]; then
+    "clone" )
+      if [ $# -ne 1 ]; then
         nvm help
         return;
       fi
-      echo $START
+      mkdir -p "$NVM_DIR/src" && \
+      cd "$NVM_DIR/src" && \
+      git clone git://github.com/ry/node.git && \
+      cd node && \
+      ./configure --prefix="$NVM_DIR/HEAD" && \
+      make && \
+      make install && \
+      nvm use HEAD
+      cd $START
+    ;;
+    "update" )
+      if [ $# -ne 1 ]; then
+        nvm help
+        return;
+      fi
+      cd "$NVM_DIR/src/node" && \
+      git pull --rebase origin master
+      ./configure && \
+      make clean all && \
+      make install && \
+      nvm use HEAD
+      cd $START
+    ;;
+    "install" )
+      if [ $# -ne 2 ]; then
+        nvm help
+        return;
+      fi
       mkdir -p "$NVM_DIR/src" && \
       cd "$NVM_DIR/src" && \
       wget "http://nodejs.org/dist/node-$2.tar.gz" -N && \
@@ -42,7 +73,7 @@ nvm()
       cd $START
     ;;
     "use" )
-      if [ $# -lt 2 ]; then
+      if [ $# -ne 2 ]; then
         nvm help
         return;
       fi
@@ -51,8 +82,12 @@ nvm()
       echo "Now using node $2"
     ;;
     "list" )
+      if [ $# -ne 1 ]; then
+        nvm help
+        return;
+      fi
       # TODO: put a star by the current active one if possible
-      ls "$NVM_DIR" | grep -v src
+      ls "$NVM_DIR" | grep -v src | grep -v nvm.sh
     ;;
     * )
       nvm help
