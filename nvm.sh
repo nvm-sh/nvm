@@ -78,6 +78,10 @@ nvm()
         nvm help
         return;
       fi
+      if [ ! -d $NVM_DIR/$2 ]; then
+        echo "$2 version is not installed yet"
+        return;
+      fi
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
         PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$2/bin${PATH#*$NVM_DIR/*/bin}
       else
@@ -91,8 +95,20 @@ nvm()
         nvm help
         return;
       fi
-      # TODO: put a star by the current active one if possible
-      ls "$NVM_DIR" | grep -v src | grep -v nvm.sh | grep -v README.markdown
+      if [ -d $NVM_DIR/HEAD ]; then
+        if [[ $PATH == *$NVM_DIR/HEAD/bin* ]]; then
+          echo "HEAD *"
+        else
+          echo "HEAD"
+        fi
+      fi
+      for f in $NVM_DIR/v*; do
+        if [[ $PATH == *$f/bin* ]]; then
+          echo "v${f##*v} *"
+        else
+          echo "v${f##*v}"
+        fi
+      done
     ;;
     * )
       nvm help
