@@ -78,8 +78,12 @@ nvm()
         nvm help
         return;
       fi
-      # TODO: Remove old nvm paths before adding this one
-      PATH="$NVM_DIR/$2/bin:$PATH"
+      if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
+        PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$2/bin${PATH#*$NVM_DIR/*/bin}
+      else
+        PATH="$NVM_DIR/$2/bin:$PATH"
+      fi
+      export PATH
       echo "Now using node $2"
     ;;
     "list" )
