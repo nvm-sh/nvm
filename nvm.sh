@@ -38,7 +38,7 @@ nvm()
       cd "$NVM_DIR/src" && \
       git clone git://github.com/ry/node.git && \
       cd node && \
-      ./configure --prefix="$NVM_DIR/HEAD" && \
+      ./configure --debug --prefix="$NVM_DIR/HEAD" && \
       make && \
       make install && \
       nvm use HEAD
@@ -50,8 +50,8 @@ nvm()
         return;
       fi
       cd "$NVM_DIR/src/node" && \
-      git pull --rebase origin master
-      ./configure && \
+      git pull origin master && \
+      ./configure --debug --prefix="$NVM_DIR/HEAD" && \
       make clean all && \
       make install && \
       nvm use HEAD
