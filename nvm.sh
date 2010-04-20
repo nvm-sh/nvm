@@ -24,6 +24,7 @@ nvm()
       echo "    nvm update          (Pull and rebuild HEAD version)"
       echo "    nvm list            (Show all installed versions)"
       echo "    nvm use version     (Set this version in the PATH)"
+      echo "    nvm deactivate      (Remove nvm entry from PATH)"
       echo
       echo "Example:"
       echo "    nvm install v0.1.91"
@@ -73,6 +74,15 @@ nvm()
       nvm use $2
       cd $START
     ;;
+    "deactivate" )
+      if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
+        export PATH=${PATH%$NVM_DIR/*/bin*}${PATH#*$NVM_DIR/*/bin:}
+        unset NODE_PATH
+        echo "$NVM_DIR/*/bin removed from \$PATH"
+      else
+        echo "Could not find $NVM_DIR/*/bin in \$PATH"
+      fi
+    ;;
     "use" )
       if [ $# -ne 2 ]; then
         nvm help
@@ -88,6 +98,8 @@ nvm()
         PATH="$NVM_DIR/$2/bin:$PATH"
       fi
       export PATH
+      mkdir -p "$NVM_DIR/libs/$2"
+      export NODE_PATH="$NVM_DIR/libs/$2"
       echo "Now using node $2"
     ;;
     "list" )
