@@ -25,7 +25,8 @@ nvm()
       echo "    nvm list            (Show all installed versions)"
       echo "    nvm use version     (Set this version in the PATH)"
       echo "    nvm deactivate      (Remove nvm entry from PATH)"
-      echo "    nvm addlib          (Adds the library in cwd to the current env)"
+      echo "    nvm addlib          (Copies the module in cwd to the current env)"
+      echo "    nvm linklib         (Links the module in cwd to the current env)"
       echo
       echo "Example:"
       echo "    nvm install v0.1.91"
@@ -86,11 +87,22 @@ nvm()
     ;;
     "addlib" )
       mkdir -p $NODE_PATH
+      mkdir -p $NODE_BIN
+      if [ -d `pwd`/lib ]; then
+        cp -r `pwd`/lib/ "$NODE_PATH/"
+        cp -r `pwd`/bin/ "$NODE_BIN/"
+      else
+        echo "Can't find lib dir at `pwd`/lib"
+      fi
+    ;;
+    "linklib" )
+      mkdir -p $NODE_PATH
+      mkdir -p $NODE_BIN
       if [ -d `pwd`/lib ]; then
         ln -sf `pwd`/lib/* "$NODE_PATH/"
         ln -sf `pwd`/bin/* "$NODE_BIN/"
       else
-        ln -sf `pwd`/* "$NODE_PATH/"
+        echo "Can't find lib dir at `pwd`/lib"
       fi
     ;;
     "use" )
@@ -108,9 +120,10 @@ nvm()
         PATH="$NVM_DIR/$2/bin:$PATH"
       fi
       export PATH
-      mkdir -p "$NVM_DIR/libs/$2"
-      export NODE_PATH="$NVM_DIR/libs/$2"
+      export NODE_PATH="$NVM_DIR/$2/modules"
       export NODE_BIN="$NVM_DIR/$2/bin"
+      mkdir -p "$NODE_PATH"
+      mkdir -p "$NODE_BIN"
       echo "Now using node $2"
     ;;
     "list" )
