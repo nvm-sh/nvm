@@ -120,7 +120,7 @@ nvm()
         PATH="$NVM_DIR/$2/bin:$PATH"
       fi
       export PATH
-      export NODE_PATH="$NVM_DIR/$2/modules"
+      export NODE_PATH="$NVM_DIR/$2/lib"
       export NODE_BIN="$NVM_DIR/$2/bin"
       mkdir -p "$NODE_PATH"
       mkdir -p "$NODE_BIN"
