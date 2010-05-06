@@ -41,6 +41,6 @@ When you want to grab the latest from the node repo do:
 
 If you want to see what versions you have installed issue:
 
-   nvm list
+    nvm list
 
 If you want to install nvm to somewhere other than `$HOME/.nvm`, then set the `$NVM_DIR` environment variable before sourcing the nvm.sh file.
