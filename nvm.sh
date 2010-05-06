@@ -20,45 +20,17 @@ nvm()
       echo "Usage:"
       echo "    nvm help            (Show this message)"
       echo "    nvm install version (Download and install a released version)"
-      echo "    nvm clone           (Clone and install HEAD version)"
-      echo "    nvm update          (Pull and rebuild HEAD version)"
       echo "    nvm list            (Show all installed versions)"
       echo "    nvm use version     (Set this version in the PATH)"
+      echo "    nvm use             (Use the latest stable version)"
       echo "    nvm deactivate      (Remove nvm entry from PATH)"
       echo "    nvm addlib          (Copies the module in cwd to the current env)"
       echo "    nvm linklib         (Links the module in cwd to the current env)"
+      echo "    nvm listlibs        (Show the modules in the current env)"
       echo
       echo "Example:"
-      echo "    nvm install v0.1.91"
+      echo "    nvm install v0.1.94"
       echo
-    ;;
-    "clone" )
-      if [ $# -ne 1 ]; then
-        nvm help
-        return;
-      fi
-      mkdir -p "$NVM_DIR/src" && \
-      cd "$NVM_DIR/src" && \
-      git clone git://github.com/ry/node.git && \
-      cd node && \
-      ./configure --debug --prefix="$NVM_DIR/HEAD" && \
-      make && \
-      make install && \
-      nvm use HEAD
-      cd $START
-    ;;
-    "update" )
-      if [ $# -ne 1 ]; then
-        nvm help
-        return;
-      fi
-      cd "$NVM_DIR/src/node" && \
-      git pull origin master && \
-      ./configure --debug --prefix="$NVM_DIR/HEAD" && \
-      make clean all && \
-      make install && \
-      nvm use HEAD
-      cd $START
     ;;
     "install" )
       if [ $# -ne 2 ]; then
@@ -107,7 +79,9 @@ nvm()
     ;;
     "use" )
       if [ $# -ne 2 ]; then
-        nvm help
+        for f in $NVM_DIR/v*; do
+          nvm use ${f##*/} > /dev/null
+        done
         return;
       fi
       if [ ! -d $NVM_DIR/$2 ]; then
@@ -120,11 +94,14 @@ nvm()
         PATH="$NVM_DIR/$2/bin:$PATH"
       fi
       export PATH
-      export NODE_PATH="$NVM_DIR/$2/lib"
+      export NODE_PATH="$NVM_DIR/$2/lib/node"
       export NODE_BIN="$NVM_DIR/$2/bin"
       mkdir -p "$NODE_PATH"
       mkdir -p "$NODE_BIN"
       echo "Now using node $2"
+    ;;
+    "listlibs" )
+      ls $NODE_PATH | grep -v wafadmin
     ;;
     "list" )
       if [ $# -ne 1 ]; then
