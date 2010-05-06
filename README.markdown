@@ -12,10 +12,10 @@ Or if you have `git` installed, then just clone it:
 
 Then add two lines to your bash profile:
 
-    . $NVM_DIR/nvm.sh
+    . $HOME/.nvm/nvm.sh
     nvm use
 
-The first line loads the nvm function into your bash shell so that it's available as a command.  The second line sets your default node version to the latest released version.
+The first line loads the `nvm` function into your bash shell so that it's available as a command.  The second line sets your default node version to the latest released version.
 
 ## Usage
 
@@ -42,3 +42,5 @@ When you want to grab the latest from the node repo do:
 If you want to see what versions you have installed issue:
 
    nvm list
+
+If you want to install nvm to somewhere other than `$HOME/.nvm`, then set the `$NVM_DIR` environment variable before sourcing the nvm.sh file.
