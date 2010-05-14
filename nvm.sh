@@ -51,28 +51,31 @@ nvm()
     "deactivate" )
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
         export PATH=${PATH%$NVM_DIR/*/bin*}${PATH#*$NVM_DIR/*/bin:}
-        unset NODE_PATH
         echo "$NVM_DIR/*/bin removed from \$PATH"
       else
         echo "Could not find $NVM_DIR/*/bin in \$PATH"
       fi
+      unset NVM_PATH
+      unset NVM_DIR
+      unset NVM_BIN
+      echo "Unset NVM_PATH, NVM_BIN, and NVM_DIR."
     ;;
     "addlib" )
-      mkdir -p $NODE_PATH
-      mkdir -p $NODE_BIN
+      mkdir -p $NVM_PATH
+      mkdir -p $NVM_BIN
       if [ -d `pwd`/lib ]; then
-        cp -r `pwd`/lib/ "$NODE_PATH/"
-        cp -r `pwd`/bin/ "$NODE_BIN/"
+        cp -r `pwd`/lib/ "$NVM_PATH/"
+        cp -r `pwd`/bin/ "$NVM_BIN/"
       else
         echo "Can't find lib dir at `pwd`/lib"
       fi
     ;;
     "linklib" )
-      mkdir -p $NODE_PATH
-      mkdir -p $NODE_BIN
+      mkdir -p $NVM_PATH
+      mkdir -p $NVM_BIN
       if [ -d `pwd`/lib ]; then
-        ln -sf `pwd`/lib/* "$NODE_PATH/"
-        ln -sf `pwd`/bin/* "$NODE_BIN/"
+        ln -sf `pwd`/lib/* "$NVM_PATH/"
+        ln -sf `pwd`/bin/* "$NVM_BIN/"
       else
         echo "Can't find lib dir at `pwd`/lib"
       fi
@@ -94,14 +97,12 @@ nvm()
         PATH="$NVM_DIR/$2/bin:$PATH"
       fi
       export PATH
-      export NODE_PATH="$NVM_DIR/$2/lib/node"
-      export NODE_BIN="$NVM_DIR/$2/bin"
-      mkdir -p "$NODE_PATH"
-      mkdir -p "$NODE_BIN"
+      export NVM_PATH="$NVM_DIR/$2/lib/node"
+      export NVM_BIN="$NVM_DIR/$2/bin"
       echo "Now using node $2"
     ;;
     "listlibs" )
-      ls $NODE_PATH | grep -v wafadmin
+      ls $NVM_PATH | grep -v wafadmin
     ;;
     "list" )
       if [ $# -ne 1 ]; then
