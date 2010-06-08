@@ -12,7 +12,7 @@ Or if you have `git` installed, then just clone it:
 
 Then add two lines to your bash profile:
 
-    export $NVM_DIR=$HOME/.nvm
+    export NVM_DIR=$HOME/.nvm
     . $NVM_DIR/nvm.sh
     nvm use
 
