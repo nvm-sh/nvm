@@ -12,7 +12,8 @@ Or if you have `git` installed, then just clone it:
 
 Then add two lines to your bash profile:
 
-    . $HOME/.nvm/nvm.sh
+    export $NVM_DIR=$HOME/.nvm
+    . $NVM_DIR/nvm.sh
     nvm use
 
 The first line loads the `nvm` function into your bash shell so that it's available as a command.  The second line sets your default node version to the latest released version.
