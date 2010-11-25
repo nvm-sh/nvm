@@ -1,5 +1,6 @@
 { "name" : "nvm"
 , "version" : "0.0.2"
-, "bin" : { "nvm" : "./nvm.sh" }
 , "author" : "Tim Caswell <tim@creationix.org>"
+, "scripts" :
+  { "install" : "./install.sh" , "uninstall" : "./uninstall.sh" }
 }
