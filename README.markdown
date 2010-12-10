@@ -13,10 +13,13 @@ Or if you have `git` installed, then just clone it:
 To activate nvm, you need to source it from your bash shell
 
     . ~/.nvm/nvm.sh
+
+I always add this line to my ~/.bashrc or ~/.profile file to have it automatically sources upon login.   
+Often I also put in a line to use a specific version of node.
     
 ## Usage
 
-To download, install, and use the v0.2.5 release of node do this:
+To download, compile, and install the v0.2.5 release of node do this:
 
     nvm install v0.2.5
 

@@ -46,6 +46,8 @@ nvm()
       make && \
       make install && \
       nvm use $2
+      echo "Installing NPM..."
+      curl http://npmjs.org/install.sh | sh
       cd $START
     ;;
     "deactivate" )
