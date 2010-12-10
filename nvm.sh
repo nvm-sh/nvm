@@ -10,7 +10,6 @@ export NVM_DIR=$(dirname ${BASH_ARGV[0]})
 
 nvm()
 {
-  START=`pwd`
   if [ $# -lt 1 ]; then
     nvm help
     return
@@ -37,6 +36,7 @@ nvm()
         nvm help
         return;
       fi
+      START=`pwd`
       mkdir -p "$NVM_DIR/src" && \
       cd "$NVM_DIR/src" && \
       wget "http://nodejs.org/dist/node-$2.tar.gz" -N && \
