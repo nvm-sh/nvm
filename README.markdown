@@ -19,7 +19,7 @@ Often I also put in a line to use a specific version of node.
     
 ## Usage
 
-To download, compile, and install the v0.2.5 release of node do this:
+To download, compile, and install the v0.2.5 release of node, do this:
 
     nvm install v0.2.5
 

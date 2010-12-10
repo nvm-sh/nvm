@@ -9,9 +9,7 @@ if [ "x$has" != "x" ]; then
 fi
 cat <<NVM_CODE >>~/.bashrc
 # ADDED BY npm FOR NVM
-NVM_DIR=$dir
-. \$NVM_DIR/nvm.sh
-nvm use
+. $dir/nvm.sh
 # END ADDED BY npm FOR NVM
 NVM_CODE
 
