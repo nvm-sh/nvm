@@ -5,6 +5,9 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
+# Auto detect the NVM_DIR using magic bash 3.x stuff
+export NVM_DIR=$(dirname ${BASH_ARGV[0]})
+
 nvm()
 {
   START=`pwd`
@@ -18,18 +21,15 @@ nvm()
       echo "Node Version Manager"
       echo
       echo "Usage:"
-      echo "    nvm help            (Show this message)"
-      echo "    nvm install version (Download and install a released version)"
-      echo "    nvm list            (Show all installed versions)"
-      echo "    nvm use version     (Set this version in the PATH)"
-      echo "    nvm use             (Use the latest stable version)"
-      echo "    nvm deactivate      (Remove nvm entry from PATH)"
-      echo "    nvm addlib          (Copies the module in cwd to the current env)"
-      echo "    nvm linklib         (Links the module in cwd to the current env)"
-      echo "    nvm listlibs        (Show the modules in the current env)"
+      echo "    nvm help                Show this message"
+      echo "    nvm install <version>   Download and install a <version>"
+      echo "    nvm use <version>       Modify PATH to use <version>"
+      echo "    nvm ls                  List versions currently installed"
+      echo "    nvm deactivate          Undo effects of NVM on current shell"
       echo
       echo "Example:"
-      echo "    nvm install v0.1.94"
+      echo "    nvm install v0.2.5"
+      echo "    nvm use v0.2.5"
       echo
     ;;
     "install" )
@@ -55,37 +55,11 @@ nvm()
       else
         echo "Could not find $NVM_DIR/*/bin in \$PATH"
       fi
-      unset NVM_PATH
-      unset NVM_DIR
-      unset NVM_BIN
-      echo "Unset NVM_PATH, NVM_BIN, and NVM_DIR."
-    ;;
-    "addlib" )
-      mkdir -p $NVM_PATH
-      mkdir -p $NVM_BIN
-      if [ -d `pwd`/lib ]; then
-        cp -r `pwd`/lib/ "$NVM_PATH/"
-        cp -r `pwd`/bin/ "$NVM_BIN/"
-      else
-        echo "Can't find lib dir at `pwd`/lib"
-      fi
-    ;;
-    "linklib" )
-      mkdir -p $NVM_PATH
-      mkdir -p $NVM_BIN
-      if [ -d `pwd`/lib ]; then
-        ln -sf `pwd`/lib/* "$NVM_PATH/"
-        ln -sf `pwd`/bin/* "$NVM_BIN/"
-      else
-        echo "Can't find lib dir at `pwd`/lib"
-      fi
     ;;
     "use" )
       if [ $# -ne 2 ]; then
-        for f in $NVM_DIR/v*; do
-          nvm use ${f##*/} > /dev/null
-        done
-        return;
+        nvm help
+        return
       fi
       if [ ! -d $NVM_DIR/$2 ]; then
         echo "$2 version is not installed yet"
@@ -101,20 +75,10 @@ nvm()
       export NVM_BIN="$NVM_DIR/$2/bin"
       echo "Now using node $2"
     ;;
-    "listlibs" )
-      ls $NVM_PATH | grep -v wafadmin
-    ;;
-    "list" )
+    "ls" )
       if [ $# -ne 1 ]; then
         nvm help
         return;
-      fi
-      if [ -d $NVM_DIR/HEAD ]; then
-        if [[ $PATH == *$NVM_DIR/HEAD/bin* ]]; then
-          echo "HEAD *"
-        else
-          echo "HEAD"
-        fi
       fi
       for f in $NVM_DIR/v*; do
         if [[ $PATH == *$f/bin* ]]; then
