@@ -59,6 +59,12 @@ nvm()
       else
         echo "Could not find $NVM_DIR/*/bin in \$PATH"
       fi
+      if [[ $MANPATH == *$NVM_DIR/*/share/man* ]]; then
+        export MANPATH=${MANPATH%$NVM_DIR/*/share/man*}${MANPATH#*$NVM_DIR/*/share/man:}
+        echo "$NVM_DIR/*/share/man removed from \$MANPATH"
+      else
+        echo "Could not find $NVM_DIR/*/share/man in \$MANPATH"
+      fi
     ;;
     "use" )
       if [ $# -ne 2 ]; then
@@ -74,7 +80,13 @@ nvm()
       else
         PATH="$NVM_DIR/$2/bin:$PATH"
       fi
+      if [[ $MANPATH == *$NVM_DIR/*/share/man* ]]; then
+        MANPATH=${MANPATH%$NVM_DIR/*/share/man*}$NVM_DIR/$2/share/man${MANPATH#*$NVM_DIR/*/share/man}
+      else
+        MANPATH="$NVM_DIR/$2/share/man:$MANPATH"
+      fi
       export PATH
+      export MANPATH
       export NVM_PATH="$NVM_DIR/$2/lib/node"
       export NVM_BIN="$NVM_DIR/$2/bin"
       echo "Now using node $2"
