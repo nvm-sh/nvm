@@ -5,8 +5,8 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
-# Auto detect the NVM_DIR using magic bash 3.x stuff
-export NVM_DIR=$(dirname ${BASH_ARGV[0]})
+eval last=\${$#}
+export NVM_DIR=$(dirname $last)
 
 nvm()
 {
