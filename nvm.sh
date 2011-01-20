@@ -5,8 +5,7 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
-eval last=\${$#}
-export NVM_DIR=$(dirname $last)
+export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}); pwd)
 
 nvm()
 {
