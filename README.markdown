@@ -27,7 +27,7 @@ And then in any new shell just use the installed version:
 
     nvm use v0.2.5
 
-If you want to see what versions you have installed issue:
+If you want to see what versions are available:
 
     nvm ls
 
