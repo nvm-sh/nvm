@@ -185,14 +185,18 @@ nvm()
       fi
     ;;
     "sync" )
+        LATEST=`version latest`
+        STABLE=`version stable`
         (cd $NVM_DIR
         rm -f v* 2>/dev/null
-        echo -n "Syncing with nodejs.org..."
-        for VER in `curl -s http://nodejs.org/dist/ | grep 'node-v.*\.tar\.gz' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//'`
-            do touch $VER
+        echo -n "# syncing with nodejs.org..."
+        for VER in `curl -s http://nodejs.org/dist/ | grep 'node-v.*\.tar\.gz' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//'`; do
+            touch $VER
         done
         echo " done."
         )
+        [ "$STABLE" = `version stable` ] || echo "NEW stable: `version stable`"
+        [ "$LATEST" = `version latest` ] || echo "NEW latest: `version latest`"
     ;;
     "clear-cache" )
         rm -f $NVM_DIR/v*
