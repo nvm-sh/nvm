@@ -9,12 +9,12 @@
 export NVM_DIR=$(dirname ${BASH_ARGV[0]})
 
 # Expand a version using the version cache
-version()
+nvm_version()
 {
     PATTERN=$1
     VERSION=''
     if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
-        version `cat $NVM_DIR/alias/$PATTERN`
+        nvm_version `cat $NVM_DIR/alias/$PATTERN`
         return
     fi
     # If it looks like an explicit version, don't do anything funny
@@ -83,7 +83,7 @@ nvm()
         nvm help
         return;
       fi
-      VERSION=`version $2`
+      VERSION=`nvm_version $2`
       START=`pwd`
       mkdir -p "$NVM_DIR/src" && \
       rm -f "$NVM_DIR/$2" && \
@@ -120,7 +120,7 @@ nvm()
         nvm help
         return
       fi
-      VERSION=`version $2`
+      VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet"
         return;
@@ -143,12 +143,12 @@ nvm()
     ;;
     "ls" )
       if [ $# -ne 1 ]; then
-        version $2
+        nvm_version $2
         return
       fi
-      version all
+      nvm_version all
       for P in {stable,latest,current}; do
-          echo -ne "$P: \t"; version $P
+          echo -ne "$P: \t"; nvm_version $P
       done
       nvm alias
       echo "# use 'nvm sync' to update from nodejs.org"
@@ -157,7 +157,7 @@ nvm()
       if [ $# -le 2 ]; then
         (cd $NVM_DIR/alias; for ALIAS in `ls $2* 2>/dev/null`; do
             DEST=`cat $ALIAS`
-            VERSION=`version $DEST`
+            VERSION=`nvm_version $DEST`
             if [ "$DEST" = "$VERSION" ]; then
                 echo "$ALIAS -> $DEST"
             else
@@ -172,7 +172,7 @@ nvm()
           return
       fi
       mkdir -p $NVM_DIR/alias
-      VERSION=`version $3`
+      VERSION=`nvm_version $3`
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '$3' does not exist." >&2 
       fi
@@ -185,8 +185,8 @@ nvm()
       fi
     ;;
     "sync" )
-        LATEST=`version latest`
-        STABLE=`version stable`
+        LATEST=`nvm_version latest`
+        STABLE=`nvm_version stable`
         (cd $NVM_DIR
         rm -f v* 2>/dev/null
         echo -n "# syncing with nodejs.org..."
@@ -195,15 +195,15 @@ nvm()
         done
         echo " done."
         )
-        [ "$STABLE" = `version stable` ] || echo "NEW stable: `version stable`"
-        [ "$LATEST" = `version latest` ] || echo "NEW latest: `version latest`"
+        [ "$STABLE" = `nvm_version stable` ] || echo "NEW stable: `nvm_version stable`"
+        [ "$LATEST" = `nvm_version latest` ] || echo "NEW latest: `nvm_version latest`"
     ;;
     "clear-cache" )
         rm -f $NVM_DIR/v*
         echo "Cache cleared."
     ;;
     "version" )
-        version $2
+        nvm_version $2
     ;;
     * )
       nvm help
