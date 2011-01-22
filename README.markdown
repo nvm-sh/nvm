@@ -35,3 +35,7 @@ To restore your PATH, you can deactivate it.
 
     nvm deactivate
 
+To set a default Node version to be used in any new shell, use the alias 'default':
+
+    nvm alias default v0.2.5
+
