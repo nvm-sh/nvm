@@ -64,8 +64,10 @@ nvm()
       echo "    nvm sync                Update the local cache of available versions"
       echo
       echo "Example:"
-      echo "    nvm install v0.2.5"
-      echo "    nvm use v0.2.5"
+      echo "    nvm install v0.2.5      Install a specific version number"
+      echo "    nvm use stable          Use the stable release"
+      echo "    nvm install latest      Install the latest, possibly unstable version"
+      echo "    nvm use 0.3             Use the latest available 0.3.x release"
       echo
     ;;
     "install" )
@@ -73,17 +75,18 @@ nvm()
         nvm help
         return;
       fi
+      VERSION=`version $2`
       START=`pwd`
       mkdir -p "$NVM_DIR/src" && \
       rm -f "$NVM_DIR/$2" && \
       cd "$NVM_DIR/src" && \
-      wget "http://nodejs.org/dist/node-$2.tar.gz" -N && \
-      tar -xzf "node-$2.tar.gz" && \
-      cd "node-$2" && \
-      ./configure --prefix="$NVM_DIR/$2" && \
+      wget "http://nodejs.org/dist/node-$VERSION.tar.gz" -N && \
+      tar -xzf "node-$VERSION.tar.gz" && \
+      cd "node-$VERSION" && \
+      ./configure --prefix="$NVM_DIR/$VERSION" && \
       make && \
       make install && \
-      nvm use $2
+      nvm use $VERSION
       if ! which npm ; then
         echo "Installing npm..."
         curl http://npmjs.org/install.sh | sh
@@ -109,25 +112,26 @@ nvm()
         nvm help
         return
       fi
-      if [ ! -d $NVM_DIR/$2 ]; then
-        echo "$2 version is not installed yet"
+      VERSION=`version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
         return;
       fi
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
-        PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$2/bin${PATH#*$NVM_DIR/*/bin}
+        PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$VERSION/bin${PATH#*$NVM_DIR/*/bin}
       else
-        PATH="$NVM_DIR/$2/bin:$PATH"
+        PATH="$NVM_DIR/$VERSION/bin:$PATH"
       fi
       if [[ $MANPATH == *$NVM_DIR/*/share/man* ]]; then
-        MANPATH=${MANPATH%$NVM_DIR/*/share/man*}$NVM_DIR/$2/share/man${MANPATH#*$NVM_DIR/*/share/man}
+        MANPATH=${MANPATH%$NVM_DIR/*/share/man*}$NVM_DIR/$VERSION/share/man${MANPATH#*$NVM_DIR/*/share/man}
       else
-        MANPATH="$NVM_DIR/$2/share/man:$MANPATH"
+        MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
       fi
       export PATH
       export MANPATH
-      export NVM_PATH="$NVM_DIR/$2/lib/node"
-      export NVM_BIN="$NVM_DIR/$2/bin"
-      echo "Now using node $2"
+      export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
+      export NVM_BIN="$NVM_DIR/$VERSION/bin"
+      echo "Now using node $VERSION"
     ;;
     "ls" )
       if [ $# -ne 1 ]; then
