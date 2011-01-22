@@ -27,11 +27,15 @@ And then in any new shell just use the installed version:
 
     nvm use v0.2.5
 
-If you want to see what versions you have installed issue:
+If you want to see what versions are available:
 
     nvm ls
 
 To restore your PATH, you can deactivate it.
 
     nvm deactivate
+
+To set a default Node version to be used in any new shell, use the alias 'default':
+
+    nvm alias default v0.2.5
 
