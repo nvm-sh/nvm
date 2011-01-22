@@ -13,21 +13,25 @@ version()
 {
     PATTERN=$1
     VERSION=''
+    if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
+        version `cat $NVM_DIR/alias/$PATTERN`
+        return
+    fi
     # If it looks like an explicit version, don't do anything funny
-    if [[ $PATTERN == v*.*.* ]]; then
-        VERSION=$PATTERN
+    if [[ "$PATTERN" == v*.*.* ]]; then
+        VERSION="$PATTERN"
     fi
     # The default version is the current one
-    if [ ! $PATTERN -o $PATTERN = 'current' ]; then
+    if [ ! "$PATTERN" -o "$PATTERN" = 'current' ]; then
         VERSION=`node -v 2>/dev/null`
     fi
-    if [ $PATTERN = 'stable' ]; then
+    if [ "$PATTERN" = 'stable' ]; then
         PATTERN='*.*[02468].'
     fi
-    if [ $PATTERN = 'latest' ]; then
+    if [ "$PATTERN" = 'latest' ]; then
         PATTERN='*.*.'
     fi
-    if [ $PATTERN = 'all' ]; then
+    if [ "$PATTERN" = 'all' ]; then
         (cd $NVM_DIR; ls -dG v* 2>/dev/null || echo "N/A")
         return
     fi
@@ -36,8 +40,9 @@ version()
     fi
     if [ ! "$VERSION" ]; then
         echo "N/A"
+        return -1
     elif [ -e "$NVM_DIR/$VERSION" ]; then
-        (cd $NVM_DIR; ls -dG $VERSION)
+        (cd $NVM_DIR; ls -dG "$VERSION")
     else
         echo "$VERSION"
     fi
@@ -55,19 +60,22 @@ nvm()
       echo "Node Version Manager"
       echo
       echo "Usage:"
-      echo "    nvm help                Show this message"
-      echo "    nvm install <version>   Download and install a <version>"
-      echo "    nvm use <version>       Modify PATH to use <version>"
-      echo "    nvm ls                  List versions (installed versions are blue)"
-      echo "    nvm ls <version>        List versions matching a given description"
-      echo "    nvm deactivate          Undo effects of NVM on current shell"
-      echo "    nvm sync                Update the local cache of available versions"
+      echo "    nvm help                    Show this message"
+      echo "    nvm install <version>       Download and install a <version>"
+      echo "    nvm use <version>           Modify PATH to use <version>"
+      echo "    nvm ls                      List versions (installed versions are blue)"
+      echo "    nvm ls <version>            List versions matching a given description"
+      echo "    nvm deactivate              Undo effects of NVM on current shell"
+      echo "    nvm sync                    Update the local cache of available versions"
+      echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
+      echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo
       echo "Example:"
-      echo "    nvm install v0.2.5      Install a specific version number"
-      echo "    nvm use stable          Use the stable release"
-      echo "    nvm install latest      Install the latest, possibly unstable version"
-      echo "    nvm use 0.3             Use the latest available 0.3.x release"
+      echo "    nvm install v0.2.5          Install a specific version number"
+      echo "    nvm use stable              Use the stable release"
+      echo "    nvm install latest          Install the latest, possibly unstable version"
+      echo "    nvm use 0.3                 Use the latest available 0.3.x release"
+      echo "    nvm alias default v0.3.6    Set v0.3.6 as the default" 
       echo
     ;;
     "install" )
@@ -136,13 +144,45 @@ nvm()
     "ls" )
       if [ $# -ne 1 ]; then
         version $2
-        return;
+        return
       fi
       version all
       for P in {stable,latest,current}; do
           echo -ne "$P: \t"; version $P
       done
+      nvm alias
       echo "# use 'nvm sync' to update from nodejs.org"
+    ;;
+    "alias" )
+      if [ $# -le 2 ]; then
+        (cd $NVM_DIR/alias; for ALIAS in `ls $2* 2>/dev/null`; do
+            DEST=`cat $ALIAS`
+            VERSION=`version $DEST`
+            if [ "$DEST" = "$VERSION" ]; then
+                echo "$ALIAS -> $DEST"
+            else
+                echo "$ALIAS -> $DEST (-> $VERSION)"
+            fi
+        done)
+        return
+      fi
+      if [ ! "$3" ]; then
+          rm -f $NVM_DIR/alias/$2
+          echo "$2 -> *poof*"
+          return
+      fi
+      mkdir -p $NVM_DIR/alias
+      VERSION=`version $3`
+      if [ $? -ne 0 ]; then
+        echo "! WARNING: Version '$3' does not exist." >&2 
+      fi
+      echo $3 > "$NVM_DIR/alias/$2"
+      if [ ! "$3" = "$VERSION" ]; then
+          echo "$2 -> $3 (-> $VERSION)"
+          echo "! WARNING: Moving target. Aliases to implicit versions may change without warning."
+      else
+        echo "$2 -> $3"
+      fi
     ;;
     "sync" )
         (cd $NVM_DIR
