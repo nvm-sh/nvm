@@ -8,6 +8,24 @@
 # Auto detect the NVM_DIR using magic bash 3.x stuff
 export NVM_DIR=$(dirname ${BASH_ARGV[0]})
 
+# Emulate curl with wget, if necessary
+if [ ! `which curl` ]; then
+    if [ `which wget` ]; then
+        curl() {
+            ARGS="$* "
+            ARGS=${ARGS/-s /-q }
+            ARGS=${ARGS/-\# /}
+            ARGS=${ARGS/-C - /-c }
+            ARGS=${ARGS/-o /-O }
+
+            wget $ARGS
+        }
+    else
+        NOCURL='nocurl'
+        curl() { echo 'Need curl or wget to proceed.' >&2; }
+    fi
+fi
+
 nvm()
 {
   if [ $# -lt 1 ]; then
@@ -36,10 +54,11 @@ nvm()
         nvm help
         return;
       fi
+      [ "$NOCURL" ] && curl && return
       START=`pwd`
       mkdir -p "$NVM_DIR/src" && \
       cd "$NVM_DIR/src" && \
-      wget "http://nodejs.org/dist/node-$2.tar.gz" -N && \
+      curl -C - -# "http://nodejs.org/dist/node-$2.tar.gz" -o "node-$2.tar.gz" && \
       tar -xzf "node-$2.tar.gz" && \
       cd "node-$2" && \
       ./configure --prefix="$NVM_DIR/$2" && \
@@ -48,7 +67,7 @@ nvm()
       nvm use $2
       if ! which npm ; then
         echo "Installing npm..."
-        curl http://npmjs.org/install.sh | sh
+        curl -# http://npmjs.org/install.sh -o - | sh
       fi
       cd $START
     ;;
