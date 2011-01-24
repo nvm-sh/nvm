@@ -111,7 +111,7 @@ nvm()
       cd "node-$VERSION" && \
       ./configure --prefix="$NVM_DIR/$VERSION" && \
       make && \
-      rm -f "$NVM_DIR/$VERSION" && \
+      rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
       make install && \
       nvm use $VERSION
       if ! which npm ; then
@@ -209,7 +209,7 @@ nvm()
         STABLE=`nvm_version stable`
         (cd $NVM_DIR
         rm -f v* 2>/dev/null
-        echo -n "# syncing with nodejs.org..."
+        printf "# syncing with nodejs.org..."
         for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'node-v.*\.tar\.gz' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//'`; do
             touch $VER
         done
@@ -219,7 +219,7 @@ nvm()
         [ "$LATEST" = `nvm_version latest` ] || echo "NEW latest: `nvm_version latest`"
     ;;
     "clear-cache" )
-        rm -f $NVM_DIR/v*
+        rm -f $NVM_DIR/v* 2>/dev/null
         echo "Cache cleared."
     ;;
     "version" )
