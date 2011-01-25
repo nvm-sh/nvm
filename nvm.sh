@@ -173,8 +173,9 @@ nvm()
       echo "# use 'nvm sync' to update from nodejs.org"
     ;;
     "alias" )
+      mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
-        (cd $NVM_DIR/alias; for ALIAS in `ls $2* 2>/dev/null`; do
+        (cd $NVM_DIR/alias && for ALIAS in `ls $2* 2>/dev/null`; do
             DEST=`cat $ALIAS`
             VERSION=`nvm_version $DEST`
             if [ "$DEST" = "$VERSION" ]; then
