@@ -60,7 +60,7 @@ nvm_version()
     fi
     if [ ! "$VERSION" ]; then
         echo "N/A"
-        return -1
+        return 13
     elif [ -e "$NVM_DIR/$VERSION" ]; then
         (cd $NVM_DIR; ls -dG "$VERSION")
     else
@@ -101,7 +101,7 @@ nvm()
     "install" )
       if [ $# -ne 2 ]; then
         nvm help
-        return;
+        return
       fi
       [ "$NOCURL" ] && curl && return
       VERSION=`nvm_version $2`
