@@ -36,21 +36,25 @@ nvm()
         nvm help
         return;
       fi
-      START=`pwd`
-      mkdir -p "$NVM_DIR/src" && \
-      cd "$NVM_DIR/src" && \
-      wget "http://nodejs.org/dist/node-$2.tar.gz" -N && \
-      tar -xzf "node-$2.tar.gz" && \
-      cd "node-$2" && \
-      ./configure --prefix="$NVM_DIR/$2" && \
-      make && \
-      make install && \
-      nvm use $2
-      if ! which npm ; then
-        echo "Installing npm..."
-        curl http://npmjs.org/install.sh | sh
+      if (
+        mkdir -p "$NVM_DIR/src" &&
+        cd "$NVM_DIR/src" && \
+        wget "http://nodejs.org/dist/node-$2.tar.gz" -N && \
+        tar -xzf "node-$2.tar.gz" && \
+        cd "node-$2" && \
+        ./configure --prefix="$NVM_DIR/$2" && \
+        make && \
+        make install
+        )
+      then
+        nvm use $2
+        if ! which npm ; then
+          echo "Installing npm..."
+          curl http://npmjs.org/install.sh | sh
+        fi
+      else
+        echo "nvm: install $2 failed!"
       fi
-      cd $START
     ;;
     "deactivate" )
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
