@@ -27,8 +27,8 @@ nvm()
       echo "    nvm deactivate          Undo effects of NVM on current shell"
       echo
       echo "Example:"
-      echo "    nvm install v0.2.5"
-      echo "    nvm use v0.2.5"
+      echo "    nvm install v0.4.0"
+      echo "    nvm use v0.4.0"
       echo
     ;;
     "install" )
