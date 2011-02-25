@@ -7,7 +7,7 @@
 
 # Auto detect the NVM_DIR using magic bash 3.x stuff
 if [ ! -d "$NVM_DIR" ]; then
-    export NVM_DIR=$(dirname ${BASH_ARGV[0]})
+    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}); pwd)
 fi
 
 # Emulate curl with wget, if necessary
@@ -91,11 +91,11 @@ nvm()
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo
       echo "Example:"
-      echo "    nvm install v0.2.5          Install a specific version number"
+      echo "    nvm install v0.4.0          Install a specific version number"
       echo "    nvm use stable              Use the stable release"
       echo "    nvm install latest          Install the latest, possibly unstable version"
-      echo "    nvm use 0.3                 Use the latest available 0.3.x release"
-      echo "    nvm alias default v0.3.6    Set v0.3.6 as the default" 
+      echo "    nvm use 0.2                 Use the latest available 0.2.x release"
+      echo "    nvm alias default v0.4.0    Set v0.4.0 as the default" 
       echo
     ;;
     "install" )
@@ -105,22 +105,26 @@ nvm()
       fi
       [ "$NOCURL" ] && curl && return
       VERSION=`nvm_version $2`
-      START=`pwd`
-      mkdir -p "$NVM_DIR/src" && \
-      cd "$NVM_DIR/src" && \
-      curl -C - -# "http://nodejs.org/dist/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz" && \
-      tar -xzf "node-$VERSION.tar.gz" && \
-      cd "node-$VERSION" && \
-      ./configure --prefix="$NVM_DIR/$VERSION" && \
-      make && \
-      rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
-      make install && \
-      nvm use $VERSION
-      if ! which npm ; then
-        echo "Installing npm..."
-        curl -# http://npmjs.org/install.sh -o - | sh
+      if (
+        mkdir -p "$NVM_DIR/src" && \
+        cd "$NVM_DIR/src" && \
+        curl -C - -# "http://nodejs.org/dist/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz" && \
+        tar -xzf "node-$VERSION.tar.gz" && \
+        cd "node-$VERSION" && \
+        ./configure --prefix="$NVM_DIR/$VERSION" && \
+        make && \
+        rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
+        make install
+        )
+      then
+        nvm use $VERSION
+        if ! which npm ; then
+          echo "Installing npm..."
+          curl http://npmjs.org/install.sh | sh
+        fi
+      else
+        echo "nvm: install $VERSION failed!"
       fi
-      cd $START
     ;;
     "deactivate" )
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
