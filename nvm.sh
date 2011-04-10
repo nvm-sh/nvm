@@ -90,6 +90,7 @@ nvm()
       echo "    nvm sync                    Update the local cache of available versions"
       echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
+      echo "    nvm unalias <name>          Deletes the alias named <name>"
       echo
       echo "Example:"
       echo "    nvm install v0.4.0          Install a specific version number"
@@ -237,6 +238,12 @@ nvm()
       else
         echo "$2 -> $3"
       fi
+    ;;
+    "unalias" )
+      mkdir -p $NVM_DIR/alias
+      [ $# -ne 2 ] && nvm help && return
+      rm -f $NVM_DIR/alias/$2
+      echo "Deleted alias $2"
     ;;
     "sync" )
         [ "$NOCURL" ] && curl && return
