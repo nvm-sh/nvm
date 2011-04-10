@@ -82,6 +82,7 @@ nvm()
       echo "Usage:"
       echo "    nvm help                    Show this message"
       echo "    nvm install <version>       Download and install a <version>"
+      echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
       echo "    nvm ls                      List versions (installed versions are blue)"
       echo "    nvm ls <version>            List versions matching a given description"
@@ -125,6 +126,33 @@ nvm()
       else
         echo "nvm: install $VERSION failed!"
       fi
+    ;;
+    "uninstall" )
+      [ $# -ne 2 ] && nvm help && return
+      if [[ $2 == `nvm_version` ]]; then
+        echo "nvm: Cannot uninstall currently-active node version, $2."
+        return
+      fi
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return;
+      fi
+
+      # Delete all files related to target version.
+      (cd "$NVM_DIR" && \
+      mkdir -p "$NVM_DIR/src" && \
+      rm -rf "node-$VERSION" 2>/dev/null && \
+      mkdir -p "$NVM_DIR/src" && \
+      cd "$NVM_DIR/src" && \
+      rm -f "node-$VERSION.tar.gz" 2>/dev/null && \
+      rm -rf "$NVM_DIR/$VERSION" 2>/dev/null)
+
+      # TODO: Should rm any aliases that point to uninstalled version.
+
+      # Run sync in order to restore version stub file in $NVM_DIR.
+      nvm sync 1>/dev/null
+      echo "Uninstalled node $VERSION"
     ;;
     "deactivate" )
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
