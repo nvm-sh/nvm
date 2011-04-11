@@ -148,12 +148,16 @@ nvm()
       cd "$NVM_DIR/src" && \
       rm -f "node-$VERSION.tar.gz" 2>/dev/null && \
       rm -rf "$NVM_DIR/$VERSION" 2>/dev/null)
+      echo "Uninstalled node $VERSION"
 
-      # TODO: Should rm any aliases that point to uninstalled version.
+      # Rm any aliases that point to uninstalled version.
+      for A in `grep -l $VERSION $NVM_DIR/alias/*`
+      do
+        nvm unalias `basename $A`
+      done
 
       # Run sync in order to restore version stub file in $NVM_DIR.
       nvm sync 1>/dev/null
-      echo "Uninstalled node $VERSION"
     ;;
     "deactivate" )
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
