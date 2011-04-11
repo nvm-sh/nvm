@@ -242,6 +242,7 @@ nvm()
     "unalias" )
       mkdir -p $NVM_DIR/alias
       [ $# -ne 2 ] && nvm help && return
+      [ ! -f $NVM_DIR/alias/$2 ] && echo "Alias $2 doesn't exist!" && return
       rm -f $NVM_DIR/alias/$2
       echo "Deleted alias $2"
     ;;
