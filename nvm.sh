@@ -120,7 +120,8 @@ nvm()
         nvm use $VERSION
         if ! which npm ; then
           echo "Installing npm..."
-          curl http://npmjs.org/install.sh | sh
+          # TODO: if node version 0.2.x add npm_install=0.2.19 before sh
+          curl http://npmjs.org/install.sh | clean=yes sh
         fi
       else
         echo "nvm: install $VERSION failed!"
@@ -129,6 +130,7 @@ nvm()
     "deactivate" )
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
         export PATH=${PATH%$NVM_DIR/*/bin*}${PATH#*$NVM_DIR/*/bin:}
+        hash -r
         echo "$NVM_DIR/*/bin removed from \$PATH"
       else
         echo "Could not find $NVM_DIR/*/bin in \$PATH"
@@ -161,6 +163,7 @@ nvm()
         MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
       fi
       export PATH
+      hash -r
       export MANPATH
       export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
