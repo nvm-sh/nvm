@@ -1,6 +1,0 @@
-{ "name" : "nvm"
-, "version" : "0.1.0"
-, "author" : "Tim Caswell <tim@creationix.org>"
-, "scripts" :
-  { "install" : "./install.sh" , "uninstall" : "./uninstall.sh" }
-}
