@@ -55,6 +55,9 @@ nvm_version()
         (cd $NVM_DIR; \ls -dG v* 2>/dev/null || echo "N/A")
         return
     fi
+    if [ "$PATTERN" = 'master' ]; then
+      VERSION='master'
+    fi
     if [ ! "$VERSION" ]; then
         VERSION=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 2,1n -k 2,2n -k 3,3n | tail -n1`
     fi
@@ -66,6 +69,22 @@ nvm_version()
     else
         echo "$VERSION"
     fi
+}
+
+nvm_fetch() {
+  VERSION=$1
+  mkdir -p "$NVM_DIR/src" && \
+  cd "$NVM_DIR/src" && \
+  if [ "$VERSION" = 'master' ]; then
+    if [ -d "node-$VERSION" ]; then
+      (cd node-$VERSION && git pull origin $VERSION)
+    else
+      git clone https://github.com/joyent/node.git node-$VERSION
+    fi
+  else
+    curl -C - -# "http://nodejs.org/dist/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz" && \
+    tar -xzf "node-$VERSION.tar.gz"
+  fi
 }
 
 nvm()
@@ -106,10 +125,7 @@ nvm()
       [ "$NOCURL" ] && curl && return
       VERSION=`nvm_version $2`
       if (
-        mkdir -p "$NVM_DIR/src" && \
-        cd "$NVM_DIR/src" && \
-        curl -C - -# "http://nodejs.org/dist/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz" && \
-        tar -xzf "node-$VERSION.tar.gz" && \
+        nvm_fetch "$VERSION" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" && \
         make && \
@@ -175,7 +191,7 @@ nvm()
         return
       fi
       nvm_version all
-      for P in {stable,latest,current}; do
+      for P in {stable,latest,current,master}; do
           echo -ne "$P: \t"; nvm_version $P
       done
       nvm alias
