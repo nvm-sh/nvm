@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+  export HOME="${HOME%%+(\/)}" # Remove trailing slashes if they exist on HOME
+
+  if (( ${nvm_ignore_nvmrc:=0} == 0 ))
+  then
+    for nvmrc in /etc/nvmrc "$HOME/.nvmrc"
+    do
+      if [[ -f "$nvmrc" ]]
+      then
+        if \grep '^\s*nvm .*$' "$nvmrc" >/dev/null 2>&1
+        then
+          printf "\nError: $nvmrc is for nvm settings only.\nnvm CLI may NOT be called from within $nvmrc. \nSkipping the loading of $nvmrc"
+          return 1
+        else
+          source "$nvmrc"
+        fi
+      fi
+    done
+  fi
+
+  if [[ -z "${nvm_path:-}" ]]
+  then
+    # Set the default sandboxed value.
+    # TODO: Alter the variable names to make sense
+    if [[ -z "${nvm_user_install_flag:-}" ]]
+    then
+      if (( UID == 0 )) ||
+        [[ -n "${nvm_prefix:-}" && "${nvm_prefix:-}" != "${HOME}" ]]
+      then
+        nvm_user_install_flag=0
+      else
+        nvm_user_install_flag=1
+      fi
+    fi
+
+    if [[ -z "${nvm_prefix:-}" ]]
+    then
+      if (( ${nvm_user_install_flag:=0} == 0 ))
+      then
+        nvm_prefix="/usr/local"
+      elif [[ -n "$HOME" ]]
+      then
+        nvm_prefix="$HOME"
+      else
+        echo "No \$nvm_prefix was provided and "
+        echo "$(id | \sed -e's/^[^(]*(//' -e 's/).*//') has no \$HOME defined."
+        echo "Halting loading of NVM."
+        nvm_load_nvm=0
+      fi
+    fi
+
+    true "${nvm_prefix/nvm/scripts}" # Fix nvm_prefix changes, older installs.
+
+    if [[ -z "${nvm_path:-}" ]]
+    then
+      if [[ "$nvm_prefix" = "$HOME" ]]
+      then
+        nvm_path="${nvm_prefix}/.nvm"
+      else
+        nvm_path="${nvm_prefix}/nvm"
+      fi
+    fi
+    export nvm_path="${nvm_path%%+(\/)}"
+  fi
+
+__nvm_shell_lookup_script()
+{
+  local relative_scripts_dir
+  relative_scripts_dir="$(dirname -- "$(dirname -- "$0")")"
+  for directory in "$HOME/.nvm" "/usr/local/nvm" "$relative_scripts_dir"; do
+    if [[ -d "$directory" && -s "$directory/nvm.sh" ]]; then
+      echo "$directory/nvm.sh"
+      return
+    fi
+  done
+}
+
+if [[ -n "$1" && ! -f "$1" && -n "$(echo "$1" | \grep -v '^-')" ]]; then
+  nvm_shell_node_string="$1"
+  shift
+fi
+
+nvm_shell_nvm_path="$(__nvm_shell_lookup_script)"
+if [[ -n "$nvm_shell_nvm_path" ]]; then
+  source "$nvm_shell_nvm_path"
+  # Setup as expected.
+  if [[ -n "$nvm_shell_node_string" ]]; then
+      nvm use "$nvm_shell_node_string"
+      if [[ "$?" -gt 0 ]]; then
+        echo "Error: NVM was unable to use '$nvm_shell_node_string'" 1>&2
+        exit 1
+      fi
+  else
+    nvm use default >/dev/null 2>&1
+  fi
+fi
+
+exec bash "$@"
