@@ -197,6 +197,7 @@ nvm()
       fi
       if [ ! "$3" ]; then
           rm -f $NVM_DIR/alias/$2
+          rm -rf $NVM_DIR/alias/$2_bin
           echo "$2 -> *poof*"
           return
       fi
@@ -210,6 +211,9 @@ nvm()
           echo "$2 -> $3 (-> $VERSION)"
           echo "! WARNING: Moving target. Aliases to implicit versions may change without warning."
       else
+        rm -rf $NVM_DIR/alias/$2_bin 2>/dev/null
+        mkdir -p $NVM_DIR/alias/$2_bin
+        ln -s $NVM_DIR/$3/bin/node $NVM_DIR/alias/$2_bin/node
         echo "$2 -> $3"
       fi
     ;;
