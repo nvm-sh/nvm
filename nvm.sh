@@ -89,6 +89,7 @@ nvm()
       echo "    nvm sync                    Update the local cache of available versions"
       echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
+      echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
       echo
       echo "Example:"
       echo "    nvm install v0.4.0          Install a specific version number"
@@ -227,6 +228,16 @@ nvm()
         )
         [ "$STABLE" = `nvm_version stable` ] || echo "NEW stable: `nvm_version stable`"
         [ "$LATEST" = `nvm_version latest` ] || echo "NEW latest: `nvm_version latest`"
+    ;;
+    "copy-packages" )
+        if [ $# -ne 2 ]; then
+          nvm help
+          return
+        fi
+        VERSION=`nvm_version $2`
+        ROOT=`nvm use $VERSION && npm -g root`
+        INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | grep "$ROOT\/[^/]\+$" | cut -d '/' -f 8 | cut -d ":" -f 2 | grep -v npm | tr "\n" " "`
+        npm install -g $INSTALLS
     ;;
     "clear-cache" )
         rm -f $NVM_DIR/v* 2>/dev/null
