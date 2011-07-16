@@ -108,7 +108,9 @@ nvm()
       if (
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
-        curl -C - -# "http://nodejs.org/dist/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz" && \
+        (([[ $VERSION =~ ^v((0\.[01234]\.)|(0\.5\.0)) ]] && \
+            curl -C - -# "http://nodejs.org/dist/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz") || \
+          curl -C - -# "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz") && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" && \
@@ -220,7 +222,7 @@ nvm()
         (cd $NVM_DIR
         rm -f v* 2>/dev/null
         printf "# syncing with nodejs.org..."
-        for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'node-v.*\.tar\.gz' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//'`; do
+        for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'href=".*"' | sed -e 's/.*href="//' -e 's/".*//' -e 's/\///' -e 's/.*node-//' -e 's/\.tar\.gz.*//'`; do
             touch $VER
         done
         echo " done."
