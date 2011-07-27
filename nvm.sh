@@ -105,10 +105,17 @@ nvm()
       fi
       [ "$NOCURL" ] && curl && return
       VERSION=`nvm_version $2`
+      export tarball=''
+      if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
+        export tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
+      elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
+        export tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
+      fi
       if (
+        [ ! -z $tarball ] && \
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
-        curl -C - -# "http://nodejs.org/dist/node-$VERSION.tar.gz" -o "node-$VERSION.tar.gz" && \
+        curl -C - -# $tarball -o "node-$VERSION.tar.gz" && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" && \
@@ -220,7 +227,7 @@ nvm()
         (cd $NVM_DIR
         rm -f v* 2>/dev/null
         printf "# syncing with nodejs.org..."
-        for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'node-v.*\.tar\.gz' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//'`; do
+        for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'v[0-9].*' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//' -e 's/<[^>]*>//' -e 's/\/<[^>]*>.*//'`; do
             touch $VER
         done
         echo " done."
