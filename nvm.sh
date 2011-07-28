@@ -105,11 +105,11 @@ nvm()
       fi
       [ "$NOCURL" ] && curl && return
       VERSION=`nvm_version $2`
-      export tarball=''
+      tarball=''
       if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
-        export tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
+        tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
       elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
-        export tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
+        tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
       fi
       if (
         [ ! -z $tarball ] && \
