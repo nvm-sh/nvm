@@ -223,6 +223,9 @@ nvm()
         for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'node-v.*\.tar\.gz' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//'`; do
             touch $VER
         done
+        for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'v0.[0-9]\{1,2\}\.[0-9]\{1,2\}/' | sed -e 's/.*v0./v0./' | sed -e 's/\/.*//'`; do
+            touch $VER
+        done
         echo " done."
         )
         [ "$STABLE" = `nvm_version stable` ] || echo "NEW stable: `nvm_version stable`"
