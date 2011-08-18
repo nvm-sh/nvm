@@ -7,7 +7,7 @@
 
 # Auto detect the NVM_DIR
 if [ ! -d "$NVM_DIR" ]; then
-    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}); pwd)
+    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null; pwd)
 fi
 
 # Emulate curl with wget, if necessary
@@ -52,17 +52,17 @@ nvm_version()
         PATTERN='*.*.'
     fi
     if [ "$PATTERN" = 'all' ]; then
-        (cd $NVM_DIR; \ls -dG v* 2>/dev/null || echo "N/A")
+        (cd $NVM_DIR > /dev/null; \ls -dG v* 2>/dev/null || echo "N/A")
         return
     fi
     if [ ! "$VERSION" ]; then
-        VERSION=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 2,1n -k 2,2n -k 3,3n | tail -n1`
+        VERSION=`(cd $NVM_DIR > /dev/null; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 2,1n -k 2,2n -k 3,3n | tail -n1`
     fi
     if [ ! "$VERSION" ]; then
         echo "N/A"
         return 13
     elif [ -e "$NVM_DIR/$VERSION" ]; then
-        (cd $NVM_DIR; \ls -dG "$VERSION")
+        (cd $NVM_DIR > /dev/null; \ls -dG "$VERSION")
     else
         echo "$VERSION"
     fi
@@ -192,7 +192,7 @@ nvm()
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
-        (cd $NVM_DIR/alias && for ALIAS in `\ls $2* 2>/dev/null`; do
+        (cd $NVM_DIR/alias > /dev/null && for ALIAS in `\ls $2* 2>/dev/null`; do
             DEST=`cat $ALIAS`
             VERSION=`nvm_version $DEST`
             if [ "$DEST" = "$VERSION" ]; then
@@ -225,7 +225,7 @@ nvm()
         [ "$NOCURL" ] && curl && return
         LATEST=`nvm_version latest`
         STABLE=`nvm_version stable`
-        (cd $NVM_DIR
+        (cd $NVM_DIR > /dev/null
         rm -f v* 2>/dev/null
         printf "# syncing with nodejs.org..."
         for VER in `curl -s http://nodejs.org/dist/ -o - | grep 'v[0-9].*' | sed -e 's/.*node-//' -e 's/\.tar\.gz.*//' -e 's/<[^>]*>//' -e 's/\/<[^>]*>.*//'`; do
