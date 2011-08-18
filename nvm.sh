@@ -82,6 +82,7 @@ nvm()
       echo "Usage:"
       echo "    nvm help                    Show this message"
       echo "    nvm install <version>       Download and install a <version>"
+      echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
       echo "    nvm ls                      List versions (installed versions are blue)"
       echo "    nvm ls <version>            List versions matching a given description"
@@ -89,6 +90,7 @@ nvm()
       echo "    nvm sync                    Update the local cache of available versions"
       echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
+      echo "    nvm unalias <name>          Deletes the alias named <name>"
       echo
       echo "Example:"
       echo "    nvm install v0.4.0          Install a specific version number"
@@ -133,6 +135,36 @@ nvm()
       else
         echo "nvm: install $VERSION failed!"
       fi
+    ;;
+    "uninstall" )
+      [ $# -ne 2 ] && nvm help && return
+      if [[ $2 == `nvm_version` ]]; then
+        echo "nvm: Cannot uninstall currently-active node version, $2."
+        return
+      fi
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return;
+      fi
+
+      # Delete all files related to target version.
+      (cd "$NVM_DIR" && \
+          rm -rf "node-$VERSION" 2>/dev/null && \
+          mkdir -p "$NVM_DIR/src" && \
+          cd "$NVM_DIR/src" && \
+          rm -f "node-$VERSION.tar.gz" 2>/dev/null && \
+          rm -rf "$NVM_DIR/$VERSION" 2>/dev/null)
+      echo "Uninstalled node $VERSION"
+
+      # Rm any aliases that point to uninstalled version.
+      for A in `grep -l $VERSION $NVM_DIR/alias/*`
+      do
+        nvm unalias `basename $A`
+      done
+
+      # Run sync in order to restore version stub file in $NVM_DIR.
+      nvm sync 1>/dev/null
     ;;
     "deactivate" )
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
@@ -219,6 +251,13 @@ nvm()
       else
         echo "$2 -> $3"
       fi
+    ;;
+    "unalias" )
+      mkdir -p $NVM_DIR/alias
+      [ $# -ne 2 ] && nvm help && return
+      [ ! -f $NVM_DIR/alias/$2 ] && echo "Alias $2 doesn't exist!" && return
+      rm -f $NVM_DIR/alias/$2
+      echo "Deleted alias $2"
     ;;
     "sync" )
         [ "$NOCURL" ] && curl && return
