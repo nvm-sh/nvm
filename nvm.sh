@@ -56,7 +56,7 @@ nvm_version()
         return
     fi
     if [ ! "$VERSION" ]; then
-        VERSION=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 2,1n -k 2,2n -k 3,3n | tail -n1`
+        VERSION=`(cd $NVM_DIR; \ls -d v${~PATTERN}* 2>/dev/null) | sort -t. -k 2,1n -k 2,2n -k 3,3n | tail -n1`
     fi
     if [ ! "$VERSION" ]; then
         echo "N/A"
@@ -118,7 +118,7 @@ nvm()
         [ ! -z $tarball ] && \
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
-        curl -C - -# $tarball -o "node-$VERSION.tar.gz" && \
+        curl -C - --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" && \
