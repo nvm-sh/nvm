@@ -16,7 +16,7 @@ if [ ! `which curl` ]; then
         curl() {
             ARGS="$* "
             ARGS=${ARGS/-s /-q }
-            ARGS=${ARGS/-\# /}
+            ARGS=${ARGS/--progress-bar /}
             ARGS=${ARGS/-C - /-c }
             ARGS=${ARGS/-o /-O }
 
