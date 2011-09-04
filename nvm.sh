@@ -55,6 +55,10 @@ nvm_version()
         (cd $NVM_DIR; \ls -dG v* 2>/dev/null || echo "N/A")
         return
     fi
+    if [ "$PATTERN" = 'installed' ]; then
+        (cd $NVM_DIR; \ls -dpG v* 2>/dev/null | grep v.*/ | sed "s/\///" || echo "N/A")
+        return
+    fi
     if [ ! "$VERSION" ]; then
         VERSION=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 2,1n -k 2,2n -k 3,3n | tail -n1`
     fi
