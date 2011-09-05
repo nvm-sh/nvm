@@ -150,10 +150,9 @@ nvm()
       fi
 
       # Delete all files related to target version.
-      (cd "$NVM_DIR" && \
-          rm -rf "node-$VERSION" 2>/dev/null && \
-          mkdir -p "$NVM_DIR/src" && \
+      (mkdir -p "$NVM_DIR/src" && \
           cd "$NVM_DIR/src" && \
+          rm -rf "node-$VERSION" 2>/dev/null && \
           rm -f "node-$VERSION.tar.gz" 2>/dev/null && \
           rm -rf "$NVM_DIR/$VERSION" 2>/dev/null)
       echo "Uninstalled node $VERSION"
