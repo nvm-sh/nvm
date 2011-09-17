@@ -108,6 +108,9 @@ nvm()
       fi
       [ "$NOCURL" ] && curl && return
       VERSION=`nvm_version $2`
+
+      [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
+
       tarball=''
       if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
