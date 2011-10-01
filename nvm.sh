@@ -38,7 +38,7 @@ nvm_version()
         return
     fi
     # If it looks like an explicit version, don't do anything funny
-    if [[ "$PATTERN" == v*.*.* ]]; then
+    if [[ "$PATTERN" == v?*.?*.?* ]]; then
         VERSION="$PATTERN"
     fi
     # The default version is the current one
