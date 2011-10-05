@@ -200,15 +200,13 @@ nvm()
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
       echo "Now using node $VERSION"
     ;;
-    "ls" )
+    "ls" | "list" )
       if [ $# -ne 1 ]; then
         nvm_version $2
         return
       fi
       nvm_version all
-      for P in {stable,latest,current}; do
-          echo -ne "$P: \t"; nvm_version $P
-      done
+      echo -ne "current: \t"; nvm_version current
       nvm alias
     ;;
     "alias" )
