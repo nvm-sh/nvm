@@ -206,9 +206,7 @@ nvm()
         return
       fi
       nvm_version all
-      for P in {stable,latest,current}; do
-          echo -ne "$P: \t"; nvm_version $P
-      done
+      echo -ne "current: \t"; nvm_version current
       nvm alias
     ;;
     "alias" )
