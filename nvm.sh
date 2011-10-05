@@ -200,7 +200,7 @@ nvm()
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
       echo "Now using node $VERSION"
     ;;
-    "ls" )
+    "ls" | "list" )
       if [ $# -ne 1 ]; then
         nvm_version $2
         return
