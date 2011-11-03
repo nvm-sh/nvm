@@ -12,20 +12,8 @@ fi
 
 # Emulate curl with wget, if necessary
 if [ ! `which curl` ]; then
-    if [ `which wget` ]; then
-        curl() {
-            ARGS="$* "
-            ARGS=${ARGS/-s /-q }
-            ARGS=${ARGS/--progress-bar /}
-            ARGS=${ARGS/-C - /-c }
-            ARGS=${ARGS/-o /-O }
-
-            wget $ARGS
-        }
-    else
-        NOCURL='nocurl'
-        curl() { echo 'Need curl or wget to proceed.' >&2; }
-    fi
+  NOCURL='nocurl'
+  curl() { echo 'Need curl to proceed.' >&2; }
 fi
 
 # Expand a version using the version cache
