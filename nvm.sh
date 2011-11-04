@@ -20,34 +20,56 @@ fi
 nvm_version()
 {
     PATTERN=$1
-    VERSION=''
+    # The default version is the current one
+    if [ ! "$PATTERN" ]; then
+        PATTERN='current'
+    fi
+
+    VERSION=`nvm_ls $PATTERN | tail -n1`
+    echo "$VERSION"
+    
+    if [ "$VERSION" = 'N/A' ]; then
+        return 13
+    fi
+}
+
+nvm_ls()
+{
+    PATTERN=$1
+    VERSIONS=''
+    if [ "$PATTERN" = 'current' ]; then
+        VERSION=`node -v 2>/dev/null`
+    fi
+
     if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
         nvm_version `cat $NVM_DIR/alias/$PATTERN`
         return
     fi
     # If it looks like an explicit version, don't do anything funny
     if [[ "$PATTERN" == v?*.?*.?* ]]; then
-        VERSION="$PATTERN"
+        VERSIONS="$PATTERN"
+    else
+        VERSIONS=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 1.2,1n -k 2,2n -k 3,3n`
     fi
-    # The default version is the current one
-    if [ ! "$PATTERN" -o "$PATTERN" = 'current' ]; then
-        VERSION=`node -v 2>/dev/null`
-    fi
-    if [ "$PATTERN" = 'all' ]; then
-        (cd $NVM_DIR; \ls -dG v* 2>/dev/null || echo "N/A")
+    if [ ! "$VERSIONS" ]; then
+        echo "N/A"
         return
     fi
-    if [ ! "$VERSION" ]; then
-        VERSION=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 1.2,1n -k 2,2n -k 3,3n | tail -n1`
-    fi
-    if [ ! "$VERSION" ]; then
-        echo "N/A"
-        return 13
-    elif [ -e "$NVM_DIR/$VERSION" ]; then
-        (cd $NVM_DIR; \ls -dG "$VERSION")
-    else
-        echo "$VERSION"
-    fi
+    echo "$VERSIONS"
+    return
+}
+
+print_versions()
+{
+    OUTPUT=''
+    for VERSION in $1; do
+        PADDED_VERSION=`printf '%10s' $VERSION`
+        if [[ -d "$NVM_DIR/$VERSION" ]]; then
+             PADDED_VERSION="\033[0;34m$PADDED_VERSION\033[0m" 
+        fi
+        OUTPUT="$OUTPUT\n$PADDED_VERSION" 
+    done
+    echo -e "$OUTPUT" | column 
 }
 
 nvm()
@@ -189,13 +211,12 @@ nvm()
       echo "Now using node $VERSION"
     ;;
     "ls" | "list" )
-      if [ $# -ne 1 ]; then
-        nvm_version $2
-        return
+      print_versions "`nvm_ls $2`"
+      if [ $# -eq 1 ]; then
+        echo -ne "current: \t"; nvm_version current
+        nvm alias
       fi
-      nvm_version all
-      echo -ne "current: \t"; nvm_version current
-      nvm alias
+      return
     ;;
     "alias" )
       mkdir -p $NVM_DIR/alias
@@ -250,7 +271,7 @@ nvm()
         echo "Cache cleared."
     ;;
     "version" )
-        nvm_version $2
+        print_versions "`nvm_version $2`"
     ;;
     * )
       nvm help
