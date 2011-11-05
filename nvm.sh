@@ -202,7 +202,7 @@ nvm()
     ;;
     "run" )
       # run given version of node
-      if [ $# -ne 2 ]; then
+      if [ $# -lt 2 ]; then
         nvm help
         return
       fi
@@ -212,7 +212,7 @@ nvm()
         return;
       fi
       echo "Running node $VERSION"
-      $NVM_DIR/$VERSION/bin/node
+      $NVM_DIR/$VERSION/bin/node "${@:3}"
     ;;
     "ls" | "list" )
       if [ $# -ne 1 ]; then
