@@ -188,6 +188,20 @@ nvm()
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
       echo "Now using node $VERSION"
     ;;
+    "run" )
+      # run given version of node
+      if [ $# -lt 2 ]; then
+        nvm help
+        return
+      fi
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return;
+      fi
+      echo "Running node $VERSION"
+      $NVM_DIR/$VERSION/bin/node "${@:3}"
+    ;;
     "ls" | "list" )
       if [ $# -ne 1 ]; then
         nvm_version $2
