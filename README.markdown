@@ -39,3 +39,8 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
     nvm alias default v0.4.1
 
+## Problems
+
+If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
+    
+    curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
