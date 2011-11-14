@@ -66,6 +66,7 @@ nvm()
       echo "    nvm install <version>       Download and install a <version>"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
+      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
       echo "    nvm ls                      List installed versions"
       echo "    nvm ls <version>            List versions matching a given description"
       echo "    nvm deactivate              Undo effects of NVM on current shell"
@@ -77,6 +78,7 @@ nvm()
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
       echo "    nvm use 0.2                 Use the latest available 0.2.x release"
+      echo "    nvm run 0.4.12 myApp.js     Run myApp.js using node v0.4.12"
       echo "    nvm alias default 0.4       Auto use the latest installed v0.4.x version"
       echo
     ;;
