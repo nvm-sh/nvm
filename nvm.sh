@@ -114,11 +114,14 @@ nvm()
         nvm use $VERSION
         if ! which npm ; then
           echo "Installing npm..."
-          # TODO: if node version 0.2.x add npm_install=0.2.19 before sh
           if [[ "`expr match $VERSION '\(^v0\.1\.\)'`" != '' ]]; then
-            echo "npm requires node v0.2.x or higher"
+            echo "npm requires node v0.2.3 or higher"
           elif [[ "`expr match $VERSION '\(^v0\.2\.\)'`" != '' ]]; then
-            curl http://npmjs.org/install.sh | clean=yes npm_install=0.2.19 sh
+            if [[ "`expr match $VERSION '\(^v0\.2\.[0-2]$\)'`" != '' ]]; then
+              echo "npm requires node v0.2.3 or higher"
+            else
+              curl http://npmjs.org/install.sh | clean=yes npm_install=0.2.19 sh
+            fi
           else
             curl http://npmjs.org/install.sh | clean=yes sh
           fi
