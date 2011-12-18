@@ -92,6 +92,11 @@ nvm()
 
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
 
+      OPENSSL_LIBPATH=''
+      if [ `uname -s` == 'Darwin' ]; then
+          OPENSSL_LIBPATH='--openssl-libpath=/usr/lib/'
+      fi
+
       tarball=''
       if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
@@ -105,7 +110,7 @@ nvm()
         curl -C - --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
-        ./configure --prefix="$NVM_DIR/$VERSION" && \
+        ./configure --prefix="$NVM_DIR/$VERSION" "$OPENSSL_LIBPATH" && \
         make && \
         rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
         make install
