@@ -51,4 +51,4 @@ If you try to install a node version and the installation fails, be sure to dele
 
 Where's my 'sudo node'? Checkout this link:
     
-    https://github.com/creationix/nvm/issues/43
+https://github.com/creationix/nvm/issues/43
