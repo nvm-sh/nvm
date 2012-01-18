@@ -197,6 +197,7 @@ nvm()
       export MANPATH
       export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
+      export NODE_PATH="$NODE_PATH:$NVM_DIR/$VERSION/lib/node_modules"
       echo "Now using node $VERSION"
     ;;
     "run" )
