@@ -88,6 +88,7 @@ nvm()
       echo "    nvm install <version>       Download and install a <version>"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
+      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
       echo "    nvm ls                      List installed versions"
       echo "    nvm ls <version>            List versions matching a given description"
       echo "    nvm deactivate              Undo effects of NVM on current shell"
@@ -99,6 +100,7 @@ nvm()
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
       echo "    nvm use 0.2                 Use the latest available 0.2.x release"
+      echo "    nvm run 0.4.12 myApp.js     Run myApp.js using node v0.4.12"
       echo "    nvm alias default 0.4       Auto use the latest installed v0.4.x version"
       echo
     ;;
@@ -134,8 +136,17 @@ nvm()
         nvm use $VERSION
         if ! which npm ; then
           echo "Installing npm..."
-          # TODO: if node version 0.2.x add npm_install=0.2.19 before sh
-          curl http://npmjs.org/install.sh | clean=yes sh
+          if [[ "`expr match $VERSION '\(^v0\.1\.\)'`" != '' ]]; then
+            echo "npm requires node v0.2.3 or higher"
+          elif [[ "`expr match $VERSION '\(^v0\.2\.\)'`" != '' ]]; then
+            if [[ "`expr match $VERSION '\(^v0\.2\.[0-2]$\)'`" != '' ]]; then
+              echo "npm requires node v0.2.3 or higher"
+            else
+              curl http://npmjs.org/install.sh | clean=yes npm_install=0.2.19 sh
+            fi
+          else
+            curl http://npmjs.org/install.sh | clean=yes sh
+          fi
         fi
       else
         echo "nvm: install $VERSION failed!"
@@ -209,6 +220,20 @@ nvm()
       export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
       echo "Now using node $VERSION"
+    ;;
+    "run" )
+      # run given version of node
+      if [ $# -lt 2 ]; then
+        nvm help
+        return
+      fi
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return;
+      fi
+      echo "Running node $VERSION"
+      $NVM_DIR/$VERSION/bin/node "${@:3}"
     ;;
     "ls" | "list" )
       print_versions "`nvm_ls $2`"
