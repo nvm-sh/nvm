@@ -97,6 +97,7 @@ nvm()
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo "    nvm unalias <name>          Deletes the alias named <name>"
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
+      echo "    nvm versions                List available versions"
       echo
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
@@ -111,7 +112,11 @@ nvm()
         return
       fi
       [ "$NOCURL" ] && curl && return
-      VERSION=`nvm_version $2`
+      if [ $2 == latest ]; then
+        VERSION=$(nvm versions | tail -1)
+      else
+        VERSION=`nvm_version $2`
+      fi
 
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
 
@@ -298,6 +303,9 @@ nvm()
     ;;
     "version" )
         print_versions "`nvm_version $2`"
+    ;;
+    "versions" )
+      curl -s -o - http://nodejs.org/dist/ | grep -oE 'v[0-9]\.[0-9]\.[0-9]' | sort -u
     ;;
     * )
       nvm help
