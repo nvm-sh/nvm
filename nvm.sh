@@ -38,7 +38,8 @@ nvm_ls()
     PATTERN=$1
     VERSIONS=''
     if [ "$PATTERN" = 'current' ]; then
-        VERSION=`node -v 2>/dev/null`
+        echo `node -v 2>/dev/null`
+        return
     fi
 
     if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
