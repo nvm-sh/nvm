@@ -69,11 +69,6 @@ print_versions()
 
 nvm()
 {
-  if [ ! `which curl` ]; then
-    echo 'NVM Needs curl to proceed.' >&2;
-    return
-  fi
-
   if [ $# -lt 1 ]; then
     nvm help
     return
@@ -105,11 +100,14 @@ nvm()
       echo
     ;;
     "install" )
+      if [ ! `which curl` ]; then
+        echo 'NVM Needs curl to proceed.' >&2;
+      fi
+      
       if [ $# -ne 2 ]; then
         nvm help
         return
       fi
-      [ "$NOCURL" ] && curl && return
       VERSION=`nvm_version $2`
 
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
