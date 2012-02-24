@@ -10,12 +10,6 @@ if [ ! -d "$NVM_DIR" ]; then
     export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}); pwd)
 fi
 
-# Emulate curl with wget, if necessary
-if [ ! `which curl` ]; then
-  NOCURL='nocurl'
-  curl() { echo 'Need curl to proceed.' >&2; }
-fi
-
 # Expand a version using the version cache
 nvm_version()
 {
@@ -75,6 +69,11 @@ print_versions()
 
 nvm()
 {
+  if [ ! `which curl` ]; then
+    echo 'NVM Needs curl to proceed.' >&2;
+    return
+  fi
+
   if [ $# -lt 1 ]; then
     nvm help
     return
