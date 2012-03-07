@@ -23,6 +23,7 @@ To download, compile, and install the v0.4.1 release of node, do this:
 
     nvm install v0.4.1
 
+
 And then in any new shell just use the installed version:
 
     nvm use v0.4.1
@@ -52,3 +53,8 @@ If you try to install a node version and the installation fails, be sure to dele
 Where's my 'sudo node'? Checkout this link:
     
     https://github.com/creationix/nvm/issues/43
+
+on Arch Linux and other systems using python3 by default, before running *install* you need to
+
+      export PYTHON=python2
+
