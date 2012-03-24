@@ -19,18 +19,18 @@ Often I also put in a line to use a specific version of node.
     
 ## Usage
 
-To download, compile, and install the v0.4.1 release of node, do this:
+To download, compile, and install the v0.6.14 release of node, do this:
 
-    nvm install v0.4.1
+    nvm install v0.6.14
 
 
 And then in any new shell just use the installed version:
 
-    nvm use v0.4.1
+    nvm use v0.6.14
 
 Or you can just run it:
 
-    nvm run v0.4.1
+    nvm run v0.6.14
 
 If you want to see what versions are available:
 
@@ -42,7 +42,7 @@ To restore your PATH, you can deactivate it.
 
 To set a default Node version to be used in any new shell, use the alias 'default':
 
-    nvm alias default v0.4.1
+    nvm alias default 0.6
 
 ## Problems
 
