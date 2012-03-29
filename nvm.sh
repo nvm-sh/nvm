@@ -67,6 +67,14 @@ print_versions()
     echo -e "$OUTPUT" | column 
 }
 
+# Used to remove strings from values like PATH or MANPATH
+# Parameters
+#   $1 = string to remove
+#   $2 = string to remove from
+nvm_delete_path(){
+  echo $(IFS=':';p=($2);unset IFS;p=(${p[@]%%$1});IFS=':';echo "${p[*]}";unset IFS)
+}
+
 nvm()
 {
   if [ $# -lt 1 ]; then
@@ -79,24 +87,25 @@ nvm()
       echo "Node Version Manager"
       echo
       echo "Usage:"
-      echo "    nvm help                    Show this message"
-      echo "    nvm install <version>       Download and install a <version>"
-      echo "    nvm uninstall <version>     Uninstall a version"
-      echo "    nvm use <version>           Modify PATH to use <version>"
-      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
-      echo "    nvm ls                      List installed versions"
-      echo "    nvm ls <version>            List versions matching a given description"
-      echo "    nvm deactivate              Undo effects of NVM on current shell"
-      echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
-      echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
-      echo "    nvm unalias <name>          Deletes the alias named <name>"
-      echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
+      echo "    nvm help                         Show this message"
+      echo "    nvm install <version>            Download and install a <version>"
+      echo "    nvm uninstall <version>          Uninstall a version"
+      echo "    nvm use <version> or system      Modify PATH to use <version> or use system node"
+      echo "    nvm run <version> [<args>]       Run <version> with <args> as arguments"
+      echo "    nvm ls                           List installed versions"
+      echo "    nvm ls <version>                 List versions matching a given description"
+      echo "    nvm deactivate                   Undo effects of NVM on current shell"
+      echo "    nvm alias [<pattern>]            Show all aliases beginning with <pattern>"
+      echo "    nvm alias <name> <version>       Set an alias named <name> pointing to <version>"
+      echo "    nvm unalias <name>               Deletes the alias named <name>"
+      echo "    nvm copy-packages <version>      Install global NPM packages contained in <version> to current version"
       echo
       echo "Example:"
-      echo "    nvm install v0.4.12         Install a specific version number"
-      echo "    nvm use 0.2                 Use the latest available 0.2.x release"
-      echo "    nvm run 0.4.12 myApp.js     Run myApp.js using node v0.4.12"
-      echo "    nvm alias default 0.4       Auto use the latest installed v0.4.x version"
+      echo "    nvm install v0.4.12              Install a specific version number"
+      echo "    nvm use 0.2                      Use the latest available 0.2.x release"
+      echo "    nvm use system                   Use the node version installed in the system"
+      echo "    nvm run 0.4.12 myApp.js          Run myApp.js using node v0.4.12"
+      echo "    nvm alias default 0.4            Auto use the latest installed v0.4.x version"
       echo
     ;;
     "install" )
@@ -196,6 +205,26 @@ nvm()
       if [ $# -ne 2 ]; then
         nvm help
         return
+      fi
+      if [ $2 = "system" ]; then
+        command -v node >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          if [ "$VERSION" = 'N/A' ]; then
+            echo "Already using system node (`node -v`)"
+            return;
+          else
+            export PATH=$(nvm_delete_path "$NVM_DIR/$VERSION/bin" $PATH)
+            export MANPATH=$(nvm_delete_path "$NVM_DIR/$VERSION/share/man" $MANPATH)
+            unset NVM_BIN
+            unset NVM_PATH
+            export VERSION='N/A'
+            echo "Now using system node (`node -v`)"
+            return;
+          fi
+        else
+          echo "Node is not installed in your system"
+          return;
+        fi
       fi
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
