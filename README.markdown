@@ -4,7 +4,7 @@
 
 First you'll need to make sure your system has a c++ compiler.  For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
-To install create a folder somewhere in your filesystem with the "`nvm.sh`" file inside it.  I put mine in a folder called "`.nvm`".
+To install create a folder somewhere in your filesystem with the "`nvm.sh`" file inside it.  I put mine in a folder called "`nvm`".
 
 Or if you have `git` installed, then just clone it:
 
@@ -46,7 +46,7 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
 ## Problems
 
-If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
+If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
     
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
