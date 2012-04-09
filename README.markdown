@@ -44,6 +44,40 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
     nvm alias default 0.6
 
+## Bash completion
+
+To activate, you need to source `bash_completion`:
+
+  	[[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
+
+Put the above sourcing line just below the sourcing line for NVM in your profile (`.bashrc`, `.bash_profile`).
+
+### Usage
+
+nvm
+
+	$ nvm [tab][tab]
+	alias          copy-packages  help           list           run            uninstall      version        
+	clear-cache    deactivate     install        ls             unalias        use
+
+nvm alias
+
+	$ nvm alias [tab][tab]
+	default
+
+	$ nvm alias my_alias [tab][tab]
+	v0.4.11        v0.4.12       v0.6.14
+	
+nvm use
+
+	$ nvm use [tab][tab]
+	my_alias        default        v0.4.11        v0.4.12       v0.6.14
+	
+nvm uninstall
+
+	$ nvm uninstall [tab][tab]
+	my_alias        default        v0.4.11        v0.4.12       v0.6.14
+	
 ## Problems
 
 If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
