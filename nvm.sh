@@ -216,6 +216,7 @@ nvm()
       hash -r
       export MANPATH
       export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
+			export NODE_PATH="$NVM_DIR/$VERSION/lib/node":"$NVM_DIR/$VERSION/lib/node_modules"
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
       echo "Now using node $VERSION"
     ;;
