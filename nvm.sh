@@ -23,7 +23,7 @@ nvm_version()
     echo "$VERSION"
 
     if [ "$VERSION" = 'N/A' ]; then
-        return 13
+        return
     fi
 }
 
