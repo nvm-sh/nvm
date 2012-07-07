@@ -10,6 +10,10 @@ if [ ! -d "$NVM_DIR" ]; then
     export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
 fi
 
+# Make zsh glob matching behave same as bash
+# This fixes the "zsh: no matches found" errors
+unsetopt nomatch 2>/dev/null
+
 # Expand a version using the version cache
 nvm_version()
 {
