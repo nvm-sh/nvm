@@ -108,11 +108,21 @@ nvm()
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
-      if [ $# -ne 2 ]; then
+      if [ $# -le 2 ]; then
         nvm help
         return
       fi
       VERSION=`nvm_version $2`
+      ADDITIONAL_PARAMETERS=''
+      shift
+      shift
+      while [ $# -ne 0 ]
+      do
+        ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
+        shift
+      done
+
+      echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
 
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
 
@@ -129,7 +139,7 @@ nvm()
         curl -C - --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
-        ./configure --prefix="$NVM_DIR/$VERSION" && \
+        ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
         make && \
         rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
         make install
