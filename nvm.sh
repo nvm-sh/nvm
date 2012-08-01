@@ -108,7 +108,7 @@ nvm()
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
-      if [ $# -le 2 ]; then
+      if [ $# -lt 2 ]; then
         nvm help
         return
       fi
