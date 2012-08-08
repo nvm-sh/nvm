@@ -12,7 +12,9 @@ fi
 
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
-unsetopt nomatch 2>/dev/null
+if [[ `which unsetopt` ]]; then
+    unsetopt nomatch 2>/dev/null
+fi
 
 # Expand a version using the version cache
 nvm_version()
