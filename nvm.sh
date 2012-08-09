@@ -14,6 +14,10 @@ fi
 # This fixes the "zsh: no matches found" errors
 unsetopt nomatch 2>/dev/null
 
+# Use gmake when available to support FreeBSD 
+MAKE_BIN='make'
+command -v gmake >/dev/null 2>&1 && MAKE_BIN='gmake'
+
 # Expand a version using the version cache
 nvm_version()
 {
@@ -140,9 +144,9 @@ nvm()
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
-        make && \
+        $MAKE_BIN && \
         rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
-        make install
+        $MAKE_BIN install
         )
       then
         nvm use $VERSION
