@@ -12,7 +12,7 @@ fi
 
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
-if [[ `which unsetopt` ]]; then
+if [ ! -z "$(which unsetopt)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
 
