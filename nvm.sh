@@ -262,26 +262,29 @@ nvm()
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet"
-        return;
+        return 1;
       fi
       echo $NVM_DIR/$VERSION/bin/node
+      return 0;
     ;;
     "bin" )
       # prints out the current node binary
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet"
-        return;
+        return 1;
       fi
       echo $NVM_DIR/$VERSION/bin
+      return 0;
     ;;
     "root" )
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet"
-        return;
+        return 1;
       fi
       echo $NVM_DIR/$VERSION
+      return 0;
     ;;
     "ls" | "list" )
       print_versions "`nvm_ls $2`"
