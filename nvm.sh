@@ -4,7 +4,6 @@
 #
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
-
 # Auto detect the NVM_DIR
 if [ ! -d "$NVM_DIR" ]; then
     export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
@@ -37,7 +36,13 @@ nvm_ls()
 {
     PATTERN=$1
     VERSIONS=''
+    CURRENT_NODE="$(which node)"
+
     if [ "$PATTERN" = 'current' ]; then
+        if [ "${CURRENT_NODE##$NVM_DIR}" = "${CURRENT_NODE}" ]; then
+          echo "N/A"
+          return
+        fi
         echo `node -v 2>/dev/null`
         return
     fi
@@ -85,18 +90,21 @@ nvm()
       echo "Node Version Manager"
       echo
       echo "Usage:"
-      echo "    nvm help                    Show this message"
-      echo "    nvm install <version>       Download and install a <version>"
-      echo "    nvm uninstall <version>     Uninstall a version"
-      echo "    nvm use <version>           Modify PATH to use <version>"
-      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
-      echo "    nvm ls                      List installed versions"
-      echo "    nvm ls <version>            List versions matching a given description"
-      echo "    nvm deactivate              Undo effects of NVM on current shell"
-      echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
-      echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
-      echo "    nvm unalias <name>          Deletes the alias named <name>"
-      echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
+      echo "    nvm help                      Show this message"
+      echo "    nvm install <version>         Download and install a <version>"
+      echo "    nvm uninstall <version>       Uninstall a version"
+      echo "    nvm use <version>             Modify PATH to use <version>"
+      echo "    nvm run [<version>] [<args>]  Run <version> with <args> as arguments"
+      echo "    nvm which [<version>]         Prints the path of the currently used node executable"
+      echo "    nvm root [<version>]          Prints the root path of the currently used node version"
+      echo "    nvm bin [<version>]           Prints the path to the 'bin' directory of the currently used node version"      
+      echo "    nvm ls                        List installed versions"
+      echo "    nvm ls <version>              List versions matching a given description"
+      echo "    nvm deactivate                Undo effects of NVM on current shell"
+      echo "    nvm alias [<pattern>]         Show all aliases beginning with <pattern>"
+      echo "    nvm alias <name> <version>    Set an alias named <name> pointing to <version>"
+      echo "    nvm unalias <name>            Deletes the alias named <name>"
+      echo "    nvm copy-packages <version>   Install global NPM packages contained in <version> to current version"
       echo
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
@@ -248,6 +256,35 @@ nvm()
       fi
       echo "Running node $VERSION"
       $NVM_DIR/$VERSION/bin/node "${@:3}"
+    ;;
+    "which" )
+      # prints out the current node binary
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return 1;
+      fi
+      echo $NVM_DIR/$VERSION/bin/node
+      return 0;
+    ;;
+    "bin" )
+      # prints out the current node binary
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return 1;
+      fi
+      echo $NVM_DIR/$VERSION/bin
+      return 0;
+    ;;
+    "root" )
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return 1;
+      fi
+      echo $NVM_DIR/$VERSION
+      return 0;
     ;;
     "ls" | "list" )
       print_versions "`nvm_ls $2`"
