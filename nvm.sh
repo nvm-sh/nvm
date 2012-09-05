@@ -43,7 +43,7 @@ nvm_ls()
     fi
 
     if [ "$PATTERN" = 'latest' ]; then
-        echo `curl http://nodejs.org/download/ 2> /dev/null | grep "Current version" | sed -n '/<b>/,/<\/b>/p' | sed -e '1s/.*<b>//' -e '$s/<\/b>.*//'`
+        echo `curl http://nodejs.org/download/ 2> /dev/null | grep "Current version" | sed -e '1s/.*<b>//' -e '$/<\/b>.*//'`
         return
     fi
 
