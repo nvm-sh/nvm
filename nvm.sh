@@ -42,6 +42,11 @@ nvm_ls()
         return
     fi
 
+    if [ "$PATTERN" = 'latest' ]; then
+        echo `curl http://nodejs.org/download/ 2> /dev/null | grep "Current version" | sed -n '/<b>/,/<\/b>/p' | sed -e '1s/.*<b>//' -e '$s/<\/b>.*//'`
+        return
+    fi
+
     if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
         nvm_version `cat $NVM_DIR/alias/$PATTERN`
         return
@@ -114,7 +119,15 @@ nvm()
         nvm help
         return
       fi
+
+      if [ "$2" = 'latest' ]; then
+          echo -n "Checking latest version... "
+      fi
       VERSION=`nvm_version $2`
+      if [ "$2" = 'latest' ]; then
+          echo "$VERSION"
+      fi
+
       ADDITIONAL_PARAMETERS=''
       shift
       shift
