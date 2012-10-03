@@ -156,10 +156,10 @@ nvm()
             if [[ "`expr match $VERSION '\(^v0\.2\.[0-2]$\)'`" != '' ]]; then
               echo "npm requires node v0.2.3 or higher"
             else
-              curl http://npmjs.org/install.sh | clean=yes npm_install=0.2.19 sh
+              curl https://npmjs.org/install.sh | clean=yes npm_install=0.2.19 sh
             fi
           else
-            curl http://npmjs.org/install.sh | clean=yes sh
+            curl https://npmjs.org/install.sh | clean=yes sh
           fi
         fi
       else
