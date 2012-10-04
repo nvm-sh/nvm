@@ -23,6 +23,10 @@ nvm_version()
     # The default version is the current one
     if [ ! "$PATTERN" ]; then
         PATTERN='current'
+    elif [ "${PATTERN:0:1}" != "v" ]; then
+        if [ "$PATTERN" != "default" -a "$PATTERN" != "current" ]; then
+            PATTERN=v$PATTERN
+        fi
     fi
 
     VERSION=`nvm_ls $PATTERN | tail -n1`
