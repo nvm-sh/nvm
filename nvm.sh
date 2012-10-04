@@ -77,6 +77,17 @@ print_versions()
     echo -e "$OUTPUT" | column
 }
 
+nvm_ls_remote()
+{
+    PATTERN=$1
+    curl -s http://nodejs.org/dist/ \
+            | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
+            | sort -u -k 1,1n -k 2,2n -k 3,3n -t . \
+            | tr "\n" "\t"
+    echo ""
+}
+
+
 nvm()
 {
   if [ $# -lt 1 ]; then
@@ -96,6 +107,7 @@ nvm()
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
       echo "    nvm ls                      List installed versions"
       echo "    nvm ls <version>            List versions matching a given description"
+      echo "    nvm ls-remote               List remote versions available for install"
       echo "    nvm deactivate              Undo effects of NVM on current shell"
       echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
