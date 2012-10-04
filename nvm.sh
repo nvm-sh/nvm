@@ -190,7 +190,8 @@ nvm()
       fi
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
-        echo "$VERSION version is not installed yet"
+        echo "$VERSION version is not installed yet... installing"
+        nvm install $VERSION
         return;
       fi
 
