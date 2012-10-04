@@ -23,14 +23,21 @@ nvm_version()
     # The default version is the current one
     if [ ! "$PATTERN" ]; then
         PATTERN='current'
-    elif [ "${PATTERN:0:1}" != "v" ]; then
-        if [ "$PATTERN" != "default" -a "$PATTERN" != "current" ]; then
-            PATTERN=v$PATTERN
-        fi
     fi
 
     VERSION=`nvm_ls $PATTERN | tail -n1`
     echo "$VERSION"
+
+    if [ "$VERSION" = 'N/A' ]; then
+        return
+    fi
+}
+
+nvm_remote_version()
+{
+    PATTERN=$1
+    VERSION=`nvm_ls_remote $PATTERN | tail -n1`
+    echo "v$VERSION"
 
     if [ "$VERSION" = 'N/A' ]; then
         return
@@ -64,6 +71,21 @@ nvm_ls()
     return
 }
 
+nvm_ls_remote()
+{
+    PATTERN=$1
+    VERSIONS=`curl -s http://nodejs.org/dist/ \
+            | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
+            | grep -w "${PATTERN}" \
+            | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
+    if [ ! "$VERSIONS" ]; then
+        echo "N/A"
+        return
+    fi
+    echo "$VERSIONS"
+    return
+}
+
 print_versions()
 {
     OUTPUT=''
@@ -76,17 +98,6 @@ print_versions()
     done
     echo -e "$OUTPUT" | column
 }
-
-nvm_ls_remote()
-{
-    PATTERN=$1
-    curl -s http://nodejs.org/dist/ \
-            | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
-            | sort -u -k 1,1n -k 2,2n -k 3,3n -t . \
-            | tr "\n" "\t"
-    echo ""
-}
-
 
 nvm()
 {
@@ -130,7 +141,7 @@ nvm()
         nvm help
         return
       fi
-      VERSION=`nvm_version $2`
+      VERSION=`nvm_remote_version $2`
       ADDITIONAL_PARAMETERS=''
       shift
       shift
@@ -275,7 +286,7 @@ nvm()
       return
     ;;
     "ls-remote" | "list-remote" )
-        nvm_ls_remote
+        print_versions "`nvm_ls_remote $2`"
         return
     ;;
     "alias" )
