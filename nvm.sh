@@ -75,7 +75,7 @@ nvm_ls_remote()
 {
     PATTERN=$1
     VERSIONS=`curl -s http://nodejs.org/dist/ \
-            | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
+            | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
             | grep -w "${PATTERN}" \
             | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
     if [ ! "$VERSIONS" ]; then
