@@ -274,6 +274,10 @@ nvm()
       fi
       return
     ;;
+    "ls-remote" | "list-remote" )
+        nvm_ls_remote
+        return
+    ;;
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
