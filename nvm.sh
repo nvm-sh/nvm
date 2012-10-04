@@ -7,7 +7,7 @@
 
 # Auto detect the NVM_DIR
 if [ ! -d "$NVM_DIR" ]; then
-    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
+    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)'/.nvm'
 fi
 
 # Make zsh glob matching behave same as bash
