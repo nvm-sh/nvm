@@ -37,7 +37,7 @@ nvm_remote_version()
 {
     PATTERN=$1
     VERSION=`nvm_ls_remote $PATTERN | tail -n1`
-    echo "v$VERSION"
+    echo "$VERSION"
 
     if [ "$VERSION" = 'N/A' ]; then
         return
@@ -74,6 +74,11 @@ nvm_ls()
 nvm_ls_remote()
 {
     PATTERN=$1
+    if [ "$PATTERN" ]; then
+        if [ "${PATTERN:0:1}" != "v" ]; then
+            PATTERN=v$PATTERN
+        fi
+    fi
     VERSIONS=`curl -s http://nodejs.org/dist/ \
             | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
             | grep -w "${PATTERN}" \
