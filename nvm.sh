@@ -33,6 +33,17 @@ nvm_version()
     fi
 }
 
+nvm_remote_version()
+{
+    PATTERN=$1
+    VERSION=`nvm_ls_remote $PATTERN | tail -n1`
+    echo "v$VERSION"
+
+    if [ "$VERSION" = 'N/A' ]; then
+        return
+    fi
+}
+
 nvm_ls()
 {
     PATTERN=$1
@@ -52,6 +63,21 @@ nvm_ls()
     else
         VERSIONS=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 1.2,1n -k 2,2n -k 3,3n`
     fi
+    if [ ! "$VERSIONS" ]; then
+        echo "N/A"
+        return
+    fi
+    echo "$VERSIONS"
+    return
+}
+
+nvm_ls_remote()
+{
+    PATTERN=$1
+    VERSIONS=`curl -s http://nodejs.org/dist/ \
+            | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
+            | grep -w "${PATTERN}" \
+            | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
     if [ ! "$VERSIONS" ]; then
         echo "N/A"
         return
@@ -92,6 +118,7 @@ nvm()
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
       echo "    nvm ls                      List installed versions"
       echo "    nvm ls <version>            List versions matching a given description"
+      echo "    nvm ls-remote               List remote versions available for install"
       echo "    nvm deactivate              Undo effects of NVM on current shell"
       echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
@@ -114,7 +141,7 @@ nvm()
         nvm help
         return
       fi
-      VERSION=`nvm_version $2`
+      VERSION=`nvm_remote_version $2`
       ADDITIONAL_PARAMETERS=''
       shift
       shift
@@ -174,7 +201,8 @@ nvm()
       fi
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
-        echo "$VERSION version is not installed yet"
+        echo "$VERSION version is not installed yet... installing"
+        nvm install $VERSION
         return;
       fi
 
@@ -256,6 +284,10 @@ nvm()
         nvm alias
       fi
       return
+    ;;
+    "ls-remote" | "list-remote" )
+        print_versions "`nvm_ls_remote $2`"
+        return
     ;;
     "alias" )
       mkdir -p $NVM_DIR/alias

@@ -21,16 +21,16 @@ Often I also put in a line to use a specific version of node.
 
 To download, compile, and install the v0.6.14 release of node, do this:
 
-    nvm install v0.6.14
+    nvm install 0.6.14
 
 
 And then in any new shell just use the installed version:
 
-    nvm use v0.6.14
+    nvm use 0.6.14
 
 Or you can just run it:
 
-    nvm run v0.6.14
+    nvm run 0.6.14
 
 If you want to see what versions are available:
 
