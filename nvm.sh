@@ -78,6 +78,8 @@ nvm_ls_remote()
         if [ "${PATTERN:0:1}" != "v" ]; then
             PATTERN=v$PATTERN
         fi
+    else
+        PATTERN=".*"
     fi
     VERSIONS=`curl -s http://nodejs.org/dist/ \
             | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
