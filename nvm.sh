@@ -75,7 +75,7 @@ nvm_ls_remote()
 {
     PATTERN=$1
     if [ "$PATTERN" ]; then
-        if [ "${PATTERN:0:1}" != "v" ]; then
+        if echo "${PATTERN}" | grep -v '^v' ; then
             PATTERN=v$PATTERN
         fi
     fi
