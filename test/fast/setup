@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+(
+  cd ../..
+
+  # Back up
+  mkdir -p bak
+  mv v* src alias bak || sleep 0s
+)

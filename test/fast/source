@@ -1,4 +1,4 @@
 #!/bin/sh
 
-. ../nvm.sh
+. ../../nvm.sh
 nvm
