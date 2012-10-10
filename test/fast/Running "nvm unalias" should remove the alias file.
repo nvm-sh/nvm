@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo v0.1.2 > ../../alias/test
+. ../../nvm.sh
+nvm unalias test
+! [ -e ../../alias/test ]

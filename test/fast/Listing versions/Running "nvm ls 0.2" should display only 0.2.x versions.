@@ -1,0 +1,10 @@
+#!/bin/sh
+
+mkdir ../../../v0.1.3
+mkdir ../../../v0.2.3
+
+. ../../../nvm.sh
+
+# The result should contain only the appropriate version numbers.
+nvm ls 0.2 | grep v0.2.3 &&
+nvm ls 0.1 | grep -v v0.2.3
