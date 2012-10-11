@@ -57,6 +57,28 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+## Running tests
+Tests are written in [Urchin](http://www.urchin.sh). Install Urchin like so.
+
+    wget -O /usr/local/bin https://raw.github.com/scraperwiki/urchin/master/urchin
+    chmod +x /usr/local/bin/urchin
+
+(Or put it some other place in your PATH.)
+
+There are slow tests and fast tests. The slow tests do things like install node
+and check that the right versions are used. The fast tests fake this to test
+things like aliases and uninstalling. From the root of the nvm git repository,
+run the fast tests like this.
+
+    urchin test/fast
+
+Run the slow tests like this.
+
+    urchin test/slow
+
+Run all of the tests like this
+
+    urchin test
 
 ## Bash completion
 
