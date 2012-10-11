@@ -11,4 +11,4 @@ nvm install 0.6.14
 
 # Check
 [ -d ../../v0.6.14 ]
-nvm use v0.6.14 --version | grep v0.6.14
+nvm run v0.6.14 --version | grep v0.6.14
