@@ -60,7 +60,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ## Running tests
 Tests are written in [Urchin](http://www.urchin.sh). Install Urchin like so.
 
-    wget -O /usr/local/bin https://raw.github.com/scraperwiki/urchin/master/urchin
+    wget -O /usr/local/bin https://raw.github.com/scraperwiki/urchin/83b0e53536d05a13501a9dc69b1a481158fedb24/urchin
     chmod +x /usr/local/bin/urchin
 
 (Or put it some other place in your PATH.)
