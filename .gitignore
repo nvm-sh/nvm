@@ -2,3 +2,6 @@ HEAD
 src
 v*
 alias
+
+# For testing
+bak

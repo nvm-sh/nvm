@@ -4,7 +4,6 @@
   cd ../..
 
   # Back up
-  mkdir -p bak
-  mv v* src alias bak || sleep 0s
+  rm -Rf v* src alias
   mkdir src alias
 )

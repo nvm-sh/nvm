@@ -1,16 +1,7 @@
 #!/bin/sh
-set -e
 
+# Remove temporary files
 (
   cd ../..
-
-  # Remove temporary files
   rm -fR v* src alias
-
-  # Restore
-  if [ -d bak ]
-    then
-    mv bak/* . || sleep 0s
-    rmdir bak
-  fi
 )
