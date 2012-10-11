@@ -1,0 +1,10 @@
+#!/bin/sh
+
+cd ../..
+mkdir v0.0.1
+mkdir src/node-v0.0.1
+
+. ./nvm.sh
+nvm uninstall v0.0.1
+
+[ ! -d 'v0.0.1' ] && [ ! -d 'src/node-v0.0.1' ]
