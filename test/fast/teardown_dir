@@ -1,0 +1,13 @@
+#!/bin/sh
+
+(
+  cd ../..
+
+  # Restore
+  if [ -d bak ]
+    then
+    mv bak/* . || sleep 0s
+    rmdir bak
+  fi
+  mkdir -p src alias
+)
