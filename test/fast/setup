@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 (
   cd ../..
@@ -7,4 +6,5 @@ set -e
   # Back up
   mkdir -p bak
   mv v* src alias bak || sleep 0s
+  mkdir src alias
 )
