@@ -1,0 +1,9 @@
+#!/bin/sh
+
+(
+  cd ../..
+
+  # Back up
+  rm -Rf v* src alias
+  mkdir src alias
+)

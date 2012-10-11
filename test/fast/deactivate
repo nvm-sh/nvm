@@ -1,0 +1,6 @@
+#!/bin/sh
+
+. ../../nvm.sh
+nvm &&
+nvm deactivate &&
+! nvm
