@@ -80,6 +80,8 @@ Run all of the tests like this
 
     urchin test
 
+Nota bene: Avoid running nvm while the tests are running.
+
 ## Bash completion
 
 To activate, you need to source `bash_completion`:
