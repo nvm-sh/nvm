@@ -16,6 +16,19 @@ if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
 
+# Try to figure out the os and arch for binary fetching
+uname="$(uname -a)"
+os=
+arch=x86
+case "$uname" in
+  Linux\ *) os=linux ;;
+  Darwin\ *) os=darwin ;;
+  SunOS\ *) os=sunos ;;
+esac
+case "$uname" in
+  *x86_64*) arch=x64 ;;
+esac
+
 # Expand a version using the version cache
 nvm_version()
 {
@@ -156,9 +169,39 @@ nvm()
         shift
       done
 
-      echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
-
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
+
+      # shortcut - try the binary if possible.
+      if [ -n "$os" ]; then
+        binavail=
+        # binaries started with node 0.8.6
+        case "$VERSION" in
+          v0.8.[012345]) binavail=0 ;;
+          v0.[1234567]) binavail=0 ;;
+          *) binavail=1 ;;
+        esac
+        if [ $binavail -eq 1 ]; then
+          t="$VERSION-$os-$arch"
+          url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
+          if (
+            mkdir -p "$NVM_DIR/bin/node-${t}" && \
+            cd "$NVM_DIR/bin" && \
+            curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
+            tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
+            mv "node-${t}" "../$VERSION" && \
+            rm -f "node-${t}.tar.gz"
+            )
+          then
+            nvm use $VERSION
+            return;
+          else
+            echo "Binary download failed, trying source." >&2
+            cd "$NVM_DIR/bin" && rm -rf "node-${t}.tar.gz" "node-${t}"
+          fi
+        fi
+      fi
+
+      echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
 
       tarball=''
       if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
@@ -211,11 +254,17 @@ nvm()
         return;
       fi
 
+      t="$VERSION-$os-$arch"
+
       # Delete all files related to target version.
       (mkdir -p "$NVM_DIR/src" && \
           cd "$NVM_DIR/src" && \
           rm -rf "node-$VERSION" 2>/dev/null && \
           rm -f "node-$VERSION.tar.gz" 2>/dev/null && \
+          mkdir -p "$NVM_DIR/bin" && \
+          cd "$NVM_DIR/bin" && \
+          rm -rf "node-${t}" 2>/dev/null && \
+          rm -f "node-${t}.tar.gz" 2>/dev/null && \
           rm -rf "$NVM_DIR/$VERSION" 2>/dev/null)
       echo "Uninstalled node $VERSION"
 
