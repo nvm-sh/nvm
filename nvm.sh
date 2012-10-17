@@ -406,4 +406,4 @@ nvm()
   esac
 }
 
-nvm ls default >/dev/null 2>&1 && nvm use default >/dev/null
+nvm ls default &>/dev/null && nvm use default >/dev/null || true
