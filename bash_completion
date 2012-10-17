@@ -19,7 +19,7 @@ __nvm_commands ()
 
   COMMANDS='\
     help install uninstall use\
-    run ls list deactivate alias\
+    run ls ls-remote list deactivate alias\
     unalias copy-packages clear-cache version'
 
     if [ ${#COMP_WORDS[@]} == 4 ]; then
