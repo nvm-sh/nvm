@@ -215,7 +215,7 @@ nvm()
         [ ! -z $tarball ] && \
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
-        curl -C - --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
+        curl --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
@@ -406,4 +406,4 @@ nvm()
   esac
 }
 
-nvm ls default >/dev/null 2>&1 && nvm use default >/dev/null
+nvm ls default &>/dev/null && nvm use default >/dev/null || true
