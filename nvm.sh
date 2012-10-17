@@ -215,7 +215,7 @@ nvm()
         [ ! -z $tarball ] && \
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
-        curl -C - --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
+        curl --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
