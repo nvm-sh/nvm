@@ -91,6 +91,8 @@ nvm_ls_remote()
         if echo "${PATTERN}" | grep -v '^v' ; then
             PATTERN=v$PATTERN
         fi
+    else
+        PATTERN=".*"
     fi
     VERSIONS=`curl -s http://nodejs.org/dist/ \
             | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
