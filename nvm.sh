@@ -19,7 +19,7 @@ fi
 # Try to figure out the os and arch for binary fetching
 uname="$(uname -a)"
 os=
-arch=x86
+arch="$(uname -m)"
 case "$uname" in
   Linux\ *) os=linux ;;
   Darwin\ *) os=darwin ;;
