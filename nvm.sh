@@ -67,6 +67,21 @@ nvm_remote_version() {
   fi
 }
 
+nvm_normalize_version() {
+  echo "$1" | sed -e 's/^v//' | awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }'
+}
+
+nvm_format_version() {
+  echo "$1" | sed -e 's/^\([0-9]\)/v\1/g'
+}
+  
+nvm_binary_available() {
+  # binaries started with node 0.8.6
+  local MINIMAL="0.8.6"
+  local VERSION=$1
+  [ $(nvm_normalize_version $VERSION) -ge $(nvm_normalize_version $MINIMAL) ]
+}
+
 nvm_ls() {
   local PATTERN=$1
   local VERSIONS=''
@@ -83,7 +98,7 @@ nvm_ls() {
   if [ `expr "$PATTERN" : "v[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*$"` != 0 ]; then
     VERSIONS="$PATTERN"
   else
-    VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "v$PATTERN*" -exec basename '{}' ';' \
+    VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "$(nvm_format_version $PATTERN)*" -exec basename '{}' ';' \
       | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
   fi
   if [ -z "$VERSIONS" ]; then
@@ -99,9 +114,7 @@ nvm_ls_remote() {
   local VERSIONS
   local GREP_OPTIONS=''
   if [ -n "$PATTERN" ]; then
-    if echo "${PATTERN}" | \grep -v '^v' ; then
-      PATTERN=v$PATTERN
-    fi
+    PATTERN=`nvm_format_version "$PATTERN"`
   else
     PATTERN=".*"
   fi
@@ -262,14 +275,7 @@ nvm() {
       if [ $nobinary -ne 1 ]; then
         # shortcut - try the binary if possible.
         if [ -n "$os" ]; then
-          binavail=
-          # binaries started with node 0.8.6
-          case "$VERSION" in
-            v0.8.[012345]) binavail=0 ;;
-            v0.[1234567].*) binavail=0 ;;
-            *) binavail=1 ;;
-          esac
-          if [ $binavail -eq 1 ]; then
+          if nvm_binary_available "$VERSION"; then
             t="$VERSION-$os-$arch"
             url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
             sum=`curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
@@ -346,12 +352,13 @@ nvm() {
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
-      if [ "$2" = `nvm_version` ]; then
-        echo "nvm: Cannot uninstall currently-active node version, $2."
+      PATTERN=`nvm_format_version $2`
+      if [[ $PATTERN == `nvm_version` ]]; then
+        echo "nvm: Cannot uninstall currently-active node version, $PATTERN."
         return 1
       fi
-      VERSION=`nvm_version $2`
-      if [ ! -d "$NVM_DIR/$VERSION" ]; then
+      VERSION=`nvm_version $PATTERN`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed..."
         return;
       fi
