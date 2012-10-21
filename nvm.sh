@@ -57,6 +57,22 @@ nvm_remote_version()
     fi
 }
 
+nvm_normalize_version()
+{
+  echo "$1" | sed -e 's/^v//' | awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }';
+}
+  
+nvm_binary_available()
+{
+  # binaries started with node 0.8.6
+  MINIMAL="0.8.6"
+  VERSION=$1
+  if [ $(nvm_normalize_version $VERSION) -ge $(nvm_normalize_version $MINIMAL) ]; then
+    echo "1"
+  fi
+  return
+}
+
 nvm_ls()
 {
     PATTERN=$1
@@ -175,14 +191,7 @@ nvm()
 
       # shortcut - try the binary if possible.
       if [ -n "$os" ]; then
-        binavail=
-        # binaries started with node 0.8.6
-        case "$VERSION" in
-          v0.8.[012345]) binavail=0 ;;
-          v0.[1234567]) binavail=0 ;;
-          *) binavail=1 ;;
-        esac
-        if [ $binavail -eq 1 ]; then
+        if [[ `nvm_binary_available "$VERSION"` -eq 1 ]]; then
           t="$VERSION-$os-$arch"
           url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
           if (
