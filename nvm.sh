@@ -1,3 +1,4 @@
+#!/bin/bash
 # Node Version Manager
 # Implemented as a bash function
 # To use source this file from your bash profile
