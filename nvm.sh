@@ -107,6 +107,17 @@ nvm_ls_remote()
     return
 }
 
+nvm_checksum()
+{
+    if [ "$1" = "$2" ]; then
+        return
+    else
+        echo 'Checksums do not match.'
+        return 1
+    fi
+}
+
+
 print_versions()
 {
     OUTPUT=''
@@ -186,10 +197,12 @@ nvm()
         if [ $binavail -eq 1 ]; then
           t="$VERSION-$os-$arch"
           url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
+          sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt.asc | grep node-${t}.tar.gz | awk '{print $1}'`
           if (
             mkdir -p "$NVM_DIR/bin/node-${t}" && \
             cd "$NVM_DIR/bin" && \
             curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
+            nvm_checksum `shasum node-${t}.tar.gz | awk '{print $1}'` $sum && \
             tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
             mv "node-${t}" "../$VERSION" && \
             rm -f "node-${t}.tar.gz"
@@ -207,8 +220,10 @@ nvm()
       echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
 
       tarball=''
+      sum=''
       if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
+        sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-$VERSION.tar.gz | awk '{print $1}'`
       elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
       fi
@@ -217,6 +232,7 @@ nvm()
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
         curl --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
+        if [ "$sum" = "" ]; then return 0; else nvm_checksum `shasum node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
