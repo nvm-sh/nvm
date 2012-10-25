@@ -423,4 +423,10 @@ nvm()
   esac
 }
 
+nvmsudo(){
+    PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+    PATH=$NVM_BIN:$PATH
+    sudo NVM_PATH=$NVM_PATH NVM_BIN=$NVM_BIN NVM_DIR=$NVM_DIR PATH=$PATH -- $@
+}
+
 nvm ls default &>/dev/null && nvm use default >/dev/null || true
