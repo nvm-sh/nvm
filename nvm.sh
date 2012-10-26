@@ -27,7 +27,7 @@ case "$uname" in
 esac
 case "$uname" in
   *x86_64*) arch=x64 ;;
-  *i686*) arch=x86 ;;
+  *i*86*) arch=x86 ;;
 esac
 
 # Expand a version using the version cache
