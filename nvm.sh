@@ -232,7 +232,7 @@ nvm()
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
         curl --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
-        if [ "$sum" = "" ]; then return 0; else nvm_checksum `shasum node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
+        if [ "$sum" = "" ]; then : ; else nvm_checksum `shasum node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
