@@ -97,7 +97,7 @@ nvm_ls_remote()
     fi
     VERSIONS=`curl -s http://nodejs.org/dist/ \
             | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
-            | grep -w "${PATTERN}" \
+            | grep --color=never -w "${PATTERN}" \
             | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
     if [ ! "$VERSIONS" ]; then
         echo "N/A"
