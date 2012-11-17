@@ -155,6 +155,7 @@ nvm()
       echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo "    nvm unalias <name>          Deletes the alias named <name>"
+      echo "    nvm npm <version> [<args>]  Run NPM within node <version> with <args> as arguments"
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
       echo
       echo "Example:"
@@ -349,6 +350,20 @@ nvm()
       fi
       echo "Running node $VERSION"
       $NVM_DIR/$VERSION/bin/node "${@:3}"
+    ;;
+    "npm" )
+      # run npm within the given version of node
+      if [ $# -lt 2 ]; then
+        nvm help
+        return
+      fi
+      VERSION=`nvm_version $2`
+      if [ ! -d $NVM_DIR/$VERSION ]; then
+        echo "$VERSION version is not installed yet"
+        return;
+      fi
+      echo "Running NPM within node $VERSION"
+      $NVM_DIR/$VERSION/bin/npm "${@:3}"
     ;;
     "ls" | "list" )
       print_versions "`nvm_ls $2`"
