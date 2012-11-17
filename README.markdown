@@ -44,6 +44,10 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
     nvm alias default 0.6
 
+To use NPM within the given node version:
+
+    nvm npm 0.6.14
+
 ## License
 
 Nvm is released under the MIT license.
