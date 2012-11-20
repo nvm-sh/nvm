@@ -16,24 +16,10 @@ if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
 
-# Try to figure out the os and arch for binary fetching
-uname="$(uname -a)"
-os=
-arch="$(uname -m)"
-case "$uname" in
-  Linux\ *) os=linux ;;
-  Darwin\ *) os=darwin ;;
-  SunOS\ *) os=sunos ;;
-esac
-case "$uname" in
-  *x86_64*) arch=x64 ;;
-  *i*86*) arch=x86 ;;
-esac
-
 # Expand a version using the version cache
 nvm_version()
 {
-    PATTERN=$1
+    local PATTERN=$1
     # The default version is the current one
     if [ ! "$PATTERN" ]; then
         PATTERN='current'
@@ -49,7 +35,7 @@ nvm_version()
 
 nvm_remote_version()
 {
-    PATTERN=$1
+    local PATTERN=$1
     VERSION=`nvm_ls_remote $PATTERN | tail -n1`
     echo "$VERSION"
 
@@ -60,8 +46,8 @@ nvm_remote_version()
 
 nvm_ls()
 {
-    PATTERN=$1
-    VERSIONS=''
+    local PATTERN=$1
+    local VERSIONS=''
     if [ "$PATTERN" = 'current' ]; then
         echo `node -v 2>/dev/null`
         return
@@ -87,7 +73,7 @@ nvm_ls()
 
 nvm_ls_remote()
 {
-    PATTERN=$1
+    local PATTERN=$1
     if [ "$PATTERN" ]; then
         if echo "${PATTERN}" | grep -v '^v' ; then
             PATTERN=v$PATTERN
@@ -95,10 +81,10 @@ nvm_ls_remote()
     else
         PATTERN=".*"
     fi
-    VERSIONS=`curl -s http://nodejs.org/dist/ \
-            | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
-            | grep -w "${PATTERN}" \
-            | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
+    local VERSIONS=`curl -s http://nodejs.org/dist/ \
+                  | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
+                  | grep -w "${PATTERN}" \
+                  | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
     if [ ! "$VERSIONS" ]; then
         echo "N/A"
         return
@@ -120,7 +106,8 @@ nvm_checksum()
 
 print_versions()
 {
-    OUTPUT=''
+    local OUTPUT=''
+    local PADDED_VERSION=''
     for VERSION in $1; do
         PADDED_VERSION=`printf '%10s' $VERSION`
         if [[ -d "$NVM_DIR/$VERSION" ]]; then
@@ -137,6 +124,25 @@ nvm()
     nvm help
     return
   fi
+
+  # Try to figure out the os and arch for binary fetching
+  local uname="$(uname -a)"
+  local os=
+  local arch="$(uname -m)"
+  case "$uname" in
+    Linux\ *) os=linux ;;
+    Darwin\ *) os=darwin ;;
+    SunOS\ *) os=sunos ;;
+  esac
+  case "$uname" in
+    *x86_64*) arch=x64 ;;
+    *i*86*) arch=x86 ;;
+  esac
+
+  # initialize local variables
+  local VERSION
+  local ADDITIONAL_PARAMETERS
+
   case $1 in
     "help" )
       echo
@@ -164,7 +170,15 @@ nvm()
       echo "    nvm alias default 0.4       Auto use the latest installed v0.4.x version"
       echo
     ;;
+
     "install" )
+      # initialize local variables
+      local binavail
+      local t
+      local url
+      local sum
+      local tarball
+
       if [ ! `which curl` ]; then
         echo 'NVM Needs curl to proceed.' >&2;
       fi
