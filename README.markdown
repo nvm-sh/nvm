@@ -4,7 +4,22 @@
 
 First you'll need to make sure your system has a c++ compiler.  For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
-To install create a folder somewhere in your filesystem with the "`nvm.sh`" file inside it.  I put mine in a folder called "`nvm`".
+### Install script
+
+To install you could use the [install script](https://github.com/creationix/nvm/blob/master/install.sh) (requires Git) using cURL:
+
+    curl https://raw.github.com/creationix/nvm/master/install.sh | sh
+
+or Wget:
+
+    wget -qO- https://raw.github.com/creationix/nvm/master/install.sh | sh
+
+<sub>The script clones the Nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile` or `~/.profile`).</sub>
+
+
+### Manual install
+
+For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it.  I put mine in a folder called `nvm`.
 
 Or if you have `git` installed, then just clone it:
 
@@ -14,7 +29,7 @@ To activate nvm, you need to source it from your bash shell
 
     . ~/nvm/nvm.sh
 
-I always add this line to my ~/.bashrc or ~/.profile file to have it automatically sources upon login.   
+I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically sources upon login.   
 Often I also put in a line to use a specific version of node.
     
 ## Usage
@@ -22,7 +37,6 @@ Often I also put in a line to use a specific version of node.
 To download, compile, and install the v0.6.14 release of node, do this:
 
     nvm install 0.6.14
-
 
 And then in any new shell just use the installed version:
 
