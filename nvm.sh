@@ -74,6 +74,7 @@ nvm_ls()
 nvm_ls_remote()
 {
     local PATTERN=$1
+    local VERSIONS
     if [ "$PATTERN" ]; then
         if echo "${PATTERN}" | grep -v '^v' ; then
             PATTERN=v$PATTERN
@@ -81,7 +82,7 @@ nvm_ls_remote()
     else
         PATTERN=".*"
     fi
-    local VERSIONS=`curl -s http://nodejs.org/dist/ \
+    VERSIONS=`curl -s http://nodejs.org/dist/ \
                   | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
                   | grep -w "${PATTERN}" \
                   | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
