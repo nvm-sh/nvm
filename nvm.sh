@@ -179,9 +179,14 @@ nvm()
       local url
       local sum
       local tarball
+      local shasum='shasum'
 
       if [ ! `which curl` ]; then
         echo 'NVM Needs curl to proceed.' >&2;
+      fi
+
+      if [ ! `which shasum > /dev/null 2>&1` ]; then
+        shasum='sha1sum'
       fi
 
       if [ $# -lt 2 ]; then
@@ -217,7 +222,7 @@ nvm()
             mkdir -p "$NVM_DIR/bin/node-${t}" && \
             cd "$NVM_DIR/bin" && \
             curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
-            nvm_checksum `shasum node-${t}.tar.gz | awk '{print $1}'` $sum && \
+            nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $sum && \
             tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
             mv "node-${t}" "../$VERSION" && \
             rm -f "node-${t}.tar.gz"
@@ -247,7 +252,7 @@ nvm()
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
         curl --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
-        if [ "$sum" = "" ]; then : ; else nvm_checksum `shasum node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
+        if [ "$sum" = "" ]; then : ; else nvm_checksum `${shasum} node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
