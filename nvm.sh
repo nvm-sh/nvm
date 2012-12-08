@@ -185,7 +185,7 @@ nvm()
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
-      if [ ! `which shasum > /dev/null 2>&1` ]; then
+      if [ -z "`which shasum`" ]; then
         shasum='sha1sum'
       fi
 
