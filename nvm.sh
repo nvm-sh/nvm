@@ -247,6 +247,9 @@ nvm()
       elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
       fi
+      # If python2 is available it should be used so that node compilation works on systems
+      # where python3 is the default python.
+      command -v python2 >/dev/null 2>&1 && export PATH=$NVM_DIR/bin:$PATH
       if (
         [ ! -z $tarball ] && \
         mkdir -p "$NVM_DIR/src" && \
