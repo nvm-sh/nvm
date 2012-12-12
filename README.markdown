@@ -29,7 +29,7 @@ To activate nvm, you need to source it from your bash shell
 
     . ~/nvm/nvm.sh
 
-I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically sources upon login.   
+I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically source upon login.   
 Often I also put in a line to use a specific version of node.
     
 ## Usage
