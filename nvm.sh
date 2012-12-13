@@ -61,6 +61,9 @@ nvm_ls()
     if [[ "$PATTERN" == v?*.?*.?* ]]; then
         VERSIONS="$PATTERN"
     else
+        if [[ "$PATTERN" == v* ]]; then
+            PATTERN=${PATTERN/v//}
+        fi
         VERSIONS=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 1.2,1n -k 2,2n -k 3,3n`
     fi
     if [ ! "$VERSIONS" ]; then
