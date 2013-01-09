@@ -171,21 +171,21 @@ nvm()
       echo "Node Version Manager"
       echo
       echo "Usage:"
-      echo "    nvm help                    Show this message"
-      echo "    nvm install <version>       Download and install a <version>"
-      echo "    nvm uninstall <version>     Uninstall a version"
-      echo "    nvm use <version>           Modify PATH to use <version>"
-      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
-      echo "    nvm ls                      List installed versions"
-      echo "    nvm ls <version>            List versions matching a given description"
-      echo "    nvm ls-remote               List remote versions available for install"
-      echo "    nvm deactivate              Undo effects of NVM on current shell"
-      echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
-      echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
-      echo "    nvm unalias <name>          Deletes the alias named <name>"
-      echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
-      echo "    nvm latest                  Show latest version"
-      echo "    nvm stable                  Show stable version"
+      echo "    nvm help                                Show this message"
+      echo "    nvm install <version|stable|latest>     Download and install a <version>"
+      echo "    nvm uninstall <version|stable|latest>   Uninstall a version"
+      echo "    nvm use <version>                       Modify PATH to use <version>"
+      echo "    nvm run <version> [<args>]              Run <version> with <args> as arguments"
+      echo "    nvm ls                                  List installed versions"
+      echo "    nvm ls <version>                        List versions matching a given description"
+      echo "    nvm ls-remote                           List remote versions available for install"
+      echo "    nvm deactivate                          Undo effects of NVM on current shell"
+      echo "    nvm alias [<pattern>]                   Show all aliases beginning with <pattern>"
+      echo "    nvm alias <name> <version>              Set an alias named <name> pointing to <version>"
+      echo "    nvm unalias <name>                      Deletes the alias named <name>"
+      echo "    nvm copy-packages <version>             Install global NPM packages contained in <version> to current version"
+      echo "    nvm latest                              Show latest version"
+      echo "    nvm stable                              Show stable version"
       echo
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
@@ -216,7 +216,18 @@ nvm()
         nvm help
         return
       fi
-      VERSION=`nvm_remote_version $2`
+      case "$2" in
+        "latest" )
+          latest_version=`display_latest_version`
+          VERSION=`nvm_remote_version $latest_version`
+        ;;
+        "stable" )
+          stable_version=`display_latest_stable_version`
+          VERSION=`nvm_remote_version $stable_version`
+        ;;
+        *) VERSION=`nvm_remote_version $2`
+        ;;
+      esac
       ADDITIONAL_PARAMETERS=''
       shift
       shift
@@ -309,7 +320,18 @@ nvm()
         echo "nvm: Cannot uninstall currently-active node version, $2."
         return
       fi
-      VERSION=`nvm_version $2`
+      case "$2" in
+        "latest" )
+          latest_version=`display_latest_version`
+          VERSION=`nvm_version $latest_version`
+        ;;
+        "stable" )
+          stable_version=`display_latest_stable_version`
+          VERSION=`nvm_version $stable_version`
+        ;;
+        *) VERSION=`nvm_version $2`
+        ;;
+      esac
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet... installing"
         nvm install $VERSION
