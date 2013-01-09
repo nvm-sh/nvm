@@ -104,6 +104,27 @@ nvm_checksum()
     fi
 }
 
+#
+# Display the latest node release version.
+#
+
+display_latest_version() {
+  curl -# -L 2> /dev/null http://nodejs.org/dist/ \
+    | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
+    | sort -u -k 1,1n -k 2,2n -k 3,3n -t . \
+    | tail -n1
+}
+
+#
+# Display the latest stable node release version.
+#
+
+display_latest_stable_version() {
+  curl -# -L 2> /dev/null http://nodejs.org/dist/ \
+    | egrep -o '[0-9]+\.\d*[02468]\.[0-9]+' \
+    | sort -u -k 1,1n -k 2,2n -k 3,3n -t . \
+    | tail -n1
+}
 
 print_versions()
 {
@@ -163,6 +184,8 @@ nvm()
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo "    nvm unalias <name>          Deletes the alias named <name>"
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
+      echo "    nvm latest                  Show latest version"
+      echo "    nvm stable                  Show stable version"
       echo
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
@@ -436,6 +459,12 @@ nvm()
     ;;
     "version" )
         print_versions "`nvm_version $2`"
+    ;;
+    "latest" )
+        display_latest_version
+    ;;
+    "stable" )
+        display_latest_stable_version
     ;;
     * )
       nvm help
