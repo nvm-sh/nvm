@@ -151,7 +151,7 @@ nvm()
       echo
       echo "Usage:"
       echo "    nvm help                    Show this message"
-      echo "    nvm install <version>       Download and install a <version>"
+      echo "    nvm install [-s] <version>  Download and install a <version>"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
@@ -180,6 +180,7 @@ nvm()
       local sum
       local tarball
       local shasum='shasum'
+      local nobinary
 
       if [ ! `which curl` ]; then
         echo 'NVM Needs curl to proceed.' >&2;
@@ -193,10 +194,20 @@ nvm()
         nvm help
         return
       fi
-      VERSION=`nvm_remote_version $2`
+
+      shift
+
+      nobinary=0
+      if [ "$1" = "-s" ]; then
+        nobinary=1
+        shift
+      fi
+
+      VERSION=`nvm_remote_version $1`
       ADDITIONAL_PARAMETERS=''
+
       shift
-      shift
+
       while [ $# -ne 0 ]
       do
         ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
@@ -205,34 +216,37 @@ nvm()
 
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
 
-      # shortcut - try the binary if possible.
-      if [ -n "$os" ]; then
-        binavail=
-        # binaries started with node 0.8.6
-        case "$VERSION" in
-          v0.8.[012345]) binavail=0 ;;
-          v0.[1234567]) binavail=0 ;;
-          *) binavail=1 ;;
-        esac
-        if [ $binavail -eq 1 ]; then
-          t="$VERSION-$os-$arch"
-          url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
-          sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt.asc | grep node-${t}.tar.gz | awk '{print $1}'`
-          if (
-            mkdir -p "$NVM_DIR/bin/node-${t}" && \
-            cd "$NVM_DIR/bin" && \
-            curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
-            nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $sum && \
-            tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
-            mv "node-${t}" "../$VERSION" && \
-            rm -f "node-${t}.tar.gz"
-            )
-          then
-            nvm use $VERSION
-            return;
-          else
-            echo "Binary download failed, trying source." >&2
-            cd "$NVM_DIR/bin" && rm -rf "node-${t}.tar.gz" "node-${t}"
+      # skip binary install if no binary option specified.
+      if [ $nobinary -ne 1 ]; then
+        # shortcut - try the binary if possible.
+        if [ -n "$os" ]; then
+          binavail=
+          # binaries started with node 0.8.6
+          case "$VERSION" in
+            v0.8.[012345]) binavail=0 ;;
+            v0.[1234567]) binavail=0 ;;
+            *) binavail=1 ;;
+          esac
+          if [ $binavail -eq 1 ]; then
+            t="$VERSION-$os-$arch"
+            url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
+            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt.asc | grep node-${t}.tar.gz | awk '{print $1}'`
+            if (
+              mkdir -p "$NVM_DIR/bin/node-${t}" && \
+              cd "$NVM_DIR/bin" && \
+              curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
+              nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $sum && \
+              tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
+              mv "node-${t}" "../$VERSION" && \
+              rm -f "node-${t}.tar.gz"
+              )
+            then
+              nvm use $VERSION
+              return;
+            else
+              echo "Binary download failed, trying source." >&2
+              cd "$NVM_DIR/bin" && rm -rf "node-${t}.tar.gz" "node-${t}"
+            fi
           fi
         fi
       fi
