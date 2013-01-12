@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+. ../../nvm.sh
+
+# Remove the stuff we're clobbering.
+[ -e ../../v0.8.6 ] && rm -R ../../v0.8.6
+
+# Install from source
+nvm install -s 0.8.6
+
+# Check
+[ -d ../../v0.8.6 ]
+nvm run v0.8.6 --version | grep v0.8.6
