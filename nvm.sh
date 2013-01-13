@@ -230,7 +230,7 @@ nvm()
           if [ $binavail -eq 1 ]; then
             t="$VERSION-$os-$arch"
             url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
-            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt.asc | grep node-${t}.tar.gz | awk '{print $1}'`
+            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
             if (
               mkdir -p "$NVM_DIR/bin/node-${t}" && \
               cd "$NVM_DIR/bin" && \
