@@ -351,7 +351,7 @@ nvm()
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet"
-        return;
+        exit 1
       fi
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
         PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$VERSION/bin${PATH#*$NVM_DIR/*/bin}
