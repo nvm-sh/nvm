@@ -16,6 +16,14 @@ if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
 
+# Obtain nvm version from rc file
+function rc_nvm_version {
+  if [ -e .nvmrc ]; then
+        RC_VERSION=`cat .nvmrc | head -n 1`
+    echo "Found .nvmrc files with version <$RC_VERSION>"
+  fi
+}
+
 # Expand a version using the version cache
 nvm_version()
 {
@@ -345,6 +353,18 @@ nvm()
     ;;
     "use" )
       if [ $# -ne 2 ]; then
+        nvm help
+        return
+      fi
+      if [ $# -eq 1 ]; then
+        rc_nvm_version
+        if [ ! -z $RC_VERSION ]; then
+            VERSION=`nvm_version $RC_VERSION`
+        fi
+      else
+        VERSION=`nvm_version $2`
+      fi
+      if [ -z $VERSION ]; then
         nvm help
         return
       fi
