@@ -1,8 +1,10 @@
 #!/bin/sh
 
+mkdir ../../v0.8.6
+
 . ../../nvm.sh
+
 nvm &&
-nvm install 0.8.6 &&
 nvm use 0.8.6 &&
 (echo $PATH | grep nvm)
 nvm deactivate &&
