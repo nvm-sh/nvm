@@ -352,7 +352,7 @@ nvm()
       fi
     ;;
     "use" )
-      if [ $# -ne 2 ]; then
+      if [ $# -eq 0 ]; then
         nvm help
         return
       fi
