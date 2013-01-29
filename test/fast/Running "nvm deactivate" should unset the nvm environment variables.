@@ -6,6 +6,6 @@ mkdir ../../v0.8.6
 
 nvm &&
 nvm use 0.8.6 &&
-(echo $PATH | grep nvm)
+(echo $PATH | grep nvm) &&
 nvm deactivate &&
 ! (echo $PATH | grep nvm)
