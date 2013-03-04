@@ -46,9 +46,13 @@ Or you can just run it:
 
     nvm run 0.8
 
-If you want to see what versions are available:
+If you want to see what versions are installed:
 
     nvm ls
+
+If you want to see what versions are available to install:
+
+    nvm ls-remote
 
 To restore your PATH, you can deactivate it.
 
