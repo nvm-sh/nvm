@@ -16,6 +16,14 @@ if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
 
+# Obtain nvm version from rc file
+function rc_nvm_version {
+  if [ -e .nvmrc ]; then
+        RC_VERSION=`cat .nvmrc | head -n 1`
+    echo "Found .nvmrc files with version <$RC_VERSION>"
+  fi
+}
+
 # Expand a version using the version cache
 nvm_version()
 {
@@ -74,6 +82,7 @@ nvm_ls()
 nvm_ls_remote()
 {
     local PATTERN=$1
+    local VERSIONS
     if [ "$PATTERN" ]; then
         if echo "${PATTERN}" | grep -v '^v' ; then
             PATTERN=v$PATTERN
@@ -81,7 +90,7 @@ nvm_ls_remote()
     else
         PATTERN=".*"
     fi
-    local VERSIONS=`curl -s http://nodejs.org/dist/ \
+    VERSIONS=`curl -s http://nodejs.org/dist/ \
                   | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
                   | grep -w "${PATTERN}" \
                   | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
@@ -150,7 +159,7 @@ nvm()
       echo
       echo "Usage:"
       echo "    nvm help                    Show this message"
-      echo "    nvm install <version>       Download and install a <version>"
+      echo "    nvm install [-s] <version>  Download and install a <version>"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
@@ -178,19 +187,35 @@ nvm()
       local url
       local sum
       local tarball
+      local shasum='shasum'
+      local nobinary
 
       if [ ! `which curl` ]; then
         echo 'NVM Needs curl to proceed.' >&2;
+      fi
+
+      if [ -z "`which shasum`" ]; then
+        shasum='sha1sum'
       fi
 
       if [ $# -lt 2 ]; then
         nvm help
         return
       fi
-      VERSION=`nvm_remote_version $2`
+
+      shift
+
+      nobinary=0
+      if [ "$1" = "-s" ]; then
+        nobinary=1
+        shift
+      fi
+
+      VERSION=`nvm_remote_version $1`
       ADDITIONAL_PARAMETERS=''
+
       shift
-      shift
+
       while [ $# -ne 0 ]
       do
         ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
@@ -199,34 +224,37 @@ nvm()
 
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
 
-      # shortcut - try the binary if possible.
-      if [ -n "$os" ]; then
-        binavail=
-        # binaries started with node 0.8.6
-        case "$VERSION" in
-          v0.8.[012345]) binavail=0 ;;
-          v0.[1234567]) binavail=0 ;;
-          *) binavail=1 ;;
-        esac
-        if [ $binavail -eq 1 ]; then
-          t="$VERSION-$os-$arch"
-          url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
-          sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt.asc | grep node-${t}.tar.gz | awk '{print $1}'`
-          if (
-            mkdir -p "$NVM_DIR/tmp/node-${t}" && \
-            cd "$NVM_DIR/tmp" && \
-            curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
-            nvm_checksum `shasum node-${t}.tar.gz | awk '{print $1}'` $sum && \
-            tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
-            mv "node-${t}" "../$VERSION" && \
-            rm -f "node-${t}.tar.gz"
-            )
-          then
-            nvm use $VERSION
-            return;
-          else
-            echo "Binary download failed, trying source." >&2
-            cd "$NVM_DIR/tmp" && rm -rf "node-${t}.tar.gz" "node-${t}"
+      # skip binary install if no binary option specified.
+      if [ $nobinary -ne 1 ]; then
+        # shortcut - try the binary if possible.
+        if [ -n "$os" ]; then
+          binavail=
+          # binaries started with node 0.8.6
+          case "$VERSION" in
+            v0.8.[012345]) binavail=0 ;;
+            v0.[1234567].*) binavail=0 ;;
+            *) binavail=1 ;;
+          esac
+          if [ $binavail -eq 1 ]; then
+            t="$VERSION-$os-$arch"
+            url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
+            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
+            if (
+              mkdir -p "$NVM_DIR/tmp/node-${t}" && \
+              cd "$NVM_DIR/tmp" && \
+              curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
+              nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $sum && \
+              tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
+              mv "node-${t}" "../$VERSION" && \
+              rm -f "node-${t}.tar.gz"
+              )
+            then
+              nvm use $VERSION
+              return;
+            else
+              echo "Binary download failed, trying source." >&2
+              cd "$NVM_DIR/tmp" && rm -rf "node-${t}.tar.gz" "node-${t}"
+            fi
           fi
         fi
       fi
@@ -246,7 +274,7 @@ nvm()
         mkdir -p "$NVM_DIR/src" && \
         cd "$NVM_DIR/src" && \
         curl --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
-        if [ "$sum" = "" ]; then : ; else nvm_checksum `shasum node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
+        if [ "$sum" = "" ]; then : ; else nvm_checksum `${shasum} node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
@@ -324,14 +352,26 @@ nvm()
       fi
     ;;
     "use" )
-      if [ $# -ne 2 ]; then
+      if [ $# -eq 0 ]; then
+        nvm help
+        return
+      fi
+      if [ $# -eq 1 ]; then
+        rc_nvm_version
+        if [ ! -z $RC_VERSION ]; then
+            VERSION=`nvm_version $RC_VERSION`
+        fi
+      else
+        VERSION=`nvm_version $2`
+      fi
+      if [ -z $VERSION ]; then
         nvm help
         return
       fi
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet"
-        return;
+        return 1
       fi
       if [[ $PATH == *$NVM_DIR/*/bin* ]]; then
         PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$VERSION/bin${PATH#*$NVM_DIR/*/bin}

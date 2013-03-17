@@ -4,7 +4,22 @@
 
 First you'll need to make sure your system has a c++ compiler.  For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
-To install create a folder somewhere in your filesystem with the "`nvm.sh`" file inside it.  I put mine in a folder called "`nvm`".
+### Install script
+
+To install you could use the [install script](https://github.com/creationix/nvm/blob/master/install.sh) (requires Git) using cURL:
+
+    curl https://raw.github.com/creationix/nvm/master/install.sh | sh
+
+or Wget:
+
+    wget -qO- https://raw.github.com/creationix/nvm/master/install.sh | sh
+
+<sub>The script clones the Nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile` or `~/.profile`).</sub>
+
+
+### Manual install
+
+For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it.  I put mine in a folder called `nvm`.
 
 Or if you have `git` installed, then just clone it:
 
@@ -14,27 +29,30 @@ To activate nvm, you need to source it from your bash shell
 
     . ~/nvm/nvm.sh
 
-I always add this line to my ~/.bashrc or ~/.profile file to have it automatically sources upon login.   
+I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically sourced upon login.   
 Often I also put in a line to use a specific version of node.
     
 ## Usage
 
-To download, compile, and install the v0.6.14 release of node, do this:
+To download, compile, and install the latest v0.8.x release of node, do this:
 
-    nvm install 0.6.14
-
+    nvm install 0.8
 
 And then in any new shell just use the installed version:
 
-    nvm use 0.6.14
+    nvm use 0.8
 
 Or you can just run it:
 
-    nvm run 0.6.14
+    nvm run 0.8
 
-If you want to see what versions are available:
+If you want to see what versions are installed:
 
     nvm ls
+
+If you want to see what versions are available to install:
+
+    nvm ls-remote
 
 To restore your PATH, you can deactivate it.
 
@@ -42,7 +60,7 @@ To restore your PATH, you can deactivate it.
 
 To set a default Node version to be used in any new shell, use the alias 'default':
 
-    nvm alias default 0.6
+    nvm alias default 0.8
 
 ## License
 
@@ -130,3 +148,6 @@ on Arch Linux and other systems using python3 by default, before running *instal
 
       export PYTHON=python2
 
+After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
+
+    nvm install -s 0.8.6
