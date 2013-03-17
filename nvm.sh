@@ -240,8 +240,8 @@ nvm()
             url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
             sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
             if (
-              mkdir -p "$NVM_DIR/bin/node-${t}" && \
-              cd "$NVM_DIR/bin" && \
+              mkdir -p "$NVM_DIR/tmp/node-${t}" && \
+              cd "$NVM_DIR/tmp" && \
               curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
               nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $sum && \
               tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
@@ -253,7 +253,7 @@ nvm()
               return;
             else
               echo "Binary download failed, trying source." >&2
-              cd "$NVM_DIR/bin" && rm -rf "node-${t}.tar.gz" "node-${t}"
+              cd "$NVM_DIR/tmp" && rm -rf "node-${t}.tar.gz" "node-${t}"
             fi
           fi
         fi
@@ -322,8 +322,8 @@ nvm()
           cd "$NVM_DIR/src" && \
           rm -rf "node-$VERSION" 2>/dev/null && \
           rm -f "node-$VERSION.tar.gz" 2>/dev/null && \
-          mkdir -p "$NVM_DIR/bin" && \
-          cd "$NVM_DIR/bin" && \
+          mkdir -p "$NVM_DIR/tmp" && \
+          cd "$NVM_DIR/tmp" && \
           rm -rf "node-${t}" 2>/dev/null && \
           rm -f "node-${t}.tar.gz" 2>/dev/null && \
           rm -rf "$NVM_DIR/$VERSION" 2>/dev/null)
@@ -441,6 +441,11 @@ nvm()
         echo "! WARNING: Version '$3' does not exist." >&2
       fi
       echo $3 > "$NVM_DIR/alias/$2"
+      if [ "$2" = "default" ]; then
+          ln -nfs $NVM_DIR/$3/bin $NVM_DIR/bin
+          mkdir -p $NVM_DIR/share
+          ln -nfs $NVM_DIR/$3/share/man $NVM_DIR/share/man
+      fi
       if [ ! "$3" = "$VERSION" ]; then
           echo "$2 -> $3 (-> $VERSION)"
       else
@@ -452,6 +457,10 @@ nvm()
       [ $# -ne 2 ] && nvm help && return
       [ ! -f $NVM_DIR/alias/$2 ] && echo "Alias $2 doesn't exist!" && return
       rm -f $NVM_DIR/alias/$2
+      if [ "$2" = "default" ]; then
+        [ -e $VNM_DIR/bin ] && rm $NVM_DIR/bin
+        [ -e $NVM_DIR/share/man ] && rm $NVM_DIR/share/man
+      fi
       echo "Deleted alias $2"
     ;;
     "copy-packages" )
