@@ -23,11 +23,11 @@ For manual install create a folder somewhere in your filesystem with the `nvm.sh
 
 Or if you have `git` installed, then just clone it:
 
-    git clone git://github.com/creationix/nvm.git ~/nvm
+    git clone git://github.com/creationix/nvm.git ~/.nvm
 
 To activate nvm, you need to source it from your bash shell
 
-    . ~/nvm/nvm.sh
+    source ~/.nvm/nvm.sh
 
 I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically sourced upon login.   
 Often I also put in a line to use a specific version of node.
