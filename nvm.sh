@@ -45,7 +45,9 @@ nvm_remote_version()
 {
     local PATTERN=$1
     VERSION=`nvm_ls_remote $PATTERN | tail -n1`
-    echo "$VERSION"
+    EV_VERSION="$VERSION"
+    SPLIT_VERSION=(${EV_VERSION//*:/})
+    echo ${SPLIT_VERSION}
 
     if [ "$VERSION" = 'N/A' ]; then
         return
@@ -239,11 +241,12 @@ nvm()
             t="$VERSION-$os-$arch"
             url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
             sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
+            split_sum=(${sum//*:/})
             if (
               mkdir -p "$NVM_DIR/bin/node-${t}" && \
               cd "$NVM_DIR/bin" && \
               curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
-              nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $sum && \
+              nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $split_sum && \
               tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
               mv "node-${t}" "../$VERSION" && \
               rm -f "node-${t}.tar.gz"
