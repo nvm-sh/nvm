@@ -339,7 +339,7 @@ nvm()
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
-      for A in `grep -l $VERSION $NVM_DIR/alias/*`
+      for A in `grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
       do
         nvm unalias `basename $A`
       done
