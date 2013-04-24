@@ -377,7 +377,9 @@ nvm()
         nvm help
         return
       fi
-      VERSION=`nvm_version $2`
+      if [ -z $VERSION ]; then
+        VERSION=`nvm_version $2`
+      fi
       if [ ! -d $NVM_DIR/$VERSION ]; then
         echo "$VERSION version is not installed yet"
         return 1
