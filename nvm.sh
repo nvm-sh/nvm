@@ -142,6 +142,7 @@ nvm()
     Linux\ *) os=linux ;;
     Darwin\ *) os=darwin ;;
     SunOS\ *) os=sunos ;;
+    FreeBSD\ *) os=freebsd ;;
   esac
   case "$uname" in
     *x86_64*) arch=x64 ;;
@@ -211,6 +212,10 @@ nvm()
         shift
       fi
 
+      if [ "$os" = "freebsd" ]; then
+	nobinary=1
+      fi
+
       VERSION=`nvm_remote_version $1`
       ADDITIONAL_PARAMETERS=''
 
@@ -263,6 +268,10 @@ nvm()
 
       tarball=''
       sum=''
+      make='make'
+      if [ "$os" = "freebsd" ]; then
+	make='gmake'
+      fi
       if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
         sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-$VERSION.tar.gz | awk '{print $1}'`
@@ -278,9 +287,9 @@ nvm()
         tar -xzf "node-$VERSION.tar.gz" && \
         cd "node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
-        make && \
+        $make && \
         rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
-        make install
+        $make install
         )
       then
         nvm use $VERSION
