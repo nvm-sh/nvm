@@ -473,7 +473,7 @@ nvm()
         VERSION=`nvm_version $2`
         ROOT=`nvm use $VERSION && npm -g root`
         INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | grep "$ROOT\/[^/]\+$" | cut -d '/' -f 8 | cut -d ":" -f 2 | grep -v npm | tr "\n" " "`
-	eval "npm install -g $INSTALLS"
+        eval "npm install -g $INSTALLS"
     ;;
     "clear-cache" )
         rm -f $NVM_DIR/v* 2>/dev/null
