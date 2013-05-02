@@ -9,10 +9,16 @@ if [ -d "$NVM_TARGET" ]; then
   exit
 fi
 
-# Cloning to $NVM_TARGET
-git clone git://github.com/creationix/nvm.git $NVM_TARGET
+# Allow for alternate NVM sources so we can use a local copy or a fork
+if [ ! -d "$NVM_GIT_SOURCE" ]; then
+   export NVM_GIT_SOURCE="git://github.com/creationix/nvm.git"
+fi
 
-echo 
+
+# Cloning to $NVM_TARGET
+git clone $NVM_GIT_SOURCE $NVM_TARGET
+
+echo
 
 # Detect profile file, .bash_profile has precedence over .profile
 if [ ! -z "$1" ]; then
@@ -28,7 +34,7 @@ fi
 SOURCE_STR="[[ -s "$NVM_TARGET/nvm.sh" ]] && . "$NVM_TARGET/nvm.sh"  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
-  if [ -z $PROFILE ]; then 
+  if [ -z $PROFILE ]; then
 	echo "=> Profile not found"
   else
 	echo "=> Profile $PROFILE not found"
@@ -36,7 +42,7 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   echo "=> Append the following line to the correct file yourself"
   echo
   echo -e "\t$SOURCE_STR"
-  echo  
+  echo
   echo "=> Close and reopen your terminal to start using NVM"
   exit
 fi
