@@ -10,6 +10,10 @@ if [ ! -d "$NVM_DIR" ]; then
     export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
 fi
 
+if [ ! -d "$NODEJS_MIRROR" ]; then
+   export NODEJS_MIRROR="http://nodejs.org/"
+fi
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
@@ -90,7 +94,7 @@ nvm_ls_remote()
     else
         PATTERN=".*"
     fi
-    VERSIONS=`curl -s http://nodejs.org/dist/ \
+    VERSIONS=`curl -s $NODEJS_MIRROR/dist/ \
                   | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
                   | grep -w "${PATTERN}" \
                   | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
@@ -242,8 +246,8 @@ nvm()
           esac
           if [ $binavail -eq 1 ]; then
             t="$VERSION-$os-$arch"
-            url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
-            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
+            url="$NODEJS_MIRROR/dist/$VERSION/node-${t}.tar.gz"
+            sum=`curl -s $NODEJS_MIRROR/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
             if (
               mkdir -p "$NVM_DIR/bin/node-${t}" && \
               cd "$NVM_DIR/bin" && \
@@ -272,11 +276,11 @@ nvm()
       if [ "$os" = "freebsd" ]; then
 	make='gmake'
       fi
-      if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
-        tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
-        sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-$VERSION.tar.gz | awk '{print $1}'`
-      elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
-        tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
+      if [ "`curl -Is "$NODEJS_MIRROR/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
+        tarball="$NODEJS_MIRROR/dist/$VERSION/node-$VERSION.tar.gz"
+        sum=`curl -s $NODEJS_MIRROR/dist/$VERSION/SHASUMS.txt | grep node-$VERSION.tar.gz | awk '{print $1}'`
+      elif [ "`curl -Is "$NODEJS_MIRROR/dist/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
+        tarball="$NODEJS_MIRROR/dist/node-$VERSION.tar.gz"
       fi
       if (
         [ ! -z $tarball ] && \
