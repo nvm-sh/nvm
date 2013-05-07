@@ -7,7 +7,7 @@
 
 # Auto detect the NVM_DIR
 if [ ! -d "$NVM_DIR" ]; then
-    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
+    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
 fi
 
 # Make zsh glob matching behave same as bash
@@ -15,6 +15,16 @@ fi
 if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
+
+function nvm_set_nullglob {
+  if type setopt > /dev/null 2>&1; then
+      # Zsh
+      setopt NULL_GLOB
+  else
+      # Bash
+      shopt -s nullglob
+  fi
+}
 
 # Obtain nvm version from rc file
 function rc_nvm_version {
@@ -69,7 +79,7 @@ nvm_ls()
     if [[ "$PATTERN" == v?*.?*.?* ]]; then
         VERSIONS="$PATTERN"
     else
-        VERSIONS=`(cd $NVM_DIR; \ls -d v${PATTERN}* 2>/dev/null) | sort -t. -k 1.2,1n -k 2,2n -k 3,3n`
+        VERSIONS=`nvm_set_nullglob; basename -a $NVM_DIR/v${PATTERN}* 2>/dev/null | sort -t. -k 1.2,1n -k 2,2n -k 3,3n`
     fi
     if [ ! "$VERSIONS" ]; then
         echo "N/A"
@@ -244,21 +254,22 @@ nvm()
             t="$VERSION-$os-$arch"
             url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
             sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
+            local tmpdir="$NVM_DIR/bin/node-${t}"
+            local tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
-              mkdir -p "$NVM_DIR/bin/node-${t}" && \
-              cd "$NVM_DIR/bin" && \
-              curl -C - --progress-bar $url -o "node-${t}.tar.gz" && \
-              nvm_checksum `${shasum} node-${t}.tar.gz | awk '{print $1}'` $sum && \
-              tar -xzf "node-${t}.tar.gz" -C "node-${t}" --strip-components 1 && \
-              mv "node-${t}" "../$VERSION" && \
-              rm -f "node-${t}.tar.gz"
+              mkdir -p "$tmpdir" && \
+              curl -C - --progress-bar $url -o "$tmptarball" && \
+              nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum && \
+              tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
+              mv "$tmpdir" "$NVM_DIR/$VERSION" && \
+              rm -f "$tmptarball"
               )
             then
               nvm use $VERSION
               return;
             else
               echo "Binary download failed, trying source." >&2
-              cd "$NVM_DIR/bin" && rm -rf "node-${t}.tar.gz" "node-${t}"
+              rm -rf "$tmptarball" "$tmpdir"
             fi
           fi
         fi
@@ -272,6 +283,8 @@ nvm()
       if [ "$os" = "freebsd" ]; then
 	make='gmake'
       fi
+      local tmpdir="$NVM_DIR/src"
+      local tmptarball="$tmpdir/node-$VERSION.tar.gz"
       if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
         sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-$VERSION.tar.gz | awk '{print $1}'`
@@ -280,12 +293,11 @@ nvm()
       fi
       if (
         [ ! -z $tarball ] && \
-        mkdir -p "$NVM_DIR/src" && \
-        cd "$NVM_DIR/src" && \
-        curl --progress-bar $tarball -o "node-$VERSION.tar.gz" && \
-        if [ "$sum" = "" ]; then : ; else nvm_checksum `${shasum} node-$VERSION.tar.gz | awk '{print $1}'` $sum; fi && \
-        tar -xzf "node-$VERSION.tar.gz" && \
-        cd "node-$VERSION" && \
+        mkdir -p "$tmpdir" && \
+        curl --progress-bar $tarball -o "$tmptarball" && \
+        if [ "$sum" = "" ]; then : ; else nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum; fi && \
+        tar -xzf "$tmptarball" -C "$tmpdir" && \
+        cd "$tmpdir/node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
         $make && \
         rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
@@ -327,19 +339,15 @@ nvm()
       t="$VERSION-$os-$arch"
 
       # Delete all files related to target version.
-      (mkdir -p "$NVM_DIR/src" && \
-          cd "$NVM_DIR/src" && \
-          rm -rf "node-$VERSION" 2>/dev/null && \
-          rm -f "node-$VERSION.tar.gz" 2>/dev/null && \
-          mkdir -p "$NVM_DIR/bin" && \
-          cd "$NVM_DIR/bin" && \
-          rm -rf "node-${t}" 2>/dev/null && \
-          rm -f "node-${t}.tar.gz" 2>/dev/null && \
-          rm -rf "$NVM_DIR/$VERSION" 2>/dev/null)
+      rm -rf "$NVM_DIR/src/node-$VERSION" \
+             "$NVM_DIR/src/node-$VERSION.tar.gz" \
+             "$NVM_DIR/bin/node-${t}" \
+             "$NVM_DIR/bin/node-${t}.tar.gz" \
+             "$NVM_DIR/$VERSION" 2>/dev/null
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
-      for A in `grep -l $VERSION $NVM_DIR/alias/*`
+      for A in `grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
       do
         nvm unalias `basename $A`
       done
@@ -430,15 +438,15 @@ nvm()
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
-        (cd $NVM_DIR/alias && for ALIAS in `\ls $2* 2>/dev/null`; do
+        for ALIAS in $(nvm_set_nullglob; echo $NVM_DIR/alias/$2* ); do
             DEST=`cat $ALIAS`
             VERSION=`nvm_version $DEST`
             if [ "$DEST" = "$VERSION" ]; then
-                echo "$ALIAS -> $DEST"
+                echo "$(basename $ALIAS) -> $DEST"
             else
-                echo "$ALIAS -> $DEST (-> $VERSION)"
+                echo "$(basename $ALIAS) -> $DEST (-> $VERSION)"
             fi
-        done)
+        done
         return
       fi
       if [ ! "$3" ]; then
