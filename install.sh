@@ -12,7 +12,7 @@ fi
 # Cloning to $NVM_TARGET
 git clone git://github.com/creationix/nvm.git $NVM_TARGET
 
-echo 
+echo
 
 # Detect profile file, .bash_profile has precedence over .profile
 if [ ! -z "$1" ]; then
@@ -28,7 +28,7 @@ fi
 SOURCE_STR="[[ -s "$NVM_TARGET/nvm.sh" ]] && . "$NVM_TARGET/nvm.sh"  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
-  if [ -z $PROFILE ]; then 
+  if [ -z $PROFILE ]; then
 	echo "=> Profile not found"
   else
 	echo "=> Profile $PROFILE not found"
@@ -36,13 +36,14 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   echo "=> Append the following line to the correct file yourself"
   echo
   echo -e "\t$SOURCE_STR"
-  echo  
+  echo
   echo "=> Close and reopen your terminal to start using NVM"
   exit
 fi
 
 if ! grep -qc 'nvm.sh' $PROFILE; then
   echo "=> Appending source string to $PROFILE"
+  echo -e "\n" >> "$PROFILE"
   echo $SOURCE_STR >> "$PROFILE"
 else
   echo "=> Source string already in $PROFILE"

@@ -6,3 +6,5 @@ alias
 # For testing
 bak
 .urchin.log
+
+.DS_Store
