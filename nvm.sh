@@ -157,6 +157,7 @@ nvm()
   case "$uname" in
     *x86_64*) arch=x64 ;;
     *i*86*) arch=x86 ;;
+    *armv6l*) arch=arm-pi;;
   esac
 
   # initialize local variables
