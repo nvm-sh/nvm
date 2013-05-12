@@ -116,6 +116,9 @@ nvm_checksum()
 {
     if [ "$1" = "$2" ]; then
         return
+    elif [[ "$VERSION" =~ ^v0\.10\.[0-5]$ && "$arch" == 'arm-pi' && "$binavail" == 1 ]]; then
+      echo 'Checksums matching failed but this failure will be ignored because no shasum is available for node v0.10.[0-5] for arm-pi'
+      return
     else
         echo 'Checksums do not match.'
         return 1
