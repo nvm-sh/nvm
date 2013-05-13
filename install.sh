@@ -35,7 +35,7 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   fi
   echo "=> Append the following line to the correct file yourself"
   echo
-  echo -e "\t$SOURCE_STR"
+  echo "\t$SOURCE_STR"
   echo
   echo "=> Close and reopen your terminal to start using NVM"
   exit
@@ -43,7 +43,7 @@ fi
 
 if ! grep -qc 'nvm.sh' $PROFILE; then
   echo "=> Appending source string to $PROFILE"
-  echo -e "\n" >> "$PROFILE"
+  echo "\n" >> "$PROFILE"
   echo $SOURCE_STR >> "$PROFILE"
 else
   echo "=> Source string already in $PROFILE"
