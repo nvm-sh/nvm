@@ -321,13 +321,14 @@ nvm()
         fi
       else
         echo "nvm: install $VERSION failed!"
+        return 1
       fi
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
       if [[ $2 == `nvm_version` ]]; then
         echo "nvm: Cannot uninstall currently-active node version, $2."
-        return
+        return 1
       fi
       VERSION=`nvm_version $2`
       if [ ! -d $NVM_DIR/$VERSION ]; then
