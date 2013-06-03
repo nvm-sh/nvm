@@ -134,7 +134,7 @@ print_versions()
         fi
         OUTPUT="$OUTPUT\n$PADDED_VERSION"
     done
-    echo -e "$OUTPUT" | column
+    echo -e "$OUTPUT"
 }
 
 nvm()
