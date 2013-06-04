@@ -10,7 +10,7 @@ if [ -d "$NVM_TARGET" ]; then
 fi
 
 # Cloning to $NVM_TARGET
-git clone git://github.com/creationix/nvm.git $NVM_TARGET
+git clone https://github.com/creationix/nvm.git $NVM_TARGET
 
 echo
 
