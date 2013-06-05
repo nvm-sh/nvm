@@ -10,7 +10,7 @@ if [ -d "$NVM_TARGET" ]; then
 fi
 
 # Allow for alternate NVM sources so we can use a local copy or a fork
-if [ ! -d "$NVM_GIT_SOURCE" ]; then
+if [ -z "$NVM_GIT_SOURCE" ]; then
    export NVM_GIT_SOURCE="git://github.com/creationix/nvm.git"
 fi
 

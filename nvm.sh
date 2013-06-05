@@ -10,7 +10,8 @@ if [ ! -d "$NVM_DIR" ]; then
     export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd)
 fi
 
-if [ ! -d "$NODEJS_MIRROR" ]; then
+# Check to see if a MIRROR was defined
+if [ -z "$NODEJS_MIRROR" ]; then
    export NODEJS_MIRROR="http://nodejs.org/"
 fi
 
