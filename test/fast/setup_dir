@@ -4,6 +4,9 @@
   cd ../..
 
   # Back up
+
+  type setopt >/dev/null 2>&1 && setopt NULL_GLOB
+  type shopt >/dev/null 2>&1 && shopt -s nullglob
   mkdir -p bak
   mv v* src alias bak || sleep 0s
 )
