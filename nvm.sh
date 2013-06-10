@@ -79,9 +79,7 @@ nvm_ls()
     if [[ "$PATTERN" == v?*.?*.?* ]]; then
         VERSIONS="$PATTERN"
     else
-        VERSIONS=`find $NVM_DIR -type d -name "v$PATTERN*" -print \
-                    | tr '\n' '\0' \
-                    | xargs -0 -n 1 basename 2>/dev/null \
+        VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "v$PATTERN*" -exec basename '{}' ';' \
                     | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
     fi
     if [ ! "$VERSIONS" ]; then
