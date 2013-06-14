@@ -1,16 +1,21 @@
 #!/bin/bash
 
+# an alternative URL that could be used: https://github.com/creationix/nvm/tarball/master
+TARBALL_URL="https://api.github.com/repos/creationix/nvm/tarball"
 NVM_TARGET="$HOME/.nvm"
 
 if [ -d "$NVM_TARGET" ]; then
   echo "=> NVM is already installed in $NVM_TARGET, trying to update"
-  echo -ne "\r=> "
-  cd $NVM_TARGET && git pull
-  exit
+  rm -rf "$NVM_TARGET"
 fi
 
-# Cloning to $NVM_TARGET
-git clone https://github.com/creationix/nvm.git $NVM_TARGET
+# Downloading to $NVM_TARGET
+mkdir "$NVM_TARGET"
+pushd "$NVM_TARGET" > /dev/null
+echo -ne "=> "
+curl --silent -L "$TARBALL_URL" | tar -xz --strip-components=1 || exit 1
+echo -n Downloaded
+popd > /dev/null
 
 echo
 
@@ -43,7 +48,7 @@ fi
 
 if ! grep -qc 'nvm.sh' $PROFILE; then
   echo "=> Appending source string to $PROFILE"
-  echo "\n" >> "$PROFILE"
+  echo "" >> "$PROFILE"
   echo $SOURCE_STR >> "$PROFILE"
 else
   echo "=> Source string already in $PROFILE"
