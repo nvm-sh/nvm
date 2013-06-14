@@ -1,16 +1,16 @@
 #!/bin/bash
 
-NVM_TARGET="$HOME/.nvm"
+NVM_DIR="$HOME/.nvm"
 
-if [ -d "$NVM_TARGET" ]; then
-  echo "=> NVM is already installed in $NVM_TARGET, trying to update"
+if [ -d "$NVM_DIR" ]; then
+  echo "=> NVM is already installed in $NVM_DIR, trying to update"
   echo -ne "\r=> "
-  cd $NVM_TARGET && git pull
+  cd $NVM_DIR && git pull
   exit
 fi
 
-# Cloning to $NVM_TARGET
-git clone https://github.com/creationix/nvm.git $NVM_TARGET
+# Cloning to $NVM_DIR
+git clone https://github.com/creationix/nvm.git $NVM_DIR
 
 echo
 
@@ -25,7 +25,7 @@ else
   fi
 fi
 
-SOURCE_STR="[[ -s "$NVM_TARGET/nvm.sh" ]] && . "$NVM_TARGET/nvm.sh"  # This loads NVM"
+SOURCE_STR="[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
