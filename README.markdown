@@ -23,7 +23,7 @@ For manual install create a folder somewhere in your filesystem with the `nvm.sh
 
 Or if you have `git` installed, then just clone it:
 
-    git clone git://github.com/creationix/nvm.git ~/nvm
+    git clone git://github.com/creationix/nvm.git ~/.nvm
 
 To activate nvm, you need to source it from your bash shell
 
@@ -136,7 +136,7 @@ nvm uninstall
 	
 ## Problems
 
-If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
+If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
     
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
@@ -151,3 +151,4 @@ on Arch Linux and other systems using python3 by default, before running *instal
 After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
 
     nvm install -s 0.8.6
+
