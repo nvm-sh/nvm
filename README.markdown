@@ -23,7 +23,7 @@ For manual install create a folder somewhere in your filesystem with the `nvm.sh
 
 Or if you have `git` installed, then just clone it:
 
-    git clone git://github.com/creationix/nvm.git ~/nvm
+    git clone git://github.com/creationix/nvm.git ~/.nvm
 
 To activate nvm, you need to source it from your bash shell
 
@@ -34,17 +34,17 @@ Often I also put in a line to use a specific version of node.
     
 ## Usage
 
-To download, compile, and install the latest v0.8.x release of node, do this:
+To download, compile, and install the latest v0.10.x release of node, do this:
 
-    nvm install 0.8
+    nvm install 0.10
 
 And then in any new shell just use the installed version:
 
-    nvm use 0.8
+    nvm use 0.10
 
 Or you can just run it:
 
-    nvm run 0.8
+    nvm run 0.10
 
 If you want to see what versions are installed:
 
@@ -60,14 +60,14 @@ To restore your PATH, you can deactivate it.
 
 To set a default Node version to be used in any new shell, use the alias 'default':
 
-    nvm alias default 0.8
+    nvm alias default 0.10
 
 ## License
 
 Nvm is released under the MIT license.
 
 
-Copyright (C) 2010-2012 Tim Caswell
+Copyright (C) 2010-2013 Tim Caswell
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -136,7 +136,7 @@ nvm uninstall
 	
 ## Problems
 
-If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
+If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
     
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
@@ -151,3 +151,4 @@ on Arch Linux and other systems using python3 by default, before running *instal
 After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
 
     nvm install -s 0.8.6
+
