@@ -117,6 +117,9 @@ nvm_checksum()
 {
     if [ "$1" = "$2" ]; then
         return
+    elif [[ "$arch" == 'arm-pi' && "$binavail" == 1 ]]; then
+      echo 'Checksums matching failed but this failure will be ignored because no shasum is available for node for arm-pi'
+      return
     else
         echo 'Checksums do not match.'
         return 1
@@ -158,6 +161,7 @@ nvm()
   case "$uname" in
     *x86_64*) arch=x64 ;;
     *i*86*) arch=x86 ;;
+    *armv6l*) arch=arm-pi;;
   esac
 
   # initialize local variables
