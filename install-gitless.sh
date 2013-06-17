@@ -1,23 +1,25 @@
 #!/bin/bash
 
-# an alternative URL that could be used: https://github.com/creationix/nvm/tarball/master
-TARBALL_URL="https://api.github.com/repos/creationix/nvm/tarball"
-NVM_TARGET="$HOME/.nvm"
+function fatalExit (){
+    echo "$@" && exit 1;
+}
 
-if [ -d "$NVM_TARGET" ]; then
-  echo "=> NVM is already installed in $NVM_TARGET, trying to update"
-  rm -rf "$NVM_TARGET"
+# an alternative URL that could be used: https://github.com/creationix/nvm/tarball/master
+if [ "$NVM_SOURCE" == "" ]; then
+    NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
 fi
 
-# Downloading to $NVM_TARGET
-mkdir "$NVM_TARGET"
-pushd "$NVM_TARGET" > /dev/null
-echo -ne "=> "
-curl --silent -L "$TARBALL_URL" | tar -xz --strip-components=1 || exit 1
-echo -n Downloaded
-popd > /dev/null
+if [ "$NVM_DIR" == "" ]; then
+    NVM_DIR="$HOME/.nvm"
+fi
 
-echo
+# Downloading to $NVM_DIR
+mkdir -p "$NVM_DIR"
+pushd "$NVM_DIR" > /dev/null
+echo -ne "=> Downloading... "
+curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed";
+echo "Downloaded"
+popd > /dev/null
 
 # Detect profile file, .bash_profile has precedence over .profile
 if [ ! -z "$1" ]; then
@@ -30,7 +32,7 @@ else
   fi
 fi
 
-SOURCE_STR="[[ -s "$NVM_TARGET/nvm.sh" ]] && . "$NVM_TARGET/nvm.sh"  # This loads NVM"
+SOURCE_STR="[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
