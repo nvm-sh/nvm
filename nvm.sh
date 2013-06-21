@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Node Version Manager
 # Implemented as a bash function
 # To use source this file from your bash profile
@@ -16,7 +18,8 @@ if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
 
-function nvm_set_nullglob {
+nvm_set_nullglob()
+{
   if type setopt > /dev/null 2>&1; then
       # Zsh
       setopt NULL_GLOB
@@ -27,7 +30,8 @@ function nvm_set_nullglob {
 }
 
 # Obtain nvm version from rc file
-function rc_nvm_version {
+rc_nvm_version()
+{
   if [ -e .nvmrc ]; then
         RC_VERSION=`cat .nvmrc | head -n 1`
     echo "Found .nvmrc files with version <$RC_VERSION>"
