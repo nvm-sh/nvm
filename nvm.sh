@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Node Version Manager
 # Implemented as a bash function
 # To use source this file from your bash profile
@@ -16,7 +18,7 @@ if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
 fi
 
-function nvm_set_nullglob {
+nvm_set_nullglob() {
   if type setopt > /dev/null 2>&1; then
       # Zsh
       setopt NULL_GLOB
@@ -27,7 +29,7 @@ function nvm_set_nullglob {
 }
 
 # Obtain nvm version from rc file
-function rc_nvm_version {
+rc_nvm_version() {
   if [ -e .nvmrc ]; then
         RC_VERSION=`cat .nvmrc | head -n 1`
     echo "Found .nvmrc files with version <$RC_VERSION>"
@@ -35,8 +37,7 @@ function rc_nvm_version {
 }
 
 # Expand a version using the version cache
-nvm_version()
-{
+nvm_version() {
     local PATTERN=$1
     # The default version is the current one
     if [ ! "$PATTERN" ]; then
@@ -51,8 +52,7 @@ nvm_version()
     fi
 }
 
-nvm_remote_version()
-{
+nvm_remote_version() {
     local PATTERN=$1
     VERSION=`nvm_ls_remote $PATTERN | tail -n1`
     echo "$VERSION"
@@ -62,8 +62,7 @@ nvm_remote_version()
     fi
 }
 
-nvm_ls()
-{
+nvm_ls() {
     local PATTERN=$1
     local VERSIONS=''
     if [ "$PATTERN" = 'current' ]; then
@@ -90,8 +89,7 @@ nvm_ls()
     return
 }
 
-nvm_ls_remote()
-{
+nvm_ls_remote() {
     local PATTERN=$1
     local VERSIONS
     if [ "$PATTERN" ]; then
@@ -113,8 +111,7 @@ nvm_ls_remote()
     return
 }
 
-nvm_checksum()
-{
+nvm_checksum() {
     if [ "$1" = "$2" ]; then
         return
     else
@@ -124,8 +121,7 @@ nvm_checksum()
 }
 
 
-print_versions()
-{
+print_versions() {
     local OUTPUT=''
     local PADDED_VERSION=''
     for VERSION in $1; do
@@ -138,8 +134,7 @@ print_versions()
     echo -e "$OUTPUT"
 }
 
-nvm()
-{
+nvm() {
   if [ $# -lt 1 ]; then
     nvm help
     return
