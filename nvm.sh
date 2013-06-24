@@ -114,6 +114,9 @@ nvm_ls_remote() {
 nvm_checksum() {
     if [ "$1" = "$2" ]; then
         return
+    elif [ -z $2 ]; then
+        echo 'Checksums empty' #missing in raspberry pi binary
+        return
     else
         echo 'Checksums do not match.'
         return 1
@@ -153,6 +156,7 @@ nvm() {
   case "$uname" in
     *x86_64*) arch=x64 ;;
     *i*86*) arch=x86 ;;
+    *armv6l*) arch=arm-pi ;;
   esac
 
   # initialize local variables
