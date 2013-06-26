@@ -93,15 +93,15 @@ nvm_ls_remote() {
     local PATTERN=$1
     local VERSIONS
     if [ "$PATTERN" ]; then
-        if echo "${PATTERN}" | grep -v '^v' ; then
+        if echo "${PATTERN}" | \grep -v '^v' ; then
             PATTERN=v$PATTERN
         fi
     else
         PATTERN=".*"
     fi
     VERSIONS=`curl -s http://nodejs.org/dist/ \
-                  | egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
-                  | grep -w "${PATTERN}" \
+                  | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
+                  | \grep -w "${PATTERN}" \
                   | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
     if [ ! "$VERSIONS" ]; then
         echo "N/A"
@@ -253,7 +253,7 @@ nvm() {
           if [ $binavail -eq 1 ]; then
             t="$VERSION-$os-$arch"
             url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
-            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-${t}.tar.gz | awk '{print $1}'`
+            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
             local tmpdir="$NVM_DIR/bin/node-${t}"
             local tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
@@ -285,10 +285,10 @@ nvm() {
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
+      if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
-        sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | grep node-$VERSION.tar.gz | awk '{print $1}'`
-      elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | grep '200 OK'`" != '' ]; then
+        sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-$VERSION.tar.gz | awk '{print $1}'`
+      elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
         tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
       fi
       if (
@@ -348,7 +348,7 @@ nvm() {
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
-      for A in `grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
+      for A in `\grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
       do
         nvm unalias `basename $A`
       done
@@ -481,7 +481,7 @@ nvm() {
         fi
         VERSION=`nvm_version $2`
         ROOT=`nvm use $VERSION && npm -g root`
-        INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | grep "$ROOT\/[^/]\+$" | cut -d '/' -f 8 | cut -d ":" -f 2 | grep -v npm | tr "\n" " "`
+        INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f 8 | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "`
         npm install -g $INSTALLS
     ;;
     "clear-cache" )
