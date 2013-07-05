@@ -1,6 +1,10 @@
 #!/bin/bash
 
-NVM_DIR="$HOME/.nvm"
+if [ `whoami` == 'root' ]; then
+  NVM_DIR="/usr/local/nvm"
+else
+  NVM_DIR="$HOME/.nvm"
+fi
 
 if [ -d "$NVM_DIR" ]; then
   echo "=> NVM is already installed in $NVM_DIR, trying to update"
@@ -15,7 +19,9 @@ git clone https://github.com/creationix/nvm.git $NVM_DIR
 echo
 
 # Detect profile file, .bash_profile has precedence over .profile
-if [ ! -z "$1" ]; then
+if [ `whoami` == 'root' ]; then
+  PROFILE="/etc/bash.bashrc
+elsif [ ! -z "$1" ]; then
   PROFILE="$1"
 else
   if [ -f "$HOME/.bash_profile" ]; then
