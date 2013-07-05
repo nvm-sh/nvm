@@ -20,7 +20,7 @@ echo
 
 # Detect profile file, .bash_profile has precedence over .profile
 if [ `whoami` == 'root' ]; then
-  PROFILE="/etc/bash.bashrc
+  PROFILE="/etc/bash.bashrc"
 elif [ ! -z "$1" ]; then
   PROFILE="$1"
 else
