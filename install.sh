@@ -33,6 +33,7 @@ fi
 
 # Set permissions for multi user environment
 if [ `whoami` == 'root' ]; then
+  mkdir -p $NVM_DIR/alias
   chmod -R u+rwX,g+rwX,o+rX $NVM_DIR
 fi
 
