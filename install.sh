@@ -31,6 +31,11 @@ else
   fi
 fi
 
+# Set permissions for multi user environment
+if [ `whoami` == 'root' ]; then
+  chmod -R u+rwX,g+rwX,o+rX $NVM_DIR
+fi
+
 SOURCE_STR="[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
