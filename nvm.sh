@@ -170,7 +170,8 @@ nvm() {
       echo
       echo "Usage:"
       echo "    nvm help                    Show this message"
-      echo "    nvm install [-s] <version>  Download and install a <version>"
+      echo "    nvm install [-s] [-b binary_tarball_url] [-u source_tarball_url] <version>"
+      echo "                                Download and install a <version>"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
@@ -216,14 +217,31 @@ nvm() {
 
       shift
 
+      # Initialize our own variables:
+      binary_url=""
+      source_url=""
       nobinary=0
-      if [ "$1" = "-s" ]; then
-        nobinary=1
-        shift
-      fi
+
+      OPTIND=1
+      while getopts "sb:u:" opt; do
+          case "$opt" in
+          s)  nobinary=1
+              ;;
+          b)  binary_url=$OPTARG
+              ;;
+          u)  source_url=$OPTARG
+              ;;
+          esac
+      done
+      shift $((OPTIND-1))
+      [ "$1" = "--" ] && shift
 
       if [ "$os" = "freebsd" ]; then
-	nobinary=1
+        nobinary=1
+      fi
+
+      if [ -z $binary_url ] && [ ! -z $source_url ]; then
+        nobinary=1
       fi
 
       VERSION=`nvm_remote_version $1`
@@ -250,16 +268,23 @@ nvm() {
             v0.[1234567].*) binavail=0 ;;
             *) binavail=1 ;;
           esac
-          if [ $binavail -eq 1 ]; then
-            t="$VERSION-$os-$arch"
-            url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
-            sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
+          if [ $binavail -eq 1 ] || [ ! -z $binary_url ]; then
+            if [ -z "$binary_url" ]; then
+              t="$VERSION-$os-$arch"
+              url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
+            else
+              url=$binary_url
+              echo "Fetching binary from $binary_url"
+            fi
+            if [ ! -z "$binary_url" ]; then
+              sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
+            fi
             local tmpdir="$NVM_DIR/bin/node-${t}"
             local tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
               mkdir -p "$tmpdir" && \
               curl -C - --progress-bar $url -o "$tmptarball" && \
-              nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum && \
+              if [ "$sum" = "" ]; then : ; else nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum; fi && \
               tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
               mv "$tmpdir" "$NVM_DIR/$VERSION" && \
               rm -f "$tmptarball"
@@ -267,6 +292,10 @@ nvm() {
             then
               nvm use $VERSION
               return;
+            elif [ -z "$source_url" ]; then
+              echo "Binary download failed, and no source URL provided.  Aborting."
+              echo "nvm: install $VERSION failed!"
+              return 1
             else
               echo "Binary download failed, trying source." >&2
               rm -rf "$tmptarball" "$tmpdir"
@@ -281,15 +310,25 @@ nvm() {
       sum=''
       make='make'
       if [ "$os" = "freebsd" ]; then
-	make='gmake'
+        make='gmake'
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
-        tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
-        sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-$VERSION.tar.gz | awk '{print $1}'`
-      elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
-        tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
+      if [ ! -z "$source_url" ]; then
+        if [ "`curl -Is "$source_url" | \grep '200 OK'`" != '' ]; then
+          echo "Fetching source from $source_url"
+          tarball=$source_url
+        else
+          echo "Could not find source tarball: $source_url"
+          return 1
+        fi
+      else
+        if [ "`curl -Is "http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
+          tarball="http://nodejs.org/dist/$VERSION/node-$VERSION.tar.gz"
+          sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-$VERSION.tar.gz | awk '{print $1}'`
+        elif [ "`curl -Is "http://nodejs.org/dist/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
+          tarball="http://nodejs.org/dist/node-$VERSION.tar.gz"
+        fi
       fi
       if (
         [ ! -z $tarball ] && \
