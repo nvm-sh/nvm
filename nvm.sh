@@ -201,7 +201,7 @@ nvm() {
       local shasum='shasum'
       local nobinary
 
-      if [ ! `which curl` ]; then
+      if [ ! `\which curl` ]; then
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
