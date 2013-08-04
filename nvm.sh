@@ -492,6 +492,9 @@ nvm() {
     "version" )
         print_versions "`nvm_version $2`"
     ;;
+    "update" )
+        curl https://raw.github.com/creationix/nvm/master/install.sh | sh
+    ;;
     * )
       nvm help
     ;;
