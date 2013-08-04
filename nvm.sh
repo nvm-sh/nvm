@@ -182,6 +182,7 @@ nvm() {
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo "    nvm unalias <name>          Deletes the alias named <name>"
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
+      echo "    nvm update                  Updates nvm itself to the latest version in Github"
       echo
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
