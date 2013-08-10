@@ -125,7 +125,15 @@ nvm_ls_remote() {
 }
 
 nvm_checksum() {
-  if [ "$1" = "$2" ]; then
+  if which shasum >/dev/null 2>&1; then
+    checksum=$(shasum $1 | awk '{print $1}')
+  elif which sha1 >/dev/null 2>&1; then
+    checksum=$(sha1 -q $1)
+  else
+    checksum=$(sha1sum $1 | awk '{print $1}')
+  fi
+
+  if [ "$checksum" = "$2" ]; then
     return
   elif [ -z $2 ]; then
     echo 'Checksums empty' #missing in raspberry pi binary
@@ -220,15 +228,10 @@ nvm() {
       local url
       local sum
       local tarball
-      local shasum='shasum'
       local nobinary
 
       if ! has "curl"; then
         echo 'NVM Needs curl to proceed.' >&2;
-      fi
-
-      if ! has "shasum"; then
-        shasum='sha1sum'
       fi
 
       if [ $# -lt 2 ]; then
@@ -283,7 +286,7 @@ nvm() {
             if (
               mkdir -p "$tmpdir" && \
               curl -L -C - --progress-bar $url -o "$tmptarball" && \
-              nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum && \
+              nvm_checksum "$tmptarball" $sum && \
               tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
               rm -f "$tmptarball" && \
               mv "$tmpdir" "$NVM_DIR/$VERSION"
@@ -319,7 +322,7 @@ nvm() {
         [ ! -z $tarball ] && \
         mkdir -p "$tmpdir" && \
         curl -L --progress-bar $tarball -o "$tmptarball" && \
-        if [ "$sum" = "" ]; then : ; else nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum; fi && \
+        nvm_checksum "$tmptarball" $sum && \
         tar -xzf "$tmptarball" -C "$tmpdir" && \
         cd "$tmpdir/node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
