@@ -23,7 +23,7 @@ For manual install create a folder somewhere in your filesystem with the `nvm.sh
 
 Or if you have `git` installed, then just clone it:
 
-    git clone git://github.com/creationix/nvm.git ~/.nvm
+    git clone https://github.com/creationix/nvm.git ~/.nvm
 
 To activate nvm, you need to source it from your bash shell
 
