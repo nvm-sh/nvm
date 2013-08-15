@@ -29,9 +29,9 @@ To activate nvm, you need to source it from your bash shell
 
     source ~/.nvm/nvm.sh
 
-I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically sourced upon login.   
+I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically sourced upon login.
 Often I also put in a line to use a specific version of node.
-    
+
 ## Usage
 
 To download, compile, and install the latest v0.10.x release of node, do this:
@@ -41,6 +41,10 @@ To download, compile, and install the latest v0.10.x release of node, do this:
 And then in any new shell just use the installed version:
 
     nvm use 0.10
+
+You can create an `.nmvrc` file containing version number in the project root folder; run the following command to switch versions:
+
+    nvm use
 
 Or you can just run it:
 
@@ -113,7 +117,7 @@ Put the above sourcing line just below the sourcing line for NVM in your profile
 nvm
 
 	$ nvm [tab][tab]
-	alias          copy-packages  help           list           run            uninstall      version        
+	alias          copy-packages  help           list           run            uninstall      version
 	clear-cache    deactivate     install        ls             unalias        use
 
 nvm alias
@@ -123,25 +127,25 @@ nvm alias
 
 	$ nvm alias my_alias [tab][tab]
 	v0.4.11        v0.4.12       v0.6.14
-	
+
 nvm use
 
 	$ nvm use [tab][tab]
 	my_alias        default        v0.4.11        v0.4.12       v0.6.14
-	
+
 nvm uninstall
 
 	$ nvm uninstall [tab][tab]
 	my_alias        default        v0.4.11        v0.4.12       v0.6.14
-	
+
 ## Problems
 
 If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
-    
+
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
 Where's my 'sudo node'? Checkout this link:
-    
+
 https://github.com/creationix/nvm/issues/43
 
 on Arch Linux and other systems using python3 by default, before running *install* you need to
