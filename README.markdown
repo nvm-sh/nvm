@@ -14,7 +14,7 @@ or Wget:
 
     wget -qO- https://raw.github.com/creationix/nvm/master/install.sh | sh
 
-<sub>The script clones the Nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile` or `~/.profile`).</sub>
+<sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile` or `~/.profile`).</sub>
 
 
 ### Manual install
@@ -68,7 +68,7 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
 ## License
 
-Nvm is released under the MIT license.
+nvm is released under the MIT license.
 
 
 Copyright (C) 2010-2013 Tim Caswell
