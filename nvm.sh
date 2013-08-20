@@ -258,7 +258,7 @@ nvm() {
             local tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
               mkdir -p "$tmpdir" && \
-              curl -C - --progress-bar $url -o "$tmptarball" && \
+              curl -L -C - --progress-bar $url -o "$tmptarball" && \
               nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum && \
               tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
               mv "$tmpdir" "$NVM_DIR/$VERSION" && \
@@ -294,7 +294,7 @@ nvm() {
       if (
         [ ! -z $tarball ] && \
         mkdir -p "$tmpdir" && \
-        curl --progress-bar $tarball -o "$tmptarball" && \
+        curl -L --progress-bar $tarball -o "$tmptarball" && \
         if [ "$sum" = "" ]; then : ; else nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum; fi && \
         tar -xzf "$tmptarball" -C "$tmpdir" && \
         cd "$tmpdir/node-$VERSION" && \
