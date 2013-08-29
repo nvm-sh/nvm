@@ -120,9 +120,9 @@ nvm_last_stable_version(){
   VERSION=`curl http://nodejs.org/dist/latest/ | grep -o 'node-v.*\"' -m 1 | grep -o 'v[0-9]*\.[0-9]*\.[0-9]*'`
   if [ ! "$VERSION" ]; then
     echo "N/A"
-    return
+  else
+    echo "$VERSION"
   fi
-  echo "$VERSION"
   return
 }
 
