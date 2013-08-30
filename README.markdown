@@ -42,6 +42,9 @@ And then in any new shell just use the installed version:
 
     nvm use 0.10
 
+To download latest stable release of node, do this:
+    nvm install stable
+
 You can create an `.nmvrc` file containing version number in the project root folder; run the following command to switch versions:
 
     nvm use

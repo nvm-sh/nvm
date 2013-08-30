@@ -54,7 +54,11 @@ nvm_version() {
 
 nvm_remote_version() {
     local PATTERN=$1
-    VERSION=`nvm_ls_remote $PATTERN | tail -n1`
+    if [[ $PATTERN == "stable" ]]; then
+      VERSION=`nvm_last_stable_version`
+    else
+      VERSION=`nvm_ls_remote $PATTERN | tail -n1`
+    fi
     echo "$VERSION"
 
     if [ "$VERSION" = 'N/A' ]; then
@@ -109,6 +113,17 @@ nvm_ls_remote() {
     fi
     echo "$VERSIONS"
     return
+}
+
+nvm_last_stable_version(){
+  local VERSION
+  VERSION=`curl http://nodejs.org/dist/latest/ | grep -o 'node-v.*\"' -m 1 | grep -o 'v[0-9]*\.[0-9]*\.[0-9]*'`
+  if [ ! "$VERSION" ]; then
+    echo "N/A"
+  else
+    echo "$VERSION"
+  fi
+  return
 }
 
 nvm_checksum() {
@@ -223,7 +238,7 @@ nvm() {
       fi
 
       if [ "$os" = "freebsd" ]; then
-	nobinary=1
+        nobinary=1
       fi
 
       VERSION=`nvm_remote_version $1`
@@ -281,7 +296,7 @@ nvm() {
       sum=''
       make='make'
       if [ "$os" = "freebsd" ]; then
-	make='gmake'
+        make='gmake'
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
