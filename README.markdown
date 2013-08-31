@@ -42,7 +42,7 @@ And then in any new shell just use the installed version:
 
     nvm use 0.10
 
-You can create an `.nmvrc` file containing version number in the project root folder; run the following command to switch versions:
+You can create an `.nvmrc` file containing version number in the project root folder; run the following command to switch versions:
 
     nvm use
 
