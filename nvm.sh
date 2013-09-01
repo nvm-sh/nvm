@@ -182,6 +182,7 @@ nvm() {
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo "    nvm unalias <name>          Deletes the alias named <name>"
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
+      echo "    nvm npmset <name>           Changes global npm prefix "
       echo
       echo "Example:"
       echo "    nvm install v0.4.12         Install a specific version number"
@@ -223,7 +224,7 @@ nvm() {
       fi
 
       if [ "$os" = "freebsd" ]; then
-	nobinary=1
+        nobinary=1
       fi
 
       VERSION=`nvm_remote_version $1`
@@ -281,7 +282,7 @@ nvm() {
       sum=''
       make='make'
       if [ "$os" = "freebsd" ]; then
-	make='gmake'
+        make='gmake'
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
@@ -483,6 +484,24 @@ nvm() {
         ROOT=`nvm use $VERSION && npm -g root`
         INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f 8 | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "`
         npm install -g $INSTALLS
+    ;;
+    "npmset" )
+      # [ $# -ne 2 ] && nvm help && return
+      VERSION=`nvm_version`
+      NPM_CONFIG_PREFIX=$NVM_DIR/npmset/$VERSION-$2
+      if [ -d "$NPM_CONFIG_PREFIX" ]; then
+        echo "Npmset changed to $2 for node version $VERSION"
+      else
+        mkdir -p $NPM_CONFIG_PREFIX
+        echo "Created new npmset $2 for node version $VERSION"      
+      fi
+      if [[ $PATH == *$NVM_DIR/npmset/*/bin* ]]; then
+        PATH=${PATH%$NVM_DIR/npmset/*/bin*}$NPM_CONFIG_PREFIX/bin${PATH#*$NVM_DIR/npmset/*/bin}
+      else
+        PATH="$NPM_CONFIG_PREFIX/bin:$PATH"
+      fi
+
+      npm config set prefix $NPM_CONFIG_PREFIX
     ;;
     "clear-cache" )
         rm -f $NVM_DIR/v* 2>/dev/null
