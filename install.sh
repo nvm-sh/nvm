@@ -1,6 +1,10 @@
 #!/bin/bash
 
-NVM_DIR="$HOME/.nvm"
+if [ `whoami` == 'root' ]; then
+  NVM_DIR="/usr/local/nvm"
+else
+  NVM_DIR="$HOME/.nvm"
+fi
 
 if [ -d "$NVM_DIR" ]; then
   echo "=> NVM is already installed in $NVM_DIR, trying to update"
@@ -14,7 +18,9 @@ fi
 echo
 
 # Detect profile file, .bash_profile has precedence over .profile
-if [ ! -z "$1" ]; then
+if [ `whoami` == 'root' ]; then
+  PROFILE="/etc/bash.bashrc"
+elif [ ! -z "$1" ]; then
   PROFILE="$1"
 else
   if [ -f "$HOME/.bash_profile" ]; then
@@ -22,6 +28,12 @@ else
   elif [ -f "$HOME/.profile" ]; then
 	PROFILE="$HOME/.profile"
   fi
+fi
+
+# Set permissions for multi user environment
+if [ `whoami` == 'root' ]; then
+  mkdir -p $NVM_DIR/alias
+  chmod -R u+rwX,g+rwX,o+rX $NVM_DIR
 fi
 
 SOURCE_STR="[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"  # This loads NVM"
