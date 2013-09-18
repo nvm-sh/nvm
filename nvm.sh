@@ -7,15 +7,16 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
-# Auto detect the NVM_DIR
-if [ ! -d "$NVM_DIR" ]; then
-    export NVM_DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
-fi
-
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
     unsetopt nomatch 2>/dev/null
+    NVM_CD_FLAGS="-q"
+fi
+
+# Auto detect the NVM_DIR
+if [ ! -d "$NVM_DIR" ]; then
+    export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
 fi
 
 nvm_set_nullglob() {
