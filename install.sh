@@ -2,6 +2,12 @@
 
 NVM_DIR="$HOME/.nvm"
 
+if ! hash git 2>/dev/null; then
+  echo >&2 "You need to install git."
+  echo >&2 "Visit http://git-scm.com/downloads"
+  exit 1
+fi
+
 if [ -d "$NVM_DIR" ]; then
   echo "=> NVM is already installed in $NVM_DIR, trying to update"
   echo -ne "\r=> "
