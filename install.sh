@@ -23,7 +23,9 @@ echo
 if [ ! -z "$1" ]; then
   PROFILE="$1"
 else
-  if [ -f "$HOME/.bash_profile" ]; then
+  if [ -f "$HOME/.bashrc" ]; then
+	PROFILE="$HOME/.bashrc"
+  elif [ -f "$HOME/.bash_profile" ]; then
 	PROFILE="$HOME/.bash_profile"
   elif [ -f "$HOME/.profile" ]; then
 	PROFILE="$HOME/.profile"
