@@ -262,8 +262,8 @@ nvm() {
               curl -L -C - --progress-bar $url -o "$tmptarball" && \
               nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum && \
               tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
-              mv "$tmpdir" "$NVM_DIR/$VERSION" && \
-              rm -f "$tmptarball"
+              rm "$tmptarball" && \
+              mv "$tmpdir" "$NVM_DIR/$VERSION"
               )
             then
               nvm use $VERSION
