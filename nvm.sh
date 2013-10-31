@@ -325,7 +325,7 @@ nvm() {
         return 1
       fi
     ;;
-    "uninstall" )
+    "uninstall" | "rm" )
       [ $# -ne 2 ] && nvm help && return
       if [[ $2 == `nvm_version` ]]; then
         echo "nvm: Cannot uninstall currently-active node version, $2."
