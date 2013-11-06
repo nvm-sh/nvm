@@ -124,6 +124,13 @@ nvm_checksum() {
     fi
 }
 
+nvm_update_symlink() {
+    # execute only when a symlink is defined
+    if [ -f $NVM_DIR/symlink ]; then
+        ln -s $(echo $NVM_DIR/v`cat $NVM_DIR/alias/default`) $(echo `cat $NVM_DIR/symlink`)
+    fi
+}
+
 
 print_versions() {
     local OUTPUT=''
@@ -182,6 +189,7 @@ nvm() {
       echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo "    nvm unalias <name>          Deletes the alias named <name>"
+      echo "    nvm symlink <path>          Define a symlink option to use with more available runtime references"
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
       echo
       echo "Example:"
@@ -224,7 +232,7 @@ nvm() {
       fi
 
       if [ "$os" = "freebsd" ]; then
-	nobinary=1
+        nobinary=1
       fi
 
       VERSION=`nvm_remote_version $1`
@@ -282,7 +290,7 @@ nvm() {
       sum=''
       make='make'
       if [ "$os" = "freebsd" ]; then
-	make='gmake'
+        make='gmake'
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
@@ -466,6 +474,7 @@ nvm() {
       else
         echo "$2 -> $3"
       fi
+      nvm_update_symlink
     ;;
     "unalias" )
       mkdir -p $NVM_DIR/alias
@@ -473,6 +482,13 @@ nvm() {
       [ ! -f $NVM_DIR/alias/$2 ] && echo "Alias $2 doesn't exist!" && return
       rm -f $NVM_DIR/alias/$2
       echo "Deleted alias $2"
+      nvm_update_symlink
+    ;;
+    "symlink" )
+      [ $# -ne 2 ] && nvm help && return
+      # store as default symlink ment for the updating mechanism
+      echo $2 > $NVM_DIR/symlink
+      nvm_update_symlink
     ;;
     "copy-packages" )
         if [ $# -ne 2 ]; then
