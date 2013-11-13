@@ -127,7 +127,10 @@ nvm_checksum() {
 nvm_update_symlink() {
     # execute only when a symlink is defined
     if [ -f $NVM_DIR/symlink ]; then
-        ln -s $(echo $NVM_DIR/v`cat $NVM_DIR/alias/default`) $(echo `cat $NVM_DIR/symlink`)
+        if [ -d `cat $NVM_DIR/symlink` ]; then
+            rm `cat $NVM_DIR/symlink`
+        fi
+        ln -sf $(echo $NVM_DIR/`cat $NVM_DIR/alias/default`) $(echo `cat $NVM_DIR/symlink`)
     fi
 }
 
