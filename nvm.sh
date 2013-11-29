@@ -206,7 +206,7 @@ nvm() {
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
-      if [ -z "`which shasum`" ]; then
+      if [ ! `\which shasum` ]; then
         shasum='sha1sum'
       fi
 
