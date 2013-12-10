@@ -38,7 +38,7 @@ SOURCE_STR="[ -s \$HOME/.nvm/nvm.sh ] && . \$HOME/.nvm/nvm.sh  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
-	echo "=> Profile not found. Tried $HOME/.bash_profile, $HOME/.bashrc and $HOME/.profile"
+	echo "=> Profile not found. Tried $HOME/.bash_profile, $HOME/.bashrc, and $HOME/.profile"
   else
 	echo "=> Profile $PROFILE not found"
   fi
