@@ -7,9 +7,14 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
+has() {
+  type "$1" > /dev/null 2>&1
+  return $?
+}
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
-if type "unsetopt" > /dev/null 2>&1; then
+if has "unsetopt"; then
     unsetopt nomatch 2>/dev/null
     NVM_CD_FLAGS="-q"
 fi
@@ -20,7 +25,7 @@ if [ ! -d "$NVM_DIR" ]; then
 fi
 
 nvm_set_nullglob() {
-  if type setopt > /dev/null 2>&1; then
+  if has "setopt"; then
       # Zsh
       setopt NULL_GLOB
   else
@@ -202,11 +207,11 @@ nvm() {
       local shasum='shasum'
       local nobinary
 
-      if [ ! `\which curl` ]; then
+      if ! has "curl"; then
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
-      if [ ! `\which shasum` ]; then
+      if ! has "shasum"; then
         shasum='sha1sum'
       fi
 
@@ -306,7 +311,7 @@ nvm() {
         )
       then
         nvm use $VERSION
-        if ! which npm ; then
+        if ! has "npm" ; then
           echo "Installing npm..."
           if [[ "`expr match $VERSION '\(^v0\.1\.\)'`" != '' ]]; then
             echo "npm requires node v0.2.3 or higher"
