@@ -9,7 +9,7 @@
 
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
-if type "unsetopt" > /dev/null; then
+if type "unsetopt" 2&>1 > /dev/null; then
     unsetopt nomatch 2>/dev/null
     NVM_CD_FLAGS="-q"
 fi
