@@ -484,9 +484,10 @@ nvm() {
           nvm help
           return
         fi
-        VERSION=`nvm_version $2`
-        ROOT=`nvm use $VERSION && npm -g root`
-        INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f 8 | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "`
+        local VERSION=`nvm_version $2`
+        local ROOT=`nvm use $VERSION && npm -g root`
+        local ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
+        local INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f $(($ROOTDEPTH + 2)) | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "`
         npm install -g $INSTALLS
     ;;
     "clear-cache" )
