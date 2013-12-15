@@ -1,6 +1,14 @@
 #!/bin/bash
 
-NVM_DIR="$HOME/.nvm"
+set -e
+
+if [ ! "$NVM_SOURCE" ]; then
+  NVM_SOURCE="https://github.com/creationix/nvm.git"
+fi
+
+if [ ! "$NVM_DIR" ]; then
+  NVM_DIR="$HOME/.nvm"
+fi
 
 if ! hash git 2>/dev/null; then
   echo >&2 "You need to install git - visit http://git-scm.com/downloads"
@@ -11,55 +19,52 @@ fi
 if [ -d "$NVM_DIR" ]; then
   echo "=> NVM is already installed in $NVM_DIR, trying to update"
   echo -ne "\r=> "
-  cd $NVM_DIR && git pull
+  pushd "$NVM_DIR" > /dev/null
+  git pull --no-rebase origin master --quiet
+  popd > /dev/null
 else
   # Cloning to $NVM_DIR
-  git clone https://github.com/creationix/nvm.git $NVM_DIR  
+  mkdir -p "$NVM_DIR"
+  git clone "$NVM_SOURCE" "$NVM_DIR"
 fi
 
 echo
 
-# Detect profile file, .bash_profile has precedence over .profile
-if [ ! -z "$1" ]; then
-  PROFILE="$1"
-else
+# Detect profile file if not specified as environment variable (eg: NVM_PROFILE=~/.myprofile).
+if [ ! "$NVM_PROFILE" ]; then
   if [ -f "$HOME/.bash_profile" ]; then
-	PROFILE="$HOME/.bash_profile"
+    NVM_PROFILE="$HOME/.bash_profile"
   elif [ -f "$HOME/.zshrc" ]; then
-  	PROFILE="$HOME/.zshrc"
+    NVM_PROFILE="$HOME/.zshrc"
   elif [ -f "$HOME/.profile" ]; then
-	PROFILE="$HOME/.profile"
+    NVM_PROFILE="$HOME/.profile"
   fi
 fi
 
-SOURCE_STR="[ -s \$HOME/.nvm/nvm.sh ] && . \$HOME/.nvm/nvm.sh  # This loads NVM"
+SOURCE_STR="[ -s $NVM_DIR/nvm.sh ] && . $NVM_DIR/nvm.sh  # This loads NVM"
 
-if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
-  if [ -z $PROFILE ]; then
-	echo "=> Profile not found. Tried $HOME/.bash_profile and $HOME/.profile"
+if [ -z "$NVM_PROFILE" ] || [ ! -f "$NVM_PROFILE" ] ; then
+  if [ -z $NVM_PROFILE ]; then
+    echo "=> Profile not found. Tried ~/.bash_profile ~/.zshrc and ~/.profile."
+    echo "=> Create one of them and run this script again"
   else
-	echo "=> Profile $PROFILE not found"
+    echo "=> Profile $NVM_PROFILE not found"
+    echo "=> Create it (touch $NVM_PROFILE) and run this script again"
   fi
-  echo "=> Run this script again after running the following:"
+  echo "   OR"
+  echo "=> Append the following line to the correct file yourself:"
   echo
-  echo "\ttouch $HOME/.profile"
+  echo -ne "\t$SOURCE_STR"
   echo
-  echo "-- OR --"
   echo
-  echo "=> Append the following line to the correct file yourself"
-  echo
-  echo "\t$SOURCE_STR"
-  echo
-  echo "=> Close and reopen your terminal afterwards to start using NVM"
-  exit
-fi
-
-if ! grep -qc 'nvm.sh' $PROFILE; then
-  echo "=> Appending source string to $PROFILE"
-  echo "" >> "$PROFILE"
-  echo $SOURCE_STR >> "$PROFILE"
 else
-  echo "=> Source string already in $PROFILE"
+  if ! grep -qc 'nvm.sh' $NVM_PROFILE; then
+    echo "=> Appending source string to $NVM_PROFILE"
+    echo "" >> "$NVM_PROFILE"
+    echo $SOURCE_STR >> "$NVM_PROFILE"
+  else
+    echo "=> Source string already in $NVM_PROFILE"
+  fi
 fi
 
-echo "=> Close and reopen your terminal to start using NVM"
+echo "=> Close and reopen your terminal afterwards to start using NVM"
