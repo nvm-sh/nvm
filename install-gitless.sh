@@ -2,7 +2,7 @@
 
 set -e
 
-function fatalExit (){
+fatalExit(){
   echo "$@" && exit 1;
 }
 
@@ -16,11 +16,11 @@ fi
 
 # Downloading to $NVM_DIR
 mkdir -p "$NVM_DIR"
-pushd "$NVM_DIR" > /dev/null
-echo -ne "=> Downloading... "
-curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed downloading $NVM_SOURCE"
+echo -ne "\r=> Downloading... \c"
+curl --silent "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || fatalExit "Failed downloading $NVM_SOURCE"
 echo "Downloaded"
-popd > /dev/null
+
+echo
 
 # Detect profile file if not specified as environment variable (eg: NVM_PROFILE=~/.myprofile).
 if [ ! "$NVM_PROFILE" ]; then
@@ -46,7 +46,7 @@ if [ -z "$NVM_PROFILE" ] || [ ! -f "$NVM_PROFILE" ] ; then
   echo "   OR"
   echo "=> Append the following line to the correct file yourself:"
   echo
-  echo -ne "\t$SOURCE_STR"
+  echo "   $SOURCE_STR"
   echo
 else
   if ! grep -qc 'nvm.sh' $NVM_PROFILE; then
@@ -58,4 +58,5 @@ else
   fi
 fi
 
+echo
 echo "=> Close and reopen your terminal afterwards to start using NVM"

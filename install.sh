@@ -18,10 +18,8 @@ fi
 
 if [ -d "$NVM_DIR" ]; then
   echo "=> NVM is already installed in $NVM_DIR, trying to update"
-  echo -ne "\r=> "
-  pushd "$NVM_DIR" > /dev/null
-  git pull --no-rebase origin master --quiet
-  popd > /dev/null
+  echo -e "\r=> \c"
+  (cd "$NVM_DIR" && git pull --no-rebase origin master --quiet)
 else
   # Cloning to $NVM_DIR
   mkdir -p "$NVM_DIR"
@@ -54,8 +52,7 @@ if [ -z "$NVM_PROFILE" ] || [ ! -f "$NVM_PROFILE" ] ; then
   echo "   OR"
   echo "=> Append the following line to the correct file yourself:"
   echo
-  echo -ne "\t$SOURCE_STR"
-  echo
+  echo "   $SOURCE_STR"
   echo
 else
   if ! grep -qc 'nvm.sh' $NVM_PROFILE; then
@@ -67,4 +64,5 @@ else
   fi
 fi
 
+echo
 echo "=> Close and reopen your terminal afterwards to start using NVM"
