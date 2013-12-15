@@ -176,7 +176,7 @@ nvm() {
       echo
       echo "Usage:"
       echo "    nvm help                    Show this message"
-      echo "    nvm install [-s] <version>  Download and install a <version>"
+      echo "    nvm install [-s] <version>  Download and install a <version>, [-s] from source"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
@@ -190,10 +190,13 @@ nvm() {
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
       echo
       echo "Example:"
-      echo "    nvm install v0.4.12         Install a specific version number"
-      echo "    nvm use 0.2                 Use the latest available 0.2.x release"
-      echo "    nvm run 0.4.12 myApp.js     Run myApp.js using node v0.4.12"
-      echo "    nvm alias default 0.4       Auto use the latest installed v0.4.x version"
+      echo "    nvm install v0.10.23         Install a specific version number"
+      echo "    nvm use v0.10.23             Use the latest available v0.10.23 release"
+      echo "    nvm run v0.10.23 myApp.js    Run myApp.js using node v0.10.23"
+      echo "    nvm alias default v0.10.23   Version node will be use on login shell by default"
+      echo
+      echo "Note:"
+      echo "    to remove, delete or uninstall nvm - just remove ~/.nvm, ~/.npm, ~/.bower folders"
       echo
     ;;
 
