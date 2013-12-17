@@ -80,26 +80,24 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Running tests
-Tests are written in [Urchin](https://github.com/scraperwiki/urchin). Install Urchin like so.
+Tests are written in [Urchin](https://github.com/scraperwiki/urchin). Install Urchin (and other dependencies) like so:
 
-    npm install -g urchin
-
-(Or put it some other place in your PATH.)
+    npm install
 
 There are slow tests and fast tests. The slow tests do things like install node
 and check that the right versions are used. The fast tests fake this to test
 things like aliases and uninstalling. From the root of the nvm git repository,
 run the fast tests like this.
 
-    urchin test/fast
+    npm run test/fast
 
 Run the slow tests like this.
 
-    urchin test/slow
+    npm run test/slow
 
 Run all of the tests like this
 
-    urchin test
+    npm test
 
 Nota bene: Avoid running nvm while the tests are running.
 
