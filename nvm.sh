@@ -7,9 +7,14 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
+has() {
+  type "$1" > /dev/null 2>&1
+  return $?
+}
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
-if [ ! -z "$(which unsetopt 2>/dev/null)" ]; then
+if has "unsetopt"; then
     unsetopt nomatch 2>/dev/null
     NVM_CD_FLAGS="-q"
 fi
@@ -20,7 +25,7 @@ if [ ! -d "$NVM_DIR" ]; then
 fi
 
 nvm_set_nullglob() {
-  if type setopt > /dev/null 2>&1; then
+  if has "setopt"; then
       # Zsh
       setopt NULL_GLOB
   else
@@ -202,11 +207,11 @@ nvm() {
       local shasum='shasum'
       local nobinary
 
-      if [ ! `\which curl` ]; then
+      if ! has "curl"; then
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
-      if [ -z "`which shasum`" ]; then
+      if ! has "shasum"; then
         shasum='sha1sum'
       fi
 
@@ -262,8 +267,8 @@ nvm() {
               curl -L -C - --progress-bar $url -o "$tmptarball" && \
               nvm_checksum `${shasum} "$tmptarball" | awk '{print $1}'` $sum && \
               tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
-              mv "$tmpdir" "$NVM_DIR/$VERSION" && \
-              rm -f "$tmptarball"
+              rm -f "$tmptarball" && \
+              mv "$tmpdir" "$NVM_DIR/$VERSION"
               )
             then
               nvm use $VERSION
@@ -306,7 +311,7 @@ nvm() {
         )
       then
         nvm use $VERSION
-        if ! which npm ; then
+        if ! has "npm" ; then
           echo "Installing npm..."
           if [[ "`expr match $VERSION '\(^v0\.1\.\)'`" != '' ]]; then
             echo "npm requires node v0.2.3 or higher"
@@ -389,7 +394,7 @@ nvm() {
       if [ -z $VERSION ]; then
         VERSION=`nvm_version $2`
       fi
-      if [ ! -d $NVM_DIR/$VERSION ]; then
+      if [ ! -d "$NVM_DIR/$VERSION" ]; then
         echo "$VERSION version is not installed yet"
         return 1
       fi
@@ -482,10 +487,11 @@ nvm() {
           nvm help
           return
         fi
-        VERSION=`nvm_version $2`
-        ROOT=`nvm use $VERSION && npm -g root`
-        INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f 8 | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "`
-        npm install -g $INSTALLS
+        local VERSION=`nvm_version $2`
+        local ROOT=`nvm use $VERSION && npm -g root`
+        local ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
+        local INSTALLS=( `nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f $(($ROOTDEPTH + 2)) | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "` )
+        npm install -g ${INSTALLS[@]}
     ;;
     "clear-cache" )
         rm -f $NVM_DIR/v* 2>/dev/null
