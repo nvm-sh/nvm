@@ -441,6 +441,9 @@ nvm() {
         print_versions "`nvm_ls_remote $2`"
         return
     ;;
+    "current" )
+      echo -ne "current: \t"; nvm_version current
+    ;;
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
