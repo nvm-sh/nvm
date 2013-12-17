@@ -1,0 +1,33 @@
+{
+  "name": "nvm",
+  "version": "0.2.0",
+  "description": "Node Version Manager - Simple bash script to manage multiple active node.js versions",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "urchin test",
+    "test/fast": "urchin -f test/fast",
+    "test/slow": "urchin -f test/slow"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/creationix/nvm.git"
+  },
+  "keywords": [
+    "nvm",
+    "node",
+    "version",
+    "manager"
+  ],
+  "author": "Tim Caswell <tim@creationix.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/creationix/nvm/issues"
+  },
+  "homepage": "https://github.com/creationix/nvm",
+  "devDependencies": {
+    "urchin": "~0.0.2"
+  }
+}
+
