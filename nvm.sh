@@ -180,6 +180,7 @@ nvm() {
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
+      echo "    nvm current                 Display currently activated version"
       echo "    nvm ls                      List installed versions"
       echo "    nvm ls <version>            List versions matching a given description"
       echo "    nvm ls-remote               List remote versions available for install"
