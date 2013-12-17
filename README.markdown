@@ -82,8 +82,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ## Running tests
 Tests are written in [Urchin](https://github.com/scraperwiki/urchin). Install Urchin like so.
 
-    wget -O /usr/local/bin https://raw.github.com/scraperwiki/urchin/0c6837cfbdd0963903bf0463b05160c2aecc22ef/urchin
-    chmod +x /usr/local/bin/urchin
+    npm install -g urchin
 
 (Or put it some other place in your PATH.)
 
