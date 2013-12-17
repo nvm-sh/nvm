@@ -193,7 +193,7 @@ nvm() {
       echo "    nvm install v0.10.23        Install a specific version number"
       echo "    nvm use 0.10                Use the latest available 0.10.x release"
       echo "    nvm run 0.10.23 myApp.js    Run myApp.js using node v0.10.23"
-      echo "    nvm alias default 0.10.23  Set default node version on a shell"
+      echo "    nvm alias default 0.10.23   Set default node version on a shell"
       echo
       echo "Note:"
       echo "    to remove, delete or uninstall nvm - just remove ~/.nvm, ~/.npm and ~/.bower folders"
