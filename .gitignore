@@ -4,8 +4,9 @@ v*
 alias
 
 # For testing
-bak
+test/bak
 .urchin.log
+.urchin_stdout
 
 node_modules/
 
