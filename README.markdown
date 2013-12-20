@@ -2,7 +2,7 @@
 
 ## Installation
 
-First you'll need to make sure your system has a c++ compiler.  For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
+First you'll need to make sure your system has cURL and a c++ compiler.  For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
 ### Install script
 
