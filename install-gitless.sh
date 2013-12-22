@@ -16,20 +16,20 @@ fi
 
 # Downloading to $NVM_DIR
 mkdir -p "$NVM_DIR"
-pushd "$NVM_DIR" > /dev/null
-echo -ne "=> Downloading... "
+echo -e "\r=> Downloading... \c"
 
 # Detect if curl or wget is installed to download NVM_SOURCE
 if type curl > /dev/null 2>&1; then
-  curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed downloading $NVM_SOURCE";
+  curl --silent "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || fatalExit "Failed downloading $NVM_SOURCE";
 elif type wget > /dev/null 2>&1; then 
-  wget --quiet "$NVM_SOURCE" -O nvm.sh || fatalExit "Failed downloading $NVM_SOURCE";
+  wget --quiet "$NVM_SOURCE" -O "$NVM_DIR/nvm.sh" || fatalExit "Failed downloading $NVM_SOURCE";
 else
   fatalExit "Must have curl or wget to install nvm";
 fi
 
 echo "Downloaded"
-popd > /dev/null
+
+echo
 
 # Detect profile file, .bash_profile has precedence over .profile
 if [ ! -z "$1" ]; then
