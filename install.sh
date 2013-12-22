@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 NVM_DIR="$HOME/.nvm"
 
 if ! hash git 2>/dev/null; then
