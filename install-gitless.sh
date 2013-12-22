@@ -12,13 +12,13 @@ fi
 
 # Downloading to $NVM_DIR
 mkdir -p "$NVM_DIR"
-pushd "$NVM_DIR" > /dev/null
-echo -ne "=> Downloading... "
-curl --silent "$NVM_SOURCE" -o nvm.sh || {
+echo -e "\r=> Downloading... \c"
+curl --silent "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || {
   echo "Failed downloading $NVM_SOURCE" && exit 1
 }
 echo "Downloaded"
-popd > /dev/null
+
+echo
 
 # Detect profile file, .bash_profile has precedence over .profile
 if [ ! -z "$1" ]; then
