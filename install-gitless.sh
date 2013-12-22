@@ -1,59 +1,62 @@
 #!/bin/bash
 
-function fatalExit (){
-    echo "$@" && exit 1;
+set -e
+
+fatalExit(){
+  echo "$@" && exit 1;
 }
 
-# an alternative URL that could be used: https://github.com/creationix/nvm/tarball/master
-if [ "$NVM_SOURCE" == "" ]; then
-    NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
+if [ ! "$NVM_SOURCE" ]; then
+  NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
 fi
 
-if [ "$NVM_DIR" == "" ]; then
-    NVM_DIR="$HOME/.nvm"
+if [ ! "$NVM_DIR" ]; then
+  NVM_DIR="$HOME/.nvm"
 fi
 
 # Downloading to $NVM_DIR
 mkdir -p "$NVM_DIR"
-pushd "$NVM_DIR" > /dev/null
-echo -ne "=> Downloading... "
-curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed";
+echo -ne "\r=> Downloading... \c"
+curl --silent "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || fatalExit "Failed downloading $NVM_SOURCE"
 echo "Downloaded"
-popd > /dev/null
 
-# Detect profile file, .bash_profile has precedence over .profile
-if [ ! -z "$1" ]; then
-  PROFILE="$1"
-else
+echo
+
+# Detect profile file if not specified as environment variable (eg: NVM_PROFILE=~/.myprofile).
+if [ ! "$NVM_PROFILE" ]; then
   if [ -f "$HOME/.bash_profile" ]; then
-	PROFILE="$HOME/.bash_profile"
+    NVM_PROFILE="$HOME/.bash_profile"
+  elif [ -f "$HOME/.zshrc" ]; then
+    NVM_PROFILE="$HOME/.zshrc"
   elif [ -f "$HOME/.profile" ]; then
-	PROFILE="$HOME/.profile"
+    NVM_PROFILE="$HOME/.profile"
   fi
 fi
 
-SOURCE_STR="[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"  # This loads NVM"
+SOURCE_STR="[ -s $NVM_DIR/nvm.sh ] && . $NVM_DIR/nvm.sh  # This loads NVM"
 
-if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
-  if [ -z $PROFILE ]; then
-	echo "=> Profile not found"
+if [ -z "$NVM_PROFILE" ] || [ ! -f "$NVM_PROFILE" ] ; then
+  if [ -z $NVM_PROFILE ]; then
+    echo "=> Profile not found. Tried ~/.bash_profile ~/.zshrc and ~/.profile."
+    echo "=> Create one of them and run this script again"
   else
-	echo "=> Profile $PROFILE not found"
+    echo "=> Profile $NVM_PROFILE not found"
+    echo "=> Create it (touch $NVM_PROFILE) and run this script again"
   fi
-  echo "=> Append the following line to the correct file yourself"
+  echo "   OR"
+  echo "=> Append the following line to the correct file yourself:"
   echo
-  echo "\t$SOURCE_STR"
+  echo "   $SOURCE_STR"
   echo
-  echo "=> Close and reopen your terminal to start using NVM"
-  exit
-fi
-
-if ! grep -qc 'nvm.sh' $PROFILE; then
-  echo "=> Appending source string to $PROFILE"
-  echo "" >> "$PROFILE"
-  echo $SOURCE_STR >> "$PROFILE"
 else
-  echo "=> Source string already in $PROFILE"
+  if ! grep -qc 'nvm.sh' $NVM_PROFILE; then
+    echo "=> Appending source string to $NVM_PROFILE"
+    echo "" >> "$NVM_PROFILE"
+    echo $SOURCE_STR >> "$NVM_PROFILE"
+  else
+    echo "=> Source string already in $NVM_PROFILE"
+  fi
 fi
 
-echo "=> Close and reopen your terminal to start using NVM"
+echo
+echo "=> Close and reopen your terminal afterwards to start using NVM"
