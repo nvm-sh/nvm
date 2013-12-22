@@ -1,23 +1,22 @@
 #!/bin/bash
 
-function fatalExit (){
-    echo "$@" && exit 1;
-}
+set -e
 
-# an alternative URL that could be used: https://github.com/creationix/nvm/tarball/master
-if [ "$NVM_SOURCE" == "" ]; then
-    NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
+if [ ! "$NVM_SOURCE" ]; then
+  NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
 fi
 
-if [ "$NVM_DIR" == "" ]; then
-    NVM_DIR="$HOME/.nvm"
+if [ ! "$NVM_DIR" ]; then
+  NVM_DIR="$HOME/.nvm"
 fi
 
 # Downloading to $NVM_DIR
 mkdir -p "$NVM_DIR"
 pushd "$NVM_DIR" > /dev/null
 echo -ne "=> Downloading... "
-curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed";
+curl --silent "$NVM_SOURCE" -o nvm.sh || {
+  echo "Failed downloading $NVM_SOURCE" && exit 1
+}
 echo "Downloaded"
 popd > /dev/null
 
