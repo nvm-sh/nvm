@@ -46,24 +46,25 @@ SOURCE_STR="[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"  # This loads NV
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
-    echo "=> Profile not found"
+    echo "=> Profile not found. Tried ~/.bash_profile ~/.zshrc and ~/.profile."
+    echo "=> Create one of them and run this script again"
   else
     echo "=> Profile $PROFILE not found"
+    echo "=> Create it (touch $PROFILE) and run this script again"
   fi
-  echo "=> Append the following line to the correct file yourself"
+  echo "   OR"
+  echo "=> Append the following line to the correct file yourself:"
   echo
-  echo "\t$SOURCE_STR"
+  echo "   $SOURCE_STR"
   echo
-  echo "=> Close and reopen your terminal to start using NVM"
-  exit
-fi
-
-if ! grep -qc 'nvm.sh' $PROFILE; then
-  echo "=> Appending source string to $PROFILE"
-  echo "" >> "$PROFILE"
-  echo $SOURCE_STR >> "$PROFILE"
 else
-  echo "=> Source string already in $PROFILE"
+  if ! grep -qc 'nvm.sh' $PROFILE; then
+    echo "=> Appending source string to $PROFILE"
+    echo "" >> "$PROFILE"
+    echo $SOURCE_STR >> "$PROFILE"
+  else
+    echo "=> Source string already in $PROFILE"
+  fi
 fi
 
 echo "=> Close and reopen your terminal to start using NVM"
