@@ -28,16 +28,14 @@ fi
 
 echo
 
-# Detect profile file, .bash_profile has precedence over .profile
-if [ ! -z "$1" ]; then
-  PROFILE="$1"
-else
+# Detect profile file if not specified as environment variable (eg: PROFILE=~/.myprofile).
+if [ ! "$PROFILE" ]; then
   if [ -f "$HOME/.bash_profile" ]; then
-	PROFILE="$HOME/.bash_profile"
+    PROFILE="$HOME/.bash_profile"
   elif [ -f "$HOME/.zshrc" ]; then
-  	PROFILE="$HOME/.zshrc"
+    PROFILE="$HOME/.zshrc"
   elif [ -f "$HOME/.profile" ]; then
-	PROFILE="$HOME/.profile"
+    PROFILE="$HOME/.profile"
   fi
 fi
 
