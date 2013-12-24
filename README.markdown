@@ -14,8 +14,11 @@ or Wget:
 
     wget -qO- https://raw.github.com/creationix/nvm/master/install.sh | sh
 
-<sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile` or `~/.profile`).</sub>
+<sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
+You can customize the install source, directory and profile using the `NVM_SOURCE`, `NVM_DIR` and `NVM_PROFILE` variables. Eg: `curl ... | NVM_DIR=/usr/local/nvm sh` for a global install.
+
+<sub>*NB. There is also a [gitless installer](https://github.com/creationix/nvm/blob/master/install-gitless.sh) available, which accepts the same variables as the default installer.*</sub>
 
 ### Manual install
 
