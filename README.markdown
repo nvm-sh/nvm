@@ -25,11 +25,11 @@ Or if you have `git` installed, then just clone it:
 
     git clone https://github.com/creationix/nvm.git ~/.nvm
 
-To activate nvm, you need to source it from your bash shell
+To activate nvm, you need to source it from your shell:
 
     source ~/.nvm/nvm.sh
 
-I always add this line to my `~/.bashrc` or `~/.profile` file to have it automatically sourced upon login.
+I always add this line to my `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login.
 Often I also put in a line to use a specific version of node.
 
 ## Usage

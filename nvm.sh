@@ -407,6 +407,10 @@ nvm() {
       else
         PATH="$NVM_DIR/$VERSION/bin:$PATH"
       fi
+      if [ -z "$MANPATH" ]; then
+        MANPATH=$(manpath)
+      fi
+      MANPATH=${MANPATH#*$NVM_DIR/*/man:}
       if [[ $MANPATH == *$NVM_DIR/*/share/man* ]]; then
         MANPATH=${MANPATH%$NVM_DIR/*/share/man*}$NVM_DIR/$VERSION/share/man${MANPATH#*$NVM_DIR/*/share/man}
       else
