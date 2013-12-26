@@ -496,9 +496,13 @@ nvm() {
           return
         fi
         local VERSION=`nvm_version $2`
-        local ROOT=`nvm use $VERSION && npm -g root`
+        local ROOT=`(nvm use $VERSION && npm -g root) | tail -n1`
         local ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
-        local INSTALLS=( `nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f $(($ROOTDEPTH + 2)) | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "` )
+
+        # declare local INSTALLS first, otherwise it doesn't work in zsh
+        local INSTALLS
+        INSTALLS=( `nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f $(($ROOTDEPTH + 2)) | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "` )
+
         npm install -g ${INSTALLS[@]}
     ;;
     "clear-cache" )
