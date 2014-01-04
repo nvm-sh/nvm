@@ -4,11 +4,11 @@ mkdir -p ../../v0.2.3
 
 die () { echo $@ ; exit 1; }
 
-[[ $PATH != *v0.2.3/*/bin* ]] || echo "WARNING: Unexpectedly found v0.2.3 already active" >&2
+[ `expr $PATH : ".*v0.2.3/.*/bin"` == 0 ] || echo "WARNING: Unexpectedly found v0.2.3 already active" >&2
 
 . ../../nvm.sh
 nvm use v0.2.3 &&
-[[ $PATH == *v0.2.3/*/bin* ]] || die "Failed to activate v0.2.3"
+[ `expr $PATH : ".*v0.2.3/.*/bin"` != 0 ] || die "Failed to activate v0.2.3"
 
 nvm deactivate &&
-[[ $PATH != *v0.2.3/*/bin* ]] || die "Failed to deactivate v0.2.3"
+[ `expr $PATH : ".*v0.2.3/.*/bin"` != 0 ] || die "Failed to deactivate v0.2.3"
