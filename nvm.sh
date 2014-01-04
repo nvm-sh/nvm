@@ -38,8 +38,8 @@ nvm_set_nullglob() {
 
 # Obtain nvm version from rc file
 rc_nvm_version() {
-  if [ -e ~/.nvmrc ]; then
-        RC_VERSION=`cat ~/.nvmrc | head -n 1`
+  if [ -e .nvmrc ]; then
+        RC_VERSION=`cat .nvmrc | head -n 1`
     echo "Found .nvmrc files with version <$RC_VERSION>"
   fi
 }
