@@ -446,16 +446,13 @@ nvm() {
         echo "$VERSION version is not installed yet"
         return;
       fi
-      PREVIOUS_NODE_PATH=$NODE_PATH
       if [[ $NODE_PATH == *$NVM_DIR/*/lib/node_modules* ]]; then
-        NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
+        RUN_NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
       else
-        NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
+        RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
       fi
-      export NODE_PATH
       echo "Running node $VERSION"
-      $NVM_DIR/$VERSION/bin/node "${@:3}"
-      export NODE_PATH=$PREVIOUS_NODE_PATH
+      NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "${@:3}"
     ;;
     "ls" | "list" )
       print_versions "`nvm_ls $2`"
