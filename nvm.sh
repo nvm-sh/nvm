@@ -377,6 +377,12 @@ nvm() {
       else
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH"
       fi
+      if [[ $NODE_PATH == *$NVM_DIR/*/lib/node_modules* ]]; then
+        export NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}${NODE_PATH#*$NVM_DIR/*/lib/node_modules:}
+        echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
+      else
+        echo "Could not find $NVM_DIR/*/lib/node_modules in \$NODE_PATH"
+      fi
     ;;
     "use" )
       if [ $# -eq 0 ]; then
@@ -416,9 +422,15 @@ nvm() {
       else
         MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
       fi
+      if [[ $NODE_PATH == *$NVM_DIR/*/lib/node_modules* ]]; then
+        NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
+      else
+        NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
+      fi
       export PATH
       hash -r
       export MANPATH
+      export NODE_PATH
       export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
       echo "Now using node $VERSION"
@@ -434,8 +446,13 @@ nvm() {
         echo "$VERSION version is not installed yet"
         return;
       fi
+      if [[ $NODE_PATH == *$NVM_DIR/*/lib/node_modules* ]]; then
+        RUN_NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
+      else
+        RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
+      fi
       echo "Running node $VERSION"
-      $NVM_DIR/$VERSION/bin/node "${@:3}"
+      NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "${@:3}"
     ;;
     "ls" | "list" )
       print_versions "`nvm_ls $2`"
