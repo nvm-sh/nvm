@@ -133,7 +133,7 @@ nvm_checksum() {
 print_versions() {
     local OUTPUT=''
     local PADDED_VERSION=''
-    for VERSION in $1; do
+    for local VERSION in $1; do
         PADDED_VERSION=`printf '%10s' $VERSION`
         if [[ -d "$NVM_DIR/$VERSION" ]]; then
              PADDED_VERSION="\033[0;34m$PADDED_VERSION\033[0m"
@@ -357,7 +357,7 @@ nvm() {
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
-      for A in `\grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
+      for local A in `\grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
       do
         nvm unalias `basename $A`
       done
@@ -472,7 +472,7 @@ nvm() {
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
-        for ALIAS in $(nvm_set_nullglob; echo $NVM_DIR/alias/$2* ); do
+        for local ALIAS in $(nvm_set_nullglob; echo $NVM_DIR/alias/$2* ); do
             DEST=`cat $ALIAS`
             VERSION=`nvm_version $DEST`
             if [ "$DEST" = "$VERSION" ]; then
