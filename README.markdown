@@ -66,6 +66,11 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
     nvm alias default 0.10
 
+To use a mirror of the node binaries, set `$NODEJS_MIRROR`:
+
+    export NODEJS_MIRROR=http://nodejs.org/dist
+    nvm install 0.10
+
 ## License
 
 nvm is released under the MIT license.
