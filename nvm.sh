@@ -25,8 +25,8 @@ if [ ! -d "$NVM_DIR" ]; then
 fi
 
 # Setup mirror location if not already set
-if [ -z "$NODEJS_MIRROR" ]; then
-    export NODEJS_MIRROR="http://nodejs.org/dist"
+if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
+    export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
 fi
 
 nvm_set_nullglob() {
@@ -110,7 +110,7 @@ nvm_ls_remote() {
     else
         PATTERN=".*"
     fi
-    VERSIONS=`curl -s $NODEJS_MIRROR/ \
+    VERSIONS=`curl -s $NVM_NODEJS_ORG_MIRROR/ \
                   | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
                   | \grep -w "${PATTERN}" \
                   | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
@@ -267,8 +267,8 @@ nvm() {
           esac
           if [ $binavail -eq 1 ]; then
             t="$VERSION-$os-$arch"
-            url="$NODEJS_MIRROR/$VERSION/node-${t}.tar.gz"
-            sum=`curl -s $NODEJS_MIRROR/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
+            url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
+            sum=`curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
             local tmpdir="$NVM_DIR/bin/node-${t}"
             local tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
@@ -300,11 +300,11 @@ nvm() {
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`curl -Is "$NODEJS_MIRROR/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
-        tarball="$NODEJS_MIRROR/$VERSION/node-$VERSION.tar.gz"
-        sum=`curl -s $NODEJS_MIRROR/$VERSION/SHASUMS.txt | \grep node-$VERSION.tar.gz | awk '{print $1}'`
-      elif [ "`curl -Is "$NODEJS_MIRROR/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
-        tarball="$NODEJS_MIRROR/node-$VERSION.tar.gz"
+      if [ "`curl -Is "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
+        tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
+        sum=`curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt | \grep node-$VERSION.tar.gz | awk '{print $1}'`
+      elif [ "`curl -Is "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
+        tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
       fi
       if (
         [ ! -z $tarball ] && \
