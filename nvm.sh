@@ -240,6 +240,8 @@ nvm() {
       if [ "$os" = "freebsd" ]; then
 	nobinary=1
       fi
+      
+      [ -d "$NVM_DIR/$1" ] && echo "$1 is already installed." && return
 
       VERSION=`nvm_remote_version $1`
       ADDITIONAL_PARAMETERS=''
