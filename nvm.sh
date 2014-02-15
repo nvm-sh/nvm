@@ -15,137 +15,137 @@ has() {
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if has "unsetopt"; then
-    unsetopt nomatch 2>/dev/null
-    NVM_CD_FLAGS="-q"
+  unsetopt nomatch 2>/dev/null
+  NVM_CD_FLAGS="-q"
 fi
 
 # Auto detect the NVM_DIR
 if [ ! -d "$NVM_DIR" ]; then
-    export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
+  export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
 fi
 
 # Setup mirror location if not already set
 if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
-    export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
+  export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
 fi
 
 nvm_set_nullglob() {
   if has "setopt"; then
-      # Zsh
-      setopt NULL_GLOB
+    # Zsh
+    setopt NULL_GLOB
   else
-      # Bash
-      shopt -s nullglob
+    # Bash
+    shopt -s nullglob
   fi
 }
 
 # Obtain nvm version from rc file
 rc_nvm_version() {
   if [ -e .nvmrc ]; then
-        RC_VERSION=`cat .nvmrc | head -n 1`
+    RC_VERSION=`cat .nvmrc | head -n 1`
     echo "Found .nvmrc files with version <$RC_VERSION>"
   fi
 }
 
 # Expand a version using the version cache
 nvm_version() {
-    local PATTERN=$1
-    # The default version is the current one
-    if [ ! "$PATTERN" ]; then
-        PATTERN='current'
-    fi
+  local PATTERN=$1
+  # The default version is the current one
+  if [ ! "$PATTERN" ]; then
+    PATTERN='current'
+  fi
 
-    VERSION=`nvm_ls $PATTERN | tail -n1`
-    echo "$VERSION"
+  VERSION=`nvm_ls $PATTERN | tail -n1`
+  echo "$VERSION"
 
-    if [ "$VERSION" = 'N/A' ]; then
-        return
-    fi
+  if [ "$VERSION" = 'N/A' ]; then
+    return
+  fi
 }
 
 nvm_remote_version() {
-    local PATTERN=$1
-    VERSION=`nvm_ls_remote $PATTERN | tail -n1`
-    echo "$VERSION"
+  local PATTERN=$1
+  VERSION=`nvm_ls_remote $PATTERN | tail -n1`
+  echo "$VERSION"
 
-    if [ "$VERSION" = 'N/A' ]; then
-        return
-    fi
+  if [ "$VERSION" = 'N/A' ]; then
+    return
+  fi
 }
 
 nvm_ls() {
-    local PATTERN=$1
-    local VERSIONS=''
-    if [ "$PATTERN" = 'current' ]; then
-        echo `node -v 2>/dev/null`
-        return
-    fi
-
-    if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
-        nvm_version `cat $NVM_DIR/alias/$PATTERN`
-        return
-    fi
-    # If it looks like an explicit version, don't do anything funny
-    if [[ "$PATTERN" == v?*.?*.?* ]]; then
-        VERSIONS="$PATTERN"
-    else
-        VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "v$PATTERN*" -exec basename '{}' ';' \
-                    | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
-    fi
-    if [ ! "$VERSIONS" ]; then
-        echo "N/A"
-        return
-    fi
-    echo "$VERSIONS"
+  local PATTERN=$1
+  local VERSIONS=''
+  if [ "$PATTERN" = 'current' ]; then
+    echo `node -v 2>/dev/null`
     return
+  fi
+
+  if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
+    nvm_version `cat $NVM_DIR/alias/$PATTERN`
+    return
+  fi
+  # If it looks like an explicit version, don't do anything funny
+  if [[ "$PATTERN" == v?*.?*.?* ]]; then
+    VERSIONS="$PATTERN"
+  else
+    VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "v$PATTERN*" -exec basename '{}' ';' \
+      | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
+  fi
+  if [ ! "$VERSIONS" ]; then
+      echo "N/A"
+      return
+  fi
+  echo "$VERSIONS"
+  return
 }
 
 nvm_ls_remote() {
-    local PATTERN=$1
-    local VERSIONS
-    if [ "$PATTERN" ]; then
-        if echo "${PATTERN}" | \grep -v '^v' ; then
-            PATTERN=v$PATTERN
-        fi
-    else
-        PATTERN=".*"
+  local PATTERN=$1
+  local VERSIONS
+  if [ "$PATTERN" ]; then
+    if echo "${PATTERN}" | \grep -v '^v' ; then
+      PATTERN=v$PATTERN
     fi
-    VERSIONS=`curl -s $NVM_NODEJS_ORG_MIRROR/ \
-                  | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
-                  | \grep -w "${PATTERN}" \
-                  | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
-    if [ ! "$VERSIONS" ]; then
-        echo "N/A"
-        return
-    fi
-    echo "$VERSIONS"
+  else
+    PATTERN=".*"
+  fi
+  VERSIONS=`curl -s $NVM_NODEJS_ORG_MIRROR/ \
+              | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
+              | \grep -w "${PATTERN}" \
+              | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
+  if [ ! "$VERSIONS" ]; then
+    echo "N/A"
     return
+  fi
+  echo "$VERSIONS"
+  return
 }
 
 nvm_checksum() {
-    if [ "$1" = "$2" ]; then
-        return
-    elif [ -z $2 ]; then
-        echo 'Checksums empty' #missing in raspberry pi binary
-        return
-    else
-        echo 'Checksums do not match.'
-        return 1
-    fi
+  if [ "$1" = "$2" ]; then
+    return
+  elif [ -z $2 ]; then
+    echo 'Checksums empty' #missing in raspberry pi binary
+    return
+  else
+    echo 'Checksums do not match.'
+    return 1
+  fi
 }
 
 
 print_versions() {
-    local OUTPUT=''
-    local PADDED_VERSION=''
-    for VERSION in $1; do
-        PADDED_VERSION=`printf '%10s' $VERSION`
-        if [[ -d "$NVM_DIR/$VERSION" ]]; then
-             PADDED_VERSION="\033[0;34m$PADDED_VERSION\033[0m"
-        fi
-        OUTPUT="$OUTPUT\n$PADDED_VERSION"
-    done
-    echo -e "$OUTPUT"
+  local OUTPUT=''
+  local PADDED_VERSION=''
+  for VERSION in $1; do
+    PADDED_VERSION=`printf '%10s' $VERSION`
+    if [[ -d "$NVM_DIR/$VERSION" ]]; then
+      PADDED_VERSION="\033[0;34m$PADDED_VERSION\033[0m"
+    fi
+      OUTPUT="$OUTPUT\n$PADDED_VERSION"
+  done
+  echo -e "$OUTPUT"
 }
 
 nvm() {
@@ -238,9 +238,9 @@ nvm() {
       fi
 
       if [ "$os" = "freebsd" ]; then
-	nobinary=1
+        nobinary=1
       fi
-      
+
       [ -d "$NVM_DIR/$1" ] && echo "$1 is already installed." && return
 
       VERSION=`nvm_remote_version $1`
@@ -298,7 +298,7 @@ nvm() {
       sum=''
       make='make'
       if [ "$os" = "freebsd" ]; then
-	make='gmake'
+        make='gmake'
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
@@ -543,3 +543,4 @@ nvm() {
 }
 
 nvm ls default &>/dev/null && nvm use default >/dev/null || true
+
