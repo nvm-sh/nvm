@@ -55,7 +55,7 @@ nvm_version() {
     PATTERN='current'
   fi
 
-  VERSION=`nvm_ls $PATTERN | tail -n1`
+  VERSION=`nvm_ls $PATTERN`
   echo "$VERSION"
 
   if [ "$VERSION" = 'N/A' ]; then
@@ -143,9 +143,9 @@ print_versions() {
     if [[ -d "$NVM_DIR/$VERSION" ]]; then
       PADDED_VERSION="\033[0;34m$PADDED_VERSION\033[0m"
     fi
-      OUTPUT="$OUTPUT\n$PADDED_VERSION"
+      OUTPUT="$OUTPUT$PADDED_VERSION\n"
   done
-  echo -e "$OUTPUT"
+  echo -ne "$OUTPUT"
 }
 
 nvm() {
@@ -520,7 +520,7 @@ nvm() {
           return
         fi
         local VERSION=`nvm_version $2`
-        local ROOT=`(nvm use $VERSION && npm -g root) | tail -n1`
+        local ROOT=`(nvm use $VERSION && npm -g root)`
         local ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
 
         # declare local INSTALLS first, otherwise it doesn't work in zsh
