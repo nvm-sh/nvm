@@ -50,6 +50,7 @@ rc_nvm_version() {
 # Expand a version using the version cache
 nvm_version() {
   local PATTERN=$1
+  local VERSION
   # The default version is the current one
   if [ ! "$PATTERN" ]; then
     PATTERN='current'
@@ -65,6 +66,7 @@ nvm_version() {
 
 nvm_remote_version() {
   local PATTERN=$1
+  local VERSION
   VERSION=`nvm_ls_remote $PATTERN | tail -n1`
   echo "$VERSION"
 
@@ -140,8 +142,10 @@ colorize_version() {
 }
 
 print_versions() {
+  local VERSION
+  local PADDED_VERSION
   for VERSION in $1; do
-    local PADDED_VERSION=`printf '%10s' $VERSION`
+    PADDED_VERSION=`printf '%10s' $VERSION`
     if [[ -d "$NVM_DIR/$VERSION" ]]; then
       colorize_version "$PADDED_VERSION"
     else
@@ -175,6 +179,7 @@ nvm() {
   # initialize local variables
   local VERSION
   local ADDITIONAL_PARAMETERS
+  local ALIAS
 
   case $1 in
     "help" )
@@ -481,6 +486,7 @@ nvm() {
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
+        local DEST
         for ALIAS in $(nvm_set_nullglob; echo $NVM_DIR/alias/$2* ); do
             DEST=`cat $ALIAS`
             VERSION=`nvm_version $DEST`
@@ -521,7 +527,7 @@ nvm() {
           nvm help
           return
         fi
-        local VERSION=`nvm_version $2`
+        VERSION=`nvm_version $2`
         local ROOT=`(nvm use $VERSION && npm -g root)`
         local ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
 
