@@ -134,18 +134,18 @@ nvm_checksum() {
   fi
 }
 
+colorize_version() {
+  local VERSION=$1
+  echo -e "\033[0;34m$VERSION\033[0m"
+}
 
 print_versions() {
-  local OUTPUT=''
-  local PADDED_VERSION=''
   for VERSION in $1; do
-    PADDED_VERSION=`printf '%10s' $VERSION`
+    local PADDED_VERSION=`printf '%10s' $VERSION`
     if [[ -d "$NVM_DIR/$VERSION" ]]; then
-      PADDED_VERSION="\033[0;34m$PADDED_VERSION\033[0m"
+      colorize_version "$PADDED_VERSION"
     fi
-      OUTPUT="$OUTPUT$PADDED_VERSION\n"
   done
-  echo -ne "$OUTPUT"
 }
 
 nvm() {
@@ -534,7 +534,7 @@ nvm() {
         echo "Cache cleared."
     ;;
     "version" )
-        print_versions "`nvm_version $2`"
+        colorize_version "`nvm_version $2`"
     ;;
     * )
       nvm help
