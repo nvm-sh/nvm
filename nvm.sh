@@ -78,8 +78,8 @@ nvm_ls() {
     return
   fi
 
-  if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
-    nvm_version `cat $NVM_DIR/alias/$PATTERN`
+  if [ -h "$NVM_DIR/alias/$PATTERN" ]; then
+    nvm_version $(basename $(readlink $NVM_DIR/alias/$PATTERN))
     return
   fi
   # If it looks like an explicit version, don't do anything funny
@@ -373,9 +373,11 @@ nvm() {
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
-      for ALIAS in `\grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
+      for ALIAS in $NVM_DIR/alias/*
       do
-        nvm unalias `basename $ALIAS`
+        if [ $(expr $(readlink $ALIAS) : ".*${VERSION}.*") -ne 0 ]; then
+          nvm unalias $(basename $ALIAS)
+        fi
       done
 
     ;;
@@ -491,7 +493,7 @@ nvm() {
         local DEST
         for ALIAS in $NVM_DIR/alias/$2*; do
           if [ -e "$ALIAS" ]; then
-            DEST=`cat $ALIAS`
+            DEST=$(basename $(readlink $ALIAS))
             VERSION=`nvm_version $DEST`
             if [ "$DEST" = "$VERSION" ]; then
                 echo "$(basename $ALIAS) -> $DEST"
@@ -512,17 +514,24 @@ nvm() {
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '$3' does not exist." >&2
       fi
-      echo $3 > "$NVM_DIR/alias/$2"
+      # We are linking directories, so explicitly remove it rather than forcing with ln -f
+      if [ -h "$NVM_DIR/alias/$2" ]; then
+        rm -f "$NVM_DIR/alias/$2"
+      fi
       if [ ! "$3" = "$VERSION" ]; then
-          echo "$2 -> $3 (-> $VERSION)"
+        # link to other alias
+        ln -s "./$3" "$NVM_DIR/alias/$2"
+        echo "$2 -> $3 (-> $VERSION)"
       else
+        # link to node installation
+        ln -s "../$3" "$NVM_DIR/alias/$2"
         echo "$2 -> $3"
       fi
     ;;
     "unalias" )
       mkdir -p $NVM_DIR/alias
       [ $# -ne 2 ] && nvm help && return
-      [ ! -f $NVM_DIR/alias/$2 ] && echo "Alias $2 doesn't exist!" && return
+      [ ! -h $NVM_DIR/alias/$2 ] && echo "Alias $2 doesn't exist!" && return
       rm -f $NVM_DIR/alias/$2
       echo "Deleted alias $2"
     ;;
