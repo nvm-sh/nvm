@@ -140,10 +140,12 @@ colorize_version() {
 }
 
 print_versions() {
+  local VERSION
   for VERSION in $1; do
-    local PADDED_VERSION=`printf '%10s' $VERSION`
     if [[ -d "$NVM_DIR/$VERSION" ]]; then
-      colorize_version "$PADDED_VERSION"
+      colorize_version "$(printf '%10s' $VERSION)"
+    else
+      echo $VERSION
     fi
   done
 }
