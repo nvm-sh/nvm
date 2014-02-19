@@ -393,7 +393,7 @@ nvm() {
       else
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH"
       fi
-      if [[ $NODE_PATH == *$NVM_DIR/*/lib/node_modules* ]]; then
+      if [ `expr $NODE_PATH : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ] ; then
         export NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}${NODE_PATH#*$NVM_DIR/*/lib/node_modules:}
         echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       else
@@ -438,7 +438,7 @@ nvm() {
       else
         MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
       fi
-      if [[ $NODE_PATH == *$NVM_DIR/*/lib/node_modules* ]]; then
+      if [ `expr $NODE_PATH : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
         NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
       else
         NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
@@ -462,7 +462,7 @@ nvm() {
         echo "$VERSION version is not installed yet"
         return;
       fi
-      if [[ $NODE_PATH == *$NVM_DIR/*/lib/node_modules* ]]; then
+      if [ `expr $NODE_PATH : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
         RUN_NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
       else
         RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
