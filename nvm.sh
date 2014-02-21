@@ -34,16 +34,6 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
   export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
 fi
 
-nvm_set_nullglob() {
-  if has "setopt"; then
-    # Zsh
-    setopt NULL_GLOB
-  elif has "shopt"; then
-    # Bash
-    shopt -s nullglob
-  fi
-}
-
 # Obtain nvm version from rc file
 rc_nvm_version() {
   if [ -e .nvmrc ]; then
@@ -491,7 +481,8 @@ nvm() {
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
         local DEST
-        for ALIAS in $(nvm_set_nullglob; echo $NVM_DIR/alias/$2* ); do
+        for ALIAS in $NVM_DIR/alias/$2*; do
+          if [ -e "$ALIAS" ]; then
             DEST=`cat $ALIAS`
             VERSION=`nvm_version $DEST`
             if [ "$DEST" = "$VERSION" ]; then
@@ -499,6 +490,7 @@ nvm() {
             else
                 echo "$(basename $ALIAS) -> $DEST (-> $VERSION)"
             fi
+          fi
         done
         return
       fi
