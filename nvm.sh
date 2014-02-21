@@ -332,10 +332,10 @@ nvm() {
         nvm use $VERSION
         if ! has "npm" ; then
           echo "Installing npm..."
-          if [ "`expr match $VERSION '\(^v0\.1\.\)'`" != '' ]; then
+          if [ "`expr "$VERSION" : '\(^v0\.1\.\)'`" != '' ]; then
             echo "npm requires node v0.2.3 or higher"
-          elif [ "`expr match $VERSION '\(^v0\.2\.\)'`" != '' ]; then
-            if [ "`expr match $VERSION '\(^v0\.2\.[0-2]$\)'`" != '' ]; then
+          elif [ "`expr "$VERSION" : '\(^v0\.2\.\)'`" != '' ]; then
+            if [ "`expr "$VERSION" : '\(^v0\.2\.[0-2]$\)'`" != '' ]; then
               echo "npm requires node v0.2.3 or higher"
             else
               curl https://npmjs.org/install.sh | clean=yes npm_install=0.2.19 sh
@@ -379,20 +379,20 @@ nvm() {
 
     ;;
     "deactivate" )
-      if [ `expr $PATH : ".*$NVM_DIR/.*/bin.*"` != 0 ] ; then
+      if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin.*"` != 0 ] ; then
         export PATH=${PATH%$NVM_DIR/*/bin*}${PATH#*$NVM_DIR/*/bin:}
         hash -r
         echo "$NVM_DIR/*/bin removed from \$PATH"
       else
         echo "Could not find $NVM_DIR/*/bin in \$PATH"
       fi
-      if [ `expr $MANPATH : ".*$NVM_DIR/.*/share/man.*"` != 0 ] ; then
+      if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man.*"` != 0 ] ; then
         export MANPATH=${MANPATH%$NVM_DIR/*/share/man*}${MANPATH#*$NVM_DIR/*/share/man:}
         echo "$NVM_DIR/*/share/man removed from \$MANPATH"
       else
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH"
       fi
-      if [ `expr $NODE_PATH : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ] ; then
+      if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ] ; then
         export NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}${NODE_PATH#*$NVM_DIR/*/lib/node_modules:}
         echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       else
@@ -423,7 +423,7 @@ nvm() {
         echo "$VERSION version is not installed yet"
         return 1
       fi
-      if [ `expr $PATH : ".*$NVM_DIR/.*/bin"` != 0 ]; then
+      if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin"` != 0 ]; then
         PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$VERSION/bin${PATH#*$NVM_DIR/*/bin}
       else
         PATH="$NVM_DIR/$VERSION/bin:$PATH"
@@ -432,12 +432,12 @@ nvm() {
         MANPATH=$(manpath)
       fi
       MANPATH=${MANPATH#*$NVM_DIR/*/man:}
-      if [ `expr $MANPATH : ".*$NVM_DIR/.*/share/man"` != 0 ]; then
+      if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man"` != 0 ]; then
         MANPATH=${MANPATH%$NVM_DIR/*/share/man*}$NVM_DIR/$VERSION/share/man${MANPATH#*$NVM_DIR/*/share/man}
       else
         MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
       fi
-      if [ `expr $NODE_PATH : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
+      if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
         NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
       else
         NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
@@ -461,7 +461,7 @@ nvm() {
         echo "$VERSION version is not installed yet"
         return;
       fi
-      if [ `expr $NODE_PATH : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
+      if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
         RUN_NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
       else
         RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
