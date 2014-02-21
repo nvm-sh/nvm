@@ -11,4 +11,4 @@ nvm use v0.2.3 &&
 [ `expr $PATH : ".*v0.2.3/.*/bin"` != 0 ] || die "Failed to activate v0.2.3"
 
 nvm deactivate &&
-[ `expr $PATH : ".*v0.2.3/.*/bin"` != 0 ] || die "Failed to deactivate v0.2.3"
+[ `expr $PATH : ".*v0.2.3/.*/bin"` = 0 ] || die "Failed to deactivate v0.2.3"
