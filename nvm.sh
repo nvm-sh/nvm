@@ -139,8 +139,7 @@ nvm_checksum() {
 }
 
 colorize_version() {
-  local VERSION=$1
-  echo -e "\033[0;34m$VERSION\033[0m"
+  echo -e "\033[0;34m$1\033[0m"
 }
 
 print_versions() {
