@@ -132,7 +132,11 @@ nvm_checksum() {
 }
 
 colorize_version() {
-  echo $DASH_E "\033[0;34m$1\033[0m"
+  if [ -n "$DASH_E" ]; then
+    echo $DASH_E "\033[0;34m$1\033[0m"
+  else
+    echo $1
+  fi
 }
 
 print_versions() {
