@@ -93,7 +93,7 @@ nvm_ls() {
       echo "N/A"
       return
   fi
-  printf "$VERSIONS\n"
+  echo "$VERSIONS"
   return
 }
 
