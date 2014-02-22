@@ -3,12 +3,14 @@
 set -e
 . ../../nvm.sh
 
+VERSION=v0.10.26
+
 # Remove the stuff we're clobbering.
-[ -e ../../v0.8.6 ] && rm -R ../../v0.8.6
+[ -e ../../$VERSION ] && rm -R ../../$VERSION
 
 # Install from source
-nvm install -s 0.8.6
+nvm install -s $VERSION
 
 # Check
-[ -d ../../v0.8.6 ]
-nvm run v0.8.6 --version | grep v0.8.6
+[ -d ../../$VERSION ]
+nvm run $VERSION --version | grep $VERSION
