@@ -304,6 +304,7 @@ nvm() {
       make='make'
       if [ "$os" = "freebsd" ]; then
         make='gmake'
+        MAKE_CXX="CXX=c++"
       fi
       local tmpdir="$NVM_DIR/src"
       local tmptarball="$tmpdir/node-$VERSION.tar.gz"
@@ -321,9 +322,9 @@ nvm() {
         tar -xzf "$tmptarball" -C "$tmpdir" && \
         cd "$tmpdir/node-$VERSION" && \
         ./configure --prefix="$NVM_DIR/$VERSION" $ADDITIONAL_PARAMETERS && \
-        $make && \
+        $make $MAKE_CXX && \
         rm -f "$NVM_DIR/$VERSION" 2>/dev/null && \
-        $make install
+        $make $MAKE_CXX install
         )
       then
         nvm use $VERSION
