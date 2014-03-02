@@ -531,12 +531,15 @@ nvm() {
           return
         fi
         VERSION=`nvm_version $2`
-        local ROOT="(nvm use $VERSION && npm -g root)"
+        local ROOT="$(nvm use $VERSION > /dev/null && npm -g root)"
+        echo "ROOT: $ROOT"
         local ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
+        echo "ROOTDEPTH: $ROOTDEPTH"
 
         # declare local INSTALLS first, otherwise it doesn't work in zsh
         local INSTALLS
         INSTALLS=( `nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f $(($ROOTDEPTH + 2)) | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "` )
+        echo "INSTALLS: $INSTALLS"
 
         npm install -g ${INSTALLS[@]}
     ;;
