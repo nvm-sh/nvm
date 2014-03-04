@@ -14,52 +14,59 @@ if [ -d "$NVM_DIR" ]; then
   cd $NVM_DIR && git pull
 else
   # Cloning to $NVM_DIR
-  git clone https://github.com/creationix/nvm.git $NVM_DIR  
+  git clone https://github.com/creationix/nvm.git $NVM_DIR
 fi
 
 echo
 
+PROFILE_ARRAY=()
+
 # Detect profile file, .bash_profile has precedence over .profile
 if [ ! -z "$1" ]; then
-  PROFILE="$1"
+  PROFILE_ARRAY+=("$1")
 else
   if [ -f "$HOME/.bash_profile" ]; then
-	PROFILE="$HOME/.bash_profile"
-  elif [ -f "$HOME/.zshrc" ]; then
-  	PROFILE="$HOME/.zshrc"
-  elif [ -f "$HOME/.profile" ]; then
-	PROFILE="$HOME/.profile"
+    PROFILE_ARRAY+=("$HOME/.bash_profile")
+  fi
+  if [ -f "$HOME/.zshrc" ]; then
+    PROFILE_ARRAY+=("$HOME/.zshrc")
+  fi
+  if [ -f "$HOME/.profile" ]; then
+    PROFILE_ARRAY+=("$HOME/.profile")
   fi
 fi
 
 SOURCE_STR="[[ -s \$HOME/.nvm/nvm.sh ]] && . \$HOME/.nvm/nvm.sh  # This loads NVM"
 
-if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
-  if [ -z $PROFILE ]; then
-	echo "=> Profile not found. Tried $HOME/.bash_profile and $HOME/.profile"
-  else
-	echo "=> Profile $PROFILE not found"
+for PROFILE in ${PROFILE_ARRAY[@]}
+do
+  if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
+    if [ -z $PROFILE ]; then
+      echo "=> Profile not found. Tried $HOME/.bash_profile and $HOME/.profile"
+    else
+      echo "=> Profile $PROFILE not found"
+    fi
+    echo "=> Run this script again after running the following:"
+    echo
+    echo "\ttouch $HOME/.profile"
+    echo
+    echo "-- OR --"
+    echo
+    echo "=> Append the following line to the correct file yourself"
+    echo
+    echo "\t$SOURCE_STR"
+    echo
+    echo "=> Close and reopen your terminal afterwards to start using NVM"
+    exit
   fi
-  echo "=> Run this script again after running the following:"
-  echo
-  echo "\ttouch $HOME/.profile"
-  echo
-  echo "-- OR --"
-  echo
-  echo "=> Append the following line to the correct file yourself"
-  echo
-  echo "\t$SOURCE_STR"
-  echo
-  echo "=> Close and reopen your terminal afterwards to start using NVM"
-  exit
-fi
 
-if ! grep -qc 'nvm.sh' $PROFILE; then
-  echo "=> Appending source string to $PROFILE"
-  echo "" >> "$PROFILE"
-  echo $SOURCE_STR >> "$PROFILE"
-else
-  echo "=> Source string already in $PROFILE"
-fi
+  if ! grep -qc 'nvm.sh' $PROFILE; then
+    echo "=> Appending source string to $PROFILE"
+    echo "" >> "$PROFILE"
+    echo $SOURCE_STR >> "$PROFILE"
+  else
+    echo "=> Source string already in $PROFILE"
+  fi
+done
 
 echo "=> Close and reopen your terminal to start using NVM"
