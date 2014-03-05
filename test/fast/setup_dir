@@ -5,8 +5,9 @@
 
   # Back up
 
-  type setopt >/dev/null 2>&1 && setopt NULL_GLOB
-  type shopt >/dev/null 2>&1 && shopt -s nullglob
   mkdir -p bak
-  mv v* src alias bak || sleep 0s
+  for SRC in v* src alias; do
+    [ -e "$SRC" ] && mv "$SRC" bak
+  done
+  true
 )

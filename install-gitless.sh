@@ -5,11 +5,11 @@ function fatalExit (){
 }
 
 # an alternative URL that could be used: https://github.com/creationix/nvm/tarball/master
-if [ "$NVM_SOURCE" == "" ]; then
+if [ "$NVM_SOURCE" = "" ]; then
     NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
 fi
 
-if [ "$NVM_DIR" == "" ]; then
+if [ "$NVM_DIR" = "" ]; then
     NVM_DIR="$HOME/.nvm"
 fi
 
