@@ -19,7 +19,7 @@ fi
 
 # Auto detect the NVM_DIR
 if [ ! -d "$NVM_DIR" ]; then
-  if [ -n "$BASH_SOURCE" ]; then
+  if [ -n "${BASH_SOURCE[0]:-$0}" ]; then
     export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
   else
     export NVM_DIR=$HOME/.nvm
