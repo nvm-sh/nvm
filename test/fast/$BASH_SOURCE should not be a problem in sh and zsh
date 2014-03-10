@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo Testing bash
+bash -c '. ../../nvm.sh'
+echo Testing zsh
+zsh -c '. ../../nvm.sh'
+echo Testing sh
+sh -c '. ../../nvm.sh'
