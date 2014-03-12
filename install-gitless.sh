@@ -1,16 +1,16 @@
 #!/bin/bash
 
 function fatalExit (){
-    echo "$@" && exit 1;
+  echo "$@" && exit 1;
 }
 
 # an alternative URL that could be used: https://github.com/creationix/nvm/tarball/master
 if [ "$NVM_SOURCE" = "" ]; then
-    NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
+  NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
 fi
 
 if [ "$NVM_DIR" = "" ]; then
-    NVM_DIR="$HOME/.nvm"
+  NVM_DIR="$HOME/.nvm"
 fi
 
 # Downloading to $NVM_DIR
@@ -20,11 +20,11 @@ echo -ne "=> Downloading... "
 
 # Detect if curl or wget is installed to download NVM_SOURCE
 if type curl > /dev/null 2>&1; then
-    curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed";
+  curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed";
 elif type wget > /dev/null 2>&1; then 
-    wget --quiet "$NVM_SOURCE" -O nvm.sh || fatalExit "Failed";
+  wget --quiet "$NVM_SOURCE" -O nvm.sh || fatalExit "Failed";
 else
-    fatalExit "Must have curl or wget to install nvm";
+  fatalExit "Must have curl or wget to install nvm";
 fi
 
 echo "Downloaded"
