@@ -17,7 +17,16 @@ fi
 mkdir -p "$NVM_DIR"
 pushd "$NVM_DIR" > /dev/null
 echo -ne "=> Downloading... "
-curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed";
+
+# Detect if curl or wget is installed to download NVM_SOURCE
+if type curl > /dev/null 2>&1; then
+    curl --silent "$NVM_SOURCE" -o nvm.sh || fatalExit "Failed";
+elif type wget > /dev/null 2>&1; then 
+    wget --quiet "$NVM_SOURCE" -O nvm.sh || fatalExit "Failed";
+else
+    fatalExit "Must have curl or wget to install nvm";
+fi
+
 echo "Downloaded"
 popd > /dev/null
 
@@ -26,9 +35,9 @@ if [ ! -z "$1" ]; then
   PROFILE="$1"
 else
   if [ -f "$HOME/.bash_profile" ]; then
-	PROFILE="$HOME/.bash_profile"
+    PROFILE="$HOME/.bash_profile"
   elif [ -f "$HOME/.profile" ]; then
-	PROFILE="$HOME/.profile"
+    PROFILE="$HOME/.profile"
   fi
 fi
 
@@ -36,9 +45,9 @@ SOURCE_STR="[[ -s "$NVM_DIR/nvm.sh" ]] && . "$NVM_DIR/nvm.sh"  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
-	echo "=> Profile not found"
+    echo "=> Profile not found"
   else
-	echo "=> Profile $PROFILE not found"
+    echo "=> Profile $PROFILE not found"
   fi
   echo "=> Append the following line to the correct file yourself"
   echo
