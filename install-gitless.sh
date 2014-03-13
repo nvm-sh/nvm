@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function fatalExit (){
+fatalExit (){
   echo "$@" && exit 1;
 }
 
