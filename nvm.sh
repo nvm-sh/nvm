@@ -100,6 +100,7 @@ nvm_ls() {
 nvm_ls_remote() {
   local PATTERN=$1
   local VERSIONS
+  local GREP_OPTIONS=''
   if [ "$PATTERN" ]; then
     if echo "${PATTERN}" | \grep -v '^v' ; then
       PATTERN=v$PATTERN
@@ -170,6 +171,7 @@ nvm() {
   local uname="$(uname -a)"
   local os=
   local arch="$(uname -m)"
+  local GREP_OPTIONS=''
   case "$uname" in
     Linux\ *) os=linux ;;
     Darwin\ *) os=darwin ;;
