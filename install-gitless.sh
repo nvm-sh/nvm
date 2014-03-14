@@ -6,11 +6,11 @@ fatalExit (){
   echo "$@" && exit 1;
 }
 
-if [ ! "$NVM_SOURCE" ]; then
+if [ -z "$NVM_SOURCE" ]; then
   NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
 fi
 
-if [ ! "$NVM_DIR" ]; then
+if [ -z "$NVM_DIR" ]; then
   NVM_DIR="$HOME/.nvm"
 fi
 
