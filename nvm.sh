@@ -51,7 +51,7 @@ nvm_version() {
     PATTERN='current'
   fi
 
-  VERSION=`nvm_ls $PATTERN`
+  VERSION=`nvm_ls $PATTERN | tail -n1`
   echo "$VERSION"
 
   if [ "$VERSION" = 'N/A' ]; then
