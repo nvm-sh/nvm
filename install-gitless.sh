@@ -66,3 +66,4 @@ else
 fi
 
 echo "=> Close and reopen your terminal to start using NVM"
+

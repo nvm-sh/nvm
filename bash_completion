@@ -87,3 +87,4 @@ if [[ -n ${ZSH_VERSION-} ]]; then
 fi
 
 complete -o default -o nospace -F __nvm nvm
+

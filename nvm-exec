@@ -12,3 +12,4 @@ fi
 nvm use $NODE_VERSION
 
 exec $@
+
