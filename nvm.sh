@@ -47,7 +47,7 @@ nvm_version() {
   local PATTERN=$1
   local VERSION
   # The default version is the current one
-  if [ ! "$PATTERN" ]; then
+  if [ -z "$PATTERN" ]; then
     PATTERN='current'
   fi
 
@@ -89,7 +89,7 @@ nvm_ls() {
     VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "v$PATTERN*" -exec basename '{}' ';' \
       | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
   fi
-  if [ ! "$VERSIONS" ]; then
+  if [ -z "$VERSIONS" ]; then
       echo "N/A"
       return
   fi
@@ -101,7 +101,7 @@ nvm_ls_remote() {
   local PATTERN=$1
   local VERSIONS
   local GREP_OPTIONS=''
-  if [ "$PATTERN" ]; then
+  if [ -n "$PATTERN" ]; then
     if echo "${PATTERN}" | \grep -v '^v' ; then
       PATTERN=v$PATTERN
     fi
@@ -112,7 +112,7 @@ nvm_ls_remote() {
               | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
               | \grep -w "${PATTERN}" \
               | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
-  if [ ! "$VERSIONS" ]; then
+  if [ -z "$VERSIONS" ]; then
     echo "N/A"
     return
   fi
@@ -121,9 +121,9 @@ nvm_ls_remote() {
 }
 
 nvm_checksum() {
-  if which shasum >/dev/null 2>&1; then
+  if has "shasum"; then
     checksum=$(shasum $1 | awk '{print $1}')
-  elif which sha1 >/dev/null 2>&1; then
+  elif has "sha1"; then
     checksum=$(sha1 -q $1)
   else
     checksum=$(sha1sum $1 | awk '{print $1}')
@@ -131,7 +131,7 @@ nvm_checksum() {
 
   if [ "$checksum" = "$2" ]; then
     return
-  elif [ -z $2 ]; then
+  elif [ -z "$2" ]; then
     echo 'Checksums empty' #missing in raspberry pi binary
     return
   else
@@ -320,7 +320,7 @@ nvm() {
         tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
       fi
       if (
-        [ ! -z $tarball ] && \
+        [ -n "$tarball" ] && \
         mkdir -p "$tmpdir" && \
         curl -L --progress-bar $tarball -o "$tmptarball" && \
         nvm_checksum "$tmptarball" $sum && \
@@ -359,7 +359,7 @@ nvm() {
         return 1
       fi
       VERSION=`nvm_version $2`
-      if [ ! -d $NVM_DIR/$VERSION ]; then
+      if [ ! -d "$NVM_DIR/$VERSION" ]; then
         echo "$VERSION version is not installed..."
         return;
       fi
@@ -409,17 +409,17 @@ nvm() {
       fi
       if [ $# -eq 1 ]; then
         rc_nvm_version
-        if [ ! -z $RC_VERSION ]; then
+        if [ -n "$RC_VERSION" ]; then
             VERSION=`nvm_version $RC_VERSION`
         fi
       else
         VERSION=`nvm_version $2`
       fi
-      if [ -z $VERSION ]; then
+      if [ -z "$VERSION" ]; then
         nvm help
         return
       fi
-      if [ -z $VERSION ]; then
+      if [ -z "$VERSION" ]; then
         VERSION=`nvm_version $2`
       fi
       if [ ! -d "$NVM_DIR/$VERSION" ]; then
@@ -460,7 +460,7 @@ nvm() {
         return
       fi
       VERSION=`nvm_version $2`
-      if [ ! -d $NVM_DIR/$VERSION ]; then
+      if [ ! -d "$NVM_DIR/$VERSION" ]; then
         echo "$VERSION version is not installed yet"
         return;
       fi
@@ -504,7 +504,7 @@ nvm() {
         done
         return
       fi
-      if [ ! "$3" ]; then
+      if [ -z "$3" ]; then
           rm -f $NVM_DIR/alias/$2
           echo "$2 -> *poof*"
           return
@@ -524,7 +524,7 @@ nvm() {
     "unalias" )
       mkdir -p $NVM_DIR/alias
       [ $# -ne 2 ] && nvm help && return
-      [ ! -f $NVM_DIR/alias/$2 ] && echo "Alias $2 doesn't exist!" && return
+      [ ! -f "$NVM_DIR/alias/$2" ] && echo "Alias $2 doesn't exist!" && return
       rm -f $NVM_DIR/alias/$2
       echo "Deleted alias $2"
     ;;
