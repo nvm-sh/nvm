@@ -26,9 +26,6 @@ if [ ! -d "$NVM_DIR" ]; then
   fi
 fi
 
-DASH_E=""
-[ -z "$(echo -n -e)" ] && DASH_E="-e"
-
 # Setup mirror location if not already set
 if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
   export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
@@ -140,24 +137,19 @@ nvm_checksum() {
   fi
 }
 
-colorize_version() {
-  if [ -n "$DASH_E" ]; then
-    echo $DASH_E "\033[0;34m$1\033[0m"
-  else
-    echo $1
-  fi
-}
-
 print_versions() {
   local VERSION
-  local PADDED_VERSION
-  for VERSION in $1; do
-    PADDED_VERSION=`printf '%10s' $VERSION`
-    if [ -d "$NVM_DIR/$VERSION" ]; then
-      colorize_version "$PADDED_VERSION"
+  local FORMAT
+  local CURRENT=`nvm_version current`
+  echo "$1" | while read VERSION; do
+    if [ "$VERSION" == "$CURRENT" ]; then
+      FORMAT='\033[0;32m-> %9s\033[0m'
+    elif [ -d "$NVM_DIR/$VERSION" ]; then
+      FORMAT='\033[0;34m%12s\033[0m'
     else
-      echo "$PADDED_VERSION"
+      FORMAT='%12s'
     fi
+    printf "$FORMAT\n" $VERSION
   done
 }
 
@@ -475,7 +467,6 @@ nvm() {
     "ls" | "list" )
       print_versions "`nvm_ls $2`"
       if [ $# -eq 1 ]; then
-        printf "current: \t"; nvm_version current
         nvm alias
       fi
       return
@@ -485,7 +476,7 @@ nvm() {
         return
     ;;
     "current" )
-      echo $DASH_E -n "current: \t"; nvm_version current
+      nvm_version current
     ;;
     "alias" )
       mkdir -p $NVM_DIR/alias
@@ -548,7 +539,7 @@ nvm() {
         echo "Cache cleared."
     ;;
     "version" )
-        colorize_version "`nvm_version $2`"
+        nvm_version $2
     ;;
     * )
       nvm help
