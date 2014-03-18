@@ -5,14 +5,14 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
-has() {
+nvm_has() {
   type "$1" > /dev/null 2>&1
   return $?
 }
 
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
-if has "unsetopt"; then
+if nvm_has "unsetopt"; then
   unsetopt nomatch 2>/dev/null
   NVM_CD_FLAGS="-q"
 fi
@@ -32,7 +32,7 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
 fi
 
 # Obtain nvm version from rc file
-rc_nvm_version() {
+nvm_rc_version() {
   if [ -e .nvmrc ]; then
     RC_VERSION=`cat .nvmrc | head -n 1`
     echo "Found .nvmrc files with version <$RC_VERSION>"
@@ -118,9 +118,9 @@ nvm_ls_remote() {
 }
 
 nvm_checksum() {
-  if has "shasum"; then
+  if nvm_has "shasum"; then
     checksum=$(shasum $1 | awk '{print $1}')
-  elif has "sha1"; then
+  elif nvm_has "sha1"; then
     checksum=$(sha1 -q $1)
   else
     checksum=$(sha1sum $1 | awk '{print $1}')
@@ -137,7 +137,7 @@ nvm_checksum() {
   fi
 }
 
-print_versions() {
+nvm_print_versions() {
   local VERSION
   local FORMAT
   local CURRENT=`nvm_version current`
@@ -222,7 +222,7 @@ nvm() {
       local tarball
       local nobinary
 
-      if ! has "curl"; then
+      if ! nvm_has "curl"; then
         echo 'NVM Needs curl to proceed.' >&2;
       fi
 
@@ -325,7 +325,7 @@ nvm() {
         )
       then
         nvm use $VERSION
-        if ! has "npm" ; then
+        if ! nvm_has "npm" ; then
           echo "Installing npm..."
           if [ "`expr "$VERSION" : '\(^v0\.1\.\)'`" != '' ]; then
             echo "npm requires node v0.2.3 or higher"
@@ -400,7 +400,7 @@ nvm() {
         return
       fi
       if [ $# -eq 1 ]; then
-        rc_nvm_version
+        nvm_rc_version
         if [ -n "$RC_VERSION" ]; then
             VERSION=`nvm_version $RC_VERSION`
         fi
@@ -465,14 +465,14 @@ nvm() {
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "${@:3}"
     ;;
     "ls" | "list" )
-      print_versions "`nvm_ls $2`"
+      nvm_print_versions "`nvm_ls $2`"
       if [ $# -eq 1 ]; then
         nvm alias
       fi
       return
     ;;
     "ls-remote" | "list-remote" )
-        print_versions "`nvm_ls_remote $2`"
+        nvm_print_versions "`nvm_ls_remote $2`"
         return
     ;;
     "current" )
