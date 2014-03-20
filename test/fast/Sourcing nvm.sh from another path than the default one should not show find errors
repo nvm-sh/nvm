@@ -1,0 +1,8 @@
+#!/bin/zsh
+
+# ~/.nvm must not be present
+. ../../nvm.sh
+
+# Displays
+# find: ‘<home>/.nvm/’: No such file or directory
+# find: ‘<home>/.nvm/’: No such file or directory
