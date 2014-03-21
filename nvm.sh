@@ -188,6 +188,7 @@ nvm() {
       echo
       echo "Usage:"
       echo "    nvm help                    Show this message"
+      echo "    nvm --version               Print out the latest released version of nvm"
       echo "    nvm install [-s] <version>  Download and install a <version>, [-s] from source"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>"
@@ -540,6 +541,9 @@ nvm() {
     ;;
     "version" )
         nvm_version $2
+    ;;
+    "--version" )
+        echo "nvm v0.3.0"
     ;;
     * )
       nvm help
