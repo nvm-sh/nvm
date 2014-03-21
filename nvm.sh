@@ -5,6 +5,8 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
+SCRIPT_SOURCE="$_"
+
 nvm_has() {
   type "$1" > /dev/null 2>&1
   return $?
@@ -17,14 +19,15 @@ if nvm_has "unsetopt"; then
   NVM_CD_FLAGS="-q"
 fi
 
-# Auto detect the NVM_DIR
-if [ ! -d "$NVM_DIR" ]; then
+# Auto detect the NVM_DIR when not set
+if [ -z "$NVM_DIR" ]; then
   if [ -n "$BASH_SOURCE" ]; then
-    export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
-  else
-    export NVM_DIR=$HOME/.nvm
+    SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
+  export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname "${SCRIPT_SOURCE:-$0}") > /dev/null && pwd)
 fi
+unset SCRIPT_SOURCE 2> /dev/null
+
 
 # Setup mirror location if not already set
 if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
