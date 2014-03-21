@@ -19,8 +19,12 @@ fi
 
 # Auto detect the NVM_DIR
 if [ ! -d "$NVM_DIR" ]; then
-  if [ -n "$BASH_SOURCE" ]; then
-    export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname ${BASH_SOURCE[0]:-$0}) > /dev/null && pwd)
+  if [ -n "${BASH_SOURCE}" ]; then
+    export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname $BASH_SOURCE) > /dev/null && pwd)
+  elif [ "$(basename $0)" = nvm.sh ]; then
+    # Works in shells that put the path of the sourcee into $0. Unfortunately
+    # dash is not among these.
+    export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname $0) > /dev/null && pwd)
   else
     export NVM_DIR=$HOME/.nvm
   fi
