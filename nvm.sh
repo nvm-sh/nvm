@@ -225,6 +225,7 @@ nvm() {
 
       if ! nvm_has "curl"; then
         echo 'NVM Needs curl to proceed.' >&2;
+        return 1
       fi
 
       if [ $# -lt 2 ]; then
