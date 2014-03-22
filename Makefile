@@ -13,3 +13,4 @@ test: fast
 	@$(URCHIN) -f test/slow 
 
 default: test
+
