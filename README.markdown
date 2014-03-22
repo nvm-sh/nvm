@@ -1,4 +1,4 @@
-# Node Version Manager
+# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)](https://travis-ci.org/creationix/nvm)
 
 ## Installation
 
