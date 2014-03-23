@@ -5,7 +5,7 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
-SCRIPT_SOURCE="$_"
+NVM_SCRIPT_SOURCE="$_"
 
 nvm_has() {
   type "$1" > /dev/null 2>&1
@@ -22,11 +22,11 @@ fi
 # Auto detect the NVM_DIR when not set
 if [ -z "$NVM_DIR" ]; then
   if [ -n "$BASH_SOURCE" ]; then
-    SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+    NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
-  export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname "${SCRIPT_SOURCE:-$0}") > /dev/null && pwd)
+  export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname "${NVM_SCRIPT_SOURCE:-$0}") > /dev/null && pwd)
 fi
-unset SCRIPT_SOURCE 2> /dev/null
+unset NVM_SCRIPT_SOURCE 2> /dev/null
 
 
 # Setup mirror location if not already set
@@ -37,8 +37,8 @@ fi
 # Obtain nvm version from rc file
 nvm_rc_version() {
   if [ -e .nvmrc ]; then
-    RC_VERSION=`cat .nvmrc | head -n 1`
-    echo "Found .nvmrc files with version <$RC_VERSION>"
+    NVM_RC_VERSION=`cat .nvmrc | head -n 1`
+    echo "Found .nvmrc files with version <$NVM_RC_VERSION>"
   fi
 }
 
@@ -158,7 +158,7 @@ nvm_print_versions() {
   local FORMAT
   local CURRENT=`nvm_version current`
   echo "$1" | while read VERSION; do
-    if [ "$VERSION" == "$CURRENT" ]; then
+    if [ "$VERSION" = "$CURRENT" ]; then
       FORMAT='\033[0;32m-> %9s\033[0m'
     elif [ -d "$NVM_DIR/$VERSION" ]; then
       FORMAT='\033[0;34m%12s\033[0m'
@@ -358,7 +358,7 @@ nvm() {
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
       PATTERN=`nvm_format_version $2`
-      if [[ $PATTERN == `nvm_version` ]]; then
+      if [ "$PATTERN" = `nvm_version` ]; then
         echo "nvm: Cannot uninstall currently-active node version, $PATTERN."
         return 1
       fi
@@ -413,8 +413,8 @@ nvm() {
       fi
       if [ $# -eq 1 ]; then
         nvm_rc_version
-        if [ -n "$RC_VERSION" ]; then
-            VERSION=`nvm_version $RC_VERSION`
+        if [ -n "$NVM_RC_VERSION" ]; then
+            VERSION=`nvm_version $NVM_RC_VERSION`
         fi
       else
         VERSION=`nvm_version $2`
