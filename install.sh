@@ -1,6 +1,9 @@
 #!/bin/bash
 
-NVM_DIR="$HOME/.nvm"
+if [ -z "$NVM_DIR" ]
+then
+  NVM_DIR="$HOME/.nvm"
+fi
 
 if ! hash git 2>/dev/null; then
   echo >&2 "You need to install git - visit http://git-scm.com/downloads"
@@ -14,7 +17,7 @@ if [ -d "$NVM_DIR" ]; then
   cd $NVM_DIR && git pull
 else
   # Cloning to $NVM_DIR
-  git clone https://github.com/creationix/nvm.git $NVM_DIR  
+  git clone https://github.com/creationix/nvm.git $NVM_DIR
 fi
 
 echo
@@ -32,7 +35,7 @@ else
   fi
 fi
 
-SOURCE_STR="[[ -s \$HOME/.nvm/nvm.sh ]] && . \$HOME/.nvm/nvm.sh  # This loads NVM"
+SOURCE_STR="[[ -s $NVM_DIR/nvm.sh ]] && . $NVM_DIR/nvm.sh  # This loads NVM"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
