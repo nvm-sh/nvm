@@ -116,6 +116,12 @@ To activate, you need to source `bash_completion`:
 
 Put the above sourcing line just below the sourcing line for NVM in your profile (`.bashrc`, `.bash_profile`).
 
+## System-wide Installation
+
+  To install nvm for all users, define the environment variable `NVM_DIR` for the install script:
+
+    curl https://raw.github.com/creationix/nvm/v0.3.0/install.sh | NVM_DIR=/usr/local/nvm sh
+
 ### Usage
 
 nvm
