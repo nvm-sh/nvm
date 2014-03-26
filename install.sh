@@ -14,9 +14,9 @@ fi
 download_file() {
   # download_file source destination
   if has "curl"; then
-    curl --silent "$1" -o "$2"
+    curl -s "$1" -o "$2"
   elif has "wget"; then
-    wget --quiet "$1" -O "$2"
+    wget -q "$1" -O "$2"
   else
     return 1
   fi
@@ -28,13 +28,15 @@ install_from_git() {
   fi
 
   if [ -d "$NVM_DIR/.git" ]; then
-    echo "=> NVM is already installed in $NVM_DIR, trying to update"
+    echo "=> nvm is already installed in $NVM_DIR, trying to update"
     echo -e "\r=> \c"
     cd "$NVM_DIR" && git pull 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.."
     }
   else
     # Cloning to $NVM_DIR
+    echo "=> Downloading nvm from git to '$NVM_DIR'"
+    echo -e "\r=> \c"
     mkdir -p "$NVM_DIR"
     git clone "$NVM_SOURCE" "$NVM_DIR"
   fi
@@ -48,23 +50,37 @@ install_as_script() {
   # Downloading to $NVM_DIR
   mkdir -p "$NVM_DIR"
   if [ -d "$NVM_DIR/nvm.sh" ]; then
-    echo "=> NVM is already installed in $NVM_DIR, trying to update"
+    echo "=> nvm is already installed in $NVM_DIR, trying to update"
   else
-    echo "=> Downloading NVM to '$NVM_DIR'"
+    echo "=> Downloading nvm as script to '$NVM_DIR'"
   fi
   download_file "$NVM_SOURCE" "$NVM_DIR/nvm.sh" || {
-    echo >&2 "Failed.."
+    echo >&2 "Failed to download '$NVM_SOURCE'.."
     return 1
   }
 }
 
-if has "git"; then
- install_from_git
+if [ -z "$METHOD" ]; then
+ install_from_git || {
+   echo >&2 "Install using git failed, falling to back to script"
+   install_as_script || {
+     echo >&2 "You need git, curl or wget to install nvm"
+     exit 1
+   }
+ }
 else
-  install_as_script || {
-    echo >&2 -e "You need git, curl or wget to install NVM"
-    exit 1
-  }
+  if [ "$METHOD" = "git" ]; then
+    install_from_git || {
+      echo >&2 "You need git to install nvm"
+      exit 1
+    }
+  fi
+  if [ "$METHOD" = "script" ]; then
+    install_as_script || {
+      echo >&2 "You need curl or wget to install nvm"
+      exit 1
+    }
+  fi
 fi
 
 echo
@@ -80,7 +96,7 @@ if [ -z "$PROFILE" ]; then
   fi
 fi
 
-SOURCE_STR="[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"  # This loads NVM"
+SOURCE_STR="[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"  # This loads nvm"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
@@ -105,5 +121,5 @@ else
   fi
 fi
 
-echo "=> Close and reopen your terminal to start using NVM"
+echo "=> Close and reopen your terminal to start using nvm"
 
