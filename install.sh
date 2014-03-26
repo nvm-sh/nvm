@@ -30,7 +30,10 @@ install_from_git() {
   if [ -d "$NVM_DIR/.git" ]; then
     echo "=> NVM is already installed in $NVM_DIR, trying to update"
     echo -e "\r=> \c"
-    cd "$NVM_DIR" && git pull
+    cd "$NVM_DIR" && git pull 2> /dev/null || {
+      echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.."
+      return 0
+    }
   else
     # Cloning to $NVM_DIR
     mkdir -p "$NVM_DIR"
