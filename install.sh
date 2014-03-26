@@ -61,13 +61,15 @@ install_as_script() {
 }
 
 if [ -z "$METHOD" ]; then
- install_from_git || {
-   echo >&2 "Install using git failed, falling to back to script"
-   install_as_script || {
-     echo >&2 "You need git, curl or wget to install nvm"
-     exit 1
-   }
- }
+  # Autodetect install method
+  if has "git"; then
+    install_from_git
+  elif has "curl" || has "wget"; then
+    install_as_script
+  else
+    echo >&2 "You need git, curl or wget to install nvm"
+    exit 1
+  fi
 else
   if [ "$METHOD" = "git" ]; then
     install_from_git || {
