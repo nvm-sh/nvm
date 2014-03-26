@@ -32,7 +32,6 @@ install_from_git() {
     echo -e "\r=> \c"
     cd "$NVM_DIR" && git pull 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.."
-      return 0
     }
   else
     # Cloning to $NVM_DIR
