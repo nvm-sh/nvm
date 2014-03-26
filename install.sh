@@ -11,16 +11,17 @@ if [ -z "$NVM_DIR" ]; then
   NVM_DIR="$HOME/.nvm"
 fi
 
-download_file() {
-  # download_file source destination
-  if has "curl"; then
-    curl -s "$1" -o "$2"
-  elif has "wget"; then
-    wget -q "$1" -O "$2"
-  else
-    return 1
+if ! has "curl"; then
+  if has "wget"; then
+    # Emulate curl with wget
+    curl() {
+      ARGS="$* "
+      ARGS=${ARGS/-s /-q }
+      ARGS=${ARGS/-o /-O }
+      wget $ARGS
+    }
   fi
-}
+fi
 
 install_from_git() {
   if [ -z "$NVM_SOURCE" ]; then
@@ -54,7 +55,7 @@ install_as_script() {
   else
     echo "=> Downloading nvm as script to '$NVM_DIR'"
   fi
-  download_file "$NVM_SOURCE" "$NVM_DIR/nvm.sh" || {
+  curl -s "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || {
     echo >&2 "Failed to download '$NVM_SOURCE'.."
     return 1
   }
@@ -64,7 +65,7 @@ if [ -z "$METHOD" ]; then
   # Autodetect install method
   if has "git"; then
     install_from_git
-  elif has "curl" || has "wget"; then
+  elif has "curl"; then
     install_as_script
   else
     echo >&2 "You need git, curl or wget to install nvm"
@@ -72,16 +73,18 @@ if [ -z "$METHOD" ]; then
   fi
 else
   if [ "$METHOD" = "git" ]; then
-    install_from_git || {
+    if ! has "git"; then
       echo >&2 "You need git to install nvm"
       exit 1
-    }
+    fi
+    install_from_git
   fi
   if [ "$METHOD" = "script" ]; then
-    install_as_script || {
+    if ! has "curl"; then
       echo >&2 "You need curl or wget to install nvm"
       exit 1
-    }
+    fi
+    install_as_script
   fi
 fi
 
