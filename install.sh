@@ -1,66 +1,130 @@
 #!/bin/bash
 
-NVM_DIR="$HOME/.nvm"
+set -e
 
-if ! hash git 2>/dev/null; then
-  echo >&2 "You need to install git - visit http://git-scm.com/downloads"
-  echo >&2 "or, use install-gitless.sh instead."
-  exit 1
+has() {
+  type "$1" > /dev/null 2>&1
+  return $?
+}
+
+if [ -z "$NVM_DIR" ]; then
+  NVM_DIR="$HOME/.nvm"
 fi
 
-if [ -d "$NVM_DIR" ]; then
-  echo "=> NVM is already installed in $NVM_DIR, trying to update"
-  echo -ne "\r=> "
-  cd $NVM_DIR && git pull
+if ! has "curl"; then
+  if has "wget"; then
+    # Emulate curl with wget
+    curl() {
+      ARGS="$* "
+      ARGS=${ARGS/-s /-q }
+      ARGS=${ARGS/-o /-O }
+      wget $ARGS
+    }
+  fi
+fi
+
+install_from_git() {
+  if [ -z "$NVM_SOURCE" ]; then
+    NVM_SOURCE="https://github.com/creationix/nvm.git"
+  fi
+
+  if [ -d "$NVM_DIR/.git" ]; then
+    echo "=> nvm is already installed in $NVM_DIR, trying to update"
+    echo -e "\r=> \c"
+    cd "$NVM_DIR" && git pull 2> /dev/null || {
+      echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.."
+    }
+  else
+    # Cloning to $NVM_DIR
+    echo "=> Downloading nvm from git to '$NVM_DIR'"
+    echo -e "\r=> \c"
+    mkdir -p "$NVM_DIR"
+    git clone "$NVM_SOURCE" "$NVM_DIR"
+  fi
+}
+
+install_as_script() {
+  if [ -z "$NVM_SOURCE" ]; then
+    NVM_SOURCE="https://raw.github.com/creationix/nvm/master/nvm.sh"
+  fi
+
+  # Downloading to $NVM_DIR
+  mkdir -p "$NVM_DIR"
+  if [ -d "$NVM_DIR/nvm.sh" ]; then
+    echo "=> nvm is already installed in $NVM_DIR, trying to update"
+  else
+    echo "=> Downloading nvm as script to '$NVM_DIR'"
+  fi
+  curl -s "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || {
+    echo >&2 "Failed to download '$NVM_SOURCE'.."
+    return 1
+  }
+}
+
+if [ -z "$METHOD" ]; then
+  # Autodetect install method
+  if has "git"; then
+    install_from_git
+  elif has "curl"; then
+    install_as_script
+  else
+    echo >&2 "You need git, curl or wget to install nvm"
+    exit 1
+  fi
 else
-  # Cloning to $NVM_DIR
-  git clone https://github.com/creationix/nvm.git $NVM_DIR  
+  if [ "$METHOD" = "git" ]; then
+    if ! has "git"; then
+      echo >&2 "You need git to install nvm"
+      exit 1
+    fi
+    install_from_git
+  fi
+  if [ "$METHOD" = "script" ]; then
+    if ! has "curl"; then
+      echo >&2 "You need curl or wget to install nvm"
+      exit 1
+    fi
+    install_as_script
+  fi
 fi
 
 echo
 
-# Detect profile file, .bash_profile has precedence over .profile
-if [ ! -z "$1" ]; then
-  PROFILE="$1"
-else
+# Detect profile file if not specified as environment variable (eg: PROFILE=~/.myprofile).
+if [ -z "$PROFILE" ]; then
   if [ -f "$HOME/.bash_profile" ]; then
-	PROFILE="$HOME/.bash_profile"
+    PROFILE="$HOME/.bash_profile"
   elif [ -f "$HOME/.zshrc" ]; then
-  	PROFILE="$HOME/.zshrc"
+    PROFILE="$HOME/.zshrc"
   elif [ -f "$HOME/.profile" ]; then
-	PROFILE="$HOME/.profile"
+    PROFILE="$HOME/.profile"
   fi
 fi
 
-SOURCE_STR="[[ -s \$HOME/.nvm/nvm.sh ]] && . \$HOME/.nvm/nvm.sh  # This loads NVM"
+SOURCE_STR="[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"  # This loads nvm"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
-	echo "=> Profile not found. Tried $HOME/.bash_profile and $HOME/.profile"
+    echo "=> Profile not found. Tried ~/.bash_profile ~/.zshrc and ~/.profile."
+    echo "=> Create one of them and run this script again"
   else
-	echo "=> Profile $PROFILE not found"
+    echo "=> Profile $PROFILE not found"
+    echo "=> Create it (touch $PROFILE) and run this script again"
   fi
-  echo "=> Run this script again after running the following:"
+  echo "   OR"
+  echo "=> Append the following line to the correct file yourself:"
   echo
-  echo "\ttouch $HOME/.profile"
+  echo "   $SOURCE_STR"
   echo
-  echo "-- OR --"
-  echo
-  echo "=> Append the following line to the correct file yourself"
-  echo
-  echo "\t$SOURCE_STR"
-  echo
-  echo "=> Close and reopen your terminal afterwards to start using NVM"
-  exit
-fi
-
-if ! grep -qc 'nvm.sh' $PROFILE; then
-  echo "=> Appending source string to $PROFILE"
-  echo "" >> "$PROFILE"
-  echo $SOURCE_STR >> "$PROFILE"
 else
-  echo "=> Source string already in $PROFILE"
+  if ! grep -qc 'nvm.sh' $PROFILE; then
+    echo "=> Appending source string to $PROFILE"
+    echo "" >> "$PROFILE"
+    echo $SOURCE_STR >> "$PROFILE"
+  else
+    echo "=> Source string already in $PROFILE"
+  fi
 fi
 
-echo "=> Close and reopen your terminal to start using NVM"
+echo "=> Close and reopen your terminal to start using nvm"
 
