@@ -6,13 +6,13 @@ First you'll need to make sure your system has a c++ compiler.  For OSX, XCode w
 
 ### Install script
 
-To install you could use the [install script](https://github.com/creationix/nvm/blob/v0.3.0/install.sh) using cURL:
+To install you could use the [install script](https://github.com/creationix/nvm/blob/v0.4.0/install.sh) using cURL:
 
-    curl https://raw.github.com/creationix/nvm/v0.3.0/install.sh | sh
+    curl https://raw.github.com/creationix/nvm/v0.4.0/install.sh | sh
 
 or Wget:
 
-    wget -qO- https://raw.github.com/creationix/nvm/v0.3.0/install.sh | sh
+    wget -qO- https://raw.github.com/creationix/nvm/v0.4.0/install.sh | sh
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
