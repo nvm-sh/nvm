@@ -207,7 +207,7 @@ nvm() {
       echo "    nvm --version               Print out the latest released version of nvm"
       echo "    nvm install [-s] <version>  Download and install a <version>, [-s] from source"
       echo "    nvm uninstall <version>     Uninstall a version"
-      echo "    nvm use <version>           Modify PATH to use <version>"
+      echo "    nvm use <version>           Modify PATH to use <version>. Uses .nvmrc if available"
       echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
       echo "    nvm current                 Display currently activated version"
       echo "    nvm ls                      List installed versions"
