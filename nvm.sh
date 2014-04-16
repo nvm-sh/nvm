@@ -77,7 +77,7 @@ nvm_normalize_version() {
 nvm_format_version() {
   echo "$1" | sed -e 's/^\([0-9]\)/v\1/g'
 }
-  
+
 nvm_binary_available() {
   # binaries started with node 0.8.6
   local MINIMAL="0.8.6"
