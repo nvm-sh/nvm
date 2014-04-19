@@ -1,0 +1,11 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+nvm uninstall v0.10.7
+
+rm .nvmrc
+
+if [ -f ".nvmrc.bak" ]; then
+  mv .nvmrc.bak .nvmrc
+fi
+
