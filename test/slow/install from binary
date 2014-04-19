@@ -3,7 +3,7 @@
 set -e
 . ../../nvm.sh
 
-VERSION=v0.10.26
+VERSION=v0.10.7
 
 # Remove the stuff we're clobbering.
 [ -e ../../$VERSION ] && rm -R ../../$VERSION
