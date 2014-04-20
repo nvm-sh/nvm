@@ -4,21 +4,21 @@ set -e
 . ../../../nvm.sh
 
 # Remove the stuff we're clobbering.
-[ -e ../../../v0.10.7 ] && rm -R ../../../v0.10.7
-[ -e ../../../v0.10.8 ] && rm -R ../../../v0.10.8
+[ -e ../../../v0.9.7 ] && rm -R ../../../v0.9.7
+[ -e ../../../v0.9.12 ] && rm -R ../../../v0.9.12
 
 # Install from binary
-nvm install 0.10.7
-nvm install 0.10.8
+nvm install 0.9.7
+nvm install 0.9.12
 
 # Check
-[ -d ../../../v0.10.7 ]
-[ -d ../../../v0.10.8 ]
+[ -d ../../../v0.9.7 ]
+[ -d ../../../v0.9.12 ]
 
 # Use the first one
-nvm use 0.10.7
+nvm use 0.9.7
 
 # Use the latest one
-nvm use 0.10
-node --version | grep v0.10.8
+nvm use 0.9
+node --version | grep v0.9.12
 
