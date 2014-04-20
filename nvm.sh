@@ -208,7 +208,7 @@ nvm() {
       echo "    nvm install [-s] <version>  Download and install a <version>, [-s] from source. Uses .nvmrc if available"
       echo "    nvm uninstall <version>     Uninstall a version"
       echo "    nvm use <version>           Modify PATH to use <version>. Uses .nvmrc if available"
-      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments"
+      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments. Uses .nvmrc if available for <version>"
       echo "    nvm current                 Display currently activated version"
       echo "    nvm ls                      List installed versions"
       echo "    nvm ls <version>            List versions matching a given description"
@@ -471,20 +471,37 @@ nvm() {
       echo "Now using node $VERSION"
     ;;
     "run" )
+      local provided_version
+      local has_checked_nvmrc=0
       # run given version of node
-      if [ $# -lt 2 ]; then
-        nvm_rc_version
-        if [ -z "$NVM_RC_VERSION" ]; then
+      shift
+      if [ $# -lt 1 ]; then
+        nvm_rc_version && has_checked_nvmrc=1
+        if [ -n "$NVM_RC_VERSION" ]; then
+          VERSION=`nvm_version $NVM_RC_VERSION`
+        else
+          VERSION='N/A'
+        fi
+        if [ $VERSION = "N/A" ]; then
           nvm help
           return
         fi
       fi
-      NVM_PROVIDED_VERSION=`nvm_version $2`
-      if [ -z "$NVM_PROVIDED_VERSION" ]; then
-        nvm_rc_version
-        NVM_PROVIDED_VERSION="$NVM_RC_VERSION"
+
+      provided_version=$1
+      if [ -n "$provided_version" ]; then
+        VERSION=`nvm_version $provided_version`
+        if [ $VERSION = "N/A" ]; then
+          provided_version=''
+          if [ $has_checked_nvmrc -ne 1 ]; then
+            nvm_rc_version && has_checked_nvmrc=1
+          fi
+          VERSION=`nvm_version $NVM_RC_VERSION`
+        else
+          shift
+        fi
       fi
-      VERSION="$NVM_PROVIDED_VERSION"
+
       if [ ! -d "$NVM_DIR/$VERSION" ]; then
         echo "$VERSION version is not installed yet"
         return;
@@ -495,7 +512,7 @@ nvm() {
         RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
       fi
       echo "Running node $VERSION"
-      NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "${@:3}"
+      NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
     "ls" | "list" )
       nvm_print_versions "`nvm_ls $2`"
