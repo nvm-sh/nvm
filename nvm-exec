@@ -4,12 +4,11 @@ DIR="$(command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source "$DIR/nvm.sh"
 
-if [ ! "$NODE_VERSION" ]; then
-  echo 'NODE_VERSION not set'
-  exit 1
+if [ -n "$NODE_VERSION" ]; then
+  nvm use $NODE_VERSION || (echo "NODE_VERSION not set" && exit 127)
+else
+  nvm use || (echo "No .nvmrc file found" && exit 127)
 fi
-
-nvm use $NODE_VERSION
 
 exec $@
 
