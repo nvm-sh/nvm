@@ -1,4 +1,4 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)](https://travis-ci.org/creationix/nvm)
+# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3]
 
 ## Installation
 
@@ -6,7 +6,7 @@ First you'll need to make sure your system has a c++ compiler.  For OSX, XCode w
 
 ### Install script
 
-To install you could use the [install script](https://github.com/creationix/nvm/blob/v0.5.0/install.sh) using cURL:
+To install you could use the [install script][2] using cURL:
 
     curl https://raw.github.com/creationix/nvm/v0.5.0/install.sh | sh
 
@@ -90,7 +90,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Running tests
-Tests are written in [Urchin](https://github.com/scraperwiki/urchin). Install Urchin (and other dependencies) like so:
+Tests are written in [Urchin]. Install Urchin (and other dependencies) like so:
 
     npm install
 
@@ -162,4 +162,9 @@ on Arch Linux and other systems using python3 by default, before running *instal
 After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
 
     nvm install -s 0.8.6
+
+[1]: https://github.com/creationix/nvm.git
+[2]: https://github.com/creationix/nvm/blob/v0.5.0/install.sh
+[3]: https://travis-ci.org/creationix/nvm
+[Urchin]: https://github.com/scraperwiki/urchin
 
