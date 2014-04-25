@@ -422,7 +422,7 @@ nvm() {
     "use" )
       if [ $# -eq 0 ]; then
         nvm help
-        return
+        return 127
       fi
       if [ $# -eq 1 ]; then
         nvm_rc_version
@@ -434,7 +434,7 @@ nvm() {
       fi
       if [ -z "$VERSION" ]; then
         nvm help
-        return
+        return 127
       fi
       if [ -z "$VERSION" ]; then
         VERSION=`nvm_version $2`
@@ -484,7 +484,7 @@ nvm() {
         fi
         if [ $VERSION = "N/A" ]; then
           nvm help
-          return
+          return 127
         fi
       fi
 
@@ -564,7 +564,7 @@ nvm() {
     ;;
     "unalias" )
       mkdir -p $NVM_DIR/alias
-      [ $# -ne 2 ] && nvm help && return
+      [ $# -ne 2 ] && nvm help && return 127
       [ ! -f "$NVM_DIR/alias/$2" ] && echo "Alias $2 doesn't exist!" && return
       rm -f $NVM_DIR/alias/$2
       echo "Deleted alias $2"
@@ -572,7 +572,7 @@ nvm() {
     "copy-packages" )
         if [ $# -ne 2 ]; then
           nvm help
-          return
+          return 127
         fi
         VERSION=`nvm_version $2`
         local ROOT=`(nvm use $VERSION && npm -g root)`
