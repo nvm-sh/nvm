@@ -8,11 +8,11 @@ First you'll need to make sure your system has a c++ compiler.  For OSX, XCode w
 
 To install you could use the [install script][2] using cURL:
 
-    curl https://raw.github.com/creationix/nvm/v0.5.1/install.sh | sh
+    curl https://raw.githubusercontent.com/creationix/nvm/v0.5.1/install.sh | sh
 
 or Wget:
 
-    wget -qO- https://raw.github.com/creationix/nvm/v0.5.1/install.sh | sh
+    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.5.1/install.sh | sh
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
