@@ -34,11 +34,18 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
   export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
 fi
 
+nvm_find_nvmrc() {
+  if [ -e '.nvmrc' ]; then
+    echo '.nvmrc'
+  fi
+}
+
 # Obtain nvm version from rc file
 nvm_rc_version() {
-  if [ -e .nvmrc ]; then
-    NVM_RC_VERSION=`cat .nvmrc | head -n 1`
-    echo "Found .nvmrc files with version <$NVM_RC_VERSION>"
+  local NVMRC_PATH=$(nvm_find_nvmrc)
+  if [ -e "$NVMRC_PATH" ]; then
+    NVM_RC_VERSION=`cat "$NVMRC_PATH" | head -n 1`
+    echo "Found $NVMRC_PATH with version <$NVM_RC_VERSION>"
   fi
 }
 
