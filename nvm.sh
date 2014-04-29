@@ -35,9 +35,13 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
 fi
 
 nvm_find_nvmrc() {
-  if [ -e '.nvmrc' ]; then
-    echo '.nvmrc'
-  fi
+  typeset dir="$PWD"
+  typeset found=""
+  while [ "$dir" != "/" ] && [ "$found" = "" ]; do
+    found=$(find "$dir" -maxdepth 1 -name ".nvmrc")
+    dir=$(cd "$dir/.." && pwd -P)
+  done
+  echo $found
 }
 
 # Obtain nvm version from rc file
