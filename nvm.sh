@@ -34,14 +34,22 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
   export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
 fi
 
-nvm_find_nvmrc() {
-  typeset dir="$PWD"
-  typeset found=""
-  while [ "$dir" != "/" ] && [ "$found" = "" ]; do
-    found=$(find "$dir" -maxdepth 1 -name ".nvmrc")
-    dir=$(cd "$dir/.." && pwd -P)
+# Traverse up in directory tree to find containing folder
+nvm_find_up() {
+  typeset path
+  path=$(pwd)
+  while [[ "$path" != "" && ! -e "$path/$1" ]]; do
+    path=${path%/*}
   done
-  echo $found
+  echo "$path"
+}
+
+
+nvm_find_nvmrc() {
+  typeset dir=$(nvm_find_up '.nvmrc')
+  if [ -e "$dir/.nvmrc" ]; then
+    echo "$dir/.nvmrc"
+  fi
 }
 
 # Obtain nvm version from rc file
