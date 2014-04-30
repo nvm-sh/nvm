@@ -44,8 +44,8 @@ nvm_rc_version() {
 
 # Expand a version using the version cache
 nvm_version() {
-  local PATTERN=$1
-  local VERSION
+  typeset PATTERN=$1
+  typeset VERSION
   # The default version is the current one
   if [ -z "$PATTERN" ]; then
     PATTERN='current'
@@ -60,8 +60,8 @@ nvm_version() {
 }
 
 nvm_remote_version() {
-  local PATTERN=$1
-  local VERSION
+  typeset PATTERN=$1
+  typeset VERSION
   VERSION=`nvm_ls_remote $PATTERN | tail -n1`
   echo "$VERSION"
 
@@ -80,14 +80,14 @@ nvm_format_version() {
 
 nvm_binary_available() {
   # binaries started with node 0.8.6
-  local MINIMAL="0.8.6"
-  local VERSION=$1
+  typeset MINIMAL="0.8.6"
+  typeset VERSION=$1
   [ $(nvm_normalize_version $VERSION) -ge $(nvm_normalize_version $MINIMAL) ]
 }
 
 nvm_ls() {
-  local PATTERN=$1
-  local VERSIONS=''
+  typeset PATTERN=$1
+  typeset VERSIONS=''
   if [ "$PATTERN" = 'current' ]; then
     echo `node -v 2>/dev/null`
     return
@@ -113,9 +113,9 @@ nvm_ls() {
 }
 
 nvm_ls_remote() {
-  local PATTERN=$1
-  local VERSIONS
-  local GREP_OPTIONS=''
+  typeset PATTERN=$1
+  typeset VERSIONS
+  typeset GREP_OPTIONS=''
   if [ -n "$PATTERN" ]; then
     PATTERN=`nvm_format_version "$PATTERN"`
   else
@@ -154,9 +154,9 @@ nvm_checksum() {
 }
 
 nvm_print_versions() {
-  local VERSION
-  local FORMAT
-  local CURRENT=`nvm_version current`
+  typeset VERSION
+  typeset FORMAT
+  typeset CURRENT=`nvm_version current`
   echo "$1" | while read VERSION; do
     if [ "$VERSION" = "$CURRENT" ]; then
       FORMAT='\033[0;32m-> %9s\033[0m'
@@ -176,10 +176,10 @@ nvm() {
   fi
 
   # Try to figure out the os and arch for binary fetching
-  local uname="$(uname -a)"
-  local os=
-  local arch="$(uname -m)"
-  local GREP_OPTIONS=''
+  typeset uname="$(uname -a)"
+  typeset os=
+  typeset arch="$(uname -m)"
+  typeset GREP_OPTIONS=''
   case "$uname" in
     Linux\ *) os=linux ;;
     Darwin\ *) os=darwin ;;
@@ -192,10 +192,10 @@ nvm() {
     *armv6l*) arch=arm-pi ;;
   esac
 
-  # initialize local variables
-  local VERSION
-  local ADDITIONAL_PARAMETERS
-  local ALIAS
+  # initialize typeset variables
+  typeset VERSION
+  typeset ADDITIONAL_PARAMETERS
+  typeset ALIAS
 
   case $1 in
     "help" )
@@ -231,15 +231,15 @@ nvm() {
     ;;
 
     "install" )
-      # initialize local variables
-      local binavail
-      local t
-      local url
-      local sum
-      local tarball
-      local nobinary
-      local version_not_provided=0
-      local provided_version
+      # initialize typeset variables
+      typeset binavail
+      typeset t
+      typeset url
+      typeset sum
+      typeset tarball
+      typeset nobinary
+      typeset version_not_provided=0
+      typeset provided_version
 
       if ! nvm_has "curl"; then
         echo 'NVM Needs curl to proceed.' >&2;
@@ -297,8 +297,8 @@ nvm() {
             t="$VERSION-$os-$arch"
             url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
             sum=`curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
-            local tmpdir="$NVM_DIR/bin/node-${t}"
-            local tmptarball="$tmpdir/node-${t}.tar.gz"
+            typeset tmpdir="$NVM_DIR/bin/node-${t}"
+            typeset tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
               mkdir -p "$tmpdir" && \
               curl -L -C - --progress-bar $url -o "$tmptarball" && \
@@ -327,8 +327,8 @@ nvm() {
         make='gmake'
         MAKE_CXX="CXX=c++"
       fi
-      local tmpdir="$NVM_DIR/src"
-      local tmptarball="$tmpdir/node-$VERSION.tar.gz"
+      typeset tmpdir="$NVM_DIR/src"
+      typeset tmptarball="$tmpdir/node-$VERSION.tar.gz"
       if [ "`curl -Is "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
         sum=`curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt | \grep node-$VERSION.tar.gz | awk '{print $1}'`
@@ -471,8 +471,8 @@ nvm() {
       echo "Now using node $VERSION"
     ;;
     "run" )
-      local provided_version
-      local has_checked_nvmrc=0
+      typeset provided_version
+      typeset has_checked_nvmrc=0
       # run given version of node
       shift
       if [ $# -lt 1 ]; then
@@ -531,7 +531,7 @@ nvm() {
     "alias" )
       mkdir -p $NVM_DIR/alias
       if [ $# -le 2 ]; then
-        local DEST
+        typeset DEST
         for ALIAS in $NVM_DIR/alias/$2*; do
           if [ -e "$ALIAS" ]; then
             DEST=`cat $ALIAS`
@@ -575,11 +575,11 @@ nvm() {
           return 127
         fi
         VERSION=`nvm_version $2`
-        local ROOT=`(nvm use $VERSION && npm -g root)`
-        local ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
+        typeset ROOT=`(nvm use $VERSION && npm -g root)`
+        typeset ROOTDEPTH=$((`echo $ROOT | sed 's/[^\/]//g'|wc -m` -1))
 
-        # declare local INSTALLS first, otherwise it doesn't work in zsh
-        local INSTALLS
+        # declare typeset INSTALLS first, otherwise it doesn't work in zsh
+        typeset INSTALLS
         INSTALLS=`nvm use $VERSION > /dev/null && npm -g -p ll | \grep "$ROOT\/[^/]\+$" | cut -d '/' -f $(($ROOTDEPTH + 2)) | cut -d ":" -f 2 | \grep -v npm | tr "\n" " "`
 
         npm install -g ${INSTALLS[@]}
