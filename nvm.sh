@@ -451,7 +451,7 @@ nvm() {
       if [ -z "$MANPATH" ]; then
         MANPATH=$(manpath)
       fi
-      MANPATH=${MANPATH#*$NVM_DIR/*/man:}
+      MANPATH=${MANPATH%$NVM_DIR/*/share/man*}${MANPATH#*$NVM_DIR/*/share/man:}
       if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man"` != 0 ]; then
         MANPATH=${MANPATH%$NVM_DIR/*/share/man*}$NVM_DIR/$VERSION/share/man${MANPATH#*$NVM_DIR/*/share/man}
       else
