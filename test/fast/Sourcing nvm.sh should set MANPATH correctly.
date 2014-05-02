@@ -7,7 +7,8 @@ T_NVM_DIR=${T_NVM_DIR%/test/fast}
 echo $T_NVM_DIR
 
 T_MANPATH=`manpath`
-T_MANPATH=`echo ${T_MANPATH} | awk -v RS=: -v ORS=: "/${T_NVM_DIR//\//\\/}/ "'{next} {print}' | sed 's/:*$//'`
+T_NVM_DIR=`echo $T_NVM_DIR | sed 's/\//\\\//g'`
+T_MANPATH=`echo ${T_MANPATH} | awk -v RS=: -v ORS=: "/${T_NVM_DIR}/ "'{next} {print}' | sed 's/:*$//'`
 echo $T_MANPATH
 
 . ../../nvm.sh
