@@ -37,8 +37,8 @@ fi
 # Traverse up in directory tree to find containing folder
 nvm_find_up() {
   local path
-  path=$(pwd)
-  while [[ "$path" != "" && ! -e "$path/$1" ]]; do
+  path=$PWD
+  while [ "$path" != "" ] && [ ! -f "$path/$1" ]; do
     path=${path%/*}
   done
   echo "$path"
