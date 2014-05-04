@@ -46,7 +46,7 @@ nvm_find_up() {
 
 
 nvm_find_nvmrc() {
-  local dir=$(nvm_find_up '.nvmrc')
+  local dir="$(nvm_find_up '.nvmrc')"
   if [ -e "$dir/.nvmrc" ]; then
     echo "$dir/.nvmrc"
   fi
@@ -54,10 +54,10 @@ nvm_find_nvmrc() {
 
 # Obtain nvm version from rc file
 nvm_rc_version() {
-  local NVMRC_PATH=$(nvm_find_nvmrc)
+  local NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ -e "$NVMRC_PATH" ]; then
     NVM_RC_VERSION=`cat "$NVMRC_PATH" | head -n 1`
-    echo "Found $NVMRC_PATH with version <$NVM_RC_VERSION>"
+    echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
   fi
 }
 
