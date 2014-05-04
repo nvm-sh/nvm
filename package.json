@@ -1,6 +1,6 @@
 {
   "name": "nvm",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Node Version Manager - Simple bash script to manage multiple active node.js versions",
   "directories": {
     "test": "test"
