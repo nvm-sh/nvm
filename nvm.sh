@@ -309,7 +309,7 @@ nvm() {
       [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
 
       if [ "$VERSION" = "N/A" ]; then
-        echo "Version '$VERSION' not found - try \`nvm ls-remote\` to browse available versions."
+        echo "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions."
         return 3
       fi
 
