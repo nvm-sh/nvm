@@ -1,0 +1,19 @@
+#!/bin/sh
+mkdir -p ../../v0.10.26/share/man
+echo v0.10.26 >../../alias/default
+
+T_NVM_DIR=$(pwd)
+T_NVM_DIR=${T_NVM_DIR%/test/fast}
+echo $T_NVM_DIR
+
+T_MANPATH=`manpath`
+T_NVM_DIR=`echo $T_NVM_DIR | sed 's/\//\\\\\//g'`
+T_MANPATH=`echo ${T_MANPATH} | awk -v RS=: -v ORS=: "/${T_NVM_DIR}/ "'{next} {print}' | sed 's/:*$//'`
+echo $T_MANPATH
+
+. ../../nvm.sh
+echo $MANPATH
+echo ${MANPATH#*$NVM_DIR/*/man:}
+
+#The nvm entry should be the first one of MANPATH and remain other entries exist.
+[ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man"` != 0 ] && [ "${MANPATH#*$NVM_DIR/*/man:}" = "${T_MANPATH}" ]
