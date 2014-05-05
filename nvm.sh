@@ -424,20 +424,20 @@ nvm() {
     ;;
     "deactivate" )
       if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin.*"` != 0 ] ; then
-        export PATH=`echo $PATH | sed -E "s#$NVM_DIR/[^/]*/bin[^:]*(:)?##g"`
+        export PATH=`echo $PATH | sed -E "s#$NVM_DIR/[^/]*/bin[^:]*:?##g"`
         hash -r
         echo "$NVM_DIR/*/bin removed from \$PATH"
       else
         echo "Could not find $NVM_DIR/*/bin in \$PATH"
       fi
       if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man.*"` != 0 ] ; then
-        export MANPATH=`echo $MANPATH | sed -E "s#$NVM_DIR/[^/]*/share/man[^:]*(:)?##g"`
+        export MANPATH=`echo $MANPATH | sed -E "s#$NVM_DIR/[^/]*/share/man[^:]*:?##g"`
         echo "$NVM_DIR/*/share/man removed from \$MANPATH"
       else
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH"
       fi
       if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ] ; then
-        export NODE_PATH=`echo $NODE_PATH | sed -E "s#$NVM_DIR/[^/]*/lib/node_modules[^:]*(:)?##g"`
+        export NODE_PATH=`echo $NODE_PATH | sed -E "s#$NVM_DIR/[^/]*/lib/node_modules[^:]*:?##g"`
         echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       else
         echo "Could not find $NVM_DIR/*/lib/node_modules in \$NODE_PATH"
@@ -469,7 +469,7 @@ nvm() {
       fi
       if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin"` != 0 ]; then
         # Strip other version from PATH
-        PATH=`echo $PATH | sed -E "s#$NVM_DIR/[^/]*/bin[^:]*(:)?##g"`
+        PATH=`echo $PATH | sed -E "s#$NVM_DIR/[^/]*/bin[^:]*:?##g"`
       fi
       PATH="$NVM_DIR/$VERSION/bin:$PATH"
       if [ -z "$MANPATH" ]; then
@@ -477,12 +477,12 @@ nvm() {
       fi
       if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man"` != 0 ]; then
         # Strip other version from MANPATH
-        MANPATH=`echo $MANPATH | sed -E "s#$NVM_DIR/[^/]*/share/man[^:]*(:)?##g"`
+        MANPATH=`echo $MANPATH | sed -E "s#$NVM_DIR/[^/]*/share/man[^:]*:?##g"`
       fi
       MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
       if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
         # Strip other version from NODE_PATH
-        NODE_PATH=`echo $NODE_PATH | sed -E "s#$NVM_DIR/[^/]*/lib/node_modules[^:]*(:)?##g"`
+        NODE_PATH=`echo $NODE_PATH | sed -E "s#$NVM_DIR/[^/]*/lib/node_modules[^:]*:?##g"`
       fi
       NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
       export PATH
@@ -530,7 +530,7 @@ nvm() {
         return;
       fi
       if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
-        RUN_NODE_PATH=`echo $NODE_PATH | sed -E "s#$NVM_DIR/[^/]*/lib/node_modules[^:]*(:)?##g"`
+        RUN_NODE_PATH=`echo $NODE_PATH | sed -E "s#$NVM_DIR/[^/]*/lib/node_modules[^:]*:?##g"`
       fi
       RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
       echo "Running node $VERSION"
