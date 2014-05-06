@@ -97,6 +97,10 @@ nvm_format_version() {
   echo "$1" | sed -e 's/^\([0-9]\)/v\1/g'
 }
 
+nvm_strip_path() {
+  echo "$1" | sed -E "s#$NVM_DIR/[^/]*$2[^:]*:?##g"
+}
+
 nvm_binary_available() {
   # binaries started with node 0.8.6
   local MINIMAL="0.8.6"
@@ -428,20 +432,20 @@ nvm() {
     ;;
     "deactivate" )
       if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin.*"` != 0 ] ; then
-        export PATH=${PATH%$NVM_DIR/*/bin*}${PATH#*$NVM_DIR/*/bin:}
+        export PATH=`nvm_strip_path "$PATH" "/bin"`
         hash -r
         echo "$NVM_DIR/*/bin removed from \$PATH"
       else
         echo "Could not find $NVM_DIR/*/bin in \$PATH"
       fi
       if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man.*"` != 0 ] ; then
-        export MANPATH=${MANPATH%$NVM_DIR/*/share/man*}${MANPATH#*$NVM_DIR/*/share/man:}
+        export MANPATH=`nvm_strip_path "$MANPATH" "/share/man"`
         echo "$NVM_DIR/*/share/man removed from \$MANPATH"
       else
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH"
       fi
       if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ] ; then
-        export NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}${NODE_PATH#*$NVM_DIR/*/lib/node_modules:}
+        export NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
         echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       else
         echo "Could not find $NVM_DIR/*/lib/node_modules in \$NODE_PATH"
@@ -471,25 +475,21 @@ nvm() {
         echo "$VERSION version is not installed yet"
         return 1
       fi
-      if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin"` != 0 ]; then
-        PATH=${PATH%$NVM_DIR/*/bin*}$NVM_DIR/$VERSION/bin${PATH#*$NVM_DIR/*/bin}
-      else
-        PATH="$NVM_DIR/$VERSION/bin:$PATH"
-      fi
+      # Strip other version from PATH
+      PATH=`nvm_strip_path "$PATH" "/bin"`
+      # Prepend current version
+      PATH="$NVM_DIR/$VERSION/bin:$PATH"
       if [ -z "$MANPATH" ]; then
         MANPATH=$(manpath)
       fi
-      MANPATH=${MANPATH#*$NVM_DIR/*/man:}
-      if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man"` != 0 ]; then
-        MANPATH=${MANPATH%$NVM_DIR/*/share/man*}$NVM_DIR/$VERSION/share/man${MANPATH#*$NVM_DIR/*/share/man}
-      else
-        MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
-      fi
-      if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
-        NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
-      else
-        NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
-      fi
+      # Strip other version from MANPATH
+      MANPATH=`nvm_strip_path "$MANPATH" "/share/man"`
+      # Prepend current version
+      MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
+      # Strip other version from NODE_PATH
+      NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
+      # Prepend current version
+      NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
       export PATH
       hash -r
       export MANPATH
@@ -534,11 +534,8 @@ nvm() {
         echo "$VERSION version is not installed yet"
         return;
       fi
-      if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ]; then
-        RUN_NODE_PATH=${NODE_PATH%$NVM_DIR/*/lib/node_modules*}$NVM_DIR/$VERSION/lib/node_modules${NODE_PATH#*$NVM_DIR/*/lib/node_modules}
-      else
-        RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
-      fi
+      RUN_NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
+      RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
       echo "Running node $VERSION"
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
