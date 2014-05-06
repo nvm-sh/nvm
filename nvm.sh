@@ -306,7 +306,11 @@ nvm() {
         shift
       done
 
-      [ -d "$NVM_DIR/$VERSION" ] && echo "$VERSION is already installed." && return
+      if [ -d "$NVM_DIR/$VERSION" ]; then
+        echo "$VERSION is already installed."
+        nvm use "$VERSION"
+        return $?
+      fi
 
       if [ "$VERSION" = "N/A" ]; then
         echo "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions."
