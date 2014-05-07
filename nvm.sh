@@ -98,7 +98,7 @@ nvm_format_version() {
 }
 
 nvm_strip_path() {
-  echo "$1" | sed -e "s#$NVM_DIR/[^/]*$2[^:]*##g" | sed -e "s/::/:/g" | sed -e "s/:$//g"
+  echo "$1" | sed -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" -e "s#$NVM_DIR/[^/]*$2[^:]*##g"
 }
 
 nvm_binary_available() {
