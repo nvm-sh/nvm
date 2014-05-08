@@ -132,17 +132,17 @@ nvm alias
 	default
 
 	$ nvm alias my_alias [tab][tab]
-	v0.4.11        v0.4.12       v0.6.14
+	v0.6.21        v0.8.26       v0.10.28
 
 nvm use
 
 	$ nvm use [tab][tab]
-	my_alias        default        v0.4.11        v0.4.12       v0.6.14
+	my_alias        default        v0.6.21        v0.8.26       v0.10.28
 
 nvm uninstall
 
 	$ nvm uninstall [tab][tab]
-	my_alias        default        v0.4.11        v0.4.12       v0.6.14
+	my_alias        default        v0.6.21        v0.8.26       v0.10.28
 
 ## Problems
 
