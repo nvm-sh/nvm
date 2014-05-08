@@ -625,7 +625,7 @@ nvm() {
         nvm_version $2
     ;;
     "--version" )
-        echo "nvm v0.6.1"
+        echo "0.6.1"
     ;;
     * )
       nvm help
