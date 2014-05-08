@@ -101,6 +101,14 @@ nvm_strip_path() {
   echo "$1" | sed -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" -e "s#$NVM_DIR/[^/]*$2[^:]*##g"
 }
 
+nvm_prepend_path() {
+  if [ -z "$1" ]; then
+    echo "$2"
+  else
+    echo "$2:$1"
+  fi
+}
+
 nvm_binary_available() {
   # binaries started with node 0.8.6
   local MINIMAL="0.8.6"
@@ -478,18 +486,18 @@ nvm() {
       # Strip other version from PATH
       PATH=`nvm_strip_path "$PATH" "/bin"`
       # Prepend current version
-      PATH="$NVM_DIR/$VERSION/bin:$PATH"
+      PATH=`nvm_prepend_path "$PATH" "$NVM_DIR/$VERSION/bin"`
       if [ -z "$MANPATH" ]; then
         MANPATH=$(manpath)
       fi
       # Strip other version from MANPATH
       MANPATH=`nvm_strip_path "$MANPATH" "/share/man"`
       # Prepend current version
-      MANPATH="$NVM_DIR/$VERSION/share/man:$MANPATH"
+      MANPATH=`nvm_prepend_path "$MANPATH" "$NVM_DIR/$VERSION/share/man"`
       # Strip other version from NODE_PATH
       NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
       # Prepend current version
-      NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
+      NODE_PATH=`nvm_prepend_path "$NODE_PATH" "$NVM_DIR/$VERSION/lib/node_modules"`
       export PATH
       hash -r
       export MANPATH
@@ -535,7 +543,7 @@ nvm() {
         return;
       fi
       RUN_NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
-      RUN_NODE_PATH="$NVM_DIR/$VERSION/lib/node_modules:$NODE_PATH"
+      RUN_NODE_PATH=`nvm_prepend_path "$NODE_PATH" "$NVM_DIR/$VERSION/lib/node_modules"`
       echo "Running node $VERSION"
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
