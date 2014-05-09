@@ -1,7 +1,7 @@
 URCHIN=`which urchin`
 SHELLS=sh bash dash ksh zsh
 
-.PHONY: $(SHELLS) test
+.PHONY: $(SHELLS) test test_shell
 
 fast: $(SHELLS)
 
@@ -11,6 +11,9 @@ $(SHELLS):
 
 test: fast
 	@$(URCHIN) -f test/slow 
+
+test_shell:
+	@$(SHELL) $(URCHIN) -f test/$(TEST_SUITE)
 
 default: test
 
