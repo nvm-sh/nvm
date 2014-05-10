@@ -4,5 +4,11 @@ install:
 before_script:
   - curl -o /tmp/urchin https://raw.githubusercontent.com/scraperwiki/urchin/master/urchin && chmod +x /tmp/urchin
 script:
-  - NVM_DIR=$TRAVIS_BUILD_DIR make URCHIN=/tmp/urchin test
-
+  - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin $SHELL
+env:
+  - SHELL=sh TEST_SUITE=fast
+  - SHELL=dash TEST_SUITE=fast
+  - SHELL=bash TEST_SUITE=fast
+  - SHELL=zsh TEST_SUITE=fast
+  - SHELL=ksh TEST_SUITE=fast
+  - SHELL=sh TEST_SUITE=slow
