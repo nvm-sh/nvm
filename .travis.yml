@@ -11,4 +11,4 @@ env:
   - SHELL=bash TEST_SUITE=fast
   - SHELL=zsh TEST_SUITE=fast
   - SHELL=ksh TEST_SUITE=fast
-#  - SHELL=bash TEST_SUITE=slow
+  - SHELL=sh TEST_SUITE=slow
