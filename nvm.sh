@@ -117,7 +117,7 @@ nvm_binary_available() {
 }
 
 nvm_ls() {
-  local PATTERN=`expr "$1" : "v"`
+  local PATTERN=${1:-v}
   local VERSIONS=''
   if [ "$PATTERN" = 'current' ]; then
     echo `node -v 2>/dev/null`
