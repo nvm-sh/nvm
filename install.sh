@@ -101,7 +101,7 @@ if [ -z "$PROFILE" ]; then
   fi
 fi
 
-SOURCE_STR="[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"  # This loads nvm"
+SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z $PROFILE ]; then
@@ -112,15 +112,13 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
     echo "=> Create it (touch $PROFILE) and run this script again"
   fi
   echo "   OR"
-  echo "=> Append the following line to the correct file yourself:"
-  echo
-  echo "   $SOURCE_STR"
+  echo "=> Append the following lines to the correct file yourself:"
+  echo -e "$SOURCE_STR"
   echo
 else
   if ! grep -qc 'nvm.sh' $PROFILE; then
     echo "=> Appending source string to $PROFILE"
-    echo "" >> "$PROFILE"
-    echo $SOURCE_STR >> "$PROFILE"
+    echo -e "$SOURCE_STR" >> "$PROFILE"
   else
     echo "=> Source string already in $PROFILE"
   fi
