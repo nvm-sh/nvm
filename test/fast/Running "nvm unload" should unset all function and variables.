@@ -9,3 +9,4 @@ type nvm > /dev/null 2>&1 || fail "NVM not loaded"
 nvm unload
 
 type nvm > /dev/null 2>&1 && fail "NVM not unloaded" || exit 0
+
