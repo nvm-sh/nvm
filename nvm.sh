@@ -249,6 +249,7 @@ nvm() {
       echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
       echo "    nvm unalias <name>          Deletes the alias named <name>"
       echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
+      echo "    nvm unload                  Unload NVM from shell"
       echo
       echo "Example:"
       echo "    nvm install v0.10.24        Install a specific version number"
@@ -626,6 +627,10 @@ nvm() {
     ;;
     "--version" )
         echo "0.7.0"
+    ;;
+    "unload" )
+      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version > /dev/null 2>&1
+      unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
       nvm help
