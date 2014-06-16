@@ -507,7 +507,6 @@ nvm() {
       export NODE_PATH
       export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
-      echo "Now using node $VERSION"
     ;;
     "run" )
       local provided_version
@@ -547,7 +546,6 @@ nvm() {
       fi
       RUN_NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
       RUN_NODE_PATH=`nvm_prepend_path "$NODE_PATH" "$NVM_DIR/$VERSION/lib/node_modules"`
-      echo "Running node $VERSION"
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
     "ls" | "list" )
