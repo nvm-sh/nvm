@@ -74,7 +74,7 @@ nvm_version() {
   echo "$VERSION"
 
   if [ "$VERSION" = 'N/A' ]; then
-    return
+    return 3
   fi
 }
 
@@ -85,7 +85,7 @@ nvm_remote_version() {
   echo "$VERSION"
 
   if [ "$VERSION" = 'N/A' ]; then
-    return
+    return 3
   fi
 }
 
@@ -139,7 +139,7 @@ nvm_ls() {
   fi
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
-    return
+    return 3
   fi
   echo "$VERSIONS"
   return
@@ -160,7 +160,7 @@ nvm_ls_remote() {
               | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
-    return
+    return 3
   fi
   echo "$VERSIONS"
   return
