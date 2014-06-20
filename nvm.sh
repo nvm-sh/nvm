@@ -352,7 +352,7 @@ nvm() {
               )
             then
               nvm use $VERSION
-              return;
+              return $?
             else
               echo "Binary download failed, trying source." >&2
               rm -rf "$tmptarball" "$tmpdir"
