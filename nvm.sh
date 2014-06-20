@@ -543,7 +543,7 @@ nvm() {
 
       if [ ! -d "$NVM_DIR/$VERSION" ]; then
         echo "$VERSION version is not installed yet" >&2
-        return;
+        return 1
       fi
       RUN_NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
       RUN_NODE_PATH=`nvm_prepend_path "$NODE_PATH" "$NVM_DIR/$VERSION/lib/node_modules"`
