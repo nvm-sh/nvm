@@ -9,7 +9,7 @@ set -e
 
 # Install from binary
 nvm install 0.9.7
-nvm install 0.9.12
+nvm i 0.9.12
 
 # Check
 [ -d ../../../v0.9.7 ]
