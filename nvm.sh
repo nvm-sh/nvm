@@ -571,11 +571,13 @@ nvm() {
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
     "ls" | "list" )
-      nvm_print_versions "`nvm_ls $2`"
+      NVM_LS_OUTPUT=$(nvm_ls "$2")
+      NVM_LS_EXIT_CODE=$?
+      nvm_print_versions "$NVM_LS_OUTPUT"
       if [ $# -eq 1 ]; then
         nvm alias
       fi
-      return
+      return $NVM_LS_EXIT_CODE && $?
     ;;
     "ls-remote" | "list-remote" )
       nvm_print_versions "`nvm_ls_remote $2`"
