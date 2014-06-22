@@ -264,7 +264,7 @@ nvm() {
       echo
     ;;
 
-    "install" )
+    "install" | "i" )
       # initialize local variables
       local binavail
       local t
