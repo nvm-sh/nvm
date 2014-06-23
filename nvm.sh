@@ -571,6 +571,8 @@ nvm() {
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
     "ls" | "list" )
+      local NVM_LS_OUTPUT
+      local NVM_LS_EXIT_CODE
       NVM_LS_OUTPUT=$(nvm_ls "$2")
       NVM_LS_EXIT_CODE=$?
       nvm_print_versions "$NVM_LS_OUTPUT"
