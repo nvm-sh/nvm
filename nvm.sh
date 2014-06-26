@@ -579,7 +579,7 @@ nvm() {
       if [ $# -eq 1 ]; then
         nvm alias
       fi
-      return $NVM_LS_EXIT_CODE && $?
+      return $NVM_LS_EXIT_CODE
     ;;
     "ls-remote" | "list-remote" )
       nvm_print_versions "`nvm_ls_remote $2`"
