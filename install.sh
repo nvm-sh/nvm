@@ -30,14 +30,14 @@ install_from_git() {
 
   if [ -d "$NVM_DIR/.git" ]; then
     echo "=> nvm is already installed in $NVM_DIR, trying to update"
-    echo -e "\r=> \c"
+    printf "\r=> "
     cd "$NVM_DIR" && git pull 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.."
     }
   else
     # Cloning to $NVM_DIR
     echo "=> Downloading nvm from git to '$NVM_DIR'"
-    echo -e "\r=> \c"
+    printf "\r=> "
     mkdir -p "$NVM_DIR"
     git clone "$NVM_SOURCE" "$NVM_DIR"
   fi
@@ -113,12 +113,12 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   fi
   echo "   OR"
   echo "=> Append the following lines to the correct file yourself:"
-  echo -e "$SOURCE_STR"
+  printf "$SOURCE_STR"
   echo
 else
   if ! grep -qc 'nvm.sh' $PROFILE; then
     echo "=> Appending source string to $PROFILE"
-    echo -e "$SOURCE_STR" >> "$PROFILE"
+    printf "$SOURCE_STR" >> "$PROFILE"
   else
     echo "=> Source string already in $PROFILE"
   fi
