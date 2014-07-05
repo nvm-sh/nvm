@@ -2,7 +2,7 @@
 
 set -e
 
-has() {
+nvm_has() {
   type "$1" > /dev/null 2>&1
   return $?
 }
@@ -11,8 +11,8 @@ if [ -z "$NVM_DIR" ]; then
   NVM_DIR="$HOME/.nvm"
 fi
 
-if ! has "curl"; then
-  if has "wget"; then
+if ! nvm_has "curl"; then
+  if nvm_has "wget"; then
     # Emulate curl with wget
     curl() {
       ARGS="$* "
@@ -63,9 +63,9 @@ install_as_script() {
 
 if [ -z "$METHOD" ]; then
   # Autodetect install method
-  if has "git"; then
+  if nvm_has "git"; then
     install_from_git
-  elif has "curl"; then
+  elif nvm_has "curl"; then
     install_as_script
   else
     echo >&2 "You need git, curl, or wget to install nvm"
@@ -73,14 +73,14 @@ if [ -z "$METHOD" ]; then
   fi
 else
   if [ "$METHOD" = "git" ]; then
-    if ! has "git"; then
+    if ! nvm_has "git"; then
       echo >&2 "You need git to install nvm"
       exit 1
     fi
     install_from_git
   fi
   if [ "$METHOD" = "script" ]; then
-    if ! has "curl"; then
+    if ! nvm_has "curl"; then
       echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
