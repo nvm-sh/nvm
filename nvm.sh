@@ -274,7 +274,7 @@ nvm() {
       echo "    nvm alias default 0.10.24   Set default node version on a shell"
       echo
       echo "Note:"
-      echo "    to remove, delete or uninstall nvm - just remove ~/.nvm, ~/.npm and ~/.bower folders"
+      echo "    to remove, delete, or uninstall nvm - just remove ~/.nvm, ~/.npm, and ~/.bower folders"
       echo
     ;;
 
@@ -572,11 +572,15 @@ nvm() {
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
     "ls" | "list" )
-      nvm_print_versions "`nvm_ls $2`"
+      local NVM_LS_OUTPUT
+      local NVM_LS_EXIT_CODE
+      NVM_LS_OUTPUT=$(nvm_ls "$2")
+      NVM_LS_EXIT_CODE=$?
+      nvm_print_versions "$NVM_LS_OUTPUT"
       if [ $# -eq 1 ]; then
         nvm alias
       fi
-      return
+      return $NVM_LS_EXIT_CODE
     ;;
     "ls-remote" | "list-remote" )
       nvm_print_versions "`nvm_ls_remote $2`"
@@ -651,7 +655,7 @@ nvm() {
       nvm_version $2
     ;;
     "--version" )
-      echo "0.8.0"
+      echo "0.10.0"
     ;;
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version > /dev/null 2>&1

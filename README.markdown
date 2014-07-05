@@ -8,17 +8,17 @@ First you'll need to make sure your system has a c++ compiler.  For OSX, XCode w
 
 To install you could use the [install script][2] using cURL:
 
-    curl https://raw.githubusercontent.com/creationix/nvm/v0.8.0/install.sh | sh
+    curl https://raw.githubusercontent.com/creationix/nvm/v0.10.0/install.sh | bash
 
 or Wget:
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.8.0/install.sh | sh
+    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.10.0/install.sh | bash
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
 You can customize the install source, directory and profile using the `NVM_SOURCE`, `NVM_DIR` and `PROFILE` variables. Eg: `curl ... | NVM_DIR=/usr/local/nvm sh` for a global install.
 
-<sub>*NB. The installer can use Git, cURL or Wget to download NVM, whatever is available.*</sub>
+<sub>*NB. The installer can use Git, curl, or wget to download NVM, whatever is available.*</sub>
 
 ### Manual install
 
@@ -163,7 +163,7 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
     nvm install -s 0.8.6
 
 [1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.8.0/install.sh
+[2]: https://github.com/creationix/nvm/blob/v0.10.0/install.sh
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 
