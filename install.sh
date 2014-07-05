@@ -23,7 +23,7 @@ if ! nvm_has "curl"; then
   fi
 fi
 
-install_from_git() {
+install_nvm_from_git() {
   if [ -z "$NVM_SOURCE" ]; then
     NVM_SOURCE="https://github.com/creationix/nvm.git"
   fi
@@ -43,7 +43,7 @@ install_from_git() {
   fi
 }
 
-install_as_script() {
+install_nvm_as_script() {
   if [ -z "$NVM_SOURCE" ]; then
     NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/master/nvm.sh"
   fi
@@ -64,9 +64,9 @@ install_as_script() {
 if [ -z "$METHOD" ]; then
   # Autodetect install method
   if nvm_has "git"; then
-    install_from_git
+    install_nvm_from_git
   elif nvm_has "curl"; then
-    install_as_script
+    install_nvm_as_script
   else
     echo >&2 "You need git, curl, or wget to install nvm"
     exit 1
@@ -77,14 +77,14 @@ else
       echo >&2 "You need git to install nvm"
       exit 1
     fi
-    install_from_git
+    install_nvm_from_git
   fi
   if [ "$METHOD" = "script" ]; then
     if ! nvm_has "curl"; then
       echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
-    install_as_script
+    install_nvm_as_script
   fi
 fi
 
