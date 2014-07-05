@@ -18,7 +18,7 @@ if ! nvm_has "curl"; then
       ARGS="$* "
       ARGS=${ARGS/-s /-q }
       ARGS=${ARGS/-o /-O }
-      wget $ARGS
+      wget "$ARGS"
     }
   fi
 fi
@@ -31,9 +31,9 @@ install_nvm_from_git() {
   if [ -d "$NVM_DIR/.git" ]; then
     echo "=> nvm is already installed in $NVM_DIR, trying to update"
     printf "\r=> "
-    cd "$NVM_DIR" && git pull 2> /dev/null || {
+    cd "$NVM_DIR" && (git pull 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.."
-    }
+    })
   else
     # Cloning to $NVM_DIR
     echo "=> Downloading nvm from git to '$NVM_DIR'"
@@ -104,7 +104,7 @@ fi
 SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
-  if [ -z $PROFILE ]; then
+  if [ -z "$PROFILE" ]; then
     echo "=> Profile not found. Tried ~/.bash_profile, ~/.zshrc, and ~/.profile."
     echo "=> Create one of them and run this script again"
   else
@@ -113,16 +113,15 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   fi
   echo "   OR"
   echo "=> Append the following lines to the correct file yourself:"
-  printf "$SOURCE_STR"
+  printf "%s" "$SOURCE_STR"
   echo
 else
-  if ! grep -qc 'nvm.sh' $PROFILE; then
+  if ! grep -qc 'nvm.sh' "$PROFILE"; then
     echo "=> Appending source string to $PROFILE"
-    printf "$SOURCE_STR" >> "$PROFILE"
+    printf "%s" "$SOURCE_STR" >> "$PROFILE"
   else
     echo "=> Source string already in $PROFILE"
   fi
 fi
 
 echo "=> Close and reopen your terminal to start using nvm"
-
