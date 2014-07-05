@@ -18,7 +18,7 @@ or Wget:
 
 You can customize the install source, directory and profile using the `NVM_SOURCE`, `NVM_DIR` and `PROFILE` variables. Eg: `curl ... | NVM_DIR=/usr/local/nvm sh` for a global install.
 
-<sub>*NB. The installer can use Git, cURL or Wget to download NVM, whatever is available.*</sub>
+<sub>*NB. The installer can use Git, curl, or wget to download NVM, whatever is available.*</sub>
 
 ### Manual install
 

@@ -274,7 +274,7 @@ nvm() {
       echo "    nvm alias default 0.10.24   Set default node version on a shell"
       echo
       echo "Note:"
-      echo "    to remove, delete or uninstall nvm - just remove ~/.nvm, ~/.npm and ~/.bower folders"
+      echo "    to remove, delete, or uninstall nvm - just remove ~/.nvm, ~/.npm, and ~/.bower folders"
       echo
     ;;
 
