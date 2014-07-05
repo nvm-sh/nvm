@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd ../..
+. ./nvm.sh
+mkdir v0.10.10
+nvm use 0.10
+[ "$(ls -ld current | cut -d ' ' -f 13,15 && rm -rf current v0.10.10)" = "current $NVM_DIR/v0.10.10" ]
