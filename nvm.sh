@@ -18,13 +18,15 @@ nvm_curl() {
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS="$*"
-    ARGS=${ARGS/--progress-bar /}
+    echo "original: $ARGS"
+    ARGS=${ARGS/--progress-bar /--progress=bar }
     ARGS=${ARGS/-L /}
     ARGS=${ARGS/-I /}
-    ARGS=${ARGS/-s /-q }
+    ARGS=${ARGS/-s /-qO- }
     ARGS=${ARGS/-o /-O }
     ARGS=${ARGS/-C /-c }
-    wget "$ARGS"
+    ARGS=${ARGS/ - / }
+    wget $ARGS
   fi
 }
 
@@ -407,10 +409,10 @@ nvm() {
       tmpdir="$NVM_DIR/src"
       local tmptarball
       tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`nvm_curl -Is "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
+      if [ "`nvm_curl -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
         sum=`nvm_curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt | \grep node-$VERSION.tar.gz | awk '{print $1}'`
-      elif [ "`nvm_curl -Is "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
+      elif [ "`nvm_curl -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" | \grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
       fi
       if (

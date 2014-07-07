@@ -17,12 +17,14 @@ nvm_curl() {
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS="$*"
-    ARGS=${ARGS/--progress-bar /}
+    echo "original: $ARGS"
+    ARGS=${ARGS/--progress-bar /--progress=bar }
     ARGS=${ARGS/-L /}
     ARGS=${ARGS/-I /}
-    ARGS=${ARGS/-s /-q }
+    ARGS=${ARGS/-s /-qO- }
     ARGS=${ARGS/-o /-O }
     ARGS=${ARGS/-C /-c }
+    ARGS=${ARGS/ - / }
     wget $ARGS
   fi
 }
