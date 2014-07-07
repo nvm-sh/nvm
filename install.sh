@@ -101,8 +101,6 @@ if [ -z "$PROFILE" ]; then
   fi
 fi
 
-SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
-
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z "$PROFILE" ]; then
     echo "=> Profile not found. Tried ~/.bash_profile, ~/.zshrc, and ~/.profile."
@@ -118,7 +116,12 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
 else
   if ! grep -qc 'nvm.sh' "$PROFILE"; then
     echo "=> Appending source string to $PROFILE"
-    printf "%s" "$SOURCE_STR" >> "$PROFILE"
+
+cat << EOF >> "$PROFILE"
+export NVM_DIR="$NVM_DIR"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+EOF
+
   else
     echo "=> Source string already in $PROFILE"
   fi
