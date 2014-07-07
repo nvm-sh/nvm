@@ -113,7 +113,7 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   fi
   echo "   OR"
   echo "=> Append the following lines to the correct file yourself:"
-  printf "%s" "$SOURCE_STR"
+  printf "$SOURCE_STR"
   echo
 else
   if ! grep -qc 'nvm.sh' "$PROFILE"; then
