@@ -20,8 +20,12 @@ elif nvm_has "wget"; then
   # Emulate curl with wget
   nvm_curl() {
     ARGS="$* "
+    ARGS=${ARGS/--progress-bar /}
+    ARGS=${ARGS/-L /}
+    ARGS=${ARGS/-I /}
     ARGS=${ARGS/-s /-q }
     ARGS=${ARGS/-o /-O }
+    ARGS=${ARGS/-C /-c }
     wget "$ARGS"
   }
 fi
