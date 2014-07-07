@@ -12,7 +12,7 @@ nvm_has() {
   return $?
 }
 
-nvm_curl() {
+nvm_download() {
   if nvm_has "curl"; then
     curl $*
   elif nvm_has "wget"; then
@@ -180,7 +180,7 @@ nvm_ls_remote() {
   else
     PATTERN=".*"
   fi
-  VERSIONS=`nvm_curl -s $NVM_NODEJS_ORG_MIRROR/ -o - \
+  VERSIONS=`nvm_download -s $NVM_NODEJS_ORG_MIRROR/ -o - \
               | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
               | \grep -w "${PATTERN}" \
               | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
@@ -306,7 +306,7 @@ nvm() {
       version_not_provided=0
       local provided_version
 
-      if ! nvm_has "nvm_curl"; then
+      if ! nvm_has "nvm_download"; then
         echo 'nvm needs curl or wget to proceed.' >&2;
         return 1
       fi
@@ -370,14 +370,14 @@ nvm() {
           if nvm_binary_available "$VERSION"; then
             t="$VERSION-$os-$arch"
             url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
-            sum=`nvm_curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-${t}.tar.gz | awk '{print $1}'`
+            sum=`nvm_download -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-${t}.tar.gz | awk '{print $1}'`
             local tmpdir
             tmpdir="$NVM_DIR/bin/node-${t}"
             local tmptarball
             tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
               mkdir -p "$tmpdir" && \
-              nvm_curl -L -C - --progress-bar $url -o "$tmptarball" && \
+              nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
               nvm_checksum "$tmptarball" $sum && \
               tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
               rm -f "$tmptarball" && \
@@ -407,16 +407,16 @@ nvm() {
       tmpdir="$NVM_DIR/src"
       local tmptarball
       tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`nvm_curl -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - | \grep '200 OK'`" != '' ]; then
+      if [ "`nvm_download -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - | \grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
-        sum=`nvm_curl -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-$VERSION.tar.gz | awk '{print $1}'`
-      elif [ "`nvm_curl -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | \grep '200 OK'`" != '' ]; then
+        sum=`nvm_download -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-$VERSION.tar.gz | awk '{print $1}'`
+      elif [ "`nvm_download -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | \grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
       fi
       if (
         [ -n "$tarball" ] && \
         mkdir -p "$tmpdir" && \
-        nvm_curl -L --progress-bar $tarball -o "$tmptarball" && \
+        nvm_download -L --progress-bar $tarball -o "$tmptarball" && \
         nvm_checksum "$tmptarball" $sum && \
         tar -xzf "$tmptarball" -C "$tmpdir" && \
         cd "$tmpdir/node-$VERSION" && \
@@ -435,10 +435,10 @@ nvm() {
             if [ "`expr "$VERSION" : '\(^v0\.2\.[0-2]$\)'`" != '' ]; then
               echo "npm requires node v0.2.3 or higher" >&2
             else
-              nvm_curl https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
+              nvm_download https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
             fi
           else
-            nvm_curl https://npmjs.org/install.sh -o - | clean=yes sh
+            nvm_download https://npmjs.org/install.sh -o - | clean=yes sh
           fi
         fi
       else
