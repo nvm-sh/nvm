@@ -11,22 +11,21 @@ if [ -z "$NVM_DIR" ]; then
   NVM_DIR="$HOME/.nvm"
 fi
 
-if nvm_has "curl"; then
-  nvm_curl() {
+nvm_curl() {
+  if nvm_has "curl"; then
     curl $*
-  }
-elif nvm_has "wget"; then
-  # Emulate curl with wget
-  nvm_curl() {
-    ARGS="$* "
+  elif nvm_has "wget"; then
+    # Emulate curl with wget
+    ARGS="$*"
     ARGS=${ARGS/--progress-bar /}
     ARGS=${ARGS/-L /}
+    ARGS=${ARGS/-I /}
     ARGS=${ARGS/-s /-q }
     ARGS=${ARGS/-o /-O }
     ARGS=${ARGS/-C /-c }
-    wget "$ARGS"
-  }
-fi
+    wget $ARGS
+  fi
+}
 
 install_nvm_from_git() {
   if [ -z "$NVM_SOURCE" ]; then

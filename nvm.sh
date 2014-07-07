@@ -12,14 +12,12 @@ nvm_has() {
   return $?
 }
 
-if nvm_has "curl"; then
-  nvm_curl() {
+nvm_curl() {
+  if nvm_has "curl"; then
     curl $*
-  }
-elif nvm_has "wget"; then
-  # Emulate curl with wget
-  nvm_curl() {
-    ARGS="$* "
+  elif nvm_has "wget"; then
+    # Emulate curl with wget
+    ARGS="$*"
     ARGS=${ARGS/--progress-bar /}
     ARGS=${ARGS/-L /}
     ARGS=${ARGS/-I /}
@@ -27,8 +25,8 @@ elif nvm_has "wget"; then
     ARGS=${ARGS/-o /-O }
     ARGS=${ARGS/-C /-c }
     wget "$ARGS"
-  }
-fi
+  fi
+}
 
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
