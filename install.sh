@@ -20,10 +20,9 @@ nvm_curl() {
     ARGS=${ARGS/--progress-bar /--progress=bar }
     ARGS=${ARGS/-L /}
     ARGS=${ARGS/-I /}
-    ARGS=${ARGS/-s /-qO- }
+    ARGS=${ARGS/-s /-q }
     ARGS=${ARGS/-o /-O }
     ARGS=${ARGS/-C /-c }
-    ARGS=${ARGS/ - / }
     wget $ARGS
   fi
 }
