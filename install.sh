@@ -122,7 +122,7 @@ if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
 else
   if ! grep -qc 'nvm.sh' "$PROFILE"; then
     echo "=> Appending source string to $PROFILE"
-    printf "%s\n" "$SOURCE_STR" >> "$PROFILE"
+    printf "$SOURCE_STR\n" >> "$PROFILE"
   else
     echo "=> Source string already in $PROFILE"
   fi
