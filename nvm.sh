@@ -1,5 +1,6 @@
 # Node Version Manager
-# Implemented as a bash function
+# Implemented as a POSIX-compliant function
+# Should work on sh, dash, bash, ksh, zsh
 # To use source this file from your bash profile
 #
 # Implemented by Tim Caswell <tim@creationix.com>
