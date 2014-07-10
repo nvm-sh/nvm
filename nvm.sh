@@ -10,7 +10,6 @@ NVM_SCRIPT_SOURCE="$_"
 
 nvm_has() {
   type "$1" > /dev/null 2>&1
-  return $?
 }
 
 nvm_download() {
