@@ -2,7 +2,7 @@ URCHIN=`which urchin`
 SHELLS=sh bash dash ksh zsh
 TEST_SUITE=fast
 
-.PHONY: $(SHELLS) test
+.PHONY: $(SHELLS) test verify-tag release
 
 $(SHELLS):
 	@printf '\n\033[0;34m%s\033[0m\n' "Running tests in $@"
@@ -13,3 +13,13 @@ test: $(SHELLS)
 
 default: test
 
+verify-tag:
+ifndef TAG
+	$(error TAG is undefined)
+endif
+
+release: verify-tag
+	@ OLD_TAG=`git describe --abbrev=0 --tags` && \
+		npm version "$(TAG)" && \
+		replace "$${OLD_TAG/v/}" "$(TAG)" -- nvm.sh install.sh README.markdown && \
+		git commit --amend nvm.sh install.sh README.markdown package.json
