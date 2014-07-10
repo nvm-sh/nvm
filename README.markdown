@@ -16,7 +16,7 @@ or Wget:
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
-You can customize the install source, directory and profile using the `NVM_SOURCE`, `NVM_DIR` and `PROFILE` variables. Eg: `curl ... | NVM_DIR=/usr/local/nvm sh` for a global install.
+You can customize the install source, directory and profile using the `NVM_SOURCE`, `NVM_DIR` and `PROFILE` variables. Eg: `curl ... | NVM_DIR=/usr/local/nvm bash` for a global install.
 
 <sub>*NB. The installer can use Git, curl, or wget to download NVM, whatever is available.*</sub>
 
