@@ -36,7 +36,7 @@ install_nvm_from_git() {
     echo "=> nvm is already installed in $NVM_DIR, trying to update"
     printf "\r=> "
     cd "$NVM_DIR" && (git pull 2> /dev/null || {
-      echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.."
+      echo >&2 "Failed to update nvm, run 'git pull' in $NVM_DIR yourself.." && exit 1
     })
   else
     # Cloning to $NVM_DIR
@@ -45,11 +45,12 @@ install_nvm_from_git() {
     mkdir -p "$NVM_DIR"
     git clone "$NVM_SOURCE" "$NVM_DIR"
   fi
+  git checkout v0.10.0
 }
 
 install_nvm_as_script() {
   if [ -z "$NVM_SOURCE" ]; then
-    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/master/nvm.sh"
+    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.10.0/nvm.sh"
   fi
 
   # Downloading to $NVM_DIR
