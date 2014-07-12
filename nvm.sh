@@ -159,7 +159,7 @@ nvm_ls() {
     fi
   else
     VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "$(nvm_format_version $PATTERN)*" -exec basename '{}' ';' \
-      | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | grep -v '^ *\.'`
+      | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.'`
   fi
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
