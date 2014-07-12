@@ -542,6 +542,7 @@ nvm() {
       export NODE_PATH
       export NVM_PATH="$NVM_DIR/$VERSION/lib/node"
       export NVM_BIN="$NVM_DIR/$VERSION/bin"
+      rm -f "$NVM_DIR/current" && ln -s "$NVM_DIR/$VERSION" "$NVM_DIR/current"
       echo "Now using node $VERSION"
     ;;
     "run" )
