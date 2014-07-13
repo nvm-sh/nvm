@@ -153,12 +153,16 @@ nvm_ls() {
     return
   fi
   # If it looks like an explicit version, don't do anything funny
-  if [ `expr "$PATTERN" : "v[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*$"` != 0 ]; then
+  if [ `expr "$PATTERN" : "v[0-9]*\.[0-9]*\.[0-9]*$"` != 0 ]; then
     if [ -d "$NVM_DIR/$PATTERN" ]; then
       VERSIONS="$PATTERN"
     fi
   else
-    VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "$(nvm_format_version $PATTERN)*" -exec basename '{}' ';' \
+    PATTERN=$(nvm_format_version $PATTERN)
+    if [ `expr "$PATTERN" : "v[0-9]*\.[0-9]*$"` != 0 ]; then
+      PATTERN="$PATTERN."
+    fi
+    VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
       | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.'`
   fi
   if [ -z "$VERSIONS" ]; then
