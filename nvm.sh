@@ -251,6 +251,8 @@ nvm_print_versions() {
       FORMAT='\033[0;32m-> %9s\033[0m'
     elif [ -d "$NVM_DIR/$VERSION" ]; then
       FORMAT='\033[0;34m%12s\033[0m'
+    elif [ "$VERSION" = "system" ]; then
+      FORMAT='\033[0;33m%12s\033[0m'
     else
       FORMAT='%12s'
     fi
