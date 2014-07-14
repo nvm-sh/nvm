@@ -194,6 +194,9 @@ nvm_ls() {
     echo "N/A"
     return 3
   fi
+  if [ -z "$PATTERN" ] && nvm_has_system_node; then
+    VERSIONS="$VERSIONS$(printf '\n%s' 'system')"
+  fi
   echo "$VERSIONS"
   return
 }
