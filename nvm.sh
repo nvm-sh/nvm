@@ -160,7 +160,15 @@ nvm_binary_available() {
 }
 
 nvm_ls_current() {
-  echo `node -v 2>/dev/null`
+  local NODE_PATH
+  NODE_PATH="$(which node)"
+  if [ $? -ne 0 ]; then
+    echo 'none'
+  elif nvm_tree_contains_path "$NVM_DIR" "$NODE_PATH"; then
+    echo `node -v 2>/dev/null`
+  else
+    echo 'system'
+  fi
 }
 
 nvm_ls() {
