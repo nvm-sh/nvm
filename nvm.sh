@@ -550,7 +550,17 @@ nvm() {
           VERSION=`nvm_version $NVM_RC_VERSION`
         fi
       else
-        VERSION=`nvm_version $2`
+        if [ $2 = 'system' ]; then
+          if nvm_has_system_node && nvm deactivate; then
+            echo "Now using system version of node: $(node -v 2>/dev/null)."
+            return
+          else
+            echo "System version of node not found." >&2
+            return 127
+          fi
+        else
+          VERSION=`nvm_version $2`
+        fi
       fi
       if [ -z "$VERSION" ]; then
         nvm help
