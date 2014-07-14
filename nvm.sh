@@ -53,6 +53,19 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
   export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
 fi
 
+nvm_tree_contains_path() {
+  local tree
+  tree="$1"
+  local path
+  path="$2"
+  local pathdir
+  pathdir=$(dirname "$path")
+  while [ "$pathdir" != "" ] && [ "$pathdir" != "." ] && [ "$pathdir" != "/" ] && [ "$pathdir" != "$tree" ]; do
+    pathdir=$(dirname "$pathdir")
+  done
+  [ "$pathdir" = "$tree" ]
+}
+
 # Traverse up in directory tree to find containing folder
 nvm_find_up() {
   local path
