@@ -138,13 +138,17 @@ nvm_binary_available() {
   [ $(nvm_normalize_version $VERSION) -ge $(nvm_normalize_version $MINIMAL) ]
 }
 
+nvm_ls_current() {
+  echo `node -v 2>/dev/null`
+}
+
 nvm_ls() {
   local PATTERN
   PATTERN=$1
   local VERSIONS
   VERSIONS=''
   if [ "$PATTERN" = 'current' ]; then
-    echo `node -v 2>/dev/null`
+    nvm_ls_current
     return
   fi
 
@@ -220,7 +224,7 @@ nvm_print_versions() {
   local VERSION
   local FORMAT
   local NVM_CURRENT
-  NVM_CURRENT=`nvm_version current`
+  NVM_CURRENT=$(nvm_ls_current)
   echo "$1" | while read VERSION; do
     if [ "$VERSION" = "$NVM_CURRENT" ]; then
       FORMAT='\033[0;32m-> %9s\033[0m'
