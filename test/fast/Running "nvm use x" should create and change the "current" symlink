@@ -5,6 +5,7 @@
 rm -rf ../../v0.10.29
 mkdir ../../v0.10.29
 nvm use 0.10.29
+rmdir ../../v0.10.29
 
 if [ ! -L ../../current ];then
   echo "Expected 'current' symlink to be created!"
@@ -21,6 +22,7 @@ fi
 rm -rf ../../v0.11.13
 mkdir ../../v0.11.13
 nvm use 0.11.13
+rmdir ../../v0.11.13
 
 newLink="$(readlink ../../current)"
 
