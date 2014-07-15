@@ -29,7 +29,7 @@ nvm_download() {
 }
 
 nvm_has_system_node() {
-  [ $(nvm deactivate 2> /dev/null && command -v node) != '' ]
+  [ "$(nvm deactivate 2> /dev/null && command -v node)" != '' ]
 }
 
 # Make zsh glob matching behave same as bash
