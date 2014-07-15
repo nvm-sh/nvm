@@ -28,6 +28,10 @@ nvm_download() {
   fi
 }
 
+nvm_has_system_node() {
+  [ $(nvm deactivate 2> /dev/null && command -v node) != '' ]
+}
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if nvm_has "unsetopt"; then

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+cleanup () {
+  rm ../../../v0.1.2/node
+  rmdir ../../../v0.1.2
+}
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+mkdir ../../../v0.1.2
+touch ../../../v0.1.2/node
+
+nvm use 0.1.2
+
+if command -v node; then
+  nvm_has_system_node
+else
+  ! nvm_has_system_node
+fi
+
+nvm deactivate /dev/null 2>&1
+
+if command -v node; then
+  nvm_has_system_node
+else
+  ! nvm_has_system_node
+fi
+
