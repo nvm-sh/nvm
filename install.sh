@@ -45,7 +45,7 @@ install_nvm_from_git() {
     mkdir -p "$NVM_DIR"
     git clone "$NVM_SOURCE" "$NVM_DIR"
   fi
-  git checkout v0.11.0
+  git checkout -b v0.11.0 tags/v0.11.0
 }
 
 install_nvm_as_script() {
