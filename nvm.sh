@@ -23,7 +23,7 @@ nvm_download() {
     ARGS=${ARGS/-I /}
     ARGS=${ARGS/-s /-q }
     ARGS=${ARGS/-o /-O }
-    ARGS=${ARGS/-C /-c }
+    ARGS=${ARGS/-C - /-c }
     wget $ARGS
   fi
 }
