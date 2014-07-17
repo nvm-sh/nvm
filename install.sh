@@ -45,12 +45,12 @@ install_nvm_from_git() {
     mkdir -p "$NVM_DIR"
     git clone "$NVM_SOURCE" "$NVM_DIR"
   fi
-  cd $NVM_DIR && git checkout v0.11.0 && git branch -D master
+  cd $NVM_DIR && git checkout v0.11.1 && git branch -D master
 }
 
 install_nvm_as_script() {
   if [ -z "$NVM_SOURCE" ]; then
-    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.11.0/nvm.sh"
+    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.11.1/nvm.sh"
   fi
 
   # Downloading to $NVM_DIR
