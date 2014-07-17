@@ -20,6 +20,7 @@ endif
 
 release: verify-tag
 	@ OLD_TAG=`git describe --abbrev=0 --tags` && \
-		npm version "$(TAG)" && \
 		replace "$${OLD_TAG/v/}" "$(TAG)" -- nvm.sh install.sh README.markdown && \
-		git commit --amend nvm.sh install.sh README.markdown package.json
+		git commit -m "v$(TAG)" nvm.sh install.sh README.markdown package.json && \
+		git tag "v$(TAG)"
+
