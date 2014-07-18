@@ -317,7 +317,7 @@ nvm() {
       version_not_provided=0
       local provided_version
 
-      if ! nvm_has "nvm_download"; then
+      if ! nvm_has "curl" && ! nvm_has "wget"; then
         echo 'nvm needs curl or wget to proceed.' >&2;
         return 1
       fi
