@@ -17,13 +17,12 @@ nvm_download() {
     curl $*
   elif nvm_has "wget"; then
     # Emulate curl with wget
-    ARGS="$*"
-    ARGS=${ARGS/--progress-bar /--progress=bar }
-    ARGS=${ARGS/-L /}
-    ARGS=${ARGS/-I /}
-    ARGS=${ARGS/-s /-q }
-    ARGS=${ARGS/-o /-O }
-    ARGS=${ARGS/-C - /-c }
+    ARGS=$(echo "$*" | sed -e 's/--progress-bar /--progress=bar /' \
+                           -e 's/-L //' \
+                           -e 's/-I //' \
+                           -e 's/-s /-q /' \
+                           -e 's/-o /-O /' \
+                           -e 's/-C - /-c /')
     wget $ARGS
   fi
 }
