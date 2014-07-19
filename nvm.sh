@@ -92,6 +92,11 @@ nvm_version() {
     PATTERN='current'
   fi
 
+  if [ "$PATTERN" = "current" ]; then
+    nvm_ls_current
+    return $?
+  fi
+
   VERSION=`nvm_ls $PATTERN | tail -n1`
   echo "$VERSION"
 
