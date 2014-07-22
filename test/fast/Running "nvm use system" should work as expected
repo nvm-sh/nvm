@@ -1,0 +1,13 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../nvm.sh
+
+nvm_has_system_node() { return 0; }
+[ "$(nvm use system 2>&1 | tail -n1)" = "Now using system version of node: $(node -v)." ] || die "Could not use system version of node"
+
+nvm_has_system_node() { return 1; }
+[ "$(nvm use system 2>&1 | tail -n1)" = "System version of node not found." ] || die "Did not report error, system node not found"
+nvm use system 2>&1 > /dev/null || [ $? -eq 127 ] || die "Did not return error code, system node not found"
+

@@ -160,7 +160,15 @@ nvm_binary_available() {
 }
 
 nvm_ls_current() {
-  echo `node -v 2>/dev/null`
+  local NODE_PATH
+  NODE_PATH="$(which node)"
+  if [ $? -ne 0 ]; then
+    echo 'none'
+  elif nvm_tree_contains_path "$NVM_DIR" "$NODE_PATH"; then
+    echo `node -v 2>/dev/null`
+  else
+    echo 'system'
+  fi
 }
 
 nvm_ls() {
@@ -193,6 +201,9 @@ nvm_ls() {
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
     return 3
+  fi
+  if [ -z "$PATTERN" ] && nvm_has_system_node; then
+    VERSIONS="$VERSIONS$(printf '\n%s' 'system')"
   fi
   echo "$VERSIONS"
   return
@@ -251,6 +262,8 @@ nvm_print_versions() {
       FORMAT='\033[0;32m-> %9s\033[0m'
     elif [ -d "$NVM_DIR/$VERSION" ]; then
       FORMAT='\033[0;34m%12s\033[0m'
+    elif [ "$VERSION" = "system" ]; then
+      FORMAT='\033[0;33m%12s\033[0m'
     else
       FORMAT='%12s'
     fi
@@ -537,7 +550,17 @@ nvm() {
           VERSION=`nvm_version $NVM_RC_VERSION`
         fi
       else
-        VERSION=`nvm_version $2`
+        if [ $2 = 'system' ]; then
+          if nvm_has_system_node && nvm deactivate; then
+            echo "Now using system version of node: $(node -v 2>/dev/null)."
+            return
+          else
+            echo "System version of node not found." >&2
+            return 127
+          fi
+        else
+          VERSION=`nvm_version $2`
+        fi
       fi
       if [ -z "$VERSION" ]; then
         nvm help

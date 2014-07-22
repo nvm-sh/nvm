@@ -1,0 +1,21 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+mkdir -p ../../../v0.0.1
+mkdir -p ../../../v0.0.3
+mkdir -p ../../../v0.0.9
+mkdir -p ../../../v0.3.1
+mkdir -p ../../../v0.3.3
+mkdir -p ../../../v0.3.9
+
+nvm_has_system_node() { return 0; }
+nvm ls | grep system 2>&1 > /dev/null
+[ $? -eq 0 ] || die '"nvm ls" did not contain "system" when system node is present'
+
+nvm_has_system_node() { return 1; }
+nvm ls | grep system 2>&1 > /dev/null
+[ $? -ne 0 ] || die '"nvm ls" contained "system" when system node is not present'
+
