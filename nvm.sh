@@ -39,7 +39,7 @@ if nvm_has "unsetopt"; then
 fi
 
 # Auto detect the NVM_DIR when not set
-if [ -z "$NVM_DIR" ]; then
+if [ -z "$NVM_DIR" ] || [[ -n $(uname -a | grep Ubuntu) ]]; then
   if [ -n "$BASH_SOURCE" ]; then
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
