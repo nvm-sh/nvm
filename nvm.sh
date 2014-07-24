@@ -56,10 +56,10 @@ fi
 nvm_tree_contains_path() {
   local tree
   tree="$1"
-  local path
-  path="$2"
+  local node_path
+  node_path="$2"
   local pathdir
-  pathdir=$(dirname "$path")
+  pathdir=$(dirname "$node_path")
   while [ "$pathdir" != "" ] && [ "$pathdir" != "." ] && [ "$pathdir" != "/" ] && [ "$pathdir" != "$tree" ]; do
     pathdir=$(dirname "$pathdir")
   done
