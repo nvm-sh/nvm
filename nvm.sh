@@ -196,7 +196,7 @@ nvm_ls() {
       PATTERN="$PATTERN."
     fi
     VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
-      | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.'`
+      | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.' | \grep -e '^v'`
   fi
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
