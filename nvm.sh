@@ -639,6 +639,29 @@ nvm() {
       echo "Running node $VERSION"
       NODE_PATH=$RUN_NODE_PATH $NVM_DIR/$VERSION/bin/node "$@"
     ;;
+    "exec" )
+      shift
+
+      local provided_version
+      provided_version=$1
+      if [ -n "$provided_version" ]; then
+        VERSION=`nvm_version $provided_version`
+        if [ $VERSION = "N/A" ]; then
+          provided_version=''
+          nvm_rc_version
+          VERSION=`nvm_version $NVM_RC_VERSION`
+        else
+          shift
+        fi
+      fi
+
+      if [ ! -d "$NVM_DIR/$VERSION" ]; then
+        echo "$VERSION version is not installed yet" >&2
+        return 1
+      fi
+      echo "Running node $VERSION"
+      NODE_VERSION=$VERSION $NVM_DIR/nvm-exec "$@"
+    ;;
     "ls" | "list" )
       local NVM_LS_OUTPUT
       local NVM_LS_EXIT_CODE
