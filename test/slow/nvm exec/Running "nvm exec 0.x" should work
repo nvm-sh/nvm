@@ -1,0 +1,13 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+nvm use 0.10
+NPM_VERSION_TEN="$(npm --version)"
+
+nvm use 0.11.7 && [ "$(node --version)" = "v0.11.7" ] || die "\`nvm use\` failed!"
+
+[ "$(nvm exec 0.10 npm --version | tail -1)" = "$NPM_VERSION_TEN" ] || die "`nvm exec` failed to run with the correct version"
+
