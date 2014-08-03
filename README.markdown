@@ -52,7 +52,7 @@ Or you can just run it:
 
     nvm run 0.10 --version
 
-Or, you can run any arbitrary command in the node environment:
+Or, you can run any arbitrary command in a subshell with the desired version of node:
 
     nvm exec 0.10 node --version
 
