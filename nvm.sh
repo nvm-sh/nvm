@@ -23,7 +23,7 @@ nvm_download() {
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
-    wget $ARGS
+    eval wget $ARGS
   fi
 }
 
