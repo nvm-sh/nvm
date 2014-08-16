@@ -19,7 +19,7 @@ nvm_download() {
     # Emulate curl with wget
     ARGS=$(echo "$*" | sed -e 's/--progress-bar /--progress=bar /' \
                            -e 's/-L //' \
-                           -e 's/-I //' \
+                           -e 's/-I /--server-response /' \
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
