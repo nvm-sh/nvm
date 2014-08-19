@@ -95,6 +95,19 @@ nvm_rc_version() {
   fi
 }
 
+nvm_version_dir() {
+  local NVM_USE_NEW_DIR
+  NVM_USE_NEW_DIR="$1"
+  if [ -z "$NVM_USE_NEW_DIR" ] || [ "$NVM_USE_NEW_DIR" = "new" ]; then
+    echo "$NVM_DIR/versions"
+  elif [ "$NVM_USE_NEW_DIR" = "old" ]; then
+    echo "$NVM_DIR"
+  else
+    echo "unknown version dir" >&2
+    return 3
+  fi
+}
+
 nvm_version_path() {
   local VERSION
   VERSION="$1"
