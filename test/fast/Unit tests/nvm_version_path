@@ -1,0 +1,9 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+[ "$(nvm_version_path)" = "$NVM_DIR" ] &&
+[ "$(nvm_version_path foo)" = "$NVM_DIR/foo" ]
+

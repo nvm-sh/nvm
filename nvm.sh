@@ -95,6 +95,16 @@ nvm_rc_version() {
   fi
 }
 
+nvm_version_path() {
+  local VERSION
+  VERSION="$1"
+  if [ -z "$VERSION" ]; then
+    echo "$NVM_DIR"
+  elif [ ! -z "$VERSION" ]; then
+    echo "$NVM_DIR/$VERSION"
+  fi
+}
+
 # Expand a version using the version cache
 nvm_version() {
   local PATTERN
