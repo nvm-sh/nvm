@@ -112,9 +112,10 @@ nvm_version_path() {
   local VERSION
   VERSION="$1"
   if [ -z "$VERSION" ]; then
-    echo "$NVM_DIR"
+    echo "version is required" >&2
+    return 3
   elif [ ! -z "$VERSION" ]; then
-    echo "$NVM_DIR/$VERSION"
+    echo "$(nvm_version_dir old)/$VERSION"
   fi
 }
 
