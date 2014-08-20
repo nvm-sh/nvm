@@ -229,8 +229,13 @@ nvm_ls() {
     if [ `expr "$PATTERN" : "v[0-9]*\.[0-9]*$"` != 0 ]; then
       PATTERN="$PATTERN."
     fi
-    VERSIONS=`find "$NVM_DIR/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
-      | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.' | \grep -e '^v'`
+    if [ -d "$(nvm_version_dir new)" ]; then
+      VERSIONS=`find "$(nvm_version_dir new)/" "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
+        | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.' | \grep -e '^v'`
+    else
+      VERSIONS=`find "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
+        | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.' | \grep -e '^v'`
+    fi
   fi
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
