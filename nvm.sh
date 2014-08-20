@@ -122,8 +122,10 @@ nvm_version_path() {
   if [ -z "$VERSION" ]; then
     echo "version is required" >&2
     return 3
-  elif [ ! -z "$VERSION" ]; then
+  elif nvm_version_greater 0.12.0 "$VERSION"; then
     echo "$(nvm_version_dir old)/$VERSION"
+  else
+    echo "$(nvm_version_dir new)/$VERSION"
   fi
 }
 
