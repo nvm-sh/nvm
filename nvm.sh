@@ -95,6 +95,14 @@ nvm_rc_version() {
   fi
 }
 
+nvm_version_greater() {
+  local LHS
+  LHS=$(echo "$1" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
+  local RHS
+  RHS=$(echo "$2" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
+  [ $LHS \> $RHS ];
+}
+
 nvm_version_dir() {
   local NVM_USE_NEW_DIR
   NVM_USE_NEW_DIR="$1"
@@ -777,7 +785,7 @@ nvm() {
       echo "0.13.1"
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version > /dev/null 2>&1
+      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
