@@ -782,7 +782,7 @@ nvm() {
       npm install -g --quiet $INSTALLS
     ;;
     "clear-cache" )
-      rm -f $NVM_DIR/v* 2>/dev/null
+      rm -f $NVM_DIR/v* "$(nvm_version_dir)" 2>/dev/null
       echo "Cache cleared."
     ;;
     "version" )
