@@ -201,7 +201,7 @@ nvm_binary_available() {
 
 nvm_ls_current() {
   local NODE_PATH
-  NODE_PATH="$(which node)"
+  NODE_PATH="$(which node 2> /dev/null)"
   if [ $? -ne 0 ]; then
     echo 'none'
   elif nvm_tree_contains_path "$NVM_DIR" "$NODE_PATH"; then
