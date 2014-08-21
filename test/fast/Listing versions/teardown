@@ -7,5 +7,6 @@ rmdir ../../../v0.2.3
 rmdir ../../../v0.3.1
 rmdir ../../../v0.3.3
 rmdir ../../../v0.3.9
+rmdir ../../../versions
 unalias nvm_has_system_node
 
