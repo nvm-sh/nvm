@@ -11,9 +11,9 @@ die () { echo $@ ; cleanup; exit 1; }
 . ../../../nvm.sh
 
 mkdir -p tmp
-touch -p tmp/node
+touch tmp/node
 mkdir -p tmp2
-touch -p tmp2/node
+touch tmp2/node
 
 nvm_tree_contains_path tmp tmp/node || die '"tmp" should contain "tmp/node"'
 
