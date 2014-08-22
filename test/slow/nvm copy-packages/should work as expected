@@ -8,7 +8,7 @@ nvm use 0.10.28
 
 EXPECTED_PACKAGES="autoprefixer bower david eslint grunt-cli grunth-cli http-server jshint marked node-gyp recursive-blame uglify-js yo"
 
-npm install -g --quiet $EXPECTED_PACKAGES
+echo "$EXPECTED_PACKAGES" | xargs npm install -g --quiet
 
 nvm use 0.10.29
 ORIGINAL_PACKAGES=$(npm list --global --parseable --depth=0 2> /dev/null | tail -n +2 | \grep -o -e '/[^/]*$' | cut -c 2- | \grep -v npm | sort | uniq | xargs)
