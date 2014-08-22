@@ -100,7 +100,7 @@ nvm_version_greater() {
   LHS=$(echo "$1" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
   local RHS
   RHS=$(echo "$2" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
-  [ $LHS \> $RHS ];
+  [ $LHS -gt $RHS ];
 }
 
 nvm_version_dir() {
