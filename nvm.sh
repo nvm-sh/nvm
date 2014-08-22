@@ -58,6 +58,12 @@ nvm_tree_contains_path() {
   tree="$1"
   local node_path
   node_path="$2"
+
+  if [ "@$tree@" = "@@" ] || [ "@$node_path@" = "@@" ]; then
+    >&2 echo "both the tree and the node path are required"
+    return 2
+  fi
+
   local pathdir
   pathdir=$(dirname "$node_path")
   while [ "$pathdir" != "" ] && [ "$pathdir" != "." ] && [ "$pathdir" != "/" ] && [ "$pathdir" != "$tree" ]; do
