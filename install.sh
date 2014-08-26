@@ -100,6 +100,8 @@ if [ -z "$PROFILE" ]; then
     PROFILE="$HOME/.bash_profile"
   elif [ -f "$HOME/.zshrc" ]; then
     PROFILE="$HOME/.zshrc"
+  elif [ -f "$HOME/.bashrc" ]; then
+    PROFILE="$HOME/.bashrc"
   elif [ -f "$HOME/.profile" ]; then
     PROFILE="$HOME/.profile"
   fi
