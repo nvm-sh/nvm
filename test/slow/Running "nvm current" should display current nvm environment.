@@ -8,3 +8,7 @@ nvm install 0.10
 
 [ "$(nvm current)" = "$(node -v)" ] || die "Failed to find current version: got \"$(nvm current)\", expected \"$(node -v)\""
 
+nvm install 0.6.21
+[ "$(node -v)" = "v0.6.21-pre" ] || die "v0.6.21-pre not installed with v0.6.21"
+[ "$(nvm current)" = "v0.6.21" ] || die "v0.6.21-pre not reported as v0.6.21"
+
