@@ -111,7 +111,7 @@ SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$
 
 if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
   if [ -z "$PROFILE" ]; then
-    echo "=> Profile not found. Tried ~/.bash_profile, ~/.zshrc, and ~/.profile."
+    echo "=> Profile not found. Tried ~/.bash_profile, ~/bashrc, ~/.zshrc, and ~/.profile."
     echo "=> Create one of them and run this script again"
   else
     echo "=> Profile $PROFILE not found"
