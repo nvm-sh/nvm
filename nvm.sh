@@ -786,8 +786,6 @@ nvm() {
         return 127
       fi
       VERSION=$(nvm_version "$2")
-      local ROOT
-      ROOT=$(nvm use $VERSION && npm -g root)
 
       # declare local INSTALLS first, otherwise it doesn't work in zsh
       local INSTALLS
