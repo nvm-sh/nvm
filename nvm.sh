@@ -785,7 +785,7 @@ nvm() {
         nvm help
         return 127
       fi
-      VERSION=$(nvm_version "$2")
+      VERSION="$(nvm_version "$2")"
 
       # declare local INSTALLS first, otherwise it doesn't work in zsh
       local INSTALLS
