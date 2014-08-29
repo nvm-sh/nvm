@@ -80,6 +80,4 @@ registerExpectedSymlink $?
 
 cleanup
 
-echo "$(basename "$0"): ${TEST_COUNT} tested, ${TEST_PASSED} passed, ${TEST_FAILED} failed"
-
-[ ${TEST_FAILED} -ne 0 ] && exit 1
+[ ${TEST_FAILED} -ne 0 ] && echo "${TEST_COUNT} tested, ${TEST_PASSED} passed, ${TEST_FAILED} failed" && exit 1 || true
