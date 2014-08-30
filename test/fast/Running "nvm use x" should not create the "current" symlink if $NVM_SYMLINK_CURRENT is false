@@ -1,0 +1,83 @@
+#!/bin/bash
+
+. ../../nvm.sh
+
+TEST_NODE_VERSION="v0.10.29"
+
+TEST_COUNT=0
+TEST_PASSED=0
+TEST_FAILED=0
+
+function registerExpectedSymlink() {
+  registerResult ${1}
+}
+
+function registerExpectedNoSymlink() {
+  [ ${1} -ne 0 ]
+  registerResult $?
+}
+
+function registerResult() {
+  result=${1}
+
+  TEST_COUNT=$(($TEST_COUNT + 1))
+
+  [ ${result} -eq 0 ] \
+    && TEST_PASSED=$(($TEST_PASSED + 1)) \
+    || TEST_FAILED=$(($TEST_FAILED + 1))
+}
+
+function cleanup() {
+  rm -rf ../../${TEST_NODE_VERSION}
+  rm -f ../../current
+}
+
+function runNvmUse() {
+  mkdir ../../${TEST_NODE_VERSION}
+  nvm use ${TEST_NODE_VERSION} &> /dev/null
+  rmdir ../../${TEST_NODE_VERSION}
+}
+
+function isCurrentSymlinkPresent() {
+  [ -L ../../current ]
+}
+
+NVM_SYMLINK_CURRENT=false
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=false!"
+registerExpectedNoSymlink $?
+
+NVM_SYMLINK_CURRENT=true
+cleanup
+runNvmUse
+isCurrentSymlinkPresent || echo "Expected 'current' symlink to be created when NVM_SYMLINK_CURRENT=true!"
+registerExpectedSymlink $?
+
+NVM_SYMLINK_CURRENT=garbagevalue
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT contains a string!"
+registerExpectedNoSymlink $?
+
+NVM_SYMLINK_CURRENT=0
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=0!"
+registerExpectedNoSymlink $?
+
+NVM_SYMLINK_CURRENT=1
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=1!"
+registerExpectedNoSymlink $?
+
+unset NVM_SYMLINK_CURRENT
+cleanup
+runNvmUse
+isCurrentSymlinkPresent || echo "Expected 'current' symlink to be created when NVM_SYMLINK_CURRENT has been unset (default behaviour)!"
+registerExpectedSymlink $?
+
+cleanup
+
+[ ${TEST_FAILED} -ne 0 ] && echo "${TEST_COUNT} tested, ${TEST_PASSED} passed, ${TEST_FAILED} failed" && exit 1 || true

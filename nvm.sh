@@ -647,7 +647,9 @@ nvm() {
       export NODE_PATH
       export NVM_PATH="$NVM_VERSION_DIR/lib/node"
       export NVM_BIN="$NVM_VERSION_DIR/bin"
-      rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
+      if [ "$NVM_SYMLINK_CURRENT" = true ] || [ -z "$NVM_SYMLINK_CURRENT" ]; then
+        rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
+      fi
       echo "Now using node $VERSION"
     ;;
     "run" )
