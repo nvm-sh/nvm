@@ -4,7 +4,7 @@ cleanup () {
   rm tmp/emptyfile tmp/testfile
   rmdir tmp
 }
-die () { echo $@ ; exit 1; }
+die () { echo $@ ; cleanup; exit 1; }
 
 . ../../../nvm.sh
 
