@@ -284,12 +284,12 @@ nvm_ls_remote() {
 }
 
 nvm_checksum() {
-  if nvm_has "shasum"; then
-    checksum=$(shasum $1 | \awk '{print $1}')
+  if nvm_has "sha1sum"; then
+    checksum=$(sha1sum $1 | \awk '{print $1}')
   elif nvm_has "sha1"; then
     checksum=$(sha1 -q $1)
   else
-    checksum=$(sha1sum $1 | \awk '{print $1}')
+    checksum=$(shasum $1 | \awk '{print $1}')
   fi
 
   if [ "$checksum" = "$2" ]; then
