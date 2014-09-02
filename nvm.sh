@@ -789,7 +789,7 @@ nvm() {
 
       # declare local INSTALLS first, otherwise it doesn't work in zsh
       local INSTALLS
-      INSTALLS=$(nvm use $VERSION > /dev/null && npm list --global --parseable --depth=0 2> /dev/null | tail -n +2 | \grep -o -e '/[^/]*$' | cut -c 2- | \grep -v npm | xargs)
+      INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
 
       echo "$INSTALLS" | xargs npm install -g --quiet
     ;;
