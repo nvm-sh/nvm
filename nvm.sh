@@ -785,15 +785,13 @@ nvm() {
         nvm help
         return 127
       fi
-      VERSION=$(nvm_version "$2")
-      local ROOT
-      ROOT=$(nvm use $VERSION && npm -g root)
+      VERSION="$(nvm_version "$2")"
 
       # declare local INSTALLS first, otherwise it doesn't work in zsh
       local INSTALLS
-      INSTALLS=$(nvm use $VERSION > /dev/null && npm list --global --parseable --depth=0 2> /dev/null | tail -n +2 | \grep -o -e '/[^/]*$' | cut -c 2- | xargs)
+      INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
 
-      npm install -g --quiet $INSTALLS
+      echo "$INSTALLS" | xargs npm install -g --quiet
     ;;
     "clear-cache" )
       rm -f $NVM_DIR/v* "$(nvm_version_dir)" 2>/dev/null
