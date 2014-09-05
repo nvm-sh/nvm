@@ -801,10 +801,18 @@ nvm() {
         return 2
       fi
 
-      local VERSION
-      VERSION="$(nvm_version "$PROVIDED_VERSION")"
       local INSTALLS
-      INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
+      if [ "$PROVIDED_VERSION" = "system" ]; then
+        if ! nvm_has_system_node; then
+          echo 'No system version of node detected.' >&2
+          return 3
+        fi
+        INSTALLS=$(nvm deactivate > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
+      else
+        local VERSION
+        VERSION="$(nvm_version "$PROVIDED_VERSION")"
+        INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
+      fi
 
       echo "$INSTALLS" | xargs npm install -g --quiet
     ;;
