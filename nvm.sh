@@ -249,13 +249,20 @@ nvm_ls() {
         | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.' | \grep -e '^v'`
     fi
   fi
+
+  if nvm_has_system_node; then
+    if [ -z "$PATTERN" ]; then
+      VERSIONS="$VERSIONS$(printf '\n%s' 'system')"
+    elif [ "$PATTERN" = 'system' ]; then
+      VERSIONS="$(printf '%s' 'system')"
+    fi
+  fi
+
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
     return 3
   fi
-  if [ -z "$PATTERN" ] && nvm_has_system_node; then
-    VERSIONS="$VERSIONS$(printf '\n%s' 'system')"
-  fi
+
   echo "$VERSIONS"
   return
 }
