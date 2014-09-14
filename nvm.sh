@@ -433,18 +433,19 @@ nvm() {
       fi
 
       provided_version=$1
+
       if [ -z "$provided_version" ]; then
         if [ $version_not_provided -ne 1 ]; then
           nvm_rc_version
         fi
         provided_version="$NVM_RC_VERSION"
+      else
+        shift
       fi
       [ -d "$(nvm_version_path "$provided_version")" ] && echo "$provided_version is already installed." >&2 && return
 
       VERSION=`nvm_remote_version $provided_version`
       ADDITIONAL_PARAMETERS=''
-
-      shift
 
       while [ $# -ne 0 ]
       do
