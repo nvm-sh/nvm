@@ -9,7 +9,7 @@ NVM_TEST_VERSION=v0.10.7
 [ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
 
 # Install from binary
-cat "$NVM_TEST_VERSION" > .nvmrc
+echo "$NVM_TEST_VERSION" > .nvmrc
 
 nvm install -s
 
