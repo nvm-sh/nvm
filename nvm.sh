@@ -796,7 +796,7 @@ nvm() {
       local PROVIDED_VERSION
       PROVIDED_VERSION="$2"
 
-      if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ]; then
+      if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ] || [ "$(nvm_version $PROVIDED_VERSION)" = "$(nvm_ls_current)" ]; then
         echo 'Can not copy packages from the current version of node.' >&2
         return 2
       fi
