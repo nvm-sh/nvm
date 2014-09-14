@@ -27,3 +27,5 @@ env:
   - SHELL=bash TEST_SUITE=slow WITHOUT_CURL=1
   - SHELL=zsh TEST_SUITE=slow
   - SHELL=zsh TEST_SUITE=slow WITHOUT_CURL=1
+  - SHELL=ksh TEST_SUITE=slow
+  - SHELL=ksh TEST_SUITE=slow WITHOUT_CURL=1
