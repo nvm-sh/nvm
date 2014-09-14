@@ -34,7 +34,7 @@ function cleanup() {
 
 function runNvmUse() {
   mkdir ../../${TEST_NODE_VERSION}
-  nvm use ${TEST_NODE_VERSION} &> /dev/null
+  nvm use ${TEST_NODE_VERSION} > /dev/null 2>&1
   rmdir ../../${TEST_NODE_VERSION}
 }
 
