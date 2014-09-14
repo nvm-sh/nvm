@@ -495,7 +495,9 @@ nvm() {
         fi
       fi
 
-      echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
+      if [ -n "$ADDITIONAL_PARAMETERS" ]; then
+        echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
+      fi
 
       tarball=''
       sum=''
