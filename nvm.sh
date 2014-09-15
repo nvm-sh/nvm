@@ -98,6 +98,9 @@ nvm_rc_version() {
   if [ -e "$NVMRC_PATH" ]; then
     read NVM_RC_VERSION < "$NVMRC_PATH"
     echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
+  else
+    >&2 echo "No .nvmrc file found"
+    return 1
   fi
 }
 
