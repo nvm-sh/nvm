@@ -106,9 +106,9 @@ nvm_rc_version() {
 
 nvm_version_greater() {
   local LHS
-  LHS=$(echo "$1" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
+  LHS=$(nvm_normalize_version "$1")
   local RHS
-  RHS=$(echo "$2" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
+  RHS=$(nvm_normalize_version "$2")
   [ $LHS -gt $RHS ];
 }
 
@@ -174,7 +174,7 @@ nvm_remote_version() {
 }
 
 nvm_normalize_version() {
-  echo "$1" | sed -e 's/^v//' | \awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }'
+  echo "$1" | sed -e 's/^v//' | \awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_format_version() {
