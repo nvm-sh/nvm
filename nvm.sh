@@ -195,11 +195,9 @@ nvm_prepend_path() {
 
 nvm_binary_available() {
   # binaries started with node 0.8.6
-  local MINIMAL
-  MINIMAL="0.8.6"
-  local VERSION
-  VERSION=$1
-  [ $(nvm_normalize_version $VERSION) -ge $(nvm_normalize_version $MINIMAL) ]
+  local LAST_VERSION_WITHOUT_BINARY
+  LAST_VERSION_WITHOUT_BINARY="0.8.5"
+  nvm_version_greater "$1" "$LAST_VERSION_WITHOUT_BINARY"
 }
 
 nvm_ls_current() {
