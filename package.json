@@ -8,7 +8,8 @@
   "scripts": {
     "test": "urchin test",
     "test/fast": "urchin -f test/fast",
-    "test/slow": "urchin -f test/slow"
+    "test/slow": "urchin -f test/slow",
+    "test/installation": "urchin -f test/installation"
   },
   "repository": {
     "type": "git",
