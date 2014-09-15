@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../nvm.sh
+. ../../nvm.sh
 nvm uninstall v0.10.7
 
 if [ -f ".nvmrc" ]; then
