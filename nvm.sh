@@ -842,5 +842,9 @@ nvm() {
   esac
 }
 
-nvm ls default >/dev/null && nvm use default >/dev/null || true
+if nvm ls default >/dev/null; then
+  nvm use default >/dev/null
+elif nvm_rc_version >/dev/null 2>&1; then
+  nvm use >/dev/null
+fi
 
