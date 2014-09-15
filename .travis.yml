@@ -10,20 +10,22 @@ script:
   - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin $SHELL
 env:
   - SHELL=sh TEST_SUITE=fast
-  - SHELL=sh TEST_SUITE=fast WITHOUT_CURL=1
   - SHELL=dash TEST_SUITE=fast
-  - SHELL=dash TEST_SUITE=fast WITHOUT_CURL=1
   - SHELL=bash TEST_SUITE=fast
-  - SHELL=bash TEST_SUITE=fast WITHOUT_CURL=1
   - SHELL=zsh TEST_SUITE=fast
-  - SHELL=zsh TEST_SUITE=fast WITHOUT_CURL=1
   - SHELL=ksh TEST_SUITE=fast
-  - SHELL=ksh TEST_SUITE=fast WITHOUT_CURL=1
   - SHELL=sh TEST_SUITE=slow
-  - SHELL=sh TEST_SUITE=slow WITHOUT_CURL=1
   - SHELL=dash TEST_SUITE=slow
-  - SHELL=dash TEST_SUITE=slow WITHOUT_CURL=1
   - SHELL=bash TEST_SUITE=slow
-  - SHELL=bash TEST_SUITE=slow WITHOUT_CURL=1
   - SHELL=zsh TEST_SUITE=slow
-  - SHELL=zsh TEST_SUITE=slow WITHOUT_CURL=1
+  - SHELL=ksh TEST_SUITE=slow
+  - SHELL=sh TEST_SUITE=installation
+  - SHELL=sh TEST_SUITE=installation WITHOUT_CURL=1
+  - SHELL=dash TEST_SUITE=installation
+  - SHELL=dash TEST_SUITE=installation WITHOUT_CURL=1
+  - SHELL=bash TEST_SUITE=installation
+  - SHELL=bash TEST_SUITE=installation WITHOUT_CURL=1
+  - SHELL=zsh TEST_SUITE=installation
+  - SHELL=zsh TEST_SUITE=installation WITHOUT_CURL=1
+  - SHELL=ksh TEST_SUITE=installation
+  - SHELL=ksh TEST_SUITE=installation WITHOUT_CURL=1

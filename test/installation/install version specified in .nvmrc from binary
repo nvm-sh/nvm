@@ -1,17 +1,20 @@
 #!/bin/sh
 
 set -e
-. ../../../nvm.sh
+. ../../nvm.sh
 
 NVM_TEST_VERSION=v0.10.7
 
 # Remove the stuff we're clobbering.
-[ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
+[ -e ../../$NVM_TEST_VERSION ] && rm -R ../../$NVM_TEST_VERSION
 
 # Install from binary
-nvm install $NVM_TEST_VERSION
+echo "$NVM_TEST_VERSION" > .nvmrc
+
+nvm install
 
 # Check
-[ -d ../../../$NVM_TEST_VERSION ]
+[ -d ../../$NVM_TEST_VERSION ]
 nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION
+
 

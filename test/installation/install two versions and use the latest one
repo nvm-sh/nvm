@@ -1,19 +1,19 @@
 #!/bin/sh
 
 set -e
-. ../../../nvm.sh
+. ../../nvm.sh
 
 # Remove the stuff we're clobbering.
-[ -e ../../../v0.9.7 ] && rm -R ../../../v0.9.7
-[ -e ../../../v0.9.12 ] && rm -R ../../../v0.9.12
+[ -e ../../v0.9.7 ] && rm -R ../../v0.9.7
+[ -e ../../v0.9.12 ] && rm -R ../../v0.9.12
 
 # Install from binary
 nvm install 0.9.7
 nvm i 0.9.12
 
 # Check
-[ -d ../../../v0.9.7 ]
-[ -d ../../../v0.9.12 ]
+[ -d ../../v0.9.7 ]
+[ -d ../../v0.9.12 ]
 
 # Use the first one
 nvm use 0.9.7
