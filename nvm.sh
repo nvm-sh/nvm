@@ -181,6 +181,20 @@ nvm_format_version() {
   echo "$1" | sed -e 's/^\([0-9]\)/v\1/g'
 }
 
+nvm_num_version_groups() {
+  local VERSION
+  VERSION="$1"
+  if [ -z "$VERSION" ]; then
+    echo "0"
+    return
+  fi
+  local NVM_NUM_DOTS
+  NVM_NUM_DOTS=$(echo "$VERSION" | sed -e 's/^v//' | sed -e 's/\.$//' | sed -e 's/[^\.]//g')
+  local NVM_NUM_GROUPS
+  NVM_NUM_GROUPS=".$NVM_NUM_DOTS"
+  echo "${#NVM_NUM_GROUPS}"
+}
+
 nvm_strip_path() {
   echo "$1" | sed -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" -e "s#$NVM_DIR/[^/]*$2[^:]*##g"
 }
@@ -233,14 +247,18 @@ nvm_ls() {
     return
   fi
   # If it looks like an explicit version, don't do anything funny
-  if [ `expr "$PATTERN" : "v[0-9]*\.[0-9]*\.[0-9]*$"` != 0 ]; then
+  if [ "~$(echo "$PATTERN" | cut -c1-1)" = "~v" ] &&  [ "~$(nvm_num_version_groups "$PATTERN")" = "~3" ]; then
     if [ -d "$(nvm_version_path "$PATTERN")" ]; then
       VERSIONS="$PATTERN"
     fi
   else
     PATTERN=$(nvm_format_version $PATTERN)
-    if [ `expr "$PATTERN" : "v[0-9]*\.[0-9]*$"` != 0 ]; then
-      PATTERN="$PATTERN."
+    if [ "~$PATTERN" != "~system" ]; then
+      local NUM_VERSION_GROUPS
+      NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
+      if [ "~$NUM_VERSION_GROUPS" = "~2" ] || [ "~$NUM_VERSION_GROUPS" = "~1" ]; then
+        PATTERN="$(echo "$PATTERN" | sed -e 's/\.*$//g')."
+      fi
     fi
     if [ -d "$(nvm_version_dir new)" ]; then
       VERSIONS=`find "$(nvm_version_dir new)/" "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \

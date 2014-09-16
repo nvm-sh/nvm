@@ -1,7 +1,6 @@
 #!/bin/sh
 
-cleanup () { unset -f nvm_has_system_node; }
-die () { cleanup ; echo $@ ; exit 1; }
+die () { echo $@ ; exit 1; }
 
 . ../../../nvm.sh
 
