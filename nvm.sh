@@ -98,14 +98,17 @@ nvm_rc_version() {
   if [ -e "$NVMRC_PATH" ]; then
     read NVM_RC_VERSION < "$NVMRC_PATH"
     echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
+  else
+    >&2 echo "No .nvmrc file found"
+    return 1
   fi
 }
 
 nvm_version_greater() {
   local LHS
-  LHS=$(echo "$1" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
+  LHS=$(nvm_normalize_version "$1")
   local RHS
-  RHS=$(echo "$2" | awk -F. '{for (i=1;i<=NF;++i) printf "%010d",$i}')
+  RHS=$(nvm_normalize_version "$2")
   [ $LHS -gt $RHS ];
 }
 
@@ -171,7 +174,7 @@ nvm_remote_version() {
 }
 
 nvm_normalize_version() {
-  echo "$1" | sed -e 's/^v//' | \awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }'
+  echo "$1" | sed -e 's/^v//' | \awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_format_version() {
@@ -192,11 +195,9 @@ nvm_prepend_path() {
 
 nvm_binary_available() {
   # binaries started with node 0.8.6
-  local MINIMAL
-  MINIMAL="0.8.6"
-  local VERSION
-  VERSION=$1
-  [ $(nvm_normalize_version $VERSION) -ge $(nvm_normalize_version $MINIMAL) ]
+  local LAST_VERSION_WITHOUT_BINARY
+  LAST_VERSION_WITHOUT_BINARY="0.8.5"
+  nvm_version_greater "$1" "$LAST_VERSION_WITHOUT_BINARY"
 }
 
 nvm_ls_current() {
@@ -839,5 +840,9 @@ nvm() {
   esac
 }
 
-nvm ls default >/dev/null && nvm use default >/dev/null || true
+if nvm ls default >/dev/null; then
+  nvm use default >/dev/null
+elif nvm_rc_version >/dev/null 2>&1; then
+  nvm use >/dev/null
+fi
 
