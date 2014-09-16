@@ -181,6 +181,20 @@ nvm_format_version() {
   echo "$1" | sed -e 's/^\([0-9]\)/v\1/g'
 }
 
+nvm_num_version_groups() {
+  local VERSION
+  VERSION="$1"
+  if [ -z "$VERSION" ]; then
+    echo "0"
+    return
+  fi
+  local NVM_NUM_DOTS
+  NVM_NUM_DOTS=$(echo "$VERSION" | sed -e 's/^v//' | sed -e 's/\.$//' | sed -e 's/[^\.]//g')
+  local NVM_NUM_GROUPS
+  NVM_NUM_GROUPS=".$NVM_NUM_DOTS"
+  echo "${#NVM_NUM_GROUPS}"
+}
+
 nvm_strip_path() {
   echo "$1" | sed -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" -e "s#$NVM_DIR/[^/]*$2[^:]*##g"
 }
