@@ -112,6 +112,14 @@ nvm_version_greater() {
   [ $LHS -gt $RHS ];
 }
 
+nvm_version_greater_than_or_equal_to() {
+  local LHS
+  LHS=$(nvm_normalize_version "$1")
+  local RHS
+  RHS=$(nvm_normalize_version "$2")
+  [ $LHS -ge $RHS ];
+}
+
 nvm_version_dir() {
   local NVM_USE_NEW_DIR
   NVM_USE_NEW_DIR="$1"
@@ -209,9 +217,9 @@ nvm_prepend_path() {
 
 nvm_binary_available() {
   # binaries started with node 0.8.6
-  local LAST_VERSION_WITHOUT_BINARY
-  LAST_VERSION_WITHOUT_BINARY="0.8.5"
-  nvm_version_greater "$1" "$LAST_VERSION_WITHOUT_BINARY"
+  local FIRST_VERSION_WITH_BINARY
+  FIRST_VERSION_WITH_BINARY="0.8.6"
+  nvm_version_greater_than_or_equal_to "$1" "$FIRST_VERSION_WITH_BINARY"
 }
 
 nvm_ls_current() {
@@ -551,10 +559,10 @@ nvm() {
         nvm use $VERSION
         if ! nvm_has "npm" ; then
           echo "Installing npm..."
-          if [ "`expr "$VERSION" : '\(^v0\.1\.\)'`" != '' ]; then
+          if nvm_version_greater 0.2.0 "$VERSION"; then
             echo "npm requires node v0.2.3 or higher" >&2
-          elif [ "`expr "$VERSION" : '\(^v0\.2\.\)'`" != '' ]; then
-            if [ "`expr "$VERSION" : '\(^v0\.2\.[0-2]$\)'`" != '' ]; then
+          elif nvm_version_greater_than_or_equal_to "$VERSION" 0.2.0; then
+            if nvm_version_greater 0.2.3 "$VERSION"; then
               echo "npm requires node v0.2.3 or higher" >&2
             else
               nvm_download https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
@@ -599,24 +607,30 @@ nvm() {
 
     ;;
     "deactivate" )
-      if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin.*"` != 0 ] ; then
-        export PATH=`nvm_strip_path "$PATH" "/bin"`
+      local NEWPATH
+      NEWPATH="$(nvm_strip_path "$PATH" "/bin")"
+      if [ "$PATH" = "$NEWPATH" ]; then
+        echo "Could not find $NVM_DIR/*/bin in \$PATH" >&2
+      else
+        export PATH="$NEWPATH"
         hash -r
         echo "$NVM_DIR/*/bin removed from \$PATH"
-      else
-        echo "Could not find $NVM_DIR/*/bin in \$PATH" >&2
       fi
-      if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man.*"` != 0 ] ; then
-        export MANPATH=`nvm_strip_path "$MANPATH" "/share/man"`
-        echo "$NVM_DIR/*/share/man removed from \$MANPATH"
-      else
+
+      NEWPATH="$(nvm_strip_path "$MANPATH" "/share/man")"
+      if [ "$MANPATH" = "$NEWPATH" ]; then
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH" >&2
-      fi
-      if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ] ; then
-        export NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
-        echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       else
+        export MANPATH="$NEWPATH"
+        echo "$NVM_DIR/*/share/man removed from \$MANPATH"
+      fi
+
+      NEWPATH="$(nvm_strip_path "$NODE_PATH" "/lib/node_modules")"
+      if [ "$NODE_PATH" = "$NEWPATH" ]; then
         echo "Could not find $NVM_DIR/*/lib/node_modules in \$NODE_PATH" >&2
+      else
+        export NODE_PATH="$NEWPATH"
+        echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       fi
     ;;
     "use" )
@@ -849,7 +863,7 @@ nvm() {
       echo "0.16.1"
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater > /dev/null 2>&1
+      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater nvm_version_greater_than_or_equal_to > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
