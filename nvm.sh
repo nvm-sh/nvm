@@ -112,6 +112,14 @@ nvm_version_greater() {
   [ $LHS -gt $RHS ];
 }
 
+nvm_version_greater_than_or_equal_to() {
+  local LHS
+  LHS=$(nvm_normalize_version "$1")
+  local RHS
+  RHS=$(nvm_normalize_version "$2")
+  [ $LHS -ge $RHS ];
+}
+
 nvm_version_dir() {
   local NVM_USE_NEW_DIR
   NVM_USE_NEW_DIR="$1"
@@ -849,7 +857,7 @@ nvm() {
       echo "0.16.1"
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater > /dev/null 2>&1
+      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater nvm_version_greater_than_or_equal_to > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
