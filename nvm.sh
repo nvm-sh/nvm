@@ -607,24 +607,30 @@ nvm() {
 
     ;;
     "deactivate" )
-      if [ `expr "$PATH" : ".*$NVM_DIR/.*/bin.*"` != 0 ] ; then
-        export PATH=`nvm_strip_path "$PATH" "/bin"`
+      local NEWPATH
+      NEWPATH="$(nvm_strip_path "$PATH" "/bin")"
+      if [ "$PATH" = "$NEWPATH" ]; then
+        echo "Could not find $NVM_DIR/*/bin in \$PATH" >&2
+      else
+        export PATH="$NEWPATH"
         hash -r
         echo "$NVM_DIR/*/bin removed from \$PATH"
-      else
-        echo "Could not find $NVM_DIR/*/bin in \$PATH" >&2
       fi
-      if [ `expr "$MANPATH" : ".*$NVM_DIR/.*/share/man.*"` != 0 ] ; then
-        export MANPATH=`nvm_strip_path "$MANPATH" "/share/man"`
-        echo "$NVM_DIR/*/share/man removed from \$MANPATH"
-      else
+
+      NEWPATH="$(nvm_strip_path "$MANPATH" "/share/man")"
+      if [ "$MANPATH" = "$NEWPATH" ]; then
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH" >&2
-      fi
-      if [ `expr "$NODE_PATH" : ".*$NVM_DIR/.*/lib/node_modules.*"` != 0 ] ; then
-        export NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
-        echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       else
+        export MANPATH="$NEWPATH"
+        echo "$NVM_DIR/*/share/man removed from \$MANPATH"
+      fi
+
+      NEWPATH="$(nvm_strip_path "$NODE_PATH" "/lib/node_modules")"
+      if [ "$NODE_PATH" = "$NEWPATH" ]; then
         echo "Could not find $NVM_DIR/*/lib/node_modules in \$NODE_PATH" >&2
+      else
+        export NODE_PATH="$NEWPATH"
+        echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       fi
     ;;
     "use" )
