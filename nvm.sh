@@ -559,10 +559,10 @@ nvm() {
         nvm use $VERSION
         if ! nvm_has "npm" ; then
           echo "Installing npm..."
-          if [ "`expr "$VERSION" : '\(^v0\.1\.\)'`" != '' ]; then
+          if nvm_version_greater 0.2.0 "$VERSION"; then
             echo "npm requires node v0.2.3 or higher" >&2
-          elif [ "`expr "$VERSION" : '\(^v0\.2\.\)'`" != '' ]; then
-            if [ "`expr "$VERSION" : '\(^v0\.2\.[0-2]$\)'`" != '' ]; then
+          elif nvm_version_greater_than_or_equal_to "$VERSION" 0.2.0; then
+            if nvm_version_greater 0.2.3 "$VERSION"; then
               echo "npm requires node v0.2.3 or higher" >&2
             else
               nvm_download https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
