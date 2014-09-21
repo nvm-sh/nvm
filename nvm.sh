@@ -472,10 +472,17 @@ nvm() {
 
       VERSION=`nvm_remote_version $provided_version`
       ADDITIONAL_PARAMETERS=''
+      local PROVIDED_COPY_PACKAGES_FROM
+      local COPY_PACKAGES_FROM
 
       while [ $# -ne 0 ]
       do
-        ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
+        if [ "~$(echo "$1" | cut -c 1-21)" = "~--copy-packages-from=" ]; then
+          PROVIDED_COPY_PACKAGES_FROM="$(echo "$1" | cut -c 22-)"
+          COPY_PACKAGES_FROM="$(nvm_version "$PROVIDED_COPY_PACKAGES_FROM")"
+        else
+          ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
+        fi
         shift
       done
 
