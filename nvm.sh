@@ -496,7 +496,9 @@ nvm() {
 
       if [ -d "$(nvm_version_path "$VERSION")" ]; then
         echo "$VERSION is already installed." >&2
-        nvm use "$VERSION"
+        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+          nvm copy-packages "$COPY_PACKAGES_FROM"
+        fi
         return $?
       fi
 
@@ -526,7 +528,9 @@ nvm() {
               mv "$tmpdir" "$(nvm_version_path "$VERSION")"
               )
             then
-              nvm use $VERSION
+              if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+                nvm copy-packages "$COPY_PACKAGES_FROM"
+              fi
               return $?
             else
               echo "Binary download failed, trying source." >&2
@@ -570,7 +574,9 @@ nvm() {
         $make $MAKE_CXX install
         )
       then
-        nvm use $VERSION
+        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+          nvm copy-packages "$COPY_PACKAGES_FROM"
+        fi
         if ! nvm_has "npm" ; then
           echo "Installing npm..."
           if nvm_version_greater 0.2.0 "$VERSION"; then
@@ -589,6 +595,8 @@ nvm() {
         echo "nvm: install $VERSION failed!" >&2
         return 1
       fi
+
+      return $?
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
