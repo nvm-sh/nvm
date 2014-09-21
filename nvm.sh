@@ -486,6 +486,14 @@ nvm() {
         shift
       done
 
+      if [ "~$(nvm_format_version "$PROVIDED_COPY_PACKAGES_FROM")" = "~$VERSION" ]; then
+        echo "You can't copy global packages from the same version of node you're installing." >&2
+        return 4
+      elif [ ! -z "$PROVIDED_COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" = "~N/A" ]; then
+        echo "If --copy-packages-from is provided, it must point to an installed version of node." >&2
+        return 5
+      fi
+
       if [ -d "$(nvm_version_path "$VERSION")" ]; then
         echo "$VERSION is already installed." >&2
         nvm use "$VERSION"
