@@ -469,7 +469,6 @@ nvm() {
       else
         shift
       fi
-      [ -d "$(nvm_version_path "$provided_version")" ] && echo "$provided_version is already installed." >&2 && return
 
       VERSION=`nvm_remote_version $provided_version`
       ADDITIONAL_PARAMETERS=''
