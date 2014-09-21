@@ -850,6 +850,7 @@ nvm() {
         INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
       fi
 
+      echo "Copying global packages from $VERSION..."
       echo "$INSTALLS" | xargs npm install -g --quiet
     ;;
     "clear-cache" )
