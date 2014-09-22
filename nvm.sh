@@ -472,16 +472,33 @@ nvm() {
 
       VERSION=`nvm_remote_version $provided_version`
       ADDITIONAL_PARAMETERS=''
+      local PROVIDED_COPY_PACKAGES_FROM
+      local COPY_PACKAGES_FROM
 
       while [ $# -ne 0 ]
       do
-        ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
+        if [ "~$(echo "$1" | cut -c 1-21)" = "~--copy-packages-from=" ]; then
+          PROVIDED_COPY_PACKAGES_FROM="$(echo "$1" | cut -c 22-)"
+          COPY_PACKAGES_FROM="$(nvm_version "$PROVIDED_COPY_PACKAGES_FROM")"
+        else
+          ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
+        fi
         shift
       done
 
+      if [ "~$(nvm_format_version "$PROVIDED_COPY_PACKAGES_FROM")" = "~$VERSION" ]; then
+        echo "You can't copy global packages from the same version of node you're installing." >&2
+        return 4
+      elif [ ! -z "$PROVIDED_COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" = "~N/A" ]; then
+        echo "If --copy-packages-from is provided, it must point to an installed version of node." >&2
+        return 5
+      fi
+
       if [ -d "$(nvm_version_path "$VERSION")" ]; then
         echo "$VERSION is already installed." >&2
-        nvm use "$VERSION"
+        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+          nvm copy-packages "$COPY_PACKAGES_FROM"
+        fi
         return $?
       fi
 
@@ -511,7 +528,9 @@ nvm() {
               mv "$tmpdir" "$(nvm_version_path "$VERSION")"
               )
             then
-              nvm use $VERSION
+              if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+                nvm copy-packages "$COPY_PACKAGES_FROM"
+              fi
               return $?
             else
               echo "Binary download failed, trying source." >&2
@@ -555,7 +574,9 @@ nvm() {
         $make $MAKE_CXX install
         )
       then
-        nvm use $VERSION
+        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+          nvm copy-packages "$COPY_PACKAGES_FROM"
+        fi
         if ! nvm_has "npm" ; then
           echo "Installing npm..."
           if nvm_version_greater 0.2.0 "$VERSION"; then
@@ -574,6 +595,8 @@ nvm() {
         echo "nvm: install $VERSION failed!" >&2
         return 1
       fi
+
+      return $?
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
