@@ -805,33 +805,34 @@ nvm() {
       nvm_version current
     ;;
     "alias" )
-      mkdir -p $NVM_DIR/alias
+      mkdir -p "$NVM_DIR/alias"
       if [ $# -le 2 ]; then
         local DEST
-        for ALIAS in $NVM_DIR/alias/$2*; do
+        local ALIAS
+        for ALIAS in "$NVM_DIR"/alias/"$2"*; do
           if [ -e "$ALIAS" ]; then
-            DEST=`cat $ALIAS`
-            VERSION=`nvm_version $DEST`
-            if [ "$DEST" = "$VERSION" ]; then
-              echo "$(basename $ALIAS) -> $DEST"
+            DEST="$(cat "$ALIAS")"
+            VERSION="$(nvm_version "$DEST")"
+            if [ "~$DEST" = "~$VERSION" ]; then
+              echo "$(basename "$ALIAS") -> $DEST"
             else
-              echo "$(basename $ALIAS) -> $DEST (-> $VERSION)"
+              echo "$(basename "$ALIAS") -> $DEST (-> $VERSION)"
             fi
           fi
         done
         return
       fi
       if [ -z "$3" ]; then
-        rm -f $NVM_DIR/alias/$2
+        rm -f "$NVM_DIR/alias/$2"
         echo "$2 -> *poof*"
         return
       fi
-      VERSION=`nvm_version $3`
+      VERSION="$(nvm_version "$3")"
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '$3' does not exist." >&2
       fi
       echo $3 > "$NVM_DIR/alias/$2"
-      if [ ! "$3" = "$VERSION" ]; then
+      if [ ! "~$3" = "~$VERSION" ]; then
         echo "$2 -> $3 (-> $VERSION)"
       else
         echo "$2 -> $3"
