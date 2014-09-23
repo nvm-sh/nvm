@@ -826,7 +826,6 @@ nvm() {
         echo "$2 -> *poof*"
         return
       fi
-      mkdir -p $NVM_DIR/alias
       VERSION=`nvm_version $3`
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '$3' does not exist." >&2
