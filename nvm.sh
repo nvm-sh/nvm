@@ -171,12 +171,12 @@ nvm_version() {
 
 nvm_remote_version() {
   local PATTERN
-  PATTERN=$1
+  PATTERN="$1"
   local VERSION
   VERSION="$(nvm_ls_remote "$PATTERN" | tail -n1)"
   echo "$VERSION"
 
-  if [ "$VERSION" = 'N/A' ]; then
+  if [ "~$VERSION" = '~N/A' ]; then
     return 3
   fi
 }
@@ -251,7 +251,7 @@ nvm_ls() {
   fi
 
   if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
-    nvm_version `cat $NVM_DIR/alias/$PATTERN`
+    nvm_version "$(cat "$NVM_DIR/alias/$PATTERN")"
     return
   fi
   # If it looks like an explicit version, don't do anything funny
