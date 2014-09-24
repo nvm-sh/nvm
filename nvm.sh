@@ -161,7 +161,7 @@ nvm_version() {
     return $?
   fi
 
-  VERSION=`nvm_ls $PATTERN | tail -n1`
+  VERSION="$(nvm_ls "$PATTERN" | tail -n1)"
   echo "$VERSION"
 
   if [ "$VERSION" = 'N/A' ]; then
@@ -173,7 +173,7 @@ nvm_remote_version() {
   local PATTERN
   PATTERN=$1
   local VERSION
-  VERSION=`nvm_ls_remote $PATTERN | tail -n1`
+  VERSION="$(nvm_ls_remote "$PATTERN" | tail -n1)"
   echo "$VERSION"
 
   if [ "$VERSION" = 'N/A' ]; then
