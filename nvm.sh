@@ -301,7 +301,7 @@ nvm_ls_remote() {
   local GREP_OPTIONS
   GREP_OPTIONS=''
   if [ -n "$PATTERN" ]; then
-    PATTERN=`nvm_format_version "$PATTERN"`
+    PATTERN="$(nvm_format_version "$PATTERN")"
   else
     PATTERN=".*"
   fi
@@ -319,14 +319,14 @@ nvm_ls_remote() {
 
 nvm_checksum() {
   if nvm_has "sha1sum"; then
-    checksum=$(sha1sum $1 | \awk '{print $1}')
+    checksum="$(sha1sum "$1" | \awk '{print $1}')"
   elif nvm_has "sha1"; then
-    checksum=$(sha1 -q $1)
+    checksum="$(sha1 -q "$1")"
   else
-    checksum=$(shasum $1 | \awk '{print $1}')
+    checksum="$(shasum "$1" | \awk '{print $1}')"
   fi
 
-  if [ "$checksum" = "$2" ]; then
+  if [ "_$checksum" = "_$2" ]; then
     return
   elif [ -z "$2" ]; then
     echo 'Checksums empty' #missing in raspberry pi binary
@@ -470,7 +470,7 @@ nvm() {
         shift
       fi
 
-      VERSION=`nvm_remote_version $provided_version`
+      VERSION="$(nvm_remote_version "$provided_version")"
       ADDITIONAL_PARAMETERS=''
       local PROVIDED_COPY_PACKAGES_FROM
       local COPY_PACKAGES_FROM
