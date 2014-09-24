@@ -76,14 +76,14 @@ if [ -z "$METHOD" ]; then
     exit 1
   fi
 else
-  if [ "$METHOD" = "git" ]; then
+  if [ "~$METHOD" = "~git" ]; then
     if ! nvm_has "git"; then
       echo >&2 "You need git to install nvm"
       exit 1
     fi
     install_nvm_from_git
   fi
-  if [ "$METHOD" = "script" ]; then
+  if [ "~$METHOD" = "~script" ]; then
     if ! nvm_has "nvm_download"; then
       echo >&2 "You need curl or wget to install nvm"
       exit 1
