@@ -176,7 +176,7 @@ nvm_remote_version() {
   VERSION="$(nvm_ls_remote "$PATTERN" | tail -n1)"
   echo "$VERSION"
 
-  if [ "~$VERSION" = '~N/A' ]; then
+  if [ "_$VERSION" = '_N/A' ]; then
     return 3
   fi
 }
@@ -255,16 +255,16 @@ nvm_ls() {
     return
   fi
   # If it looks like an explicit version, don't do anything funny
-  if [ "~$(echo "$PATTERN" | cut -c1-1)" = "~v" ] &&  [ "~$(nvm_num_version_groups "$PATTERN")" = "~3" ]; then
+  if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] &&  [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
     if [ -d "$(nvm_version_path "$PATTERN")" ]; then
       VERSIONS="$PATTERN"
     fi
   else
     PATTERN=$(nvm_format_version $PATTERN)
-    if [ "~$PATTERN" != "~system" ]; then
+    if [ "_$PATTERN" != "_system" ]; then
       local NUM_VERSION_GROUPS
       NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
-      if [ "~$NUM_VERSION_GROUPS" = "~2" ] || [ "~$NUM_VERSION_GROUPS" = "~1" ]; then
+      if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
         PATTERN="$(echo "$PATTERN" | sed -e 's/\.*$//g')."
       fi
     fi
@@ -477,7 +477,7 @@ nvm() {
 
       while [ $# -ne 0 ]
       do
-        if [ "~$(echo "$1" | cut -c 1-21)" = "~--copy-packages-from=" ]; then
+        if [ "_$(echo "$1" | cut -c 1-21)" = "_--copy-packages-from=" ]; then
           PROVIDED_COPY_PACKAGES_FROM="$(echo "$1" | cut -c 22-)"
           COPY_PACKAGES_FROM="$(nvm_version "$PROVIDED_COPY_PACKAGES_FROM")"
         else
@@ -486,17 +486,17 @@ nvm() {
         shift
       done
 
-      if [ "~$(nvm_format_version "$PROVIDED_COPY_PACKAGES_FROM")" = "~$VERSION" ]; then
+      if [ "_$(nvm_format_version "$PROVIDED_COPY_PACKAGES_FROM")" = "_$VERSION" ]; then
         echo "You can't copy global packages from the same version of node you're installing." >&2
         return 4
-      elif [ ! -z "$PROVIDED_COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" = "~N/A" ]; then
+      elif [ ! -z "$PROVIDED_COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" = "_N/A" ]; then
         echo "If --copy-packages-from is provided, it must point to an installed version of node." >&2
         return 5
       fi
 
       if [ -d "$(nvm_version_path "$VERSION")" ]; then
         echo "$VERSION is already installed." >&2
-        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" != "_N/A" ]; then
           nvm copy-packages "$COPY_PACKAGES_FROM"
         fi
         return $?
@@ -528,7 +528,7 @@ nvm() {
               mv "$tmpdir" "$(nvm_version_path "$VERSION")"
               )
             then
-              if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+              if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" != "_N/A" ]; then
                 nvm copy-packages "$COPY_PACKAGES_FROM"
               fi
               return $?
@@ -574,7 +574,7 @@ nvm() {
         $make $MAKE_CXX install
         )
       then
-        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "~$COPY_PACKAGES_FROM" != "~N/A" ]; then
+        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" != "_N/A" ]; then
           nvm copy-packages "$COPY_PACKAGES_FROM"
         fi
         if ! nvm_has "npm" ; then
@@ -813,7 +813,7 @@ nvm() {
           if [ -e "$ALIAS" ]; then
             DEST="$(cat "$ALIAS")"
             VERSION="$(nvm_version "$DEST")"
-            if [ "~$DEST" = "~$VERSION" ]; then
+            if [ "_$DEST" = "_$VERSION" ]; then
               echo "$(basename "$ALIAS") -> $DEST"
             else
               echo "$(basename "$ALIAS") -> $DEST (-> $VERSION)"
@@ -832,7 +832,7 @@ nvm() {
         echo "! WARNING: Version '$3' does not exist." >&2
       fi
       echo $3 > "$NVM_DIR/alias/$2"
-      if [ ! "~$3" = "~$VERSION" ]; then
+      if [ ! "_$3" = "_$VERSION" ]; then
         echo "$2 -> $3 (-> $VERSION)"
       else
         echo "$2 -> $3"
