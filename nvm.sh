@@ -882,7 +882,7 @@ nvm() {
       nvm_version $2
     ;;
     "--version" )
-      echo "0.17.0"
+      echo "0.17.1"
     ;;
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater nvm_version_greater_than_or_equal_to > /dev/null 2>&1
