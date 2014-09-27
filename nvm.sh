@@ -808,7 +808,6 @@ nvm() {
       mkdir -p "$NVM_DIR/alias"
       if [ $# -le 2 ]; then
         local DEST
-        local ALIAS
         for ALIAS in "$NVM_DIR"/alias/"$2"*; do
           if [ -e "$ALIAS" ]; then
             DEST="$(cat "$ALIAS")"
