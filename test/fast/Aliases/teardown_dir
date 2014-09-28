@@ -3,5 +3,6 @@
 for i in $(seq 1 10)
   do
   rm -f "../../../alias/test$i"
+  rm -rf "../../../v0.0.$i"
 done
 

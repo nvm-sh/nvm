@@ -1,4 +1,28 @@
 #!/bin/sh
 
 . ../../../nvm.sh
-[ $(nvm alias | wc -l) = '10' ]
+
+die () { echo $@ ; exit 1; }
+
+NVM_ALIAS_OUTPUT=$(nvm alias)
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test1 -> 0.0.1 (-> v0.0.1)$' \
+  || die "did not find test1 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test2 -> 0.0.2 (-> v0.0.2)$' \
+  || die "did not find test2 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test3 -> 0.0.3 (-> v0.0.3)$' \
+  || die "did not find test3 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test4 -> 0.0.4 (-> v0.0.4)$' \
+  || die "did not find test4 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test5 -> 0.0.5 (-> v0.0.5)$' \
+  || die "did not find test5 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test6 -> 0.0.6 (-> v0.0.6)$' \
+  || die "did not find test6 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test7 -> 0.0.7 (-> v0.0.7)$' \
+  || die "did not find test7 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test8 -> 0.0.8 (-> v0.0.8)$' \
+  || die "did not find test8 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test9 -> 0.0.9 (-> v0.0.9)$' \
+  || die "did not find test9 alias" 
+echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test10 -> 0.0.10 (-> v0.0.10)$' \
+  || die "did not find test10 alias" 
+
