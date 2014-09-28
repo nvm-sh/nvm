@@ -765,13 +765,13 @@ nvm() {
       shift
 
       local provided_version
-      provided_version=$1
+      provided_version="$1"
       if [ -n "$provided_version" ]; then
         VERSION=`nvm_version $provided_version`
         if [ $VERSION = "N/A" ]; then
           provided_version=''
           nvm_rc_version
-          VERSION=`nvm_version $NVM_RC_VERSION`
+          VERSION="$(nvm_version "$NVM_RC_VERSION")"
         else
           shift
         fi
