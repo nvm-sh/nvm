@@ -28,7 +28,7 @@ nvm_download() {
 }
 
 nvm_has_system_node() {
-  [ "$(nvm deactivate 2> /dev/null && command -v node)" != '' ]
+  [ "$(nvm deactivate >/dev/null 2>&1 && command -v node)" != '' ]
 }
 
 # Make zsh glob matching behave same as bash
@@ -677,7 +677,7 @@ nvm() {
       fi
 
       if [ "_$VERSION" = '_system' ]; then
-        if nvm_has_system_node && nvm deactivate >/dev/null; then
+        if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
           echo "Now using system version of node: $(node -v 2>/dev/null)."
           return
         else
