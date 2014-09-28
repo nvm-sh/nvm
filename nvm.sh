@@ -255,12 +255,12 @@ nvm_ls() {
     return
   fi
   # If it looks like an explicit version, don't do anything funny
-  if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] &&  [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
+  PATTERN=$(nvm_format_version $PATTERN)
+  if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
     if [ -d "$(nvm_version_path "$PATTERN")" ]; then
       VERSIONS="$PATTERN"
     fi
   else
-    PATTERN=$(nvm_format_version $PATTERN)
     if [ "_$PATTERN" != "_system" ]; then
       local NUM_VERSION_GROUPS
       NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
