@@ -666,26 +666,26 @@ nvm() {
         if [ -n "$NVM_RC_VERSION" ]; then
           VERSION=`nvm_version $NVM_RC_VERSION`
         fi
+      elif [ "_$2" != '_system' ]; then
+        VERSION="$(nvm_version "$2")"
       else
-        if [ $2 = 'system' ]; then
-          if nvm_has_system_node && nvm deactivate >/dev/null; then
-            echo "Now using system version of node: $(node -v 2>/dev/null)."
-            return
-          else
-            echo "System version of node not found." >&2
-            return 127
-          fi
-        else
-          VERSION=`nvm_version $2`
-        fi
+        VERSION="$2"
       fi
       if [ -z "$VERSION" ]; then
         nvm help
         return 127
       fi
-      if [ -z "$VERSION" ]; then
-        VERSION=`nvm_version $2`
+
+      if [ "_$VERSION" = '_system' ]; then
+        if nvm_has_system_node && nvm deactivate >/dev/null; then
+          echo "Now using system version of node: $(node -v 2>/dev/null)."
+          return
+        else
+          echo "System version of node not found." >&2
+          return 127
+        fi
       fi
+
       local NVM_VERSION_DIR
       NVM_VERSION_DIR="$(nvm_version_path "$VERSION")"
       if [ ! -d "$NVM_VERSION_DIR" ]; then
