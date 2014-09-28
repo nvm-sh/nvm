@@ -296,7 +296,7 @@ nvm_ls() {
 
 nvm_ls_remote() {
   local PATTERN
-  PATTERN=$1
+  PATTERN="$1"
   local VERSIONS
   local GREP_OPTIONS
   GREP_OPTIONS=''
@@ -798,8 +798,11 @@ nvm() {
       return $NVM_LS_EXIT_CODE
     ;;
     "ls-remote" | "list-remote" )
-      nvm_print_versions "`nvm_ls_remote $2`"
-      return
+      local NVM_LS_EXIT_CODE
+      NVM_LS_OUTPUT=$(nvm_ls_remote "$2")
+      NVM_LS_EXIT_CODE=$?
+      nvm_print_versions "$NVM_LS_OUTPUT"
+      return $NVM_LS_EXIT_CODE
     ;;
     "current" )
       nvm_version current
