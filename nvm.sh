@@ -667,7 +667,7 @@ nvm() {
         fi
       else
         if [ $2 = 'system' ]; then
-          if nvm_has_system_node && nvm deactivate; then
+          if nvm_has_system_node && nvm deactivate >/dev/null; then
             echo "Now using system version of node: $(node -v 2>/dev/null)."
             return
           else
