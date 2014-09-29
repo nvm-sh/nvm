@@ -1,0 +1,35 @@
+#!/bin/sh
+
+die () { echo $@ ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_ls_remote
+}
+
+. ../../../nvm.sh
+
+nvm_ls_remote() {
+  echo "N/A"
+}
+
+OUTPUT="$(nvm_remote_version foo)"
+EXIT_CODE="$(nvm_remote_version foo >/dev/null 2>&1 ; echo $?)"
+
+[ "_$OUTPUT" = "_N/A" ] || die "nonexistent version did not report N/A"
+[ "_$EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $EXIT_CODE"
+
+nvm_ls_remote() {
+  echo "test output"
+  echo "more test output"
+  echo "pattern received: _$1_"
+}
+
+OUTPUT="$(nvm_remote_version foo)"
+EXIT_CODE="$(nvm_remote_version foo >/dev/null 2>&1 ; echo $?)"
+
+[ "_$OUTPUT" = "_pattern received: _foo_" ] \
+  || die "nvm_remote_version foo did not return last line only of nvm_ls_remote foo; got $OUTPUT"
+[ "_$EXIT_CODE" = "_0" ] || die "nvm_remote_version foo did not exit with 0, got $EXIT_CODE"
+
+cleanup
+
