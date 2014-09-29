@@ -1,0 +1,35 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+
+die () { echo $@ ; cleanup ; exit 1; }
+cleanup () {
+  rm -rf ../../../v0.8.1
+  rm -rf ../../../v0.9.1
+}
+
+mkdir ../../../v0.8.1
+mkdir ../../../v0.9.1
+
+EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
+STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"
+
+EXPECTED_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
+UNSTABLE_VERSION="$(nvm_version "$EXPECTED_UNSTABLE")"
+
+[ "_$STABLE_VERSION" != "_$UNSTABLE_VERSION" ] \
+  || die "stable and unstable versions are the same!"
+
+nvm alias stable "$EXPECTED_UNSTABLE"
+nvm alias unstable "$EXPECTED_STABLE"
+
+NVM_ALIAS_OUTPUT=$(nvm alias)
+
+echo "$NVM_ALIAS_OUTPUT" | \grep -e "^stable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION)$" \
+  || die "nvm alias did not contain the overridden 'stable' alias"
+
+echo "$NVM_ALIAS_OUTPUT" | \grep -e "^unstable -> $EXPECTED_STABLE (-> $STABLE_VERSION)$" \
+  || die "nvm alias did not contain the overridden 'unstable' alias"
+
+cleanup
+

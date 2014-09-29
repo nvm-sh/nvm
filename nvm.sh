@@ -876,6 +876,16 @@ nvm() {
             fi
           fi
         done
+
+        for ALIAS in "stable" "unstable"; do
+          if [ ! -f "$NVM_DIR/alias/$ALIAS" ]; then
+            if [ $# -lt 2 ] || [ "~$ALIAS" = "~$2" ]; then
+              DEST="$(nvm_print_implicit_alias local "$ALIAS")"
+              VERSION="$(nvm_version "$DEST")"
+              echo "$ALIAS -> $DEST (-> $VERSION) (default)"
+            fi
+          fi
+        done
         return
       fi
       if [ -z "$3" ]; then

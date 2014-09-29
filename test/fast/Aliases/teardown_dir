@@ -6,3 +6,6 @@ for i in $(seq 1 10)
   rm -rf "../../../v0.0.$i"
 done
 
+rm -f "../../../alias/stable"
+rm -f "../../../alias/unstable"
+
