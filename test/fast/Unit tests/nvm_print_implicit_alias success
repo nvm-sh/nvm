@@ -1,0 +1,42 @@
+#!/bin/sh
+
+die () { echo $@ ; cleanup ; exit 1; }
+cleanup() {
+  rm -rf ../../../v0.2.3
+  rm -rf ../../../v0.3.4
+  rm -rf ../../../v0.4.6
+  rm -rf ../../../v0.5.7
+  rm -rf ../../../v0.7.7
+  unset -f nvm_ls_remote
+}
+
+. ../../../nvm.sh
+
+mkdir ../../../v0.2.3
+mkdir ../../../v0.3.4
+mkdir ../../../v0.4.6
+mkdir ../../../v0.5.7
+mkdir ../../../v0.7.7
+
+LATEST_STABLE="$(nvm_print_implicit_alias local stable)"
+[ "_$LATEST_STABLE" = "_0.4" ] || die "local stable is not latest even minor: expected 0.4, got $LATEST_STABLE"
+
+LATEST_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
+[ "_$LATEST_UNSTABLE" = "_0.7" ] || die "local unstable is not latest odd minor: expected 0.7, got $LATEST_UNSTABLE"
+
+nvm_ls_remote() {
+  echo "v0.4.3"
+  echo "v0.5.4"
+  echo "v0.6.6"
+  echo "v0.7.7"
+  echo "v0.9.7"
+}
+
+LATEST_STABLE="$(nvm_print_implicit_alias remote stable)"
+[ "_$LATEST_STABLE" = "_0.6" ] || die "remote stable is not latest even minor: expected 0.6, got $LATEST_STABLE"
+
+LATEST_UNSTABLE="$(nvm_print_implicit_alias remote unstable)"
+[ "_$LATEST_UNSTABLE" = "_0.9" ] || die "remote unstable is not latest odd minor: expected 0.9, got $LATEST_UNSTABLE"
+
+cleanup
+
