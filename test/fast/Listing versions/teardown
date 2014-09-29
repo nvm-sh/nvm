@@ -11,4 +11,6 @@ rmdir ../../../v0.3.3 >/dev/null 2>&1
 rmdir ../../../v0.3.9 >/dev/null 2>&1
 rmdir ../../../versions >/dev/null 2>&1
 unalias nvm_has_system_node >/dev/null 2>&1
+rm -f ../../../alias/stable >/dev/null 2>&1
+rm -f ../../../alias/unstable >/dev/null 2>&1
 

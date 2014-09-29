@@ -274,6 +274,11 @@ nvm_ls() {
     fi
   else
     if [ "_$PATTERN" != "_system" ]; then
+      if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+        nvm_ls "$(nvm_print_implicit_alias local "$PATTERN" 2> /dev/null)"
+        return $?
+      fi
+
       local NUM_VERSION_GROUPS
       NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
       if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
