@@ -317,7 +317,9 @@ nvm_ls_remote() {
   local VERSIONS
   local GREP_OPTIONS
   GREP_OPTIONS=''
-  if [ -n "$PATTERN" ]; then
+  if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+    PATTERN="$(nvm_remote_version "$(nvm_print_implicit_alias remote "$PATTERN")")"
+  elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
   else
     PATTERN=".*"
@@ -518,7 +520,7 @@ nvm() {
         nobinary=1
       fi
 
-      provided_version=$1
+      provided_version="$1"
 
       if [ -z "$provided_version" ]; then
         if [ $version_not_provided -ne 1 ]; then
