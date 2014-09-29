@@ -9,7 +9,7 @@ $(SHELLS):
 	@$@ $(URCHIN) -f test/$(TEST_SUITE)
 
 test: $(SHELLS)
-	@$(URCHIN) -f test/slow 
+	@$(URCHIN) -f test/slow
 
 default: test
 
