@@ -186,8 +186,19 @@ nvm_normalize_version() {
   echo "$1" | sed -e 's/^v//' | \awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
-nvm_format_version() {
+nvm_ensure_version_prefix() {
   echo "$1" | sed -e 's/^\([0-9]\)/v\1/g'
+}
+
+nvm_format_version() {
+  local VERSION
+  VERSION="$(nvm_ensure_version_prefix "$1")"
+  if [ "_$(nvm_num_version_groups "$VERSION")" != "_3" ]; then
+    VERSION="$(echo "$VERSION" | sed -e 's/\.*$/.0/')"
+    nvm_format_version "$VERSION"
+  else
+    echo "$VERSION"
+  fi
 }
 
 nvm_num_version_groups() {
@@ -256,7 +267,7 @@ nvm_ls() {
     return
   fi
   # If it looks like an explicit version, don't do anything funny
-  PATTERN=$(nvm_format_version $PATTERN)
+  PATTERN=$(nvm_ensure_version_prefix $PATTERN)
   if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
     if [ -d "$(nvm_version_path "$PATTERN")" ]; then
       VERSIONS="$PATTERN"
@@ -302,7 +313,7 @@ nvm_ls_remote() {
   local GREP_OPTIONS
   GREP_OPTIONS=''
   if [ -n "$PATTERN" ]; then
-    PATTERN="$(nvm_format_version "$PATTERN")"
+    PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
   else
     PATTERN=".*"
   fi
@@ -487,7 +498,7 @@ nvm() {
         shift
       done
 
-      if [ "_$(nvm_format_version "$PROVIDED_COPY_PACKAGES_FROM")" = "_$VERSION" ]; then
+      if [ "_$(nvm_ensure_version_prefix "$PROVIDED_COPY_PACKAGES_FROM")" = "_$VERSION" ]; then
         echo "You can't copy global packages from the same version of node you're installing." >&2
         return 4
       elif [ ! -z "$PROVIDED_COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" = "_N/A" ]; then
@@ -601,7 +612,7 @@ nvm() {
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
-      PATTERN=`nvm_format_version $2`
+      PATTERN=`nvm_ensure_version_prefix $2`
       if [ "$PATTERN" = `nvm_version` ]; then
         echo "nvm: Cannot uninstall currently-active node version, $PATTERN." >&2
         return 1
