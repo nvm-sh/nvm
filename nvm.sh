@@ -368,6 +368,13 @@ nvm_print_versions() {
   done
 }
 
+nvm_validate_implicit_alias() {
+  if [ "_$1" != "_stable" ] && [ "_$1" != "_unstable" ]; then
+    echo "Only implicit aliases 'stable' and 'unstable' are supported." >&2
+    return 1
+  fi
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
