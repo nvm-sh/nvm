@@ -375,6 +375,41 @@ nvm_validate_implicit_alias() {
   fi
 }
 
+nvm_print_implicit_alias() {
+  if [ "_$1" != "_local" ] && [ "_$1" != "_remote" ]; then
+    echo "nvm_print_implicit_alias must be specified with local or remote as the first argument." >&2
+    return 1
+  fi
+
+  if ! nvm_validate_implicit_alias "$2"; then
+    return 2
+  fi
+
+  local LAST_TWO
+  if [ "_$1" = "_local" ]; then
+    LAST_TWO="$(nvm_ls | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)"
+  else
+    LAST_TWO="$(nvm_ls_remote | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)"
+  fi
+  local MINOR
+  local STABLE
+  local UNSTABLE
+  local MOD
+  for MINOR in $LAST_TWO; do
+    MOD=$(expr "$(nvm_normalize_version "$MINOR")" \/ 1000000 \% 2)
+    if [ $MOD -eq 0 ]; then
+      STABLE="$MINOR"
+    elif [ $MOD -eq 1 ]; then
+      UNSTABLE="$MINOR"
+    fi
+  done
+  if [ "_$2" = "_stable" ]; then
+    echo $STABLE
+  elif [ "_$2" = "_unstable" ]; then
+    echo $UNSTABLE
+  fi
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
