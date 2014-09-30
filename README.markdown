@@ -56,6 +56,18 @@ Or, you can run any arbitrary command in a subshell with the desired version of 
 
     nvm exec 0.10 node --version
 
+In place of a version pointer like "0.10", you can use the special default aliases "stable" and "unstable":
+
+    nvm install stable
+    nvm install unstable
+    nvm use stable
+    nvm run unstable --version
+
+If you want to use the system-installed version of node, you can use the special default alias "system":
+
+    nvm use system
+    nvm run system --version
+
 If you want to see what versions are installed:
 
     nvm ls
@@ -70,7 +82,7 @@ To restore your PATH, you can deactivate it.
 
 To set a default Node version to be used in any new shell, use the alias 'default':
 
-    nvm alias default 0.10
+    nvm alias default stable
 
 To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
