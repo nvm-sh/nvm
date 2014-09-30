@@ -464,5 +464,22 @@ v0.3.8"
 
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote 0.3 did not output 0.3.x versions; got $OUTPUT"
 
+# Sanity checks
+OUTPUT="$(nvm_print_implicit_alias remote stable)"
+EXPECTED_OUTPUT="0.10"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
+OUTPUT="$(nvm_print_implicit_alias remote unstable)"
+EXPECTED_OUTPUT="0.11"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote unstable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
+OUTPUT="$(nvm_ls_remote stable)"
+EXPECTED_OUTPUT="v0.10.32"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
+OUTPUT="$(nvm_ls_remote unstable)"
+EXPECTED_OUTPUT="v0.11.14"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote unstable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
 cleanup
 

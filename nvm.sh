@@ -274,6 +274,11 @@ nvm_ls() {
     fi
   else
     if [ "_$PATTERN" != "_system" ]; then
+      if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+        nvm_ls "$(nvm_print_implicit_alias local "$PATTERN" 2> /dev/null)"
+        return $?
+      fi
+
       local NUM_VERSION_GROUPS
       NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
       if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
@@ -312,7 +317,9 @@ nvm_ls_remote() {
   local VERSIONS
   local GREP_OPTIONS
   GREP_OPTIONS=''
-  if [ -n "$PATTERN" ]; then
+  if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+    PATTERN="$(nvm_remote_version "$(nvm_print_implicit_alias remote "$PATTERN")")"
+  elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
   else
     PATTERN=".*"
@@ -366,6 +373,48 @@ nvm_print_versions() {
     fi
     printf "$FORMAT\n" $VERSION
   done
+}
+
+nvm_validate_implicit_alias() {
+  if [ "_$1" != "_stable" ] && [ "_$1" != "_unstable" ]; then
+    echo "Only implicit aliases 'stable' and 'unstable' are supported." >&2
+    return 1
+  fi
+}
+
+nvm_print_implicit_alias() {
+  if [ "_$1" != "_local" ] && [ "_$1" != "_remote" ]; then
+    echo "nvm_print_implicit_alias must be specified with local or remote as the first argument." >&2
+    return 1
+  fi
+
+  if ! nvm_validate_implicit_alias "$2"; then
+    return 2
+  fi
+
+  local LAST_TWO
+  if [ "_$1" = "_local" ]; then
+    LAST_TWO="$(nvm_ls | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)"
+  else
+    LAST_TWO="$(nvm_ls_remote | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)"
+  fi
+  local MINOR
+  local STABLE
+  local UNSTABLE
+  local MOD
+  for MINOR in $LAST_TWO; do
+    MOD=$(expr "$(nvm_normalize_version "$MINOR")" \/ 1000000 \% 2)
+    if [ $MOD -eq 0 ]; then
+      STABLE="$MINOR"
+    elif [ $MOD -eq 1 ]; then
+      UNSTABLE="$MINOR"
+    fi
+  done
+  if [ "_$2" = "_stable" ]; then
+    echo $STABLE
+  elif [ "_$2" = "_unstable" ]; then
+    echo $UNSTABLE
+  fi
 }
 
 nvm() {
@@ -471,7 +520,7 @@ nvm() {
         nobinary=1
       fi
 
-      provided_version=$1
+      provided_version="$1"
 
       if [ -z "$provided_version" ]; then
         if [ $version_not_provided -ne 1 ]; then
@@ -831,6 +880,16 @@ nvm() {
               echo "$(basename "$ALIAS") -> $DEST"
             else
               echo "$(basename "$ALIAS") -> $DEST (-> $VERSION)"
+            fi
+          fi
+        done
+
+        for ALIAS in "stable" "unstable"; do
+          if [ ! -f "$NVM_DIR/alias/$ALIAS" ]; then
+            if [ $# -lt 2 ] || [ "~$ALIAS" = "~$2" ]; then
+              DEST="$(nvm_print_implicit_alias local "$ALIAS")"
+              VERSION="$(nvm_version "$DEST")"
+              echo "$ALIAS -> $DEST (-> $VERSION) (default)"
             fi
           fi
         done

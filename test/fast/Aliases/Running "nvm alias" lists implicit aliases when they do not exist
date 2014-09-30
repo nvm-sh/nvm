@@ -1,0 +1,18 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+
+die () { echo $@ ; exit 1; }
+
+NVM_ALIAS_OUTPUT=$(nvm alias)
+
+EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
+STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"
+echo "$NVM_ALIAS_OUTPUT" | \grep -e "^stable -> $EXPECTED_STABLE (-> $STABLE_VERSION) (default)$" \
+  || die "nvm alias did not contain the default local stable node version"
+
+EXPECTED_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
+UNSTABLE_VERSION="$(nvm_version "$EXPECTED_UNSTABLE")"
+echo "$NVM_ALIAS_OUTPUT" | \grep -e "^unstable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION) (default)$" \
+  || die "nvm alias did not contain the default local unstable node version"
+
