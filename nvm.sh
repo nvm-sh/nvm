@@ -890,14 +890,15 @@ nvm() {
       mkdir -p "$NVM_DIR/alias"
       if [ $# -le 2 ]; then
         local DEST
-        for ALIAS in "$NVM_DIR"/alias/"$2"*; do
-          if [ -e "$ALIAS" ]; then
-            DEST="$(cat "$ALIAS")"
+        for ALIAS_PATH in "$NVM_DIR"/alias/"$2"*; do
+          ALIAS="$(basename "$ALIAS_PATH")"
+          DEST="$(nvm_alias "$ALIAS" 2>1 /dev/null)"
+          if [ -n "$DEST" ]; then
             VERSION="$(nvm_version "$DEST")"
             if [ "_$DEST" = "_$VERSION" ]; then
-              echo "$(basename "$ALIAS") -> $DEST"
+              echo "$ALIAS -> $DEST"
             else
-              echo "$(basename "$ALIAS") -> $DEST (-> $VERSION)"
+              echo "$ALIAS -> $DEST (-> $VERSION)"
             fi
           fi
         done
