@@ -281,7 +281,7 @@ nvm_ls() {
   fi
 
   if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
-    nvm_version "$(cat "$NVM_DIR/alias/$PATTERN")"
+    nvm_version "$(nvm_alias "$PATTERN" 2> /dev/null)"
     return
   fi
   # If it looks like an explicit version, don't do anything funny
