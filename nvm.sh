@@ -234,6 +234,24 @@ nvm_binary_available() {
   nvm_version_greater_than_or_equal_to "$1" "$FIRST_VERSION_WITH_BINARY"
 }
 
+nvm_alias() {
+  local ALIAS
+  ALIAS="$1"
+  if [ -z "$ALIAS" ]; then
+    echo >&2 'An alias is required.'
+    return 1
+  fi
+
+  local NVM_ALIAS_PATH
+  NVM_ALIAS_PATH="$NVM_DIR/alias/$ALIAS"
+  if [ ! -e "$NVM_ALIAS_PATH" ]; then
+    echo >&2 'Alias does not exist.'
+    return 2
+  fi
+
+  cat "$NVM_ALIAS_PATH"
+}
+
 nvm_ls_current() {
   local NODE_PATH
   NODE_PATH="$(which node 2> /dev/null)"
