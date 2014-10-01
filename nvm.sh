@@ -382,7 +382,7 @@ nvm_print_versions() {
   echo "$1" | while read VERSION; do
     if [ "$VERSION" = "$NVM_CURRENT" ]; then
       FORMAT='\033[0;32m-> %9s\033[0m'
-    elif [ -d "$(nvm_version_path "$VERSION")" ]; then
+    elif [ -d "$(nvm_version_path "$VERSION" 2> /dev/null)" ]; then
       FORMAT='\033[0;34m%12s\033[0m'
     elif [ "$VERSION" = "system" ]; then
       FORMAT='\033[0;33m%12s\033[0m'
