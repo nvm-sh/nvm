@@ -818,7 +818,7 @@ nvm() {
       provided_version=$1
       if [ -n "$provided_version" ]; then
         VERSION=`nvm_version $provided_version`
-        if [ $VERSION = "N/A" ]; then
+        if [ "_$VERSION" = "_N/A" ]; then
           provided_version=''
           if [ $has_checked_nvmrc -ne 1 ]; then
             nvm_rc_version && has_checked_nvmrc=1
@@ -829,16 +829,15 @@ nvm() {
         fi
       fi
 
-      local NVM_VERSION_DIR
-      NVM_VERSION_DIR=$(nvm_version_path "$VERSION")
-      if [ ! -d "$NVM_VERSION_DIR" ]; then
-        echo "$VERSION version is not installed yet" >&2
-        return 1
-      fi
-      RUN_NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
-      RUN_NODE_PATH=`nvm_prepend_path "$NODE_PATH" "$NVM_VERSION_DIR/lib/node_modules"`
       echo "Running node $VERSION"
-      NODE_PATH=$RUN_NODE_PATH $NVM_VERSION_DIR/bin/node "$@"
+      local ARGS
+      ARGS="$@"
+      local OUTPUT
+      OUTPUT="$(nvm use "$VERSION" >/dev/null && node "$ARGS")"
+      local EXIT_CODE
+      EXIT_CODE="$?"
+      echo "$OUTPUT"
+      return $EXIT_CODE
     ;;
     "exec" )
       shift
