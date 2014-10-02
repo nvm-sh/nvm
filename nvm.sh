@@ -244,7 +244,7 @@ nvm_alias() {
 
   local NVM_ALIAS_PATH
   NVM_ALIAS_PATH="$NVM_DIR/alias/$ALIAS"
-  if [ ! -e "$NVM_ALIAS_PATH" ]; then
+  if [ ! -f "$NVM_ALIAS_PATH" ]; then
     echo >&2 'Alias does not exist.'
     return 2
   fi
