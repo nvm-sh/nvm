@@ -4,6 +4,10 @@
 
 First you'll need to make sure your system has a c++ compiler. For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
+Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are not supported nor developed by us:
+ - [nvmw](hakobera/nvmw)
+ - [nvm-windows](coreybutler/nvm-windows)
+
 ### Install script
 
 To install you could use the [install script][2] using cURL:
