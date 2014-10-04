@@ -2,7 +2,7 @@
 
 ## Installation
 
-First you'll need to make sure your system has a c++ compiler.  For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
+First you'll need to make sure your system has a c++ compiler. For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
 ### Install script
 
@@ -22,7 +22,7 @@ You can customize the install source, directory and profile using the `NVM_SOURC
 
 ### Manual install
 
-For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it.  I put mine in a folder called `nvm`.
+For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in a folder called `nvm`.
 
 Or if you have `git` installed, then just clone it, and check out the latest version:
 
