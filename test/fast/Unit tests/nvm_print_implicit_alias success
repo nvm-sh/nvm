@@ -30,6 +30,11 @@ nvm_ls_remote() {
   echo "v0.6.6"
   echo "v0.7.7"
   echo "v0.9.7"
+  echo "v0.4.3"
+  echo "v0.5.4"
+  echo "v0.6.6"
+  echo "v0.7.7"
+  echo "v0.9.7"
 }
 
 LATEST_STABLE="$(nvm_print_implicit_alias remote stable)"

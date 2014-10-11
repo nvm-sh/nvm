@@ -412,14 +412,21 @@ nvm_print_implicit_alias() {
 
   local LAST_TWO
   if [ "_$1" = "_local" ]; then
-    LAST_TWO="$(nvm_ls | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)"
+    LAST_TWO=$(nvm_ls | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
   else
-    LAST_TWO="$(nvm_ls_remote | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)"
+    LAST_TWO=$(nvm_ls_remote | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
   fi
   local MINOR
   local STABLE
   local UNSTABLE
   local MOD
+
+  local ZHS_HAS_SHWORDSPLIT_UNSET
+  ZHS_HAS_SHWORDSPLIT_UNSET=1
+  if nvm_has "setopt"; then
+    ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | \grep shwordsplit > /dev/null ; echo $?)
+    setopt shwordsplit
+  fi
   for MINOR in $LAST_TWO; do
     MOD=$(expr "$(nvm_normalize_version "$MINOR")" \/ 1000000 \% 2)
     if [ $MOD -eq 0 ]; then
@@ -428,6 +435,10 @@ nvm_print_implicit_alias() {
       UNSTABLE="$MINOR"
     fi
   done
+  if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
+    unsetopt shwordsplit
+  fi
+
   if [ "_$2" = "_stable" ]; then
     echo $STABLE
   elif [ "_$2" = "_unstable" ]; then
