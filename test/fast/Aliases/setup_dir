@@ -2,6 +2,8 @@
 
 for i in $(seq 1 10)
   do
-  echo 0.0.$i > ../../../alias/test$i
+  echo 0.0.$i > ../../../alias/test-stable-$i
   mkdir -p ../../../v0.0.$i
+  echo 0.1.$i > ../../../alias/test-unstable-$i
+  mkdir -p ../../../v0.1.$i
 done
