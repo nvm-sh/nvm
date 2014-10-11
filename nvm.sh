@@ -891,7 +891,7 @@ nvm() {
         local DEST
         for ALIAS_PATH in "$NVM_DIR"/alias/"$2"*; do
           ALIAS="$(basename "$ALIAS_PATH")"
-          DEST="$(nvm_alias "$ALIAS" 2&>1 > /dev/null)"
+          DEST="$(nvm_alias "$ALIAS" 2> /dev/null)"
           if [ -n "$DEST" ]; then
             VERSION="$(nvm_version "$DEST")"
             if [ "_$DEST" = "_$VERSION" ]; then
@@ -906,8 +906,10 @@ nvm() {
           if [ ! -f "$NVM_DIR/alias/$ALIAS" ]; then
             if [ $# -lt 2 ] || [ "~$ALIAS" = "~$2" ]; then
               DEST="$(nvm_print_implicit_alias local "$ALIAS")"
-              VERSION="$(nvm_version "$DEST")"
-              echo "$ALIAS -> $DEST (-> $VERSION) (default)"
+              if [ "_$DEST" != "_" ]; then
+                VERSION="$(nvm_version "$DEST")"
+                echo "$ALIAS -> $DEST (-> $VERSION) (default)"
+              fi
             fi
           fi
         done
