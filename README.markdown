@@ -12,11 +12,11 @@ Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/n
 
 To install you could use the [install script][2] using cURL:
 
-    curl https://raw.githubusercontent.com/creationix/nvm/v0.17.2/install.sh | bash
+    curl -L https://github.com/creationix/nvm/raw/master/install.sh | bash
 
 or Wget:
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.17.2/install.sh | bash
+    wget -qO- https://github.com/creationix/nvm/raw/master/install.sh | bash
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
