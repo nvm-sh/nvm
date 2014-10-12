@@ -675,10 +675,10 @@ nvm() {
             if nvm_version_greater 0.2.3 "$VERSION"; then
               echo "npm requires node v0.2.3 or higher" >&2
             else
-              nvm_download https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
+              nvm_download -L https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
             fi
           else
-            nvm_download https://npmjs.org/install.sh -o - | clean=yes sh
+            nvm_download -L https://npmjs.org/install.sh -o - | clean=yes sh
           fi
         fi
       else
