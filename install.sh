@@ -40,6 +40,13 @@ nvm_source() {
   echo "$NVM_SOURCE_URL"
 }
 
+# 
+# Node.js version to install
+#
+nvm_node_version() {
+  echo "$NODE_VERSION"
+}
+
 nvm_download() {
   if nvm_has "curl"; then
     curl -q $*
@@ -82,6 +89,30 @@ install_nvm_from_git() {
     fi
   fi
   return
+}
+
+#
+# Automatically install Node.js
+#
+nvm_install_node() {
+  local NODE_VERSION
+  NODE_VERSION="$(nvm_node_version)"
+
+  if [ -z "$NODE_VERSION" ]; then
+    echo "=> You can now install Node.js by running \`nvm install\`"
+    return 0
+  fi
+
+  echo "=> Installing Node.js version $NODE_VERSION"
+  nvm install "$NODE_VERSION"
+  local CURRENT_NVM_NODE
+
+  CURRENT_NVM_NODE="$(nvm_version current)"
+  if [ "$(nvm_version "$NODE_VERSION")" == "$CURRENT_NVM_NODE" ]; then
+    echo "=> Node.js version $NODE_VERSION has been successfully installed"
+  else
+    echo >&2 "Failed to install Node.js $NODE_VERSION"
+  fi
 }
 
 install_nvm_as_script() {
@@ -255,9 +286,13 @@ nvm_do_install() {
     fi
   fi
 
+  # Sourcing $PROFILE to take into account the new environment
+  . "$NVM_PROFILE"
+
   nvm_check_global_modules
 
-  echo "=> Close and reopen your terminal to start using nvm"
+  nvm_install_node
+
   nvm_reset
 }
 
@@ -269,7 +304,7 @@ nvm_reset() {
   unset -f nvm_reset nvm_has nvm_latest_version \
     nvm_source nvm_download install_nvm_as_script install_nvm_from_git \
     nvm_detect_profile nvm_check_global_modules nvm_do_install \
-    nvm_install_dir
+    nvm_install_dir nvm_node_version nvm_install_node
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
