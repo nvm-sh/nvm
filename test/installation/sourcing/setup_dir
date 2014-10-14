@@ -1,0 +1,8 @@
+#!/bin/sh
+
+mkdir -p ../../../alias
+
+. ../../../nvm.sh
+nvm install 0.10.1
+nvm unload || echo >&2 'nvm unload failed'
+
