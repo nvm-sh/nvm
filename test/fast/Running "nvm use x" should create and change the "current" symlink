@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export NVM_SYMLINK_CURRENT=true
 . ../../nvm.sh
 
 rm -rf ../../v0.10.29

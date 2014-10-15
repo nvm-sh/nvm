@@ -95,7 +95,7 @@ To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
     NVM_NODEJS_ORG_MIRROR=http://nodejs.org/dist nvm install 0.10
 
-`nvm use` will, by defaut, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to any value other than "true" to disable this behavior.
+`nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
 
 ## License
 

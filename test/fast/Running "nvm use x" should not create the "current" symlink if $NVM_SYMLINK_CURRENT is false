@@ -45,39 +45,40 @@ function isCurrentSymlinkPresent() {
 NVM_SYMLINK_CURRENT=false
 cleanup
 runNvmUse
-isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=false!"
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=false!"
 registerExpectedNoSymlink $?
 
 NVM_SYMLINK_CURRENT=true
 cleanup
 runNvmUse
-isCurrentSymlinkPresent || echo "Expected 'current' symlink to be created when NVM_SYMLINK_CURRENT=true!"
+isCurrentSymlinkPresent || echo >&2 "Expected 'current' symlink to be created when NVM_SYMLINK_CURRENT=true!"
 registerExpectedSymlink $?
 
 NVM_SYMLINK_CURRENT=garbagevalue
 cleanup
 runNvmUse
-isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT contains a string!"
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT contains a string!"
 registerExpectedNoSymlink $?
 
 NVM_SYMLINK_CURRENT=0
 cleanup
 runNvmUse
-isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=0!"
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=0!"
 registerExpectedNoSymlink $?
 
 NVM_SYMLINK_CURRENT=1
 cleanup
 runNvmUse
-isCurrentSymlinkPresent && echo "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=1!"
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=1!"
 registerExpectedNoSymlink $?
 
 unset NVM_SYMLINK_CURRENT
 cleanup
 runNvmUse
-isCurrentSymlinkPresent || echo "Expected 'current' symlink to be created when NVM_SYMLINK_CURRENT has been unset (default behaviour)!"
-registerExpectedSymlink $?
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT has been unset (default behaviour)!"
+registerExpectedNoSymlink $?
 
 cleanup
 
 [ ${TEST_FAILED} -ne 0 ] && echo "${TEST_COUNT} tested, ${TEST_PASSED} passed, ${TEST_FAILED} failed" && exit 1 || true
+

@@ -802,7 +802,7 @@ nvm() {
       export NODE_PATH
       export NVM_PATH="$NVM_VERSION_DIR/lib/node"
       export NVM_BIN="$NVM_VERSION_DIR/bin"
-      if [ "$NVM_SYMLINK_CURRENT" = true ] || [ -z "$NVM_SYMLINK_CURRENT" ]; then
+      if [ "$NVM_SYMLINK_CURRENT" = true ]; then
         rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
       echo "Now using node $VERSION"
