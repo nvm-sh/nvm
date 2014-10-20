@@ -50,7 +50,7 @@ unset NVM_SCRIPT_SOURCE 2> /dev/null
 
 # Setup mirror location if not already set
 if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
-  export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
+  export NVM_NODEJS_ORG_MIRROR="https://nodejs.org/dist"
 fi
 
 nvm_tree_contains_path() {
