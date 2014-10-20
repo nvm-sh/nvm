@@ -342,7 +342,7 @@ nvm_ls_remote() {
   else
     PATTERN=".*"
   fi
-  VERSIONS=`nvm_download -s $NVM_NODEJS_ORG_MIRROR/ -o - \
+  VERSIONS=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/ -o - \
               | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
               | \grep -w "${PATTERN}" \
               | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
@@ -604,7 +604,7 @@ nvm() {
           if nvm_binary_available "$VERSION"; then
             t="$VERSION-$os-$arch"
             url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
-            sum=`nvm_download -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-${t}.tar.gz | \awk '{print $1}'`
+            sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-${t}.tar.gz | \awk '{print $1}'`
             local tmpdir
             tmpdir="$NVM_DIR/bin/node-${t}"
             local tmptarball
@@ -645,10 +645,10 @@ nvm() {
       tmpdir="$NVM_DIR/src"
       local tmptarball
       tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`nvm_download -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | \grep '200 OK'`" != '' ]; then
+      if [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | \grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
-        sum=`nvm_download -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-$VERSION.tar.gz | \awk '{print $1}'`
-      elif [ "`nvm_download -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | \grep '200 OK'`" != '' ]; then
+        sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-$VERSION.tar.gz | \awk '{print $1}'`
+      elif [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | \grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
       fi
       if (
