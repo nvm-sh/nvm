@@ -50,7 +50,7 @@ unset NVM_SCRIPT_SOURCE 2> /dev/null
 
 # Setup mirror location if not already set
 if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
-  export NVM_NODEJS_ORG_MIRROR="http://nodejs.org/dist"
+  export NVM_NODEJS_ORG_MIRROR="https://nodejs.org/dist"
 fi
 
 nvm_tree_contains_path() {
@@ -987,7 +987,7 @@ nvm() {
       nvm_version $2
     ;;
     "--version" )
-      echo "0.17.2"
+      echo "0.17.3"
     ;;
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater nvm_version_greater_than_or_equal_to > /dev/null 2>&1
