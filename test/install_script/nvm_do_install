@@ -1,0 +1,6 @@
+#!/bin/sh
+
+NVM_ENV=testing . ../../install.sh
+
+#nvm_do_install is available
+type nvm_do_install > /dev/null 2>&1
