@@ -821,6 +821,9 @@ nvm() {
           echo "System version of node not found." >&2
           return 127
         fi
+      elif [ "_$VERSION" = "_∞" ]; then
+        echo "The alias \"$2\" leads to an infinite loop. Aborting." >&2
+        return 8
       fi
 
       local NVM_VERSION_DIR
