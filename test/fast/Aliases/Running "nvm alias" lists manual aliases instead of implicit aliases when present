@@ -4,6 +4,8 @@
 
 die () { echo $@ ; cleanup ; exit 1; }
 cleanup () {
+  rm -rf ../../../alias/stable
+  rm -rf ../../../alias/unstable
   rm -rf ../../../v0.8.1
   rm -rf ../../../v0.9.1
 }
