@@ -270,6 +270,32 @@ nvm_ls_current() {
   fi
 }
 
+nvm_resolve_alias() {
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  local PATTERN
+  PATTERN="$1"
+
+  if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
+    nvm_version "$(nvm_alias "$PATTERN" 2> /dev/null)"
+    return 0
+  fi
+
+  if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+    local IMPLICIT
+    IMPLICIT="$(nvm_print_implicit_alias local "$PATTERN" 2> /dev/null)"
+    if [ -n "$IMPLICIT" ]; then
+      nvm_version "$IMPLICIT"
+      return $?
+    fi
+    return 3
+  fi
+
+  return 2
+}
+
 nvm_ls() {
   local PATTERN
   PATTERN=$1
@@ -280,10 +306,10 @@ nvm_ls() {
     return
   fi
 
-  if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
-    nvm_version "$(nvm_alias "$PATTERN" 2> /dev/null)"
+  if nvm_resolve_alias "$PATTERN"; then
     return
   fi
+
   # If it looks like an explicit version, don't do anything funny
   PATTERN=$(nvm_ensure_version_prefix $PATTERN)
   if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
@@ -292,11 +318,6 @@ nvm_ls() {
     fi
   else
     if [ "_$PATTERN" != "_system" ]; then
-      if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-        nvm_ls "$(nvm_print_implicit_alias local "$PATTERN" 2> /dev/null)"
-        return $?
-      fi
-
       local NUM_VERSION_GROUPS
       NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
       if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then

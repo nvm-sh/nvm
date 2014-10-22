@@ -1,0 +1,28 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+EXIT_CODE=$(nvm_resolve_alias ; echo $?)
+[ $EXIT_CODE = "1" ] || die "nvm_resolve_alias without an argument did not return 1; got $EXIT_CODE"
+
+for i in $(seq 1 10)
+  do
+  STABLE_ALIAS="$(nvm_resolve_alias test-stable-$i)"
+  [ "_$STABLE_ALIAS" = "_v0.0.$i" ] \
+    || die "'nvm_resolve_alias test-stable-$i' was not v0.0.$i; got $STABLE_ALIAS"
+  UNSTABLE_ALIAS="$(nvm_resolve_alias test-unstable-$i)"
+  [ "_$UNSTABLE_ALIAS" = "_v0.1.$i" ] \
+    || die "'nvm_resolve_alias test-unstable-$i' was not v0.1.$i; got $UNSTABLE_ALIAS"
+done
+
+EXIT_CODE=$(nvm_resolve_alias nonexistent ; echo $?)
+[ $EXIT_CODE = "2" ] || die "'nvm_resolve_alias nonexistent' did not return 2; got $EXIT_CODE"
+
+STABLE="$(nvm_resolve_alias stable)"
+[ "_$STABLE" = "_v0.0.10" ] || die "'nvm_resolve_alias stable' was not v0.0.10; got $STABLE"
+
+UNSTABLE="$(nvm_resolve_alias unstable)"
+[ "_$UNSTABLE" = "_v0.1.10" ] || die "'nvm_resolve_alias unstable' was not v0.1.10; got $UNSTABLE"
+
