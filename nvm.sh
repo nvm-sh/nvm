@@ -278,8 +278,35 @@ nvm_resolve_alias() {
   local PATTERN
   PATTERN="$1"
 
-  if [ -f "$NVM_DIR/alias/$PATTERN" ]; then
-    nvm_version "$(nvm_alias "$PATTERN" 2> /dev/null)"
+  local ALIAS
+  ALIAS="$PATTERN"
+  local ALIAS_TEMP
+
+  local SEEN_ALIASES
+  SEEN_ALIASES="$ALIAS"
+  while true; do
+    ALIAS_TEMP="$(nvm_alias "$ALIAS" 2> /dev/null)"
+
+    if [ -z "$ALIAS_TEMP" ]; then
+      break
+    fi
+
+    if [ -n "$ALIAS_TEMP" ] \
+      && printf "$SEEN_ALIASES" | \grep -e "^$ALIAS_TEMP$" > /dev/null; then
+      ALIAS="∞"
+      break
+    fi
+
+    SEEN_ALIASES="$SEEN_ALIASES\n$ALIAS_TEMP"
+    ALIAS="$ALIAS_TEMP"
+  done
+
+  if [ -n "$ALIAS" ] && [ "_$ALIAS" != "_$PATTERN" ]; then
+    if [ "_$ALIAS" = "_∞" ]; then
+      echo "$ALIAS"
+    else
+      nvm_version "$ALIAS"
+    fi
     return 0
   fi
 

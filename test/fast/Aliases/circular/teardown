@@ -1,0 +1,10 @@
+#!/bin/sh
+
+rm -f ../../../../alias/loopback
+
+rm -f ../../../../alias/one
+rm -f ../../../../alias/two
+rm -f ../../../../alias/three
+
+rm -f ../../../../alias/four
+
