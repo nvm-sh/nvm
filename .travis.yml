@@ -19,6 +19,11 @@ env:
   - SHELL=bash TEST_SUITE=slow
   - SHELL=zsh TEST_SUITE=slow
   - SHELL=ksh TEST_SUITE=slow
+  - SHELL=sh TEST_SUITE=sourcing
+  - SHELL=dash TEST_SUITE=sourcing
+  - SHELL=bash TEST_SUITE=sourcing
+  - SHELL=zsh TEST_SUITE=sourcing
+  - SHELL=ksh TEST_SUITE=sourcing
   - SHELL=sh TEST_SUITE=installation
   - SHELL=sh TEST_SUITE=installation WITHOUT_CURL=1
   - SHELL=dash TEST_SUITE=installation
@@ -29,3 +34,4 @@ env:
   - SHELL=zsh TEST_SUITE=installation WITHOUT_CURL=1
   - SHELL=ksh TEST_SUITE=installation
   - SHELL=ksh TEST_SUITE=installation WITHOUT_CURL=1
+

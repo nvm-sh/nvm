@@ -9,7 +9,8 @@
     "test": "urchin test",
     "test/fast": "urchin -f test/fast",
     "test/slow": "urchin -f test/slow",
-    "test/installation": "urchin -f test/installation"
+    "test/installation": "urchin -f test/installation",
+    "test/sourcing": "urchin -f test/sourcing"
   },
   "repository": {
     "type": "git",
