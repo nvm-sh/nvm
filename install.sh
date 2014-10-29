@@ -66,6 +66,26 @@ install_nvm_as_script() {
   }
 }
 
+#
+# Detect profile file if not specified as environment variable
+# (eg: PROFILE=~/.myprofile)
+# The echo'ed path is guaranteed to be an existing file
+# Otherwise, an empty string is returned
+#
+nvm_detect_profile() {
+  if [ -f "$PROFILE" ]; then
+    echo "$PROFILE"
+  elif [ -f "$HOME/.bashrc" ]; then
+    echo "$HOME/.bashrc"
+  elif [ -f "$HOME/.bash_profile" ]; then
+    echo "$HOME/.bash_profile"
+  elif [ -f "$HOME/.zshrc" ]; then
+    echo "$HOME/.zshrc"
+  elif [ -f "$HOME/.profile" ]; then
+    echo "$HOME/.profile"
+  fi
+}
+
 nvm_do_install() {
   if [ -z "$METHOD" ]; then
     # Autodetect install method
@@ -93,39 +113,25 @@ nvm_do_install() {
 
   echo
 
-  # Detect profile file if not specified as environment variable (eg: PROFILE=~/.myprofile).
-  if [ -z "$PROFILE" ]; then
-    if [ -f "$HOME/.bashrc" ]; then
-      PROFILE="$HOME/.bashrc"
-    elif [ -f "$HOME/.bash_profile" ]; then
-      PROFILE="$HOME/.bash_profile"
-    elif [ -f "$HOME/.zshrc" ]; then
-      PROFILE="$HOME/.zshrc"
-    elif [ -f "$HOME/.profile" ]; then
-      PROFILE="$HOME/.profile"
-    fi
-  fi
+  local NVM_PROFILE
+  NVM_PROFILE=$(nvm_detect_profile)
 
   SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
 
-  if [ -z "$PROFILE" ] || [ ! -f "$PROFILE" ] ; then
-    if [ -z "$PROFILE" ]; then
-      echo "=> Profile not found. Tried ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
-      echo "=> Create one of them and run this script again"
-    else
-      echo "=> Profile $PROFILE not found"
-      echo "=> Create it (touch $PROFILE) and run this script again"
-    fi
+  if [ -z "$NVM_PROFILE" ] ; then
+    echo "=> Profile not found. Tried $NVM_PROFILE (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
+    echo "=> Create one of them and run this script again"
+    echo "=> Create it (touch $NVM_PROFILE) and run this script again"
     echo "   OR"
     echo "=> Append the following lines to the correct file yourself:"
     printf "$SOURCE_STR"
     echo
   else
-    if ! grep -qc 'nvm.sh' "$PROFILE"; then
-      echo "=> Appending source string to $PROFILE"
-      printf "$SOURCE_STR\n" >> "$PROFILE"
+    if ! grep -qc 'nvm.sh' "$NVM_PROFILE"; then
+      echo "=> Appending source string to $NVM_PROFILE"
+      printf "$SOURCE_STR\n" >> "$NVM_PROFILE"
     else
-      echo "=> Source string already in $PROFILE"
+      echo "=> Source string already in $NVM_PROFILE"
     fi
   fi
 
@@ -138,7 +144,7 @@ nvm_do_install() {
 # during the execution of the install script
 #
 nvm_reset() {
-  unset -f nvm_do_install nvm_has nvm_download install_nvm_as_script install_nvm_from_git nvm_reset
+  unset -f nvm_do_install nvm_has nvm_download install_nvm_as_script install_nvm_from_git nvm_reset nvm_detect_profile
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
