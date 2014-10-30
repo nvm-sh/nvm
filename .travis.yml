@@ -7,7 +7,7 @@ before_script:
   - '[ -z "$WITHOUT_CURL" ] || wget -O /tmp/urchin https://raw.githubusercontent.com/scraperwiki/urchin/master/urchin'
   - chmod +x /tmp/urchin
 script:
-  - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin $SHELL
+  - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin test-$SHELL
 env:
   - SHELL=sh TEST_SUITE=install_script
   - SHELL=dash TEST_SUITE=install_script

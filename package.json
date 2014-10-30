@@ -6,12 +6,12 @@
     "test": "test"
   },
   "scripts": {
-    "test": "urchin test",
-    "test/fast": "urchin -f test/fast",
-    "test/slow": "urchin -f test/slow",
-    "test/install_script": "urchin -f test/install_script",
-    "test/installation": "urchin -f test/installation",
-    "test/sourcing": "urchin -f test/sourcing"
+    "test": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make test-$shell",
+    "test/fast": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=fast test-$shell",
+    "test/slow": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=slow test-$shell",
+    "test/install_script": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=install_script test-$shell",
+    "test/installation": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation test-$shell",
+    "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell"
   },
   "repository": {
     "type": "git",
@@ -30,7 +30,8 @@
   },
   "homepage": "https://github.com/creationix/nvm",
   "devDependencies": {
+    "replace": "~0.3.0",
+    "semver": "~4.1.0",
     "urchin": "~0.0.2"
   }
 }
-

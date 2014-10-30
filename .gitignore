@@ -9,6 +9,7 @@ test/bak
 .urchin_stdout
 
 node_modules/
+npm-debug.log
 
 .DS_Store
 current
