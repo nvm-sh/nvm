@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cleanup () {
-  unset -f safe_type
+  unset -f safe_type die cleanup
 }
 die () { echo $@ ; cleanup ; exit 1; }
 
@@ -24,6 +24,7 @@ nvm_reset
 ! safe_type install_nvm_as_script || die 'install_nvm_as_script is still available'
 ! safe_type install_nvm_from_git || die 'install_nvm_from_git is still available'
 ! safe_type nvm_reset || die 'nvm_reset is still available'
+! safe_type nvm_detect_profile || die 'nvm_detect_profile is still available'
 
 cleanup
 
