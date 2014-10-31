@@ -11,6 +11,33 @@ if [ -z "$NVM_DIR" ]; then
   NVM_DIR="$HOME/.nvm"
 fi
 
+#
+# Outputs the location to NVM depending on:
+# * The availability of $NVM_SOURCE
+# * The method used ("script" or "git" in the script, defaults to "git")
+# NVM_SOURCE always takes precedence
+#
+nvm_source() {
+  local NVM_METHOD
+  NVM_METHOD="$1"
+  if [ -z "$NVM_SOURCE" ]; then
+    local NVM_SOURCE
+  else
+    echo "$NVM_SOURCE"
+    return 0
+  fi
+  if [ "_$NVM_METHOD" = "_script" ]; then
+    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.18.0/nvm.sh"
+  elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
+    NVM_SOURCE="https://github.com/creationix/nvm.git"
+  else
+    echo >&2 "Unexpected value \"$NVM_METHOD\" for \$NVM_METHOD"
+    return 1
+  fi
+  echo "$NVM_SOURCE"
+  return 0
+}
+
 nvm_download() {
   if nvm_has "curl"; then
     curl $*
@@ -27,10 +54,6 @@ nvm_download() {
 }
 
 install_nvm_from_git() {
-  if [ -z "$NVM_SOURCE" ]; then
-    NVM_SOURCE="https://github.com/creationix/nvm.git"
-  fi
-
   if [ -d "$NVM_DIR/.git" ]; then
     echo "=> nvm is already installed in $NVM_DIR, trying to update"
     printf "\r=> "
@@ -42,16 +65,15 @@ install_nvm_from_git() {
     echo "=> Downloading nvm from git to '$NVM_DIR'"
     printf "\r=> "
     mkdir -p "$NVM_DIR"
-    git clone "$NVM_SOURCE" "$NVM_DIR"
+    git clone "$(nvm_source "git")" "$NVM_DIR"
   fi
   cd "$NVM_DIR" && git checkout v0.18.0 && git branch -D master >/dev/null 2>&1
   return
 }
 
 install_nvm_as_script() {
-  if [ -z "$NVM_SOURCE" ]; then
-    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.18.0/nvm.sh"
-  fi
+  local NVM_SOURCE
+  NVM_SOURCE=$(nvm_source "script")
 
   # Downloading to $NVM_DIR
   mkdir -p "$NVM_DIR"
@@ -60,8 +82,8 @@ install_nvm_as_script() {
   else
     echo "=> Downloading nvm as script to '$NVM_DIR'"
   fi
-  nvm_download -s "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || {
-    echo >&2 "Failed to download '$NVM_SOURCE'.."
+  nvm_download -s "$_source" -o "$NVM_DIR/nvm.sh" || {
+    echo >&2 "Failed to download '$_source'.."
     return 1
   }
 }
