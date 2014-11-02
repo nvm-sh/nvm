@@ -17,9 +17,13 @@ SHELLS := sh bash dash ksh zsh
 	# Generate 'test-<shell>' target names from specified shells.
 	# The embedded shell names are extracted on demand inside the recipes.
 SHELL_TARGETS := $(addprefix test-,$(SHELLS))
+	# Determine if the installed Urchin version supports cross-shell testing, based on whether its usage information mentions the -s option.
+HAVE_CROSS_SHELL_TESTS := $(shell PATH="$(PATH)" $(URCHIN) -h | grep -qE '(^|\s)-s\s' && echo 'yes')
+NO_CROSS_SHELL_TESTS_WARNING := $(if $(HAVE_CROSS_SHELL_TESTS),,$(warning WARNING: This version of Urchin does not support cross-shell tests. All tests will run with 'sh'.))
 	# Define the default test suite(s). This can be overridden with `make TEST_SUITE=<...>  <target>`.
 	# Test suites are the names of subfolders of './test'.
-TEST_SUITE := $(shell find ./test -type d -mindepth 1 -maxdepth 1 -exec basename {} +)
+TEST_SUITE := $(shell find ./test/* -type d -prune -exec basename {} \;)
+
 
 # Default target (by virtue of being the first non '.'-prefixed in the file).
 .PHONY: _no-target-specified
@@ -38,7 +42,8 @@ $(SHELL_TARGETS):
 	@shell='$@'; shell=$${shell##*-}; which "$$shell" >/dev/null || { printf '\033[0;31m%s\033[0m\n' "WARNING: Cannot test with shell '$$shell': not found." >&2; exit 0; } && \
 	 printf '\n\033[0;34m%s\033[0m\n' "Running tests in $$shell"; \
 	 [ -z "$$TRAVIS_BUILD_DIR" ] && for v in $$(export -p | awk -F'[ =]' '$$2 ~ "^NVM_" { print $$2 }'); do unset $$v; done && unset v; \
-	 for suite in $(TEST_SUITE); do $$shell $(URCHIN) -f test/$$suite || exit; done
+	 [ "$(HAVE_CROSS_SHELL_TESTS)" = 'yes' ] && targetShellOpt="-s $$shell" || targetShellOpt=; \
+	 for suite in $(TEST_SUITE); do $(URCHIN) -f $$targetShellOpt test/$$suite || exit; done
 
 # All-tests target: invokes the specified test suites for ALL shells defined in $(SHELLS).
 .PHONY: test
