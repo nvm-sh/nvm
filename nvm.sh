@@ -837,7 +837,7 @@ nvm() {
       # Prepend current version
       PATH=`nvm_prepend_path "$PATH" "$NVM_VERSION_DIR/bin"`
       if [ -z "$MANPATH" ]; then
-        MANPATH=$(manpath)
+        MANPATH=$(manpath 2> /dev/null)
       fi
       # Strip other version from MANPATH
       MANPATH=`nvm_strip_path "$MANPATH" "/share/man"`
