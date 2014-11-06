@@ -1,13 +1,11 @@
 language: c # defaults to ruby
 install:
   - sudo apt-get install ksh zsh -y
+  - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s http://registry.npmjs.org/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
+  - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
-before_script:
-  - '[ -n "$WITHOUT_CURL" ] || curl -o /tmp/urchin https://raw.githubusercontent.com/scraperwiki/urchin/master/urchin'
-  - '[ -z "$WITHOUT_CURL" ] || wget -O /tmp/urchin https://raw.githubusercontent.com/scraperwiki/urchin/master/urchin'
-  - chmod +x /tmp/urchin
 script:
-  - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin test-$SHELL
+  - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL
 env:
   - SHELL=sh TEST_SUITE=install_script
   - SHELL=dash TEST_SUITE=install_script
