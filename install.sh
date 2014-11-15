@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Get this script after dereferincing all symlinks
+# !! Doesn't check for circular symlinks !!
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
 set -e
 
 nvm_has() {
@@ -132,6 +142,24 @@ nvm_do_install() {
       printf "$SOURCE_STR\n" >> "$NVM_PROFILE"
     else
       echo "=> Source string already in $NVM_PROFILE"
+    fi
+  fi
+
+  # Actions for fish shell
+  if (which fish > /dev/null); then
+    echo "=> fish found, copying nvm function"
+    FISH_CONFIG_DIR=$HOME/.config/fish
+    FISH_FUNCTIONS_DIR=$FISH_CONFIG_DIR/functions
+
+    mkdir -p $FISH_FUNCTIONS_DIR
+    cp $NVM_DIR/nvm.fish $FISH_FUNCTIONS_DIR
+
+    # Apply nvm in fish configuration
+    FISH_CONFIG_STRING="nvm > /dev/null ^&1"
+    FISH_CONFIG_FILE=$FISH_CONFIG_DIR/config.fish
+    if ! grep -q "$FISH_CONFIG_STRING" $FISH_CONFIG_FILE 2> /dev/null ; then
+      echo "=> appending nvm to fish configuration"
+      echo $FISH_CONFIG_STRING >> $FISH_CONFIG_DIR/config.fish
     fi
   fi
 
