@@ -13,7 +13,7 @@ endif
 	# The files that need updating when incrementing the version number.
 VERSIONED_FILES := nvm.sh install.sh README.markdown package.json
 	# Define all shells to test with. Can be overridden with `make SHELLS=... <target>`.
-SHELLS := sh bash dash ksh zsh
+SHELLS := sh bash dash zsh # ksh (#574)
 	# Generate 'test-<shell>' target names from specified shells.
 	# The embedded shell names are extracted on demand inside the recipes.
 SHELL_TARGETS := $(addprefix test-,$(SHELLS))

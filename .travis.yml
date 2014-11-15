@@ -1,6 +1,6 @@
 language: c # defaults to ruby
 install:
-  - sudo apt-get install ksh zsh -y
+  - sudo apt-get install zsh -y # ksh
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s http://registry.npmjs.org/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
@@ -11,22 +11,22 @@ env:
   - SHELL=dash TEST_SUITE=install_script
   - SHELL=bash TEST_SUITE=install_script
   - SHELL=zsh TEST_SUITE=install_script
-  - SHELL=ksh TEST_SUITE=install_script
+#  - SHELL=ksh TEST_SUITE=install_script
   - SHELL=sh TEST_SUITE=fast
   - SHELL=dash TEST_SUITE=fast
   - SHELL=bash TEST_SUITE=fast
   - SHELL=zsh TEST_SUITE=fast
-  - SHELL=ksh TEST_SUITE=fast
+#  - SHELL=ksh TEST_SUITE=fast
   - SHELL=sh TEST_SUITE=slow
   - SHELL=dash TEST_SUITE=slow
   - SHELL=bash TEST_SUITE=slow
   - SHELL=zsh TEST_SUITE=slow
-  - SHELL=ksh TEST_SUITE=slow
+#  - SHELL=ksh TEST_SUITE=slow
   - SHELL=sh TEST_SUITE=sourcing
   - SHELL=dash TEST_SUITE=sourcing
   - SHELL=bash TEST_SUITE=sourcing
   - SHELL=zsh TEST_SUITE=sourcing
-  - SHELL=ksh TEST_SUITE=sourcing
+#  - SHELL=ksh TEST_SUITE=sourcing
   - SHELL=sh TEST_SUITE=installation
   - SHELL=sh TEST_SUITE=installation WITHOUT_CURL=1
   - SHELL=dash TEST_SUITE=installation
@@ -35,5 +35,5 @@ env:
   - SHELL=bash TEST_SUITE=installation WITHOUT_CURL=1
   - SHELL=zsh TEST_SUITE=installation
   - SHELL=zsh TEST_SUITE=installation WITHOUT_CURL=1
-  - SHELL=ksh TEST_SUITE=installation
-  - SHELL=ksh TEST_SUITE=installation WITHOUT_CURL=1
+#  - SHELL=ksh TEST_SUITE=installation
+#  - SHELL=ksh TEST_SUITE=installation WITHOUT_CURL=1
