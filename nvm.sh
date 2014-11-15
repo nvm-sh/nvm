@@ -531,22 +531,22 @@ nvm() {
       echo "Node Version Manager"
       echo
       echo "Usage:"
-      echo "    nvm help                    Show this message"
-      echo "    nvm --version               Print out the latest released version of nvm"
-      echo "    nvm install [-s] <version>  Download and install a <version>, [-s] from source. Uses .nvmrc if available"
-      echo "    nvm uninstall <version>     Uninstall a version"
-      echo "    nvm use <version>           Modify PATH to use <version>. Uses .nvmrc if available"
-      echo "    nvm run <version> [<args>]  Run <version> with <args> as arguments. Uses .nvmrc if available for <version>"
-      echo "    nvm current                 Display currently activated version"
-      echo "    nvm ls                      List installed versions"
-      echo "    nvm ls <version>            List versions matching a given description"
-      echo "    nvm ls-remote               List remote versions available for install"
-      echo "    nvm deactivate              Undo effects of NVM on current shell"
-      echo "    nvm alias [<pattern>]       Show all aliases beginning with <pattern>"
-      echo "    nvm alias <name> <version>  Set an alias named <name> pointing to <version>"
-      echo "    nvm unalias <name>          Deletes the alias named <name>"
-      echo "    nvm copy-packages <version> Install global NPM packages contained in <version> to current version"
-      echo "    nvm unload                  Unload NVM from shell"
+      echo "    nvm help                             Show this message"
+      echo "    nvm --version                        Print out the latest released version of nvm"
+      echo "    nvm install [-s] <version>           Download and install a <version>, [-s] from source. Uses .nvmrc if available"
+      echo "    nvm uninstall <version>              Uninstall a version"
+      echo "    nvm [--print-paths] use <version>    Modify PATH (and optionally print it) to use <version>. Uses .nvmrc if available"
+      echo "    nvm run <version> [<args>]           Run <version> with <args> as arguments. Uses .nvmrc if available for <version>"
+      echo "    nvm current                          Display currently activated version"
+      echo "    nvm ls                               List installed versions"
+      echo "    nvm ls <version>                     List versions matching a given description"
+      echo "    nvm ls-remote                        List remote versions available for install"
+      echo "    nvm deactivate                       Undo effects of NVM on current shell"
+      echo "    nvm alias [<pattern>]                Show all aliases beginning with <pattern>"
+      echo "    nvm alias <name> <version>           Set an alias named <name> pointing to <version>"
+      echo "    nvm unalias <name>                   Deletes the alias named <name>"
+      echo "    nvm copy-packages <version>          Install global NPM packages contained in <version> to current version"
+      echo "    nvm unload                           Unload NVM from shell"
       echo
       echo "Example:"
       echo "    nvm install v0.10.24        Install a specific version number"
@@ -794,20 +794,35 @@ nvm() {
       fi
     ;;
     "use" )
+      shift # start treating the args given to "use"
+
       if [ $# -eq 0 ]; then
-        nvm help
-        return 127
-      fi
-      if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
           VERSION=`nvm_version $NVM_RC_VERSION`
         fi
-      elif [ "_$2" != '_system' ]; then
-        VERSION="$(nvm_version "$2")"
       else
-        VERSION="$2"
+        # Handle options
+        while [[ $# > 0 ]]; do
+                key="$1"
+                shift
+          case $key in 
+                  --print-paths)
+              PRINT_PATHS=true
+            ;;
+
+                  *)
+              if [ "_$key" != '_system' ]; then
+                      VERSION="$(nvm_version "$key")"
+                    else
+                      VERSION="$key"
+                    fi
+              break
+            ;;
+          esac
+        done
       fi
+
       if [ -z "$VERSION" ]; then
         nvm help
         return 127
@@ -822,7 +837,7 @@ nvm() {
           return 127
         fi
       elif [ "_$VERSION" = "_∞" ]; then
-        echo "The alias \"$2\" leads to an infinite loop. Aborting." >&2
+        echo "The alias \"$1\" leads to an infinite loop. Aborting." >&2
         return 8
       fi
 
@@ -857,6 +872,12 @@ nvm() {
       export NVM_BIN="$NVM_VERSION_DIR/bin"
       if [ "$NVM_SYMLINK_CURRENT" = true ]; then
         rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
+      fi
+      if [ $PRINT_PATHS ]; then
+        echo PATH=$PATH
+        echo NODE_PATH=$NODE_PATH
+        echo NVM_PATH=$NVM_PATH
+        echo NVM_BIN=$NVM_BIN
       fi
       echo "Now using node $VERSION"
     ;;
