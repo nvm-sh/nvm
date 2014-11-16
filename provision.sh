@@ -6,5 +6,4 @@ sudo apt-get install -y git fish
 sudo chsh -s `which fish` vagrant
 
 # Install nvm
-export METHOD=copy
 /vagrant/install.sh
