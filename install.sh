@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Get this script after dereferincing all symlinks
+# !! Doesn't check for circular symlinks !!
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
 set -e
 
 nvm_has() {
@@ -109,6 +119,19 @@ nvm_do_install() {
       exit 1
     fi
     install_nvm_as_script
+  # Copies install.sh dir to installation dir
+  elif [ "~$METHOD" = "~copy" ]; then
+    local COPY=true
+    if [ $DIR = $NVM_DIR ]; then
+      echo "=> install.sh is already in $NVM_DIR"
+      COPY=false
+    elif [ -d $NVM_DIR ]; then
+      echo "=> $NVM_DIR already exists and its contents will be replaced"
+    fi
+    mkdir -p $NVM_DIR
+    if $COPY; then
+      cp -R $DIR/* $NVM_DIR
+    fi
   fi
 
   echo
