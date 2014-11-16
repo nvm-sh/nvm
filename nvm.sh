@@ -803,10 +803,10 @@ nvm() {
         fi
       else
         # Handle options
-        while [[ $# > 0 ]]; do
+        while [ $# > 0 ]; do
                 key="$1"
                 shift
-          case $key in 
+          case $key in
                   --print-paths)
               PRINT_PATHS=true
             ;;
