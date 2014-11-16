@@ -837,7 +837,7 @@ nvm() {
           return 127
         fi
       elif [ "_$VERSION" = "_∞" ]; then
-        echo "The alias \"$1\" leads to an infinite loop. Aborting." >&2
+        echo "The alias \"$key\" leads to an infinite loop. Aborting." >&2
         return 8
       fi
 
