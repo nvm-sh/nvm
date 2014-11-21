@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# For non bash-shells (fish, etc)
-# add <prefix>/nvm/bin and <prefix>/nvm/current/bin to PATH
-
 export NVM_SYMLINK_CURRENT=true
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

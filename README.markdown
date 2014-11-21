@@ -109,7 +109,7 @@ Add `<prefix>/bin` and `<prefix>/current/bin` to your PATH and use nvm transpara
 
 Where nvm is installed at `~/.nvm`
 
-    set -x fish_user_paths $PATH $HOME/.nvm/current/bin $HOME/.nvm/bin
+    set -x fish_user_paths $PATH $NVM_DIR/current/bin $NVM_DIR/bin
 
 ## License
 
