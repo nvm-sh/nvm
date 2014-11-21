@@ -98,6 +98,19 @@ To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
 
+## Other shells
+
+You can run nvm from other shells by using the script provided in the bin
+directory. It must remain relative to the install.
+
+Add `<prefix>/bin` and `<prefix>/current/bin` to your PATH and use nvm transparantly.
+
+### Example [fish-shell](http://fishshell.com/) config:
+
+Where nvm is installed at `~/.nvm`
+
+    set -x fish_user_paths $PATH $HOME/.nvm/current/bin $HOME/.nvm/bin
+
 ## License
 
 nvm is released under the MIT license.
