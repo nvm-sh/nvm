@@ -951,12 +951,15 @@ nvm() {
       nvm_version current
     ;;
     "which" )
-      INPUT=$2
-
-      if [ "_$2" != '_system' ]; then
-        VERSION="$(nvm_version "$INPUT")"
+      if [ $# -eq 1 ]; then
+        nvm_rc_version
+        if [ -n "$NVM_RC_VERSION" ]; then
+          VERSION=`nvm_version $NVM_RC_VERSION`
+        fi
+      elif [ "_$2" != '_system' ]; then
+        VERSION="$(nvm_version "$2")"
       else
-        VERSION="$INPUT"
+        VERSION="$2"
       fi
       if [ -z "$VERSION" ]; then
         nvm help
