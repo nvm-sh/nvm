@@ -18,10 +18,10 @@ __nvm_commands ()
   current_word="${COMP_WORDS[COMP_CWORD]}"
 
   COMMANDS='\
-    help install uninstall use run exec\
-    alias unalias copy-packages
-    current list ls list-remote ls-remote\
-    clear-cache deactivate unload
+    help install uninstall use run exec \
+    alias unalias reinstall-packages \
+    current list ls list-remote ls-remote \
+    clear-cache deactivate unload \
     version'
 
     if [ ${#COMP_WORDS[@]} == 4 ]; then

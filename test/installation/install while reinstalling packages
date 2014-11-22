@@ -23,7 +23,7 @@ npm list --global | grep is-nan > /dev/null || die "is-nan isn't installed"
 
 nvm ls 0.9 | grep v0.9.7 > /dev/null || die "nvm ls 0.9 didn't show v0.9.7"
 
-nvm install 0.9.12 --copy-packages-from=0.9 || die "nvm install 0.9.12 --copy-packages-from=0.9 failed"
+nvm install 0.9.12 --reinstall-packages-from=0.9 || die "nvm install 0.9.12 --reinstall-packages-from=0.9 failed"
 
 [ -d ../../v0.9.12 ] || die "nvm install 0.9.12 didn't install"
 

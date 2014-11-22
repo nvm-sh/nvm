@@ -1,0 +1,31 @@
+#!/bin/sh
+
+die () { echo $@ ; cleanup ; exit 1; }
+cleanup () {
+  rm -rf ../../v0.10.4
+}
+
+mkdir ../../v0.10.4
+
+. ../../nvm.sh
+
+nvm deactivate >/dev/null 2>&1
+
+INSTALL_ERROR_MSG="$(nvm install v0.10.5 --reinstall-packages-from=0.11 2>&1)"
+EXPECTED_ERROR_MSG="If --reinstall-packages-from is provided, it must point to an installed version of node."
+[ "~$INSTALL_ERROR_MSG" = "~$EXPECTED_ERROR_MSG" ] \
+  || die ""nvm install --reinstall-packages-from" should fail when given an uninstalled version: expected '$EXPECTED_ERROR_MSG', got '$INSTALL_ERROR_MSG'"
+
+INSTALL_EXIT_CODE="$(nvm install v0.10.5 --reinstall-packages-from=0.11 >/dev/null 2>&1; echo $?)"
+[ "~$INSTALL_EXIT_CODE" = "~5" ] \
+  || die ""nvm install --reinstall-packages-from" should exit with code 5 when given an uninstalled version, got $INSTALL_EXIT_CODE"
+
+INSTALL_ERROR_MSG="$(nvm install v0.10.5 --reinstall-packages-from=0.10.5 2>&1)"
+EXPECTED_ERROR_MSG="You can't reinstall global packages from the same version of node you're installing."
+[ "~$INSTALL_ERROR_MSG" = "~$EXPECTED_ERROR_MSG" ] \
+  || die ""nvm install --reinstall-packages-from" should fail when given the same version: expected '$EXPECTED_ERROR_MSG', got '$INSTALL_ERROR_MSG'"
+
+INSTALL_EXIT_CODE="$(nvm install v0.10.5 --reinstall-packages-from=0.10.5 >/dev/null 2>&1; echo $?)"
+[ "~$INSTALL_EXIT_CODE" = "~4" ] \
+  || die ""nvm install --reinstall-packages-from" should exit with code 4 when given the same version, got $INSTALL_EXIT_CODE"
+

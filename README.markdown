@@ -146,8 +146,9 @@ Put the above sourcing line just below the sourcing line for NVM in your profile
 nvm
 
 	$ nvm [tab][tab]
-	alias          copy-packages  help           list           run            uninstall      version
-	clear-cache    deactivate     install        ls             unalias        use
+    alias               deactivate          install             ls                  run                 unload
+    clear-cache         exec                list                ls-remote           unalias             use
+    current             help                list-remote         reinstall-packages  uninstall           version
 
 nvm alias
 

@@ -545,7 +545,7 @@ nvm() {
       echo "  nvm alias [<pattern>]                 Show all aliases beginning with <pattern>"
       echo "  nvm alias <name> <version>            Set an alias named <name> pointing to <version>"
       echo "  nvm unalias <name>                    Deletes the alias named <name>"
-      echo "  nvm copy-packages <version>           Install global \`npm\` packages contained in <version> to current version"
+      echo "  nvm reinstall-packages <version>      Reinstall global \`npm\` packages contained in <version> to current version"
       echo "  nvm unload                            Unload \`nvm\` from shell"
       echo
       echo "Example:"
@@ -611,32 +611,35 @@ nvm() {
 
       VERSION="$(nvm_remote_version "$provided_version")"
       ADDITIONAL_PARAMETERS=''
-      local PROVIDED_COPY_PACKAGES_FROM
-      local COPY_PACKAGES_FROM
+      local PROVIDED_REINSTALL_PACKAGES_FROM
+      local REINSTALL_PACKAGES_FROM
 
       while [ $# -ne 0 ]
       do
-        if [ "_$(echo "$1" | cut -c 1-21)" = "_--copy-packages-from=" ]; then
-          PROVIDED_COPY_PACKAGES_FROM="$(echo "$1" | cut -c 22-)"
-          COPY_PACKAGES_FROM="$(nvm_version "$PROVIDED_COPY_PACKAGES_FROM")"
+        if [ "_$(echo "$1" | cut -c 1-26)" = "_--reinstall-packages-from=" ]; then
+          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | cut -c 27-)"
+          REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
+        elif [ "_$(echo "$1" | cut -c 1-21)" = "_--copy-packages-from=" ]; then
+          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | cut -c 22-)"
+          REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
         else
           ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
         fi
         shift
       done
 
-      if [ "_$(nvm_ensure_version_prefix "$PROVIDED_COPY_PACKAGES_FROM")" = "_$VERSION" ]; then
-        echo "You can't copy global packages from the same version of node you're installing." >&2
+      if [ "_$(nvm_ensure_version_prefix "$PROVIDED_REINSTALL_PACKAGES_FROM")" = "_$VERSION" ]; then
+        echo "You can't reinstall global packages from the same version of node you're installing." >&2
         return 4
-      elif [ ! -z "$PROVIDED_COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" = "_N/A" ]; then
-        echo "If --copy-packages-from is provided, it must point to an installed version of node." >&2
+      elif [ ! -z "$PROVIDED_REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" = "_N/A" ]; then
+        echo "If --reinstall-packages-from is provided, it must point to an installed version of node." >&2
         return 5
       fi
 
       if [ -d "$(nvm_version_path "$VERSION")" ]; then
         echo "$VERSION is already installed." >&2
-        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" != "_N/A" ]; then
-          nvm copy-packages "$COPY_PACKAGES_FROM"
+        if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+          nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
         return $?
       fi
@@ -667,8 +670,8 @@ nvm() {
               mv "$tmpdir" "$(nvm_version_path "$VERSION")"
               )
             then
-              if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" != "_N/A" ]; then
-                nvm copy-packages "$COPY_PACKAGES_FROM"
+              if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+                nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
               fi
               return $?
             else
@@ -713,8 +716,8 @@ nvm() {
         $make $MAKE_CXX install
         )
       then
-        if nvm use "$VERSION" && [ ! -z "$COPY_PACKAGES_FROM" ] && [ "_$COPY_PACKAGES_FROM" != "_N/A" ]; then
-          nvm copy-packages "$COPY_PACKAGES_FROM"
+        if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+          nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
         if ! nvm_has "npm" ; then
           echo "Installing npm..."
@@ -1003,7 +1006,7 @@ nvm() {
       rm -f $NVM_DIR/alias/$2
       echo "Deleted alias $2"
     ;;
-    "copy-packages" )
+    "reinstall-packages" | "copy-packages" )
       if [ $# -ne 2 ]; then
         nvm help
         return 127
@@ -1013,7 +1016,7 @@ nvm() {
       PROVIDED_VERSION="$2"
 
       if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ] || [ "$(nvm_version $PROVIDED_VERSION)" = "$(nvm_ls_current)" ]; then
-        echo 'Can not copy packages from the current version of node.' >&2
+        echo 'Can not reinstall packages from the current version of node.' >&2
         return 2
       fi
 
