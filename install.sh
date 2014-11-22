@@ -169,6 +169,24 @@ nvm_do_install() {
     fi
   fi
 
+  # Actions for fish shell
+  if (which fish > /dev/null); then
+    echo "=> fish found, copying nvm function"
+    FISH_CONFIG_DIR=$HOME/.config/fish
+    FISH_FUNCTIONS_DIR=$FISH_CONFIG_DIR/functions
+
+    mkdir -p $FISH_FUNCTIONS_DIR
+    cp $NVM_DIR/nvm.fish $FISH_FUNCTIONS_DIR
+
+    # Apply nvm in fish configuration
+    FISH_CONFIG_STRING="nvm > /dev/null ^&1"
+    FISH_CONFIG_FILE=$FISH_CONFIG_DIR/config.fish
+    if ! grep -q "$FISH_CONFIG_STRING" $FISH_CONFIG_FILE 2> /dev/null ; then
+      echo "=> appending nvm to fish configuration"
+      echo $FISH_CONFIG_STRING >> $FISH_CONFIG_DIR/config.fish
+    fi
+  fi
+
   echo "=> Close and reopen your terminal to start using nvm"
   nvm_reset
 }
