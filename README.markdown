@@ -61,6 +61,10 @@ Or, you can run any arbitrary command in a subshell with the desired version of 
 
     nvm exec 0.10 node --version
 
+You can also get the path to the executable to where it was installed:
+
+    nvm which 0.10
+
 In place of a version pointer like "0.10", you can use the special default aliases "stable" and "unstable":
 
     nvm install stable
