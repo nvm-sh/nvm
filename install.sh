@@ -28,6 +28,8 @@ nvm_source() {
   fi
   if [ "_$NVM_METHOD" = "_script" ]; then
     NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.18.0/nvm.sh"
+  elif [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
+    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.18.0/nvm-exec"
   elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
     NVM_SOURCE="https://github.com/creationix/nvm.git"
   else
@@ -74,6 +76,8 @@ install_nvm_from_git() {
 install_nvm_as_script() {
   local NVM_SOURCE
   NVM_SOURCE=$(nvm_source "script")
+  local NVM_EXEC_SOURCE
+  NVM_EXEC_SOURCE=$(nvm_source "script-nvm-exec")
 
   # Downloading to $NVM_DIR
   mkdir -p "$NVM_DIR"
@@ -83,8 +87,16 @@ install_nvm_as_script() {
     echo "=> Downloading nvm as script to '$NVM_DIR'"
   fi
   nvm_download -s "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || {
-    echo >&2 "Failed to download '$NVM_SOURCE'.."
+    echo >&2 "Failed to download '$NVM_SOURCE'"
     return 1
+  }
+  nvm_download -s "$NVM_EXEC_SOURCE" -o "$NVM_DIR/nvm-exec" || {
+    echo >&2 "Failed to download '$NVM_EXEC_SOURCE'"
+    return 2
+  }
+  chmod a+x "$NVM_DIR/nvm-exec" || {
+    echo >&2 "Failed to mark '$NVM_DIR/nvm-exec' as executable"
+    return 3
   }
 }
 
