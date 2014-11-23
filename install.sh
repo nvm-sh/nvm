@@ -6,7 +6,7 @@ set -e
 # Get's the path of the current script calling the function
 # !! Doesn't check for circular symlinks !!
 # e.g /tmp/path/to/script.sh
-function nvm_script_path(){
+nvm_script_path(){
   SOURCE=$0
   while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
     DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -19,7 +19,7 @@ function nvm_script_path(){
 }
 
 # Get the directory of the current script
-function nvm_script_dir(){
+nvm_script_dir(){
   echo "$( dirname $(nvm_script_path))"
 }
 
