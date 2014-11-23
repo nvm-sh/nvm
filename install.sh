@@ -1,16 +1,27 @@
 #!/bin/bash
 
-# Get this script after dereferincing all symlinks
-# !! Doesn't check for circular symlinks !!
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-
 set -e
+
+# Adapted from stackoverflow: https://stackoverflow.com/a/246128
+# Get's the path of the current script calling the function
+# !! Doesn't check for circular symlinks !!
+# e.g /tmp/path/to/script.sh
+function nvm_script_path(){
+  SOURCE=$0
+  while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  done
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  FILENAME=`basename $SOURCE`
+  echo $DIR/$FILENAME
+}
+
+# Get the directory of the current script
+function nvm_script_dir(){
+  echo "$( dirname $(nvm_script_path))"
+}
 
 nvm_has() {
   type "$1" > /dev/null 2>&1
@@ -122,6 +133,7 @@ nvm_do_install() {
   # Copies install.sh dir to installation dir
   elif [ "~$METHOD" = "~copy" ]; then
     local COPY=true
+    DIR=`nvm_script_dir`
     if [ $DIR = $NVM_DIR ]; then
       echo "=> install.sh is already in $NVM_DIR"
       COPY=false
