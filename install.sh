@@ -132,7 +132,8 @@ nvm_do_install() {
     install_nvm_as_script
   # Copies install.sh dir to installation dir
   elif [ "~$METHOD" = "~copy" ]; then
-    local COPY=true
+    local COPY
+    COPY=true
     DIR=`nvm_script_dir`
     if [ $DIR = $NVM_DIR ]; then
       echo "=> install.sh is already in $NVM_DIR"
