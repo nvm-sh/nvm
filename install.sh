@@ -27,9 +27,9 @@ nvm_source() {
     return 0
   fi
   if [ "_$NVM_METHOD" = "_script" ]; then
-    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.18.0/nvm.sh"
+    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.19.0/nvm.sh"
   elif [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
-    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.18.0/nvm-exec"
+    NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.19.0/nvm-exec"
   elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
     NVM_SOURCE="https://github.com/creationix/nvm.git"
   else
@@ -69,7 +69,7 @@ install_nvm_from_git() {
     mkdir -p "$NVM_DIR"
     git clone "$(nvm_source "git")" "$NVM_DIR"
   fi
-  cd "$NVM_DIR" && git checkout v0.18.0 && git branch -D master >/dev/null 2>&1
+  cd "$NVM_DIR" && git checkout v0.19.0 && git branch -D master >/dev/null 2>&1
   return
 }
 
