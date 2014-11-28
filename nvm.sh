@@ -253,11 +253,11 @@ nvm_alias() {
 }
 
 nvm_ls_current() {
-  local NODE_PATH
-  NODE_PATH="$(which node 2> /dev/null)"
+  local NVM_LS_CURRENT_NODE_PATH
+  NVM_LS_CURRENT_NODE_PATH="$(which node 2> /dev/null)"
   if [ $? -ne 0 ]; then
     echo 'none'
-  elif nvm_tree_contains_path "$NVM_DIR" "$NODE_PATH"; then
+  elif nvm_tree_contains_path "$NVM_DIR" "$NVM_LS_CURRENT_NODE_PATH"; then
     local VERSION
     VERSION=`node -v 2>/dev/null`
     if [ "$VERSION" = "v0.6.21-pre" ]; then
