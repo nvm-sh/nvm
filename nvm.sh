@@ -790,9 +790,7 @@ nvm() {
       fi
 
       NEWPATH="$(nvm_strip_path "$NODE_PATH" "/lib/node_modules")"
-      if [ "$NODE_PATH" = "$NEWPATH" ]; then
-        echo "Could not find $NVM_DIR/*/lib/node_modules in \$NODE_PATH" >&2
-      else
+      if [ "$NODE_PATH" != "$NEWPATH" ]; then
         export NODE_PATH="$NEWPATH"
         echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       fi
@@ -850,13 +848,8 @@ nvm() {
         MANPATH=`nvm_prepend_path "$MANPATH" "$NVM_VERSION_DIR/share/man"`
         export MANPATH
       fi
-      # Strip other version from NODE_PATH
-      NODE_PATH=`nvm_strip_path "$NODE_PATH" "/lib/node_modules"`
-      # Prepend current version
-      NODE_PATH=`nvm_prepend_path "$NODE_PATH" "$NVM_VERSION_DIR/lib/node_modules"`
       export PATH
       hash -r
-      export NODE_PATH
       export NVM_PATH="$NVM_VERSION_DIR/lib/node"
       export NVM_BIN="$NVM_VERSION_DIR/bin"
       if [ "$NVM_SYMLINK_CURRENT" = true ]; then
