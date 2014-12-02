@@ -968,7 +968,7 @@ nvm() {
 
       if [ "_$VERSION" = '_system' ]; then
         if nvm_has_system_node >/dev/null 2>&1; then
-          echo $(dirname `which node`)
+          echo $(nvm use system && echo dirname $(which node))
           return
         else
           echo "System version of node not found." >&2
