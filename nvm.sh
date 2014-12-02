@@ -954,7 +954,7 @@ nvm() {
       if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
-          VERSION=`nvm_version $NVM_RC_VERSION`
+          VERSION=$(nvm_version $NVM_RC_VERSION)
         fi
       elif [ "_$2" != '_system' ]; then
         VERSION="$(nvm_version "$2")"
@@ -967,7 +967,7 @@ nvm() {
       fi
 
       if [ "_$VERSION" = '_system' ]; then
-        if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
+        if nvm_has_system_node >/dev/null 2>&1; then
           echo $(dirname `which node`)
           return
         else
