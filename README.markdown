@@ -12,11 +12,11 @@ Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/n
 
 To install you could use the [install script][2] using cURL:
 
-    curl https://raw.githubusercontent.com/creationix/nvm/v0.18.0/install.sh | bash
+    curl https://raw.githubusercontent.com/creationix/nvm/v0.20.0/install.sh | bash
 
 or Wget:
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.18.0/install.sh | bash
+    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.20.0/install.sh | bash
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
@@ -150,8 +150,9 @@ Put the above sourcing line just below the sourcing line for NVM in your profile
 nvm
 
 	$ nvm [tab][tab]
-	alias          copy-packages  help           list           run            uninstall      version
-	clear-cache    deactivate     install        ls             unalias        use
+    alias               deactivate          install             ls                  run                 unload
+    clear-cache         exec                list                ls-remote           unalias             use
+    current             help                list-remote         reinstall-packages  uninstall           version
 
 nvm alias
 
@@ -190,7 +191,7 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
     nvm install -s 0.8.6
 
 [1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.18.0/install.sh
+[2]: https://github.com/creationix/nvm/blob/v0.20.0/install.sh
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 
