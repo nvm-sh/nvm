@@ -1,5 +1,7 @@
 #!/usr/bin/env bats
 
+load test_helper
+
 NVM_SRC_DIR="${BATS_TEST_DIRNAME}/../.."
 
 setup() {
@@ -30,35 +32,27 @@ teardown() {
     die () { echo $@ ; exit 1; }
 
     run nvm_resolve_alias loopback
-    [ "$output" -eq "∞" ]
-
+    assert_success "∞"
     run nvm alias loopback
-    [ "$output" -eq "loopback -> loopback (-> ∞)" ]
+    assert_success "loopback -> loopback (-> ∞)"
 
-    ALIAS="$(nvm_resolve_alias one)"
-    [ "_$ALIAS" = "_∞" ]
-    OUTPUT="$(nvm alias one)"
-    EXPECTED_OUTPUT="one -> two (-> ∞)"
-    [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ]
+    run nvm_resolve_alias one
+    assert_success "∞"
+    run nvm alias one
+    assert_success "one -> two (-> ∞)"
 
-    ALIAS="$(nvm_resolve_alias two)"
-    [ "_$ALIAS" = "_∞" ]
-    OUTPUT="$(nvm alias two)"
-    EXPECTED_OUTPUT="two -> three (-> ∞)"
-    [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ]
+    run nvm_resolve_alias two
+    assert_success "∞"
+    run nvm alias two
+    assert_success "two -> three (-> ∞)"
 
-    ALIAS="$(nvm_resolve_alias three)"
-    [ "_$ALIAS" = "_∞" ]
-    OUTPUT="$(nvm alias three)"
-    EXPECTED_OUTPUT="three -> one (-> ∞)"
-    [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ]
+    run nvm_resolve_alias three
+    assert_success "∞"
+    run nvm alias three
+    assert_success "three -> one (-> ∞)"
 
-    ALIAS="$(nvm_resolve_alias four)"
-    [ "_$ALIAS" = "_∞" ]
-    OUTPUT="$(nvm alias four)"
-    EXPECTED_OUTPUT="four -> two (-> ∞)"
-    [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ]
-
-    true
+    run nvm_resolve_alias four
+    assert_success "∞"
+    run nvm alias four
+    assert_success "four -> two (-> ∞)"
 }
-
