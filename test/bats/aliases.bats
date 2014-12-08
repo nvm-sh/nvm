@@ -51,13 +51,21 @@ teardown() {
 }
 
 @test './Aliases/Running "nvm alias <aliasname>" should list but one alias.' {
-##!/bin/sh
-#
-#. ../../../nvm.sh
-#[ $(nvm alias test-stable-1 | wc -l) = '2' ]
+    run nvm alias test-stable-1
+    assert_success
+    
+    local num_lines="${#lines[@]}"
+    assert_equal $num_lines 2
 }
 
 @test './Aliases/Running "nvm alias" lists implicit aliases when they do not exist' {
+    run nvm alias
+    expected_stable="$(nvm_print_implicit_alias local stable)"
+    stable_version="$(nvm_version "${expected_stable}")"
+
+    assert_line 20 "stable -> ${expected_stable} (-> ${stable_version}) (default)"
+    assert_line 21 "stable -> ${expected_stable} (-> ${stable_version}) (default)"
+    
 ##!/bin/sh
 #
 #. ../../../nvm.sh
