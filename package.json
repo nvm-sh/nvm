@@ -32,6 +32,6 @@
   "devDependencies": {
     "replace": "~0.3.0",
     "semver": "~4.1.0",
-    "urchin": "~0.0.4"
+    "urchin": "~0.0.5"
   }
 }
