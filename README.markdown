@@ -43,7 +43,7 @@ Often I also put in a line to use a specific version of node.
 ## Usage
 
 You can create an `.nvmrc` file containing version number in the project root directory (or any parent directory).
-`nvm use`, `nvm install`, `nvm exec`, and `nvm run` will all respect an `.nvmrc` file.
+`nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied.
 
 To download, compile, and install the latest v0.10.x release of node, do this:
 

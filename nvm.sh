@@ -547,7 +547,7 @@ nvm() {
       echo "  nvm unalias <name>                    Deletes the alias named <name>"
       echo "  nvm reinstall-packages <version>      Reinstall global \`npm\` packages contained in <version> to current version"
       echo "  nvm unload                            Unload \`nvm\` from shell"
-      echo "  nvm which [<version>]                 Display path to installed node version"
+      echo "  nvm which [<version>]                 Display path to installed node version. Uses .nvmrc if available"
       echo
       echo "Example:"
       echo "  nvm install v0.10.32                  Install a specific version number"
