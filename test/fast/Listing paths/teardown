@@ -1,0 +1,2 @@
+rmdir ../../../v0.0.2 >/dev/null 2>&1
+rmdir ../../../v0.0.20 >/dev/null 2>&1

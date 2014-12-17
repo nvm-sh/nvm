@@ -547,6 +547,7 @@ nvm() {
       echo "  nvm unalias <name>                    Deletes the alias named <name>"
       echo "  nvm reinstall-packages <version>      Reinstall global \`npm\` packages contained in <version> to current version"
       echo "  nvm unload                            Unload \`nvm\` from shell"
+      echo "  nvm which [<version>]                 Display path to installed node version"
       echo
       echo "Example:"
       echo "  nvm install v0.10.32                  Install a specific version number"
@@ -945,6 +946,43 @@ nvm() {
     ;;
     "current" )
       nvm_version current
+    ;;
+    "which" )
+      if [ $# -eq 1 ]; then
+        nvm_rc_version
+        if [ -n "$NVM_RC_VERSION" ]; then
+          VERSION=$(nvm_version $NVM_RC_VERSION)
+        fi
+      elif [ "_$2" != '_system' ]; then
+        VERSION="$(nvm_version "$2")"
+      else
+        VERSION="$2"
+      fi
+      if [ -z "$VERSION" ]; then
+        nvm help
+        return 127
+      fi
+
+      if [ "_$VERSION" = '_system' ]; then
+        if nvm_has_system_node >/dev/null 2>&1; then
+          echo $(nvm use system && echo dirname $(which node))
+          return
+        else
+          echo "System version of node not found." >&2
+          return 127
+        fi
+      elif [ "_$VERSION" = "_∞" ]; then
+        echo "The alias \"$2\" leads to an infinite loop. Aborting." >&2
+        return 8
+      fi
+
+      local NVM_VERSION_DIR
+      NVM_VERSION_DIR="$(nvm_version_path "$VERSION")"
+      if [ ! -d "$NVM_VERSION_DIR" ]; then
+        echo "$VERSION version is not installed yet" >&2
+        return 1
+      fi
+      echo $NVM_DIR/$VERSION/bin
     ;;
     "alias" )
       mkdir -p "$NVM_DIR/alias"
