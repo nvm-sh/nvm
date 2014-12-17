@@ -1,5 +1,5 @@
 	# Since we rely on paths relative to the makefile location, abort if make isn't being run from there.
-$(if $(findstring /,$(MAKEFILE_LIST)),$(error Please only invoke this makefile from the directory it resides in))	
+$(if $(findstring /,$(MAKEFILE_LIST)),$(error Please only invoke this makefile from the directory it resides in))
 	# Note: With Travis CI:
 	#  - the path to urchin is passed via the command line.
 	#  - the other utilities are NOT needed, so we skip the test for their existence.
