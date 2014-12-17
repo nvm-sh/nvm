@@ -22,7 +22,7 @@ __nvm_commands ()
     alias unalias reinstall-packages \
     current list ls list-remote ls-remote \
     clear-cache deactivate unload \
-    version'
+    version which'
 
     if [ ${#COMP_WORDS[@]} == 4 ]; then
 
