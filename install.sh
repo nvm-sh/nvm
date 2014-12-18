@@ -3,7 +3,7 @@
 set -e
 
 nvm_has() {
-  type "$1" > /dev/null 2>&1
+  type "$1" &> /dev/null
   return $?
 }
 
@@ -69,7 +69,7 @@ install_nvm_from_git() {
     mkdir -p "$NVM_DIR"
     git clone "$(nvm_source "git")" "$NVM_DIR"
   fi
-  cd "$NVM_DIR" && git checkout v0.20.0 && git branch -D master >/dev/null 2>&1
+  ( cd "$NVM_DIR" && git checkout v0.20.0 && git branch -D master ) &>/dev/null
   return
 }
 
@@ -107,7 +107,9 @@ install_nvm_as_script() {
 # Otherwise, an empty string is returned
 #
 nvm_detect_profile() {
-  if [ -f "$PROFILE" ]; then
+  if [ -f "$NVM_PROFILE" ]; then
+    echo "$NVM_PROFILE"
+  elif [ -f "$PROFILE" ]; then
     echo "$PROFILE"
   elif [ -f "$HOME/.bashrc" ]; then
     echo "$HOME/.bashrc"
@@ -147,29 +149,30 @@ nvm_do_install() {
 
   echo
 
-  local NVM_PROFILE
-  NVM_PROFILE=$(nvm_detect_profile)
+  local _NVM_PROFILE
+  _NVM_PROFILE="$(nvm_detect_profile)"
 
   SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
 
-  if [ -z "$NVM_PROFILE" ] ; then
-    echo "=> Profile not found. Tried $NVM_PROFILE (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
+  if [ -z "$_NVM_PROFILE" ] ; then
+    echo "=> Profile not found. Tried $_NVM_PROFILE (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
     echo "=> Create one of them and run this script again"
-    echo "=> Create it (touch $NVM_PROFILE) and run this script again"
+    echo "=> Create it (touch $_NVM_PROFILE) and run this script again"
     echo "   OR"
     echo "=> Append the following lines to the correct file yourself:"
     printf "$SOURCE_STR"
     echo
   else
-    if ! grep -qc 'nvm.sh' "$NVM_PROFILE"; then
-      echo "=> Appending source string to $NVM_PROFILE"
-      printf "$SOURCE_STR\n" >> "$NVM_PROFILE"
+    if ! grep -qc 'nvm.sh' "$_NVM_PROFILE"; then
+      echo "=> Appending source string to $_NVM_PROFILE"
+      printf "$SOURCE_STR\n" >> "$_NVM_PROFILE"
     else
-      echo "=> Source string already in $NVM_PROFILE"
+      echo "=> Source string already in $_NVM_PROFILE"
     fi
   fi
 
-  echo "=> Close and reopen your terminal to start using nvm"
+  echo "=> Close and reopen your terminal to start using nvm, or"
+  echo "=> source $_NVM_PROFILE"
   nvm_reset
 }
 
