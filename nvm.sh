@@ -982,7 +982,7 @@ nvm() {
         echo "$VERSION version is not installed yet" >&2
         return 1
       fi
-      echo $(nvm use "$VERSION" >/dev/null 2>&1 && which node)
+      echo $NVM_DIR/$VERSION/bin/node
     ;;
     "alias" )
       mkdir -p "$NVM_DIR/alias"
