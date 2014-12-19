@@ -9,12 +9,13 @@ die () { echo $@ ; exit 1; }
 
 # The result should contain only the appropriate version numbers.
 
-nvm which 0.0.2 | grep "$NVM_DIR/v0.0.2/bin" > /dev/null
+nvm which 0.0.2
+nvm which 0.0.2 | grep "$NVM_DIR/v0.0.2/bin/node" > /dev/null
 if [ $? -ne 0 ]; then
   die '"nvm which 0.0.2" did not contain the correct path'
 fi
 
-nvm which 0.0.20 | grep "$NVM_DIR/v0.0.20/bin" > /dev/null
+nvm which 0.0.20 | grep "$NVM_DIR/v0.0.20/bin/node" > /dev/null
 if [ $? -ne 0 ]; then
   die '"nvm which 0.0.2" did not contain the correct path'
 fi

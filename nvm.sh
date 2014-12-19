@@ -965,7 +965,7 @@ nvm() {
 
       if [ "_$VERSION" = '_system' ]; then
         if nvm_has_system_node >/dev/null 2>&1; then
-          echo $(nvm use system && echo dirname $(which node))
+          echo $(nvm use system > /dev/null 2>&1 && echo $(which node))
           return
         else
           echo "System version of node not found." >&2
@@ -982,7 +982,7 @@ nvm() {
         echo "$VERSION version is not installed yet" >&2
         return 1
       fi
-      echo $NVM_DIR/$VERSION/bin
+      echo $NVM_DIR/$VERSION/bin/node
     ;;
     "alias" )
       mkdir -p "$NVM_DIR/alias"
