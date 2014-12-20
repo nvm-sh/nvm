@@ -3,4 +3,4 @@
 . ../../../nvm.sh
 
 nvm which nonexistent_version
-[ "$?" = "1" ]
+[ "_$?" = "_1" ]
