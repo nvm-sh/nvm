@@ -965,8 +965,14 @@ nvm() {
 
       if [ "_$VERSION" = '_system' ]; then
         if nvm_has_system_node >/dev/null 2>&1; then
-          echo $(nvm use system > /dev/null 2>&1 && echo $(which node))
-          return
+          local NVM_BIN
+          NVM_BIN="$(nvm use system >/dev/null 2>&1 && which node)"
+          if [ -n "$NVM_BIN" ]; then
+            echo "$NVM_BIN"
+            return
+          else
+            return 1
+          fi
         else
           echo "System version of node not found." >&2
           return 127
