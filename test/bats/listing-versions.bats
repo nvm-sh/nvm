@@ -18,7 +18,7 @@ teardown() {
     rm -Rf src alias v*
 }
 
-@test './Listing versions/Running "nvm ls 0.0.2" should display only version 0.0.2.' {
+@test 'Listing versions/Running "nvm ls 0.0.2" should display only version 0.0.2.' {
 
     mkdir -p v0.0.2
     mkdir -p v0.0.20
@@ -30,7 +30,7 @@ teardown() {
     assert_nomatch "$output" "v0.0.20"  "nvm ls 0.0.2 must NOT contain v0.0.20"
 }
 
-@test './Listing versions/Running "nvm ls 0.2" should display only 0.2.x versions.' {
+@test 'Listing versions/Running "nvm ls 0.2" should display only 0.2.x versions.' {
 
     mkdir -p v0.1.3
     mkdir -p v0.2.3
@@ -47,19 +47,19 @@ teardown() {
     assert_nomatch "$output" "v0.1.3"  "nvm ls 0.2 should not contain v0.1.3"
 }
 
-@test './Listing versions/Running "nvm ls foo" should return a nonzero exit code when not found' {
+@test 'Listing versions/Running "nvm ls foo" should return a nonzero exit code when not found' {
 
     run nvm ls nonexistent_version
     assert_equal 3 "$status"
 }
 
-@test './Listing versions/Running "nvm ls node" should return a nonzero exit code when not found' {
+@test 'Listing versions/Running "nvm ls node" should return a nonzero exit code when not found' {
 
     run nvm ls node
     assert_equal 3 "$status"
 }
 
-@test './Listing versions/Running "nvm ls stable" and "nvm ls unstable" should return the appropriate implicit alias' {
+@test 'Listing versions/Running "nvm ls stable" and "nvm ls unstable" should return the appropriate implicit alias' {
 
     mkdir -p v0.2.3
     mkdir -p v0.3.3
@@ -79,7 +79,7 @@ teardown() {
 
 ## merged two tests here
 # `nvm ls` and `nvm ls system`
-@test './Listing versions/Running "nvm ls [system]" should include "system" when appropriate' {
+@test 'Listing versions/Running "nvm ls [system]" should include "system" when appropriate' {
 
     mkdir -p v0.{0,3}.{1,3,9}
 
@@ -98,7 +98,7 @@ teardown() {
     assert_nomatch "$output" system '"nvm ls" contained "system" when system node is NOT present'
 }
 
-@test './Listing versions/Running "nvm ls" should display all installed versions.' {
+@test 'Listing versions/Running "nvm ls" should display all installed versions.' {
 
     mkdir -p v0.{0,3}.{1,3,9}
 
@@ -111,7 +111,7 @@ teardown() {
     assert_match "$output" v0.3.9
 }
 
-@test './Listing versions/Running "nvm ls" should filter out ".nvm"' {
+@test 'Listing versions/Running "nvm ls" should filter out ".nvm"' {
 
     mkdir -p v0.{1,2}.3
 
@@ -119,14 +119,14 @@ teardown() {
     assert_nomatch "$output" "^ *\." "running 'nvm ls' should filter out dotfiles"
 }
 
-@test './Listing versions/Running "nvm ls" should filter out "versions"' {
+@test 'Listing versions/Running "nvm ls" should filter out "versions"' {
 
     mkdir -p v0.{1,2}.3 versions
     run nvm ls
     assert_nomatch "$output" versions "running 'nvm ls' should filter out 'versions'"
 }
 
-@test './Listing versions/Running "nvm ls" should list versions both in and out of the "versions" directory' {
+@test 'Listing versions/Running "nvm ls" should list versions both in and out of the "versions" directory' {
 
     mkdir -p versions/v0.12.1
     mkdir -p v0.1.3
@@ -139,7 +139,7 @@ teardown() {
 
 }
 
-@test './Listing versions/Running "nvm ls" with node-like versioning vx.x.x should only list a matched version' {
+@test 'Listing versions/Running "nvm ls" with node-like versioning vx.x.x should only list a matched version' {
 
     mkdir -p v0.1.2
 
