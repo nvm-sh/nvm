@@ -10,7 +10,7 @@ test_debug() {
 }
 
 test_implementing() {
-    true # set to 'false' to run all tests; set to 'true' to skip implemented tests
+    false # set to 'false' to run all tests; set to 'true' to skip implemented tests
     # only used while porting to bats: remove afterward
 }
 
@@ -139,4 +139,86 @@ teardown() {
     run nvm use foo
     assert_equal 8 "$status" "Expected exit code 8 (infinite alias loop)"
     assert_match "$output" 'The alias "foo" leads to an infinite loop. Aborting.'
+}
+
+@test 'Running "nvm use system" should work as expected' {
+    test_implementing && skip
+
+    # NOTE: undocumented assumption of this test is
+    # that node is installed on the test machine!
+    # TODO: fix that, by using a mock
+
+    nvm_has_system_node() { return 0; }
+    run nvm use system
+    assert_equal 0 "$status" "Expect success in using system node"
+    assert_match "$output" 'Now using system version of node:'
+
+    nvm_has_system_node() { return 1; }
+    run nvm use system
+    assert_equal 127 "$status" "Expect failure when no system node"
+    assert_match "$output" 'System version of node not found.'
+}
+
+@test 'Running "nvm use x" should create and change the "current" symlink' {
+    test_implementing && skip
+
+    export NVM_SYMLINK_CURRENT=true
+
+    mkdir -p v0.10.29
+    nvm use 0.10.29
+    rmdir v0.10.29
+
+    # TODO make this a proper assert
+    [ -L current ] # "expected 'current' symlink to be created"
+
+    oldLink="$(readlink current)"
+
+    assert_equal "$(basename $oldLink)" "v0.10.29" "Expected 'current' to point to v0.10.29 but was $oldLink"
+
+    mkdir v0.11.13
+    nvm use 0.11.13
+    rmdir v0.11.13
+
+    newlink="$(readlink current)"
+
+    assert_equal "$(basename $newlink)" "v0.11.13" "Expected 'current' to point to v0.11.13 but was $newLink"
+}
+
+@test 'Running "nvm use x" should not create the "current" symlink if $NVM_SYMLINK_CURRENT is false' {
+    test_implementing && skip
+
+    test_symlink_made() {
+        local arg="$1"
+
+        mkdir v0.10.29
+
+        if [ "$arg" = "undef" ]
+        then
+            unset NVM_SYMLINK_CURRENT
+        else 
+            NVM_SYMLINK_CURRENT="$arg"
+        fi
+
+        run nvm use 0.10.29
+        run [ -L current ]
+        result="$status"
+
+        rm -f current
+        rmdir v0.10.29
+
+        return $result
+    }
+
+    test_symlink_made 'true'
+
+    ! test_symlink_made 'false'
+    ! test_symlink_made 'garbagevalue'
+    ! test_symlink_made 0
+    ! test_symlink_made 1
+    ! test_symlink_made 'undef'
+}
+
+@test 'Sourcing nvm.sh should make the nvm command available.' {
+
+    nvm
 }
