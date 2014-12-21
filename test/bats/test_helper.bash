@@ -60,6 +60,24 @@ assert_equal() {
   fi
 }
 
+assert_match() {
+  if [[ ! "$1" =~ $2 ]]; then
+    { [ -z "$3" ] || echo "$3"
+      echo "expected: $1"
+      echo "to match: $2"
+    } | flunk
+  fi
+}
+
+assert_nomatch() {
+  if [[ "$1" =~ $2 ]]; then
+    { [ -z "$3" ] || echo "$3"
+      echo "expected    : $1"
+      echo "to not match: $2"
+    } | flunk
+  fi
+}
+
 assert_unequal() {
   if [ "$1" = "$2" ]; then
     { [ -z "$3" ] || echo "$3"
