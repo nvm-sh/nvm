@@ -56,8 +56,18 @@ assert_failure() {
 
 assert_equal() {
   if [ "$1" != "$2" ]; then
-    { echo "expected: $1"
+    { [ -z "$3" ] || echo "$3"
+      echo "expected: $1"
       echo "actual:   $2"
+    } | flunk
+  fi
+}
+
+assert_unequal() {
+  if [ "$1" = "$2" ]; then
+    { [ -z "$3" ] || echo "$3"
+      echo "expected:   $1"
+      echo "unequal to: $2"
     } | flunk
   fi
 }
@@ -72,7 +82,7 @@ assert_output() {
 
 assert_line() {
   if [ "$1" -ge 0 ] 2>/dev/null; then
-    assert_equal "$2" "${lines[$1]}"
+    assert_equal "$2" "${lines[$1]}" "$3"
   else
     local line
     for line in "${lines[@]}"; do

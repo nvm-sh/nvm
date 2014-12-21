@@ -34,20 +34,20 @@ teardown() {
     for i in $(seq 1 10)
     do
         run nvm_resolve_alias test-stable-$i
-        assert_success "v0.0.$i"
+        assert_success "v0.0.$i" "nvm_resolve_alias test-stable-$i"
 
         run nvm_resolve_alias test-unstable-$i
-        assert_success "v0.1.$i"
+        assert_success "v0.1.$i" "nvm_resolve_alias test-unstable-$i"
     done
     
     run nvm_resolve_alias nonexistent
     assert_failure 
 
     run nvm_resolve_alias stable
-    assert_success "v0.0.10"
+    assert_success "v0.0.10"  "'nvm_resolve_alias stable' was not v0.0.10"
 
     run nvm_resolve_alias unstable
-    assert_success "v0.1.10"
+    assert_success "v0.1.10"  "'nvm_resolve_alias unstable' was not v0.1.10"
 }
 
 @test './Aliases/Running "nvm alias <aliasname>" should list but one alias.' {
@@ -60,120 +60,52 @@ teardown() {
 
 @test './Aliases/Running "nvm alias" lists implicit aliases when they do not exist' {
     run nvm alias
-    expected_stable="$(nvm_print_implicit_alias local stable)"
-    stable_version="$(nvm_version "${expected_stable}")"
 
-    assert_line 20 "stable -> ${expected_stable} (-> ${stable_version}) (default)"
-    assert_line 21 "stable -> ${expected_stable} (-> ${stable_version}) (default)"
-    
-##!/bin/sh
-#
-#. ../../../nvm.sh
-#
-#die () { echo $@ ; exit 1; }
-#
-#NVM_ALIAS_OUTPUT=$(nvm alias)
-#
-#EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
-#STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e "^stable -> $EXPECTED_STABLE (-> $STABLE_VERSION) (default)$" \
-#  || die "nvm alias did not contain the default local stable node version"
-#
-#EXPECTED_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
-#UNSTABLE_VERSION="$(nvm_version "$EXPECTED_UNSTABLE")"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e "^unstable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION) (default)$" \
-#  || die "nvm alias did not contain the default local unstable node version"
-#
+    assert_line 20 "stable -> 0.0 (-> v0.0.10) (default)"  "nvm alias did not contain the default local stable node version"
+    assert_line 21 "unstable -> 0.1 (-> v0.1.10) (default)" "nvm alias did not contain the default local unstable node version"
 }
 
 @test './Aliases/Running "nvm alias" lists manual aliases instead of implicit aliases when present' {
-##!/bin/sh
-#
-#. ../../../nvm.sh
-#
-#die () { echo $@ ; cleanup ; exit 1; }
-#cleanup () {
-#  rm -rf ../../../alias/stable
-#  rm -rf ../../../alias/unstable
-#  rm -rf ../../../v0.8.1
-#  rm -rf ../../../v0.9.1
-#}
-#
-#mkdir ../../../v0.8.1
-#mkdir ../../../v0.9.1
-#
-#EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
-#STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"
-#
-#EXPECTED_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
-#UNSTABLE_VERSION="$(nvm_version "$EXPECTED_UNSTABLE")"
-#
-#[ "_$STABLE_VERSION" != "_$UNSTABLE_VERSION" ] \
-#  || die "stable and unstable versions are the same!"
-#
-#nvm alias stable "$EXPECTED_UNSTABLE"
-#nvm alias unstable "$EXPECTED_STABLE"
-#
-#NVM_ALIAS_OUTPUT=$(nvm alias)
-#
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e "^stable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION)$" \
-#  || die "nvm alias did not contain the overridden 'stable' alias"
-#
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e "^unstable -> $EXPECTED_STABLE (-> $STABLE_VERSION)$" \
-#  || die "nvm alias did not contain the overridden 'unstable' alias"
-#
-#cleanup
-#
+    mkdir v0.8.1
+    mkdir v0.9.1
+    
+    stable="$(nvm_print_implicit_alias local stable)"
+    unstable="$(nvm_print_implicit_alias local unstable)"
+   
+    assert_unequal $stable $unstable "stable and unstable versions are the same!"
+
+    run nvm alias stable $unstable
+    run nvm alias unstable $stable
+
+    run nvm alias
+
+    assert_line  0 "stable -> 0.9 (-> v0.9.1)"    "nvm alias did not contain the overridden 'stable' alias"
+    assert_line 21 "unstable -> 0.8 (-> v0.8.1)"  "nvm alias did not contain the overridden 'unstable' alias"
 }
 
 @test './Aliases/Running "nvm alias" should list all aliases.' {
-##!/bin/sh
-#
-#. ../../../nvm.sh
-#
-#die () { echo $@ ; exit 1; }
-#
-#NVM_ALIAS_OUTPUT=$(nvm alias)
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-1 -> 0.0.1 (-> v0.0.1)$' \
-#  || die "did not find test-stable-1 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-2 -> 0.0.2 (-> v0.0.2)$' \
-#  || die "did not find test-stable-2 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-3 -> 0.0.3 (-> v0.0.3)$' \
-#  || die "did not find test-stable-3 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-4 -> 0.0.4 (-> v0.0.4)$' \
-#  || die "did not find test-stable-4 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-5 -> 0.0.5 (-> v0.0.5)$' \
-#  || die "did not find test-stable-5 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-6 -> 0.0.6 (-> v0.0.6)$' \
-#  || die "did not find test-stable-6 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-7 -> 0.0.7 (-> v0.0.7)$' \
-#  || die "did not find test-stable-7 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-8 -> 0.0.8 (-> v0.0.8)$' \
-#  || die "did not find test-stable-8 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-9 -> 0.0.9 (-> v0.0.9)$' \
-#  || die "did not find test-stable-9 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-stable-10 -> 0.0.10 (-> v0.0.10)$' \
-#  || die "did not find test-stable-10 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-1 -> 0.1.1 (-> v0.1.1)$' \
-#  || die "did not find test-unstable-1 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-2 -> 0.1.2 (-> v0.1.2)$' \
-#  || die "did not find test-unstable-2 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-3 -> 0.1.3 (-> v0.1.3)$' \
-#  || die "did not find test-unstable-3 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-4 -> 0.1.4 (-> v0.1.4)$' \
-#  || die "did not find test-unstable-4 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-5 -> 0.1.5 (-> v0.1.5)$' \
-#  || die "did not find test-unstable-5 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-6 -> 0.1.6 (-> v0.1.6)$' \
-#  || die "did not find test-unstable-6 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-7 -> 0.1.7 (-> v0.1.7)$' \
-#  || die "did not find test-unstable-7 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-8 -> 0.1.8 (-> v0.1.8)$' \
-#  || die "did not find test-unstable-8 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-9 -> 0.1.9 (-> v0.1.9)$' \
-#  || die "did not find test-unstable-9 alias"
-#echo "$NVM_ALIAS_OUTPUT" | \grep -e '^test-unstable-10 -> 0.1.10 (-> v0.1.10)$' \
-#  || die "did not find test-unstable-10 alias"
-#
+    run nvm alias
+    
+    assert_line  0 'test-stable-1 -> 0.0.1 (-> v0.0.1)'      "did not find test-stable-1 alias"
+    assert_line  1 'test-stable-10 -> 0.0.10 (-> v0.0.10)'   "did not find test-stable-10 alias"
+    assert_line  2 'test-stable-2 -> 0.0.2 (-> v0.0.2)'      "did not find test-stable-2 alias"
+    assert_line  3 'test-stable-3 -> 0.0.3 (-> v0.0.3)'      "did not find test-stable-3 alias"
+    assert_line  4 'test-stable-4 -> 0.0.4 (-> v0.0.4)'      "did not find test-stable-4 alias"
+    assert_line  5 'test-stable-5 -> 0.0.5 (-> v0.0.5)'      "did not find test-stable-5 alias"
+    assert_line  6 'test-stable-6 -> 0.0.6 (-> v0.0.6)'      "did not find test-stable-6 alias"
+    assert_line  7 'test-stable-7 -> 0.0.7 (-> v0.0.7)'      "did not find test-stable-7 alias"
+    assert_line  8 'test-stable-8 -> 0.0.8 (-> v0.0.8)'      "did not find test-stable-8 alias"
+    assert_line  9 'test-stable-9 -> 0.0.9 (-> v0.0.9)'      "did not find test-stable-9 alias"
+    assert_line 10 'test-unstable-1 -> 0.1.1 (-> v0.1.1)'    "did not find test-unstable-1 alias"
+    assert_line 11 'test-unstable-10 -> 0.1.10 (-> v0.1.10)' "did not find test-unstable-10 alias"
+    assert_line 12 'test-unstable-2 -> 0.1.2 (-> v0.1.2)'    "did not find test-unstable-2 alias"
+    assert_line 13 'test-unstable-3 -> 0.1.3 (-> v0.1.3)'    "did not find test-unstable-3 alias"
+    assert_line 14 'test-unstable-4 -> 0.1.4 (-> v0.1.4)'    "did not find test-unstable-4 alias"
+    assert_line 15 'test-unstable-5 -> 0.1.5 (-> v0.1.5)'    "did not find test-unstable-5 alias"
+    assert_line 16 'test-unstable-6 -> 0.1.6 (-> v0.1.6)'    "did not find test-unstable-6 alias"
+    assert_line 17 'test-unstable-7 -> 0.1.7 (-> v0.1.7)'    "did not find test-unstable-7 alias"
+    assert_line 18 'test-unstable-8 -> 0.1.8 (-> v0.1.8)'    "did not find test-unstable-8 alias"
+    assert_line 19 'test-unstable-9 -> 0.1.9 (-> v0.1.9)'    "did not find test-unstable-9 alias"
+    
 }
 
