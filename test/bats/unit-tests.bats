@@ -31,6 +31,10 @@ teardown() {
 }
 
 @test './Unit tests/nvm_alias' {
+
+    run nvm_alias
+    assert_equal 1 "$status" "nvm_alias should exit with code 1"
+    assert_match "$output" "An alias is required."
 ##!/bin/sh
 #
 #die () { echo $@ ; cleanup ; exit 1; }
@@ -43,7 +47,7 @@ teardown() {
 #
 #OUTPUT="$(nvm_alias 2>&1)"
 #EXPECTED_OUTPUT='An alias is required.'
-#[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias' produced wrong output; got $OUTPUT"
+#[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "
 #
 #EXIT_CODE="$(nvm_alias >/dev/null 2>&1 ; echo $?)"
 #[ "_$EXIT_CODE" = "_1" ] || die "'nvm_alias' exited with $EXIT_CODE, expected 1"
