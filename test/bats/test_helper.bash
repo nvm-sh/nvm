@@ -16,13 +16,10 @@ fi
 # guard against executing this block twice due to bats internals
 if [ "$RBENV_ROOT" != "${RBENV_TEST_DIR}/root" ]; then
   export RBENV_ROOT="${RBENV_TEST_DIR}/root"
-  export HOME="${RBENV_TEST_DIR}/home"
 
   PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
-  PATH="${RBENV_TEST_DIR}/bin:$PATH"
   PATH="${BATS_TEST_DIRNAME}/../libexec:$PATH"
   PATH="${BATS_TEST_DIRNAME}/libexec:$PATH"
-  PATH="${RBENV_ROOT}/shims:$PATH"
   export PATH
 fi
 
