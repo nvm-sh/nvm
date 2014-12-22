@@ -12,6 +12,24 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
+nvm_get_latest() {
+  local NVM_LATEST_URL
+  if nvm_has "curl"; then
+    NVM_LATEST_URL="$(curl -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
+  elif nvm_has "wget"; then
+    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+  else
+    >&2 echo 'nvm needs curl or wget to proceed.'
+    return 1
+  fi
+  if [ "_$NVM_LATEST_URL" = "_" ]; then
+    >&2 echo "http://latest.nvm.sh did not redirect to the latest release on Github"
+    return 2
+  else
+    echo "$NVM_LATEST_URL" | awk -F'/' '{print $NF}'
+  fi
+}
+
 nvm_download() {
   if nvm_has "curl"; then
     curl $*
