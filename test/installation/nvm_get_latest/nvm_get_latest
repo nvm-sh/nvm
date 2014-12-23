@@ -31,7 +31,7 @@ wget() {
 --2014-12-21 18:11:14--  http://latest.nvm.sh/
 Resolving latest.nvm.sh... 50.31.209.229
 Connecting to latest.nvm.sh|50.31.209.229|:80... connected.
-HTTP request sent, awaiting response... 
+HTTP request sent, awaiting response...
   HTTP/1.1 301 Moved Permanently
   Location: https://github.com/creationix/nvm/releases/latest
   Content-Type: text/html; charset=utf-8
@@ -41,7 +41,7 @@ Location: https://github.com/creationix/nvm/releases/latest [following]
 --2014-12-21 18:11:15--  https://github.com/creationix/nvm/releases/latest
 Resolving github.com... 192.30.252.130
 Connecting to github.com|192.30.252.130|:443... connected.
-HTTP request sent, awaiting response... 
+HTTP request sent, awaiting response...
   HTTP/1.1 302 Found
   Server: GitHub.com
   Date: Mon, 22 Dec 2014 02:11:15 GMT
@@ -68,7 +68,7 @@ HTTP request sent, awaiting response...
 Location: $URL [following]
 --2014-12-21 18:11:15--  $URL
 Reusing existing connection to github.com:443.
-HTTP request sent, awaiting response... 
+HTTP request sent, awaiting response...
   HTTP/1.1 200 OK
   Server: GitHub.com
   Date: Mon, 22 Dec 2014 02:11:15 GMT
