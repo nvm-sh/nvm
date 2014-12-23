@@ -61,8 +61,6 @@ teardown() {
     assert_nomatch "$PATH" ".*v0.2.3/.*/bin" "v0.2.3 should not be active yet"
     [ `expr $PATH : ".*v0.2.3/.*/bin"` = 0 ]
 
-    x=$(nvm_version_path v0.2.3)
-
     # can't use 'run' -- sets up new env, PATH is lost
     nvm use 0.2.3
 
