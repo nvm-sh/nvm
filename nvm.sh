@@ -1102,7 +1102,7 @@ nvm() {
       echo "0.21.0"
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater nvm_version_greater_than_or_equal_to > /dev/null 2>&1
+      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater nvm_version_greater_than_or_equal_to nvm_supports_source_options > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
@@ -1111,7 +1111,18 @@ nvm() {
   esac
 }
 
-if nvm ls default >/dev/null; then
+nvm_supports_source_options() {
+  [ "_$(echo 'echo $1' | . /dev/stdin yes)" = "_yes" ]
+}
+
+if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
+  VERSION="$(nvm_alias default 2>/dev/null)"
+  if [ -n "$VERSION" ]; then
+    nvm install "$VERSION" >/dev/null
+  elif nvm_rc_version >/dev/null 2>&1; then
+    nvm install >/dev/null
+  fi
+elif nvm ls default >/dev/null; then
   nvm use default >/dev/null
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
