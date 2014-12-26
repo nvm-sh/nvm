@@ -1111,7 +1111,14 @@ nvm() {
   esac
 }
 
-if nvm ls default >/dev/null; then
+if [ "_$1" = "_--install" ]; then
+  VERSION="$(nvm_alias default 2>/dev/null)"
+  if [ -n "$VERSION" ]; then
+    nvm install "$VERSION" >/dev/null
+  elif nvm_rc_version >/dev/null 2>&1; then
+    nvm install >/dev/null
+  fi
+elif nvm ls default >/dev/null; then
   nvm use default >/dev/null
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
