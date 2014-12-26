@@ -1,6 +1,14 @@
 #!/bin/sh
 
 die () { echo $@ ; exit 1; }
+supports_source_options () {
+  [ "_$(echo 'echo $1' | . /dev/stdin yes)" = "_yes" ]
+}
+
+if ! supports_source_options; then
+  echo 'this shell does not support passing options on sourcing'
+  exit 0;
+fi
 
 echo '0.10.2' > ../../.nvmrc || die 'creation of .nvmrc failed'
 
