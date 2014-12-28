@@ -11,6 +11,10 @@ if [ -z "$NVM_DIR" ]; then
   NVM_DIR="$HOME/.nvm"
 fi
 
+nvm_latest_version() {
+  echo "v0.22.0"
+}
+
 #
 # Outputs the location to NVM depending on:
 # * The availability of $NVM_SOURCE
@@ -23,9 +27,9 @@ nvm_source() {
   if [ -z "$NVM_SOURCE" ]; then
     local NVM_SOURCE
     if [ "_$NVM_METHOD" = "_script" ]; then
-      NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.22.0/nvm.sh"
+      NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm.sh"
     elif [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
-      NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/v0.22.0/nvm-exec"
+      NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm-exec"
     elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
       NVM_SOURCE="https://github.com/creationix/nvm.git"
     else
@@ -66,7 +70,7 @@ install_nvm_from_git() {
     mkdir -p "$NVM_DIR"
     git clone "$(nvm_source git)" "$NVM_DIR"
   fi
-  cd "$NVM_DIR" && git checkout --quiet v0.22.0 && git branch --quiet -D master >/dev/null 2>&1
+  cd "$NVM_DIR" && git checkout --quiet $(nvm_latest_version) && git branch --quiet -D master >/dev/null 2>&1
   return
 }
 
@@ -175,7 +179,7 @@ nvm_do_install() {
 # during the execution of the install script
 #
 nvm_reset() {
-  unset -f nvm_do_install nvm_has nvm_download install_nvm_as_script install_nvm_from_git nvm_reset nvm_detect_profile
+  unset -f nvm_do_install nvm_has nvm_download install_nvm_as_script install_nvm_from_git nvm_reset nvm_detect_profile nvm_latest_version
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
