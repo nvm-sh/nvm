@@ -272,7 +272,7 @@ nvm_alias() {
 
 nvm_ls_current() {
   local NVM_LS_CURRENT_NODE_PATH
-  NVM_LS_CURRENT_NODE_PATH="$(which node 2> /dev/null)"
+  NVM_LS_CURRENT_NODE_PATH="$(command which node 2> /dev/null)"
   if [ $? -ne 0 ]; then
     echo 'none'
   elif nvm_tree_contains_path "$NVM_DIR" "$NVM_LS_CURRENT_NODE_PATH"; then
@@ -984,7 +984,7 @@ nvm() {
       if [ "_$VERSION" = '_system' ]; then
         if nvm_has_system_node >/dev/null 2>&1; then
           local NVM_BIN
-          NVM_BIN="$(nvm use system >/dev/null 2>&1 && which node)"
+          NVM_BIN="$(nvm use system >/dev/null 2>&1 && command which node)"
           if [ -n "$NVM_BIN" ]; then
             echo "$NVM_BIN"
             return
