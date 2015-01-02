@@ -1,6 +1,10 @@
 #!/bin/sh
 
-die () { echo $@ ; exit 1; }
+TEST_PWD=$(pwd)
+TEST_DIR="$TEST_PWD/nvm_ls_current_tmp"
+
+cleanup() { rm -rf "$TEST_DIR"; unset -f return_zero; unalias node; }
+die () { echo $@ ; cleanup ; exit 1; }
 
 . ../../../nvm.sh
 
@@ -8,8 +12,6 @@ return_zero () { return 0; }
 
 [ "$(nvm deactivate > /dev/null 2>&1 ; nvm_ls_current)" = "system" ] || die 'when deactivated, did not return "system"'
 
-TEST_PWD=$(pwd)
-TEST_DIR="$TEST_PWD/nvm_ls_current_tmp"
 rm -rf "$TEST_DIR"
 mkdir "$TEST_DIR"
 ln -s "$(command which which)" "$TEST_DIR/which"
@@ -24,5 +26,7 @@ chmod a+x "$TEST_DIR/node"
 
 [ "$(alias nvm_tree_contains_path='return_zero' && PATH="$TEST_DIR" nvm_ls_current)" = "VERSION FOO!" ] || die 'when activated, did not return nvm node version'
 
-rm -rf "$TEST_DIR"
+alias node='node --harmony'
+[ "$(alias nvm_tree_contains_path='return_zero' && PATH="$TEST_DIR" nvm_ls_current)" = "VERSION FOO!" ] || die 'when activated and node aliased, did not return nvm node version'
 
+cleanup
