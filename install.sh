@@ -45,7 +45,7 @@ nvm_download() {
     curl $*
   elif nvm_has "wget"; then
     # Emulate curl with wget
-    ARGS=$(echo "$*" | sed -e 's/--progress-bar /--progress=bar /' \
+    ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
                            -e 's/-L //' \
                            -e 's/-I /--server-response /' \
                            -e 's/-s /-q /' \

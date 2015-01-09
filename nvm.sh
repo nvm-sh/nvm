@@ -35,7 +35,7 @@ nvm_download() {
     curl $*
   elif nvm_has "wget"; then
     # Emulate curl with wget
-    ARGS=$(echo "$*" | sed -e 's/--progress-bar /--progress=bar /' \
+    ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
                            -e 's/-L //' \
                            -e 's/-I /--server-response /' \
                            -e 's/-s /-q /' \
@@ -201,18 +201,18 @@ nvm_remote_version() {
 }
 
 nvm_normalize_version() {
-  echo "$1" | sed -e 's/^v//' | \awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
+  echo "$1" | command sed -e 's/^v//' | \awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_ensure_version_prefix() {
-  echo "$1" | sed -e 's/^\([0-9]\)/v\1/g'
+  echo "$1" | command sed -e 's/^\([0-9]\)/v\1/g'
 }
 
 nvm_format_version() {
   local VERSION
   VERSION="$(nvm_ensure_version_prefix "$1")"
   if [ "_$(nvm_num_version_groups "$VERSION")" != "_3" ]; then
-    VERSION="$(echo "$VERSION" | sed -e 's/\.*$/.0/')"
+    VERSION="$(echo "$VERSION" | command sed -e 's/\.*$/.0/')"
     nvm_format_version "$VERSION"
   else
     echo "$VERSION"
@@ -227,14 +227,14 @@ nvm_num_version_groups() {
     return
   fi
   local NVM_NUM_DOTS
-  NVM_NUM_DOTS=$(echo "$VERSION" | sed -e 's/^v//' | sed -e 's/\.$//' | sed -e 's/[^\.]//g')
+  NVM_NUM_DOTS=$(echo "$VERSION" | command sed -e 's/^v//' | command sed -e 's/\.$//' | command sed -e 's/[^\.]//g')
   local NVM_NUM_GROUPS
   NVM_NUM_GROUPS=".$NVM_NUM_DOTS"
   echo "${#NVM_NUM_GROUPS}"
 }
 
 nvm_strip_path() {
-  echo "$1" | sed -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" -e "s#$NVM_DIR/[^/]*$2[^:]*##g"
+  echo "$1" | command sed -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" -e "s#$NVM_DIR/[^/]*$2[^:]*##g"
 }
 
 nvm_prepend_path() {
@@ -366,7 +366,7 @@ nvm_ls() {
       local NUM_VERSION_GROUPS
       NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
       if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
-        PATTERN="$(echo "$PATTERN" | sed -e 's/\.*$//g')."
+        PATTERN="$(echo "$PATTERN" | command sed -e 's/\.*$//g')."
       fi
     fi
     if [ -d "$(nvm_version_dir new)" ]; then
