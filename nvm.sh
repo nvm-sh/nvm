@@ -140,11 +140,11 @@ nvm_version_greater_than_or_equal_to() {
 }
 
 nvm_version_dir() {
-  local NVM_USE_NEW_DIR
-  NVM_USE_NEW_DIR="$1"
-  if [ -z "$NVM_USE_NEW_DIR" ] || [ "$NVM_USE_NEW_DIR" = "new" ]; then
+  local NVM_WHICH_DIR
+  NVM_WHICH_DIR="$1"
+  if [ -z "$NVM_WHICH_DIR" ] || [ "_$NVM_WHICH_DIR" = "_new" ]; then
     echo "$NVM_DIR/versions"
-  elif [ "$NVM_USE_NEW_DIR" = "old" ]; then
+  elif [ "_$NVM_WHICH_DIR" = "_old" ]; then
     echo "$NVM_DIR"
   else
     echo "unknown version dir" >&2
