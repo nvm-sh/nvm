@@ -655,7 +655,9 @@ nvm() {
         return 5
       fi
 
-      if [ -d "$(nvm_version_path "$VERSION")" ]; then
+      local VERSION_PATH
+      VERSION_PATH="$(nvm_version_path "$VERSION")"
+      if [ -d "$VERSION_PATH" ]; then
         echo "$VERSION is already installed." >&2
         if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
@@ -686,7 +688,7 @@ nvm() {
               nvm_checksum "$tmptarball" $sum && \
               command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
               command rm -f "$tmptarball" && \
-              command mv "$tmpdir" "$(nvm_version_path "$VERSION")"
+              command mv "$tmpdir" "$VERSION_PATH"
               )
             then
               if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
@@ -729,9 +731,9 @@ nvm() {
         nvm_checksum "$tmptarball" $sum && \
         command tar -xzf "$tmptarball" -C "$tmpdir" && \
         cd "$tmpdir/node-$VERSION" && \
-        ./configure --prefix="$(nvm_version_path "$VERSION")" $ADDITIONAL_PARAMETERS && \
+        ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
         $make $MAKE_CXX && \
-        command rm -f "$(nvm_version_path "$VERSION")" 2>/dev/null && \
+        command rm -f "$VERSION_PATH" 2>/dev/null && \
         $make $MAKE_CXX install
         )
       then
@@ -766,8 +768,11 @@ nvm() {
         echo "nvm: Cannot uninstall currently-active node version, $PATTERN." >&2
         return 1
       fi
-      VERSION=`nvm_version $PATTERN`
-      if [ ! -d "$(nvm_version_path "$VERSION")" ]; then
+      local VERSION
+      VERSION="$(nvm_version "$PATTERN")"
+      local VERSION_PATH
+      VERSION_PATH="$(nvm_version_path "$VERSION")"
+      if [ ! -d "$VERSION_PATH" ]; then
         echo "$VERSION version is not installed..." >&2
         return;
       fi
@@ -779,7 +784,7 @@ nvm() {
              "$NVM_DIR/src/node-$VERSION.tar.gz" \
              "$NVM_DIR/bin/node-${t}" \
              "$NVM_DIR/bin/node-${t}.tar.gz" \
-             "$(nvm_version_path "$VERSION")" 2>/dev/null
+             "$VERSION_PATH" 2>/dev/null
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
