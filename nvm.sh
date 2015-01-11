@@ -277,7 +277,7 @@ nvm_ls_current() {
     echo 'none'
   elif nvm_tree_contains_path "$NVM_DIR" "$NVM_LS_CURRENT_NODE_PATH"; then
     local VERSION
-    VERSION=`node -v 2>/dev/null`
+    VERSION="$(node -v 2>/dev/null)"
     if [ "$VERSION" = "v0.6.21-pre" ]; then
       echo "v0.6.21"
     else
@@ -763,8 +763,8 @@ nvm() {
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
-      PATTERN=`nvm_ensure_version_prefix $2`
-      if [ "$PATTERN" = `nvm_version` ]; then
+      PATTERN="$(nvm_ensure_version_prefix "$2")"
+      if [ "_$PATTERN" = "_$(nvm_version)" ]; then
         echo "nvm: Cannot uninstall currently-active node version, $PATTERN." >&2
         return 1
       fi
@@ -790,14 +790,14 @@ nvm() {
       # Rm any aliases that point to uninstalled version.
       for ALIAS in `command grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
       do
-        nvm unalias `basename $ALIAS`
+        nvm unalias "$(command basename "$ALIAS")"
       done
 
     ;;
     "deactivate" )
       local NEWPATH
       NEWPATH="$(nvm_strip_path "$PATH" "/bin")"
-      if [ "$PATH" = "$NEWPATH" ]; then
+      if [ "_$PATH" = "_$NEWPATH" ]; then
         echo "Could not find $NVM_DIR/*/bin in \$PATH" >&2
       else
         export PATH="$NEWPATH"
@@ -806,7 +806,7 @@ nvm() {
       fi
 
       NEWPATH="$(nvm_strip_path "$MANPATH" "/share/man")"
-      if [ "$MANPATH" = "$NEWPATH" ]; then
+      if [ "_$MANPATH" = "_$NEWPATH" ]; then
         echo "Could not find $NVM_DIR/*/share/man in \$MANPATH" >&2
       else
         export MANPATH="$NEWPATH"
@@ -814,7 +814,7 @@ nvm() {
       fi
 
       NEWPATH="$(nvm_strip_path "$NODE_PATH" "/lib/node_modules")"
-      if [ "$NODE_PATH" != "$NEWPATH" ]; then
+      if [ "_$NODE_PATH" != "_$NEWPATH" ]; then
         export NODE_PATH="$NEWPATH"
         echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
       fi
@@ -827,7 +827,7 @@ nvm() {
       if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
-          VERSION=`nvm_version $NVM_RC_VERSION`
+          VERSION="$(nvm_version "$NVM_RC_VERSION")"
         fi
       elif [ "_$2" != '_system' ]; then
         VERSION="$(nvm_version "$2")"
@@ -859,17 +859,17 @@ nvm() {
         return 1
       fi
       # Strip other version from PATH
-      PATH=`nvm_strip_path "$PATH" "/bin"`
+      PATH="$(nvm_strip_path "$PATH" "/bin")"
       # Prepend current version
-      PATH=`nvm_prepend_path "$PATH" "$NVM_VERSION_DIR/bin"`
+      PATH="$(nvm_prepend_path "$PATH" "$NVM_VERSION_DIR/bin")"
       if nvm_has manpath; then
         if [ -z "$MANPATH" ]; then
           MANPATH=$(manpath)
         fi
         # Strip other version from MANPATH
-        MANPATH=`nvm_strip_path "$MANPATH" "/share/man"`
+        MANPATH="$(nvm_strip_path "$MANPATH" "/share/man")"
         # Prepend current version
-        MANPATH=`nvm_prepend_path "$MANPATH" "$NVM_VERSION_DIR/share/man"`
+        MANPATH="$(nvm_prepend_path "$MANPATH" "$NVM_VERSION_DIR/share/man")"
         export MANPATH
       fi
       export PATH
@@ -890,7 +890,7 @@ nvm() {
       if [ $# -lt 1 ]; then
         nvm_rc_version && has_checked_nvmrc=1
         if [ -n "$NVM_RC_VERSION" ]; then
-          VERSION=`nvm_version $NVM_RC_VERSION`
+          VERSION="$(nvm_version "$NVM_RC_VERSION")"
         else
           VERSION='N/A'
         fi
@@ -902,13 +902,13 @@ nvm() {
 
       provided_version=$1
       if [ -n "$provided_version" ]; then
-        VERSION=`nvm_version $provided_version`
+        VERSION="$(nvm_version "$provided_version")"
         if [ "_$VERSION" = "_N/A" ]; then
           provided_version=''
           if [ $has_checked_nvmrc -ne 1 ]; then
             nvm_rc_version && has_checked_nvmrc=1
           fi
-          VERSION=`nvm_version $NVM_RC_VERSION`
+          VERSION="$(nvm_version "$NVM_RC_VERSION")"
         else
           shift
         fi
@@ -930,8 +930,8 @@ nvm() {
       local provided_version
       provided_version="$1"
       if [ -n "$provided_version" ]; then
-        VERSION=`nvm_version $provided_version`
-        if [ $VERSION = "N/A" ]; then
+        VERSION="$(nvm_version "$provided_version")"
+        if [ "_$VERSION" = "_N/A" ]; then
           provided_version=''
           nvm_rc_version
           VERSION="$(nvm_version "$NVM_RC_VERSION")"
@@ -941,13 +941,13 @@ nvm() {
       fi
 
       local NVM_VERSION_DIR
-      NVM_VERSION_DIR=$(nvm_version_path "$VERSION")
+      NVM_VERSION_DIR="$(nvm_version_path "$VERSION")"
       if [ ! -d "$NVM_VERSION_DIR" ]; then
         echo "$VERSION version is not installed yet" >&2
         return 1
       fi
       echo "Running node $VERSION"
-      NODE_VERSION=$VERSION $NVM_DIR/nvm-exec "$@"
+      NODE_VERSION="$VERSION" $NVM_DIR/nvm-exec "$@"
     ;;
     "ls" | "list" )
       local NVM_LS_OUTPUT
@@ -974,7 +974,7 @@ nvm() {
       if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
-          VERSION=$(nvm_version $NVM_RC_VERSION)
+          VERSION=$(nvm_version "$NVM_RC_VERSION")
         fi
       elif [ "_$2" != '_system' ]; then
         VERSION="$(nvm_version "$2")"
@@ -1075,13 +1075,13 @@ nvm() {
       local PROVIDED_VERSION
       PROVIDED_VERSION="$2"
 
-      if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ] || [ "$(nvm_version $PROVIDED_VERSION)" = "$(nvm_ls_current)" ]; then
+      if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ] || [ "$(nvm_version "$PROVIDED_VERSION")" = "$(nvm_ls_current)" ]; then
         echo 'Can not reinstall packages from the current version of node.' >&2
         return 2
       fi
 
       local INSTALLS
-      if [ "$PROVIDED_VERSION" = "system" ]; then
+      if [ "_$PROVIDED_VERSION" = "_system" ]; then
         if ! nvm_has_system_node; then
           echo 'No system version of node detected.' >&2
           return 3
