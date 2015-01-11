@@ -59,7 +59,7 @@ install_nvm_from_git() {
   if [ -d "$NVM_DIR/.git" ]; then
     echo "=> nvm is already installed in $NVM_DIR, trying to update"
     printf "\r=> "
-    cd "$NVM_DIR" && (git fetch 2> /dev/null || {
+    cd "$NVM_DIR" && (command git fetch 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git fetch' in $NVM_DIR yourself." && exit 1
     })
   else
@@ -67,9 +67,9 @@ install_nvm_from_git() {
     echo "=> Downloading nvm from git to '$NVM_DIR'"
     printf "\r=> "
     mkdir -p "$NVM_DIR"
-    git clone "$(nvm_source git)" "$NVM_DIR"
+    command git clone "$(nvm_source git)" "$NVM_DIR"
   fi
-  cd "$NVM_DIR" && git checkout --quiet $(nvm_latest_version) && git branch --quiet -D master >/dev/null 2>&1
+  cd "$NVM_DIR" && command git checkout --quiet $(nvm_latest_version) && command git branch --quiet -D master >/dev/null 2>&1
   return
 }
 

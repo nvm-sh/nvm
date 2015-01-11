@@ -201,7 +201,7 @@ nvm_remote_version() {
 }
 
 nvm_normalize_version() {
-  echo "$1" | command sed -e 's/^v//' | \awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
+  echo "$1" | command sed -e 's/^v//' | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_ensure_version_prefix() {
@@ -310,7 +310,7 @@ nvm_resolve_alias() {
     fi
 
     if [ -n "$ALIAS_TEMP" ] \
-      && printf "$SEEN_ALIASES" | \grep -e "^$ALIAS_TEMP$" > /dev/null; then
+      && printf "$SEEN_ALIASES" | command grep -e "^$ALIAS_TEMP$" > /dev/null; then
       ALIAS="∞"
       break
     fi
@@ -370,19 +370,19 @@ nvm_ls() {
       fi
     fi
     if [ -d "$(nvm_version_dir new)" ]; then
-      VERSIONS=`find "$(nvm_version_dir new)/" "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
-        | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.' | \grep -e '^v' | \grep -v -e '^versions$'`
+      VERSIONS=`command find "$(nvm_version_dir new)/" "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
+        | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | command grep -v '^ *\.' | command grep -e '^v' | command grep -v -e '^versions$'`
     else
-      VERSIONS=`find "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
-        | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | \grep -v '^ *\.' | \grep -e '^v'`
+      VERSIONS=`command find "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
+        | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | command grep -v '^ *\.' | command grep -e '^v'`
     fi
   fi
 
   if nvm_has_system_node; then
     if [ -z "$PATTERN" ]; then
-      VERSIONS="$VERSIONS$(printf '\n%s' 'system')"
+      VERSIONS="$VERSIONS$(command printf '\n%s' 'system')"
     elif [ "$PATTERN" = 'system' ]; then
-      VERSIONS="$(printf '%s' 'system')"
+      VERSIONS="$(command printf '%s' 'system')"
     fi
   fi
 
@@ -410,7 +410,7 @@ nvm_ls_remote() {
   fi
   VERSIONS=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/ -o - \
               | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
-              | \grep -w "${PATTERN}" \
+              | command grep -w "${PATTERN}" \
               | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
@@ -422,11 +422,11 @@ nvm_ls_remote() {
 
 nvm_checksum() {
   if nvm_has "sha1sum"; then
-    checksum="$(sha1sum "$1" | \awk '{print $1}')"
+    checksum="$(sha1sum "$1" | command awk '{print $1}')"
   elif nvm_has "sha1"; then
     checksum="$(sha1 -q "$1")"
   else
-    checksum="$(shasum "$1" | \awk '{print $1}')"
+    checksum="$(shasum "$1" | command awk '{print $1}')"
   fi
 
   if [ "_$checksum" = "_$2" ]; then
@@ -478,9 +478,9 @@ nvm_print_implicit_alias() {
 
   local LAST_TWO
   if [ "_$1" = "_local" ]; then
-    LAST_TWO=$(nvm_ls | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
+    LAST_TWO=$(nvm_ls | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
   else
-    LAST_TWO=$(nvm_ls_remote | \grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
+    LAST_TWO=$(nvm_ls_remote | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
   fi
   local MINOR
   local STABLE
@@ -490,7 +490,7 @@ nvm_print_implicit_alias() {
   local ZHS_HAS_SHWORDSPLIT_UNSET
   ZHS_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
-    ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | \grep shwordsplit > /dev/null ; echo $?)
+    ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
     setopt shwordsplit
   fi
   for MINOR in $LAST_TWO; do
@@ -635,11 +635,11 @@ nvm() {
 
       while [ $# -ne 0 ]
       do
-        if [ "_$(echo "$1" | cut -c 1-26)" = "_--reinstall-packages-from=" ]; then
-          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | cut -c 27-)"
+        if [ "_$(echo "$1" | command cut -c 1-26)" = "_--reinstall-packages-from=" ]; then
+          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | command cut -c 27-)"
           REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
-        elif [ "_$(echo "$1" | cut -c 1-21)" = "_--copy-packages-from=" ]; then
-          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | cut -c 22-)"
+        elif [ "_$(echo "$1" | command cut -c 1-21)" = "_--copy-packages-from=" ]; then
+          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | command cut -c 22-)"
           REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
         else
           ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
@@ -675,18 +675,18 @@ nvm() {
           if nvm_binary_available "$VERSION"; then
             t="$VERSION-$os-$arch"
             url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
-            sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-${t}.tar.gz | \awk '{print $1}'`
+            sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-${t}.tar.gz | command awk '{print $1}'`
             local tmpdir
             tmpdir="$NVM_DIR/bin/node-${t}"
             local tmptarball
             tmptarball="$tmpdir/node-${t}.tar.gz"
             if (
-              mkdir -p "$tmpdir" && \
+              command mkdir -p "$tmpdir" && \
               nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
               nvm_checksum "$tmptarball" $sum && \
-              tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
-              rm -f "$tmptarball" && \
-              mv "$tmpdir" "$(nvm_version_path "$VERSION")"
+              command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
+              command rm -f "$tmptarball" && \
+              command mv "$tmpdir" "$(nvm_version_path "$VERSION")"
               )
             then
               if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
@@ -695,7 +695,7 @@ nvm() {
               return $?
             else
               echo "Binary download failed, trying source." >&2
-              rm -rf "$tmptarball" "$tmpdir"
+              command rm -rf "$tmptarball" "$tmpdir"
             fi
           fi
         fi
@@ -716,22 +716,22 @@ nvm() {
       tmpdir="$NVM_DIR/src"
       local tmptarball
       tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | \grep '200 OK'`" != '' ]; then
+      if [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | command grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
-        sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | \grep node-$VERSION.tar.gz | \awk '{print $1}'`
-      elif [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | \grep '200 OK'`" != '' ]; then
+        sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-$VERSION.tar.gz | command awk '{print $1}'`
+      elif [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | command grep '200 OK'`" != '' ]; then
         tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
       fi
       if (
         [ -n "$tarball" ] && \
-        mkdir -p "$tmpdir" && \
+        command mkdir -p "$tmpdir" && \
         nvm_download -L --progress-bar $tarball -o "$tmptarball" && \
         nvm_checksum "$tmptarball" $sum && \
-        tar -xzf "$tmptarball" -C "$tmpdir" && \
+        command tar -xzf "$tmptarball" -C "$tmpdir" && \
         cd "$tmpdir/node-$VERSION" && \
         ./configure --prefix="$(nvm_version_path "$VERSION")" $ADDITIONAL_PARAMETERS && \
         $make $MAKE_CXX && \
-        rm -f "$(nvm_version_path "$VERSION")" 2>/dev/null && \
+        command rm -f "$(nvm_version_path "$VERSION")" 2>/dev/null && \
         $make $MAKE_CXX install
         )
       then
@@ -775,7 +775,7 @@ nvm() {
       t="$VERSION-$os-$arch"
 
       # Delete all files related to target version.
-      rm -rf "$NVM_DIR/src/node-$VERSION" \
+      command rm -rf "$NVM_DIR/src/node-$VERSION" \
              "$NVM_DIR/src/node-$VERSION.tar.gz" \
              "$NVM_DIR/bin/node-${t}" \
              "$NVM_DIR/bin/node-${t}.tar.gz" \
@@ -783,7 +783,7 @@ nvm() {
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
-      for ALIAS in `\grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
+      for ALIAS in `command grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
       do
         nvm unalias `basename $ALIAS`
       done
@@ -872,7 +872,7 @@ nvm() {
       export NVM_PATH="$NVM_VERSION_DIR/lib/node"
       export NVM_BIN="$NVM_VERSION_DIR/bin"
       if [ "$NVM_SYMLINK_CURRENT" = true ]; then
-        rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
+        command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
       echo "Now using node $VERSION"
     ;;
@@ -1009,11 +1009,11 @@ nvm() {
       echo "$NVM_VERSION_DIR/bin/node"
     ;;
     "alias" )
-      mkdir -p "$NVM_DIR/alias"
+      command mkdir -p "$NVM_DIR/alias"
       if [ $# -le 2 ]; then
         local DEST
         for ALIAS_PATH in "$NVM_DIR"/alias/"$2"*; do
-          ALIAS="$(basename "$ALIAS_PATH")"
+          ALIAS="$(command basename "$ALIAS_PATH")"
           DEST="$(nvm_alias "$ALIAS" 2> /dev/null)"
           if [ -n "$DEST" ]; then
             VERSION="$(nvm_version "$DEST")"
@@ -1039,7 +1039,7 @@ nvm() {
         return
       fi
       if [ -z "$3" ]; then
-        rm -f "$NVM_DIR/alias/$2"
+        command rm -f "$NVM_DIR/alias/$2"
         echo "$2 -> *poof*"
         return
       fi
@@ -1047,7 +1047,7 @@ nvm() {
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '$3' does not exist." >&2
       fi
-      echo $3 > "$NVM_DIR/alias/$2"
+      echo "$3" > "$NVM_DIR/alias/$2"
       if [ ! "_$3" = "_$VERSION" ]; then
         echo "$2 -> $3 (-> $VERSION)"
       else
@@ -1055,10 +1055,10 @@ nvm() {
       fi
     ;;
     "unalias" )
-      mkdir -p $NVM_DIR/alias
+      command mkdir -p "$NVM_DIR/alias"
       [ $# -ne 2 ] && nvm help && return 127
       [ ! -f "$NVM_DIR/alias/$2" ] && echo "Alias $2 doesn't exist!" >&2 && return
-      rm -f $NVM_DIR/alias/$2
+      command rm -f $NVM_DIR/alias/$2
       echo "Deleted alias $2"
     ;;
     "reinstall-packages" | "copy-packages" )
@@ -1081,18 +1081,18 @@ nvm() {
           echo 'No system version of node detected.' >&2
           return 3
         fi
-        INSTALLS=$(nvm deactivate > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
+        INSTALLS=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -v npm | command xargs)
       else
         local VERSION
         VERSION="$(nvm_version "$PROVIDED_VERSION")"
-        INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | xargs)
+        INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -v npm | command xargs)
       fi
 
       echo "Copying global packages from $VERSION..."
-      echo "$INSTALLS" | xargs npm install -g --quiet
+      echo "$INSTALLS" | command xargs npm install -g --quiet
     ;;
     "clear-cache" )
-      rm -f $NVM_DIR/v* "$(nvm_version_dir)" 2>/dev/null
+      command rm -f $NVM_DIR/v* "$(nvm_version_dir)" 2>/dev/null
       echo "Cache cleared."
     ;;
     "version" )
