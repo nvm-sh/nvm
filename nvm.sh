@@ -369,12 +369,29 @@ nvm_ls() {
         PATTERN="$(echo "$PATTERN" | command sed -e 's/\.*$//g')."
       fi
     fi
-    if [ -d "$(nvm_version_dir new)" ]; then
-      VERSIONS=`command find "$(nvm_version_dir new)/" "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
-        | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | command grep -v '^ *\.' | command grep -e '^v' | command grep -v -e '^versions$'`
-    else
-      VERSIONS=`command find "$(nvm_version_dir old)/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
-        | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | command grep -v '^ *\.' | command grep -e '^v'`
+    local NVM_DIRS_TO_SEARCH
+    NVM_DIRS_TO_SEARCH="$(nvm_version_dir old)/"
+    for NVM_VERSION_DIR in "$(nvm_version_dir new)"; do
+      if [ -d "$NVM_VERSION_DIR" ]; then
+        NVM_DIRS_TO_SEARCH="$NVM_VERSION_DIR/ $NVM_DIRS_TO_SEARCH"
+      fi
+    done
+
+    local ZHS_HAS_SHWORDSPLIT_UNSET
+    ZHS_HAS_SHWORDSPLIT_UNSET=1
+    if nvm_has "setopt"; then
+      ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
+      setopt shwordsplit
+    fi
+
+    VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
+     | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
+     | command grep -v '^ *\.' \
+     | command grep -e '^v' \
+     | command grep -v -e '^versions$')"
+
+    if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
+      unsetopt shwordsplit
     fi
   fi
 
@@ -392,7 +409,6 @@ nvm_ls() {
   fi
 
   echo "$VERSIONS"
-  return
 }
 
 nvm_ls_remote() {
