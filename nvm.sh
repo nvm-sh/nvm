@@ -144,6 +144,8 @@ nvm_version_dir() {
   NVM_WHICH_DIR="$1"
   if [ -z "$NVM_WHICH_DIR" ] || [ "_$NVM_WHICH_DIR" = "_new" ]; then
     echo "$NVM_DIR/versions/node"
+  elif [ "_$NVM_WHICH_DIR" = "_iojs" ]; then
+    echo "$NVM_DIR/versions/io.js"
   elif [ "_$NVM_WHICH_DIR" = "_old" ]; then
     echo "$NVM_DIR"
   else
