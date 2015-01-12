@@ -152,6 +152,10 @@ nvm_version_dir() {
   fi
 }
 
+nvm_alias_path() {
+  echo "$(nvm_version_dir old)/alias"
+}
+
 nvm_version_path() {
   local VERSION
   VERSION="$1"
@@ -261,7 +265,7 @@ nvm_alias() {
   fi
 
   local NVM_ALIAS_PATH
-  NVM_ALIAS_PATH="$NVM_DIR/alias/$ALIAS"
+  NVM_ALIAS_PATH="$(nvm_alias_path)/$ALIAS"
   if [ ! -f "$NVM_ALIAS_PATH" ]; then
     echo >&2 'Alias does not exist.'
     return 2
@@ -804,7 +808,7 @@ nvm() {
       echo "Uninstalled node $VERSION"
 
       # Rm any aliases that point to uninstalled version.
-      for ALIAS in `command grep -l $VERSION $NVM_DIR/alias/* 2>/dev/null`
+      for ALIAS in `command grep -l $VERSION "$(nvm_alias_path)/*" 2>/dev/null`
       do
         nvm unalias "$(command basename "$ALIAS")"
       done
@@ -1030,10 +1034,12 @@ nvm() {
       echo "$NVM_VERSION_DIR/bin/node"
     ;;
     "alias" )
-      command mkdir -p "$NVM_DIR/alias"
+      local NVM_ALIAS_DIR
+      NVM_ALIAS_DIR="$(nvm_alias_path)"
+      command mkdir -p "$NVM_ALIAS_DIR"
       if [ $# -le 2 ]; then
         local DEST
-        for ALIAS_PATH in "$NVM_DIR"/alias/"$2"*; do
+        for ALIAS_PATH in "$NVM_ALIAS_DIR"/"$2"*; do
           ALIAS="$(command basename "$ALIAS_PATH")"
           DEST="$(nvm_alias "$ALIAS" 2> /dev/null)"
           if [ -n "$DEST" ]; then
@@ -1047,7 +1053,7 @@ nvm() {
         done
 
         for ALIAS in "stable" "unstable"; do
-          if [ ! -f "$NVM_DIR/alias/$ALIAS" ]; then
+          if [ ! -f "$NVM_ALIAS_DIR/$ALIAS" ]; then
             if [ $# -lt 2 ] || [ "~$ALIAS" = "~$2" ]; then
               DEST="$(nvm_print_implicit_alias local "$ALIAS")"
               if [ "_$DEST" != "_" ]; then
@@ -1060,7 +1066,7 @@ nvm() {
         return
       fi
       if [ -z "$3" ]; then
-        command rm -f "$NVM_DIR/alias/$2"
+        command rm -f "$NVM_ALIAS_DIR/$2"
         echo "$2 -> *poof*"
         return
       fi
@@ -1068,7 +1074,7 @@ nvm() {
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '$3' does not exist." >&2
       fi
-      echo "$3" > "$NVM_DIR/alias/$2"
+      echo "$3" > "$NVM_ALIAS_DIR/$2"
       if [ ! "_$3" = "_$VERSION" ]; then
         echo "$2 -> $3 (-> $VERSION)"
       else
@@ -1076,10 +1082,12 @@ nvm() {
       fi
     ;;
     "unalias" )
-      command mkdir -p "$NVM_DIR/alias"
+      local NVM_ALIAS_DIR
+      NVM_ALIAS_DIR="$(nvm_alias_path)"
+      command mkdir -p "$NVM_ALIAS_DIR"
       [ $# -ne 2 ] && nvm help && return 127
-      [ ! -f "$NVM_DIR/alias/$2" ] && echo "Alias $2 doesn't exist!" >&2 && return
-      command rm -f $NVM_DIR/alias/$2
+      [ ! -f "$NVM_ALIAS_DIR/$2" ] && echo "Alias $2 doesn't exist!" >&2 && return
+      command rm -f "$NVM_ALIAS_DIR/$2"
       echo "Deleted alias $2"
     ;;
     "reinstall-packages" | "copy-packages" )
