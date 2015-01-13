@@ -539,6 +539,32 @@ nvm_print_implicit_alias() {
   fi
 }
 
+nvm_get_os() {
+  local NVM_UNAME
+  NVM_UNAME="$(uname -a)"
+  local NVM_OS
+  case "$NVM_UNAME" in
+    Linux\ *) NVM_OS=linux ;;
+    Darwin\ *) NVM_OS=darwin ;;
+    SunOS\ *) NVM_OS=sunos ;;
+    FreeBSD\ *) NVM_OS=freebsd ;;
+  esac
+  echo "$NVM_OS"
+}
+
+nvm_get_arch() {
+  local NVM_UNAME
+  NVM_UNAME="$(uname -a)"
+  local NVM_ARCH
+  case "$NVM_UNAME" in
+    *x86_64*) NVM_ARCH=x64 ;;
+    *i*86*) NVM_ARCH=x86 ;;
+    *armv6l*) NVM_ARCH=arm-pi ;;
+    *) NVM_ARCH="$(uname -m)" ;;
+  esac
+  echo "$NVM_ARCH"
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -546,24 +572,10 @@ nvm() {
   fi
 
   # Try to figure out the os and arch for binary fetching
-  local uname
-  uname="$(uname -a)"
   local os
   local arch
-  arch="$(uname -m)"
   local GREP_OPTIONS
   GREP_OPTIONS=''
-  case "$uname" in
-    Linux\ *) os=linux ;;
-    Darwin\ *) os=darwin ;;
-    SunOS\ *) os=sunos ;;
-    FreeBSD\ *) os=freebsd ;;
-  esac
-  case "$uname" in
-    *x86_64*) arch=x64 ;;
-    *i*86*) arch=x86 ;;
-    *armv6l*) arch=arm-pi ;;
-  esac
 
   # initialize local variables
   local VERSION
@@ -617,6 +629,8 @@ nvm() {
       local version_not_provided
       version_not_provided=0
       local provided_version
+      local NVM_OS
+      NVM_OS="$(nvm_get_os)"
 
       if ! nvm_has "curl" && ! nvm_has "wget"; then
         echo 'nvm needs curl or wget to proceed.' >&2;
@@ -635,12 +649,12 @@ nvm() {
       shift
 
       nobinary=0
-      if [ "$1" = "-s" ]; then
+      if [ "_$1" = "_-s" ]; then
         nobinary=1
         shift
       fi
 
-      if [ "$os" = "freebsd" ]; then
+      if [ "_$NVM_OS" = "_freebsd" ]; then
         nobinary=1
       fi
 
@@ -692,7 +706,7 @@ nvm() {
         return $?
       fi
 
-      if [ "$VERSION" = "N/A" ]; then
+      if [ "_$VERSION" = "_N/A" ]; then
         echo "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions." >&2
         return 3
       fi
@@ -700,9 +714,9 @@ nvm() {
       # skip binary install if no binary option specified.
       if [ $nobinary -ne 1 ]; then
         # shortcut - try the binary if possible.
-        if [ -n "$os" ]; then
+        if [ -n "$NVM_OS" ]; then
           if nvm_binary_available "$VERSION"; then
-            t="$VERSION-$os-$arch"
+            t="$VERSION-$NVM_OS-$(nvm_get_arch)"
             url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
             sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-${t}.tar.gz | command awk '{print $1}'`
             local tmpdir
@@ -737,7 +751,7 @@ nvm() {
       tarball=''
       sum=''
       make='make'
-      if [ "$os" = "freebsd" ]; then
+      if [ "_$NVM_OS" = "_freebsd" ]; then
         make='gmake'
         MAKE_CXX="CXX=c++"
       fi
@@ -804,7 +818,7 @@ nvm() {
         return;
       fi
 
-      t="$VERSION-$os-$arch"
+      t="$VERSION-$(nvm_get_os)-$(nvm_get_arch)"
 
       # Delete all files related to target version.
       command rm -rf "$NVM_DIR/src/node-$VERSION" \
