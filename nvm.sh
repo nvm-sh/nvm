@@ -350,6 +350,9 @@ nvm_resolve_alias() {
 nvm_iojs_prefix() {
   echo "iojs"
 }
+nvm_node_prefix() {
+  echo "node"
+}
 
 nvm_ls() {
   local PATTERN
@@ -1194,7 +1197,7 @@ nvm() {
     ;;
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum \
-        nvm_iojs_prefix \
+        nvm_iojs_prefix nvm_node_prefix \
         nvm_ls_remote nvm_ls nvm_remote_version \
         nvm_version nvm_rc_version \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
