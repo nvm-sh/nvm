@@ -211,7 +211,13 @@ nvm_normalize_version() {
 }
 
 nvm_ensure_version_prefix() {
-  echo "$1" | command sed -e 's/^\([0-9]\)/v\1/g'
+  local NVM_VERSION
+  NVM_VERSION="$(nvm_strip_iojs_prefix "$1" | command sed -e 's/^\([0-9]\)/v\1/g')"
+  if nvm_is_iojs_version "$1"; then
+    echo "$(nvm_add_iojs_prefix "$NVM_VERSION")"
+  else
+    echo "$NVM_VERSION"
+  fi
 }
 
 nvm_format_version() {
