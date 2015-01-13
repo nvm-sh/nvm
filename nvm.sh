@@ -354,6 +354,10 @@ nvm_node_prefix() {
   echo "node"
 }
 
+nvm_is_iojs_version() {
+  [ "_$(echo "$1" | cut -c1-5)" = "_iojs-" ]
+}
+
 nvm_ls() {
   local PATTERN
   PATTERN="$1"
@@ -1198,6 +1202,7 @@ nvm() {
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum \
         nvm_iojs_prefix nvm_node_prefix \
+        nvm_is_iojs_version \
         nvm_ls_remote nvm_ls nvm_remote_version \
         nvm_version nvm_rc_version \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
