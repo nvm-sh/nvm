@@ -416,7 +416,12 @@ nvm_ls() {
 
     local NVM_DIRS_TO_TEST_AND_SEARCH
     local NVM_DIRS_TO_SEARCH
-    NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir old) $(nvm_version_dir new)"
+    if nvm_is_iojs_version "$PATTERN"; then
+      NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir iojs)"
+      PATTERN="$(nvm_strip_iojs_prefix "$PATTERN")"
+    else
+      NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir old) $(nvm_version_dir new) $(nvm_version_dir iojs)"
+    fi
     for NVM_VERSION_DIR in $NVM_DIRS_TO_TEST_AND_SEARCH; do
       if [ -d "$NVM_VERSION_DIR" ]; then
         NVM_DIRS_TO_SEARCH="$NVM_VERSION_DIR $NVM_DIRS_TO_SEARCH"
@@ -427,12 +432,16 @@ nvm_ls() {
       PATTERN='v'
     fi
     VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" \
+      | command sed "s#$(nvm_version_dir iojs)/#"$(nvm_iojs_prefix)"-#" \
       | command sed "s#^$NVM_DIR/##" \
       | command grep -v -e '^versions$' \
+      | command sed 's#^versions/##' \
       | sed -e 's/^v/node-v/' \
-      | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
+      | sed -e 's#^\(iojs\)[-/]v#\1.v#' | sed -e 's#^\(node\)[-/]v#\1.v#' \
+      | command sort -t. -u -k 2.2,2n -k 3,3n -k 4,4n \
       | command sort -s -t- -k1.1,1.1 \
-      | command sed 's/^node-//')"
+      | command sed 's/^\(iojs\)\./\1-/' \
+      | command sed 's/^node\.//')"
 
     if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
       unsetopt shwordsplit
