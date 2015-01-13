@@ -1115,17 +1115,33 @@ nvm() {
       return $NVM_LS_EXIT_CODE
     ;;
     "ls-remote" | "list-remote" )
-      local NVM_LS_REMOTE_OUTPUT
-      local NVM_LS_REMOTE_EXIT_CODE
-      NVM_LS_REMOTE_OUTPUT=$(nvm_ls_remote "$2")
-      NVM_LS_REMOTE_EXIT_CODE=$?
-      nvm_print_versions "$NVM_LS_REMOTE_OUTPUT"
+      local PATTERN
+      PATTERN="$2"
+      local NVM_FLAVOR
+      case "_$PATTERN" in
+        "_$(nvm_iojs_prefix)" | "_$(nvm_node_prefix)" )
+          NVM_FLAVOR="$PATTERN"
+          PATTERN="$3"
+        ;;
+      esac
 
-      local NVM_LS_REMOTE_IOJS_OUTPUT
+      local NVM_LS_REMOTE_EXIT_CODE
+      NVM_LS_REMOTE_EXIT_CODE=0
+      if [ "_$NVM_FLAVOR" != "_$(nvm_iojs_prefix)" ]; then
+        local NVM_LS_REMOTE_OUTPUT
+        NVM_LS_REMOTE_OUTPUT=$(nvm_ls_remote "$PATTERN")
+        NVM_LS_REMOTE_EXIT_CODE=$?
+        nvm_print_versions "$NVM_LS_REMOTE_OUTPUT"
+      fi
+
       local NVM_LS_REMOTE_IOJS_EXIT_CODE
-      NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "$2")
-      NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
-      nvm_print_versions "$NVM_LS_REMOTE_IOJS_OUTPUT"
+      NVM_LS_REMOTE_IOJS_EXIT_CODE=0
+      if [ "_$NVM_FLAVOR" != "_$(nvm_node_prefix)" ]; then
+        local NVM_LS_REMOTE_IOJS_OUTPUT
+        NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "$PATTERN")
+        NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
+        nvm_print_versions "$NVM_LS_REMOTE_IOJS_OUTPUT"
+      fi
 
       return $NVM_LS_REMOTE_EXIT_CODE && $NVM_LS_REMOTE_IOJS_EXIT_CODE
     ;;
