@@ -207,8 +207,12 @@ nvm_remote_version() {
   local PATTERN
   PATTERN="$1"
   local VERSION
-  VERSION="$(nvm_ls_remote "$PATTERN" | tail -n1)"
-  echo "$VERSION"
+  if nvm_is_iojs_version "$PATTERN"; then
+    VERSION="$(nvm_ls_remote_iojs "$PATTERN")"
+  else
+    VERSION="$(nvm_ls_remote "$PATTERN")"
+  fi
+  echo "$VERSION" | tail -n1
 
   if [ "_$VERSION" = '_N/A' ]; then
     return 3
