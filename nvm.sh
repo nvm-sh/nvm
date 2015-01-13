@@ -347,7 +347,7 @@ nvm_resolve_alias() {
 
 nvm_ls() {
   local PATTERN
-  PATTERN=$1
+  PATTERN="$1"
   local VERSIONS
   VERSIONS=''
   if [ "$PATTERN" = 'current' ]; then
@@ -373,13 +373,6 @@ nvm_ls() {
         PATTERN="$(echo "$PATTERN" | command sed -e 's/\.*$//g')."
       fi
     fi
-    local NVM_DIRS_TO_SEARCH
-    NVM_DIRS_TO_SEARCH="$(nvm_version_dir old)/"
-    for NVM_VERSION_DIR in "$(nvm_version_dir new)"; do
-      if [ -d "$NVM_VERSION_DIR" ]; then
-        NVM_DIRS_TO_SEARCH="$NVM_VERSION_DIR/ $NVM_DIRS_TO_SEARCH"
-      fi
-    done
 
     local ZHS_HAS_SHWORDSPLIT_UNSET
     ZHS_HAS_SHWORDSPLIT_UNSET=1
@@ -388,11 +381,25 @@ nvm_ls() {
       setopt shwordsplit
     fi
 
-    VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
-     | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
-     | command grep -v '^ *\.' \
-     | command grep -e '^v' \
-     | command grep -v -e '^versions$')"
+    local NVM_DIRS_TO_TEST_AND_SEARCH
+    local NVM_DIRS_TO_SEARCH
+    NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir old) $(nvm_version_dir new)"
+    for NVM_VERSION_DIR in $NVM_DIRS_TO_TEST_AND_SEARCH; do
+      if [ -d "$NVM_VERSION_DIR" ]; then
+        NVM_DIRS_TO_SEARCH="$NVM_VERSION_DIR $NVM_DIRS_TO_SEARCH"
+      fi
+    done
+
+    if [ -z "$PATTERN" ]; then
+      PATTERN='v'
+    fi
+    VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" \
+      | command sed "s#^$NVM_DIR/##" \
+      | command grep -v -e '^versions$' \
+      | sed -e 's/^v/node-v/' \
+      | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
+      | command sort -s -t- -k1.1,1.1 \
+      | command sed 's/^node-//')"
 
     if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
       unsetopt shwordsplit
@@ -400,7 +407,7 @@ nvm_ls() {
   fi
 
   if nvm_has_system_node; then
-    if [ -z "$PATTERN" ]; then
+    if [ -z "$PATTERN" ] || [ "_$PATTERN" = "_v" ]; then
       VERSIONS="$VERSIONS$(command printf '\n%s' 'system')"
     elif [ "$PATTERN" = 'system' ]; then
       VERSIONS="$(command printf '%s' 'system')"
