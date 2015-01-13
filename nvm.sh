@@ -565,6 +565,49 @@ nvm_get_arch() {
   echo "$NVM_ARCH"
 }
 
+nvm_install_node_binary() {
+  local VERSION
+  VERSION="$1"
+  local REINSTALL_PACKAGES_FROM
+  REINSTALL_PACKAGES_FROM="$2"
+
+  local VERSION_PATH
+  VERSION_PATH="$(nvm_version_path "$VERSION")"
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+  local t
+  local url
+  local sum
+
+  if [ -n "$NVM_OS" ]; then
+    if nvm_binary_available "$VERSION"; then
+      t="$VERSION-$NVM_OS-$(nvm_get_arch)"
+      url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
+      sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-${t}.tar.gz | command awk '{print $1}'`
+      local tmpdir
+      tmpdir="$NVM_DIR/bin/node-${t}"
+      local tmptarball
+      tmptarball="$tmpdir/node-${t}.tar.gz"
+      if (
+        command mkdir -p "$tmpdir" && \
+        nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
+        nvm_checksum "$tmptarball" $sum && \
+        command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
+        command rm -f "$tmptarball" && \
+        command mv "$tmpdir" "$VERSION_PATH"
+        )
+      then
+        return 0
+      else
+        echo "Binary download failed, trying source." >&2
+        command rm -rf "$tmptarball" "$tmpdir"
+        return 1
+      fi
+    fi
+  fi
+  return 2
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -622,7 +665,6 @@ nvm() {
       # initialize local variables
       local binavail
       local t
-      local url
       local sum
       local tarball
       local nobinary
@@ -711,36 +753,14 @@ nvm() {
         return 3
       fi
 
-      # skip binary install if no binary option specified.
+      # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ]; then
         # shortcut - try the binary if possible.
-        if [ -n "$NVM_OS" ]; then
-          if nvm_binary_available "$VERSION"; then
-            t="$VERSION-$NVM_OS-$(nvm_get_arch)"
-            url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
-            sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-${t}.tar.gz | command awk '{print $1}'`
-            local tmpdir
-            tmpdir="$NVM_DIR/bin/node-${t}"
-            local tmptarball
-            tmptarball="$tmpdir/node-${t}.tar.gz"
-            if (
-              command mkdir -p "$tmpdir" && \
-              nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
-              nvm_checksum "$tmptarball" $sum && \
-              command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
-              command rm -f "$tmptarball" && \
-              command mv "$tmpdir" "$VERSION_PATH"
-              )
-            then
-              if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
-                nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
-              fi
-              return $?
-            else
-              echo "Binary download failed, trying source." >&2
-              command rm -rf "$tmptarball" "$tmpdir"
-            fi
+        if nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+          if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+            nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
           fi
+          return $?
         fi
       fi
 
