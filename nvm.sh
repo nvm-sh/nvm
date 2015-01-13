@@ -289,9 +289,11 @@ nvm_ls_current() {
   NVM_LS_CURRENT_NODE_PATH="$(command which node 2> /dev/null)"
   if [ $? -ne 0 ]; then
     echo 'none'
+  elif nvm_tree_contains_path "$(nvm_version_dir iojs)" "$NVM_LS_CURRENT_NODE_PATH"; then
+    echo "$(nvm_add_iojs_prefix $(iojs --version 2>/dev/null))"
   elif nvm_tree_contains_path "$NVM_DIR" "$NVM_LS_CURRENT_NODE_PATH"; then
     local VERSION
-    VERSION="$(node -v 2>/dev/null)"
+    VERSION="$(node --version 2>/dev/null)"
     if [ "$VERSION" = "v0.6.21-pre" ]; then
       echo "v0.6.21"
     else
