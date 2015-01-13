@@ -347,6 +347,10 @@ nvm_resolve_alias() {
   return 2
 }
 
+nvm_iojs_prefix() {
+  echo "iojs"
+}
+
 nvm_ls() {
   local PATTERN
   PATTERN="$1"
@@ -1189,7 +1193,12 @@ nvm() {
       echo "0.22.2"
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum nvm_ls_remote nvm_ls nvm_remote_version nvm_version nvm_rc_version nvm_version_greater nvm_version_greater_than_or_equal_to nvm_supports_source_options > /dev/null 2>&1
+      unset -f nvm nvm_print_versions nvm_checksum \
+        nvm_iojs_prefix \
+        nvm_ls_remote nvm_ls nvm_remote_version \
+        nvm_version nvm_rc_version \
+        nvm_version_greater nvm_version_greater_than_or_equal_to \
+        nvm_supports_source_options > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
