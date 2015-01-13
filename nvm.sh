@@ -164,6 +164,8 @@ nvm_version_path() {
   if [ -z "$VERSION" ]; then
     echo "version is required" >&2
     return 3
+  elif nvm_is_iojs_version "$VERSION"; then
+    echo "$(nvm_version_dir iojs)/$(nvm_strip_iojs_prefix "$VERSION")"
   elif nvm_version_greater 0.12.0 "$VERSION"; then
     echo "$(nvm_version_dir old)/$VERSION"
   else
@@ -515,14 +517,14 @@ nvm_print_versions() {
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
   echo "$1" | while read VERSION; do
-    if [ "$VERSION" = "$NVM_CURRENT" ]; then
-      FORMAT='\033[0;32m-> %9s\033[0m'
-    elif [ -d "$(nvm_version_path "$VERSION" 2> /dev/null)" ]; then
-      FORMAT='\033[0;34m%12s\033[0m'
+    if [ "_$VERSION" = "_$NVM_CURRENT" ]; then
+      FORMAT='\033[0;32m-> %12s\033[0m'
     elif [ "$VERSION" = "system" ]; then
-      FORMAT='\033[0;33m%12s\033[0m'
+      FORMAT='\033[0;33m%15s\033[0m'
+    elif [ -d "$(nvm_version_path "$VERSION" 2> /dev/null)" ]; then
+      FORMAT='\033[0;34m%15s\033[0m'
     else
-      FORMAT='%12s'
+      FORMAT='%15s'
     fi
     printf "$FORMAT\n" $VERSION
   done
