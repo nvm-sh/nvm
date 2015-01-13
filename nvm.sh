@@ -71,6 +71,13 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
   export NVM_NODEJS_ORG_MIRROR="https://nodejs.org/dist"
 fi
 
+if [ -z "$NVM_IOJS_ORG_MIRROR" ]; then
+  export NVM_IOJS_ORG_MIRROR="https://iojs.org/dist"
+fi
+if [ -z "$NVM_IOJS_ORG_VERSION_LISTING" ]; then
+  export NVM_IOJS_ORG_VERSION_LISTING="$NVM_IOJS_ORG_MIRROR/index.tab"
+fi
+
 nvm_tree_contains_path() {
   local tree
   tree="$1"
@@ -490,7 +497,28 @@ nvm_ls_remote() {
     return 3
   fi
   echo "$VERSIONS"
-  return
+}
+
+nvm_ls_remote_iojs() {
+  local PATTERN
+  PATTERN="$1"
+  local VERSIONS
+  if [ -n "$PATTERN" ]; then
+    PATTERN="$(nvm_ensure_version_prefix $(nvm_strip_iojs_prefix "$PATTERN"))"
+  else
+    PATTERN=".*"
+  fi
+  VERSIONS="$(nvm_download -L -s $NVM_IOJS_ORG_VERSION_LISTING -o - \
+    | command sed 1d \
+    | command sed "s/^/$(nvm_iojs_prefix)-/" \
+    | command cut -f1 \
+    | command grep -w "$PATTERN" \
+    | command sort)"
+  if [ -z "$VERSIONS" ]; then
+    echo "N/A"
+    return 3
+  fi
+  echo "$VERSIONS"
 }
 
 nvm_checksum() {
@@ -1083,11 +1111,19 @@ nvm() {
       return $NVM_LS_EXIT_CODE
     ;;
     "ls-remote" | "list-remote" )
-      local NVM_LS_EXIT_CODE
-      NVM_LS_OUTPUT=$(nvm_ls_remote "$2")
-      NVM_LS_EXIT_CODE=$?
-      nvm_print_versions "$NVM_LS_OUTPUT"
-      return $NVM_LS_EXIT_CODE
+      local NVM_LS_REMOTE_OUTPUT
+      local NVM_LS_REMOTE_EXIT_CODE
+      NVM_LS_REMOTE_OUTPUT=$(nvm_ls_remote "$2")
+      NVM_LS_REMOTE_EXIT_CODE=$?
+      nvm_print_versions "$NVM_LS_REMOTE_OUTPUT"
+
+      local NVM_LS_REMOTE_IOJS_OUTPUT
+      local NVM_LS_REMOTE_IOJS_EXIT_CODE
+      NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "$2")
+      NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
+      nvm_print_versions "$NVM_LS_REMOTE_IOJS_OUTPUT"
+
+      return $NVM_LS_REMOTE_EXIT_CODE && $NVM_LS_REMOTE_IOJS_EXIT_CODE
     ;;
     "current" )
       nvm_version current
