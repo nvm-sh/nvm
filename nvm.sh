@@ -608,6 +608,83 @@ nvm_install_node_binary() {
   return 2
 }
 
+nvm_install_node_source() {
+  local VERSION
+  VERSION="$1"
+  local REINSTALL_PACKAGES_FROM
+  REINSTALL_PACKAGES_FROM="$2"
+  local ADDITIONAL_PARAMETERS
+  ADDITIONAL_PARAMETERS="$3"
+
+  if [ -n "$ADDITIONAL_PARAMETERS" ]; then
+    echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
+  fi
+
+  local VERSION_PATH
+  VERSION_PATH="$(nvm_version_path "$VERSION")"
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+
+  local tarball
+  tarball=''
+  local sum
+  sum=''
+  local make
+  make='make'
+  if [ "_$NVM_OS" = "_freebsd" ]; then
+    make='gmake'
+    MAKE_CXX="CXX=c++"
+  fi
+  local tmpdir
+  tmpdir="$NVM_DIR/src"
+  local tmptarball
+  tmptarball="$tmpdir/node-$VERSION.tar.gz"
+
+  if [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | command grep '200 OK'`" != '' ]; then
+    tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
+    sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep "node-$VERSION.tar.gz" | command awk '{print $1}'`
+  elif [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | command grep '200 OK'`" != '' ]; then
+    tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
+  fi
+
+  if (
+    [ -n "$tarball" ] && \
+    command mkdir -p "$tmpdir" && \
+    nvm_download -L --progress-bar $tarball -o "$tmptarball" && \
+    nvm_checksum "$tmptarball" $sum && \
+    command tar -xzf "$tmptarball" -C "$tmpdir" && \
+    cd "$tmpdir/node-$VERSION" && \
+    ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
+    $make $MAKE_CXX && \
+    command rm -f "$VERSION_PATH" 2>/dev/null && \
+    $make $MAKE_CXX install
+    )
+  then
+    if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+      nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
+    fi
+    if ! nvm_has "npm" ; then
+      echo "Installing npm..."
+      if nvm_version_greater 0.2.0 "$VERSION"; then
+        echo "npm requires node v0.2.3 or higher" >&2
+      elif nvm_version_greater_than_or_equal_to "$VERSION" 0.2.0; then
+        if nvm_version_greater 0.2.3 "$VERSION"; then
+          echo "npm requires node v0.2.3 or higher" >&2
+        else
+          nvm_download -L https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
+        fi
+      else
+        nvm_download -L https://npmjs.org/install.sh -o - | clean=yes sh
+      fi
+    fi
+  else
+    echo "nvm: install $VERSION failed!" >&2
+    return 1
+  fi
+
+  return $?
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -662,11 +739,6 @@ nvm() {
     ;;
 
     "install" | "i" )
-      # initialize local variables
-      local binavail
-      local t
-      local sum
-      local tarball
       local nobinary
       local version_not_provided
       version_not_provided=0
@@ -754,73 +826,16 @@ nvm() {
       fi
 
       # skip binary install if "nobinary" option specified.
-      if [ $nobinary -ne 1 ]; then
-        # shortcut - try the binary if possible.
-        if nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
-          if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
-            nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
-          fi
-          return $?
-        fi
-      fi
-
-      if [ -n "$ADDITIONAL_PARAMETERS" ]; then
-        echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
-      fi
-
-      tarball=''
-      sum=''
-      make='make'
-      if [ "_$NVM_OS" = "_freebsd" ]; then
-        make='gmake'
-        MAKE_CXX="CXX=c++"
-      fi
-      local tmpdir
-      tmpdir="$NVM_DIR/src"
-      local tmptarball
-      tmptarball="$tmpdir/node-$VERSION.tar.gz"
-      if [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | command grep '200 OK'`" != '' ]; then
-        tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
-        sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-$VERSION.tar.gz | command awk '{print $1}'`
-      elif [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | command grep '200 OK'`" != '' ]; then
-        tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
-      fi
-      if (
-        [ -n "$tarball" ] && \
-        command mkdir -p "$tmpdir" && \
-        nvm_download -L --progress-bar $tarball -o "$tmptarball" && \
-        nvm_checksum "$tmptarball" $sum && \
-        command tar -xzf "$tmptarball" -C "$tmpdir" && \
-        cd "$tmpdir/node-$VERSION" && \
-        ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
-        $make $MAKE_CXX && \
-        command rm -f "$VERSION_PATH" 2>/dev/null && \
-        $make $MAKE_CXX install
-        )
-      then
-        if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+      if [ $nobinary -ne 1 ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+        if nvm use "$VERSION" \
+          && [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
+          && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
-        if ! nvm_has "npm" ; then
-          echo "Installing npm..."
-          if nvm_version_greater 0.2.0 "$VERSION"; then
-            echo "npm requires node v0.2.3 or higher" >&2
-          elif nvm_version_greater_than_or_equal_to "$VERSION" 0.2.0; then
-            if nvm_version_greater 0.2.3 "$VERSION"; then
-              echo "npm requires node v0.2.3 or higher" >&2
-            else
-              nvm_download -L https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
-            fi
-          else
-            nvm_download -L https://npmjs.org/install.sh -o - | clean=yes sh
-          fi
-        fi
-      else
-        echo "nvm: install $VERSION failed!" >&2
-        return 1
+        return $?
       fi
 
-      return $?
+      nvm_install_node_source "$VERSION" "$REINSTALL_PACKAGES_FROM" "$ADDITIONAL_PARAMETERS"
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
