@@ -2,7 +2,7 @@
 
 mkdir -p ../../../v0.0.2
 mkdir -p ../../../v0.0.20
-mkdir -p ../../../versions/v0.12.0
+mkdir -p ../../../versions/node/v0.12.0
 
 . ../../../nvm.sh
 
