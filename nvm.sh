@@ -846,10 +846,6 @@ nvm() {
         shift
       fi
 
-      if [ "_$NVM_OS" = "_freebsd" ]; then
-        nobinary=1
-      fi
-
       provided_version="$1"
 
       if [ -z "$provided_version" ]; then
@@ -903,6 +899,18 @@ nvm() {
         return 3
       fi
 
+      local NVM_IOJS
+      if nvm_is_iojs_version "$VERSION"; then
+        NVM_IOJS=true
+      fi
+
+      if [ "_$NVM_OS" = "_freebsd" ]; then
+        # node.js and io.js do not have a FreeBSD binary
+        nobinary=1
+      elif [ "_$NVM_OS" = "_sunos" ] && [ "$NVM_IOJS" = true ]; then
+        # io.js does not have a SunOS binary
+        nobinary=1
+      fi
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
         if nvm use "$VERSION" \
