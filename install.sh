@@ -100,25 +100,32 @@ install_nvm_as_script() {
   }
 }
 
-#
 # Detect profile file if not specified as environment variable
 # (eg: PROFILE=~/.myprofile)
 # The echo'ed path is guaranteed to be an existing file
 # Otherwise, an empty string is returned
-#
+#  
+# Auto detects the appropriate shell by looking at the shell of 
+# the caller process and login/interactive status.
 nvm_detect_profile() {
-  if [ -f "$PROFILE" ]; then
-    echo "$PROFILE"
-  elif [ -f "$HOME/.bashrc" ]; then
-    echo "$HOME/.bashrc"
-  elif [ -f "$HOME/.bash_profile" ]; then
-    echo "$HOME/.bash_profile"
-  elif [ -f "$HOME/.zshrc" ]; then
-    echo "$HOME/.zshrc"
-  elif [ -f "$HOME/.profile" ]; then
-    echo "$HOME/.profile"
-  fi
+        local shell=$(ps $PPID | tail -n 1 | awk '{print $(NF-0)}')
+        if [ -f "$PROFILE" ]; then
+                echo "$PROFILE"
+        elif echo $shell | grep -q "zsh"; then
+                echo "$HOME/.zshrc"
+        elif echo $shell | grep -q "bash"; then
+                local login_status=$(shopt -q login_shell)
+                local interactive_status=$([[ $- == *i* ]])
+                if [[ $login_status -eq 0 ]]; then
+                        echo "$HOME/.bashrc"
+                elif [[ $interactive_status -eq 0 ]]; then
+                        echo "$HOME/.bash_profile"
+                fi
+        else
+                echo ""
+        fi
 }
+
 
 nvm_do_install() {
   if [ -z "$METHOD" ]; then
