@@ -1076,11 +1076,22 @@ nvm() {
         fi
       fi
 
-      echo "Running node $VERSION"
+      local NVM_IOJS
+      if nvm_is_iojs_version "$VERSION"; then
+        NVM_IOJS=true
+      fi
+
       local ARGS
       ARGS="$@"
       local OUTPUT
-      OUTPUT="$(nvm use "$VERSION" >/dev/null && node "$ARGS")"
+
+      if [ "$NVM_IOJS" = true ]; then
+        echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")"
+        OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs "$ARGS")"
+      else
+        echo "Running node $VERSION"
+        OUTPUT="$(nvm use "$VERSION" >/dev/null && node "$ARGS")"
+      fi
       local EXIT_CODE
       EXIT_CODE="$?"
       echo "$OUTPUT"
