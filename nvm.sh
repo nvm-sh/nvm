@@ -71,6 +71,11 @@ if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
   export NVM_NODEJS_ORG_MIRROR="https://nodejs.org/dist"
 fi
 
+# Setup alternative tar prefix, if not already set
+if [ -z "$NVM_NODE_PREFIX" ]; then
+  export NVM_NODE_PREFIX="node"
+fi
+
 nvm_tree_contains_path() {
   local tree
   tree="$1"
@@ -396,10 +401,10 @@ nvm_ls() {
     VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" \
       | command sed "s#^$NVM_DIR/##" \
       | command grep -v -e '^versions$' \
-      | sed -e 's/^v/node-v/' \
+      | sed -e 's/^v/$NVM_NODE_PREFIX-v/' \
       | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
       | command sort -s -t- -k1.1,1.1 \
-      | command sed 's/^node-//')"
+      | command sed 's/^$NVM_NODE_PREFIX-//')"
 
     if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
       unsetopt shwordsplit
@@ -582,12 +587,12 @@ nvm_install_node_binary() {
   if [ -n "$NVM_OS" ]; then
     if nvm_binary_available "$VERSION"; then
       t="$VERSION-$NVM_OS-$(nvm_get_arch)"
-      url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
-      sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-${t}.tar.gz | command awk '{print $1}'`
+      url="$NVM_NODEJS_ORG_MIRROR/$VERSION/$NVM_NODE_PREFIX-${t}.tar.gz"
+      sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep $NVM_NODE_PREFIX-${t}.tar.gz | command awk '{print $1}'`
       local tmpdir
-      tmpdir="$NVM_DIR/bin/node-${t}"
+      tmpdir="$NVM_DIR/bin/$NVM_NODE_PREFIX-${t}"
       local tmptarball
-      tmptarball="$tmpdir/node-${t}.tar.gz"
+      tmptarball="$tmpdir/$NVM_NODE_PREFIX-${t}.tar.gz"
       if (
         command mkdir -p "$tmpdir" && \
         nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
@@ -638,13 +643,13 @@ nvm_install_node_source() {
   local tmpdir
   tmpdir="$NVM_DIR/src"
   local tmptarball
-  tmptarball="$tmpdir/node-$VERSION.tar.gz"
+  tmptarball="$tmpdir/$NVM_NODE_PREFIX-$VERSION.tar.gz"
 
-  if [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | command grep '200 OK'`" != '' ]; then
-    tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
-    sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep "node-$VERSION.tar.gz" | command awk '{print $1}'`
-  elif [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | command grep '200 OK'`" != '' ]; then
-    tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
+  if [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/$NVM_NODE_PREFIX-$VERSION.tar.gz" -o - 2>&1 | command grep '200 OK'`" != '' ]; then
+    tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/$NVM_NODE_PREFIX-$VERSION.tar.gz"
+    sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep "$NVM_NODE_PREFIX-$VERSION.tar.gz" | command awk '{print $1}'`
+  elif [ "`nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$NVM_NODE_PREFIX-$VERSION.tar.gz" -o - | command grep '200 OK'`" != '' ]; then
+    tarball="$NVM_NODEJS_ORG_MIRROR/$NVM_NODE_PREFIX-$VERSION.tar.gz"
   fi
 
   if (
@@ -653,7 +658,7 @@ nvm_install_node_source() {
     nvm_download -L --progress-bar $tarball -o "$tmptarball" && \
     nvm_checksum "$tmptarball" $sum && \
     command tar -xzf "$tmptarball" -C "$tmpdir" && \
-    cd "$tmpdir/node-$VERSION" && \
+    cd "$tmpdir/$NVM_NODE_PREFIX-$VERSION" && \
     ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
     $make $MAKE_CXX && \
     command rm -f "$VERSION_PATH" 2>/dev/null && \
@@ -856,10 +861,10 @@ nvm() {
       t="$VERSION-$(nvm_get_os)-$(nvm_get_arch)"
 
       # Delete all files related to target version.
-      command rm -rf "$NVM_DIR/src/node-$VERSION" \
-             "$NVM_DIR/src/node-$VERSION.tar.gz" \
-             "$NVM_DIR/bin/node-${t}" \
-             "$NVM_DIR/bin/node-${t}.tar.gz" \
+      command rm -rf "$NVM_DIR/src/$NVM_NODE_PREFIX-$VERSION" \
+             "$NVM_DIR/src/$NVM_NODE_PREFIX-$VERSION.tar.gz" \
+             "$NVM_DIR/bin/$NVM_NODE_PREFIX-${t}" \
+             "$NVM_DIR/bin/$NVM_NODE_PREFIX-${t}.tar.gz" \
              "$VERSION_PATH" 2>/dev/null
       echo "Uninstalled node $VERSION"
 
