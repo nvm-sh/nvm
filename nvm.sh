@@ -913,7 +913,18 @@ nvm() {
         shift
       fi
 
-      VERSION="$(nvm_remote_version "$provided_version")"
+      case "_$provided_version" in
+        "_$(nvm_iojs_prefix)" | "_io.js")
+          VERSION="$(nvm_add_iojs_prefix $(nvm_ls_remote_iojs | tail -n1))"
+        ;;
+        "_$(nvm_node_prefix)")
+          VERSION="$(nvm_ls_remote stable)"
+        ;;
+        *)
+          VERSION="$(nvm_remote_version "$provided_version")"
+        ;;
+      esac
+
       ADDITIONAL_PARAMETERS=''
       local PROVIDED_REINSTALL_PACKAGES_FROM
       local REINSTALL_PACKAGES_FROM
@@ -940,6 +951,11 @@ nvm() {
         return 5
       fi
 
+      local NVM_IOJS
+      if nvm_is_iojs_version "$VERSION"; then
+        NVM_IOJS=true
+      fi
+
       local VERSION_PATH
       VERSION_PATH="$(nvm_version_path "$VERSION")"
       if [ -d "$VERSION_PATH" ]; then
@@ -953,11 +969,6 @@ nvm() {
       if [ "_$VERSION" = "_N/A" ]; then
         echo "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions." >&2
         return 3
-      fi
-
-      local NVM_IOJS
-      if nvm_is_iojs_version "$VERSION" || [ "_$VERSION" = "_$(nvm_iojs_prefix)" ]; then
-        NVM_IOJS=true
       fi
 
       if [ "_$NVM_OS" = "_freebsd" ]; then
