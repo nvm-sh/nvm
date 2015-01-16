@@ -926,8 +926,12 @@ nvm() {
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
       PATTERN="$(nvm_ensure_version_prefix "$2")"
-      if [ "_$PATTERN" = "_$(nvm_version)" ]; then
-        echo "nvm: Cannot uninstall currently-active node version, $PATTERN." >&2
+      if [ "_$PATTERN" = "_$(nvm_ls_current)" ]; then
+        if nvm_is_iojs_version "$PATTERN"; then
+          echo "nvm: Cannot uninstall currently-active io.js version, $PATTERN." >&2
+        else
+          echo "nvm: Cannot uninstall currently-active node version, $PATTERN." >&2
+        fi
         return 1
       fi
       local VERSION
@@ -941,20 +945,25 @@ nvm() {
 
       t="$VERSION-$(nvm_get_os)-$(nvm_get_arch)"
 
+      local NVM_PREFIX
+      if nvm_is_iojs_version "$PATTERN"; then
+        NVM_PREFIX="$(nvm_iojs_prefix)"
+      else
+        NVM_PREFIX="$(nvm_node_prefix)"
+      fi
       # Delete all files related to target version.
-      command rm -rf "$NVM_DIR/src/node-$VERSION" \
-             "$NVM_DIR/src/node-$VERSION.tar.gz" \
-             "$NVM_DIR/bin/node-${t}" \
-             "$NVM_DIR/bin/node-${t}.tar.gz" \
+      command rm -rf "$NVM_DIR/src/$NVM_PREFIX-$VERSION" \
+             "$NVM_DIR/src/$NVM_PREFIX-$VERSION.tar.gz" \
+             "$NVM_DIR/bin/$NVM_PREFIX-${t}" \
+             "$NVM_DIR/bin/$NVM_PREFIX-${t}.tar.gz" \
              "$VERSION_PATH" 2>/dev/null
-      echo "Uninstalled node $VERSION"
+      echo "Uninstalled $NVM_PREFIX $VERSION"
 
       # Rm any aliases that point to uninstalled version.
       for ALIAS in `command grep -l $VERSION "$(nvm_alias_path)/*" 2>/dev/null`
       do
         nvm unalias "$(command basename "$ALIAS")"
       done
-
     ;;
     "deactivate" )
       local NEWPATH
