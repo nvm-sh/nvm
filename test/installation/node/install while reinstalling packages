@@ -2,17 +2,17 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../nvm.sh
+. ../../../nvm.sh
 
 # Remove the stuff we're clobbering.
-[ -e ../../v0.9.7 ] && rm -R ../../v0.9.7
-[ -e ../../v0.9.12 ] && rm -R ../../v0.9.12
+[ -e ../../../v0.9.7 ] && rm -R ../../../v0.9.7
+[ -e ../../../v0.9.12 ] && rm -R ../../../v0.9.12
 
 # Install from binary
 nvm install 0.9.7
 
 # Check
-[ -d ../../v0.9.7 ] || die "nvm install 0.9.7 didn't install"
+[ -d ../../../v0.9.7 ] || die "nvm install 0.9.7 didn't install"
 
 nvm use 0.9.7
 
@@ -25,7 +25,7 @@ nvm ls 0.9 | grep v0.9.7 > /dev/null || die "nvm ls 0.9 didn't show v0.9.7"
 
 nvm install 0.9.12 --reinstall-packages-from=0.9 || die "nvm install 0.9.12 --reinstall-packages-from=0.9 failed"
 
-[ -d ../../v0.9.12 ] || die "nvm install 0.9.12 didn't install"
+[ -d ../../../v0.9.12 ] || die "nvm install 0.9.12 didn't install"
 
 nvm use 0.9
 node --version | grep v0.9.12 > /dev/null || die "nvm ls 0.9 didn't use v0.9.12"

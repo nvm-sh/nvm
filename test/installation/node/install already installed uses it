@@ -2,13 +2,13 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../nvm.sh
+. ../../../nvm.sh
 
 [ "$(nvm install invalid.invalid 2>&1)" = "Version 'invalid.invalid' not found - try \`nvm ls-remote\` to browse available versions." ] || die "nvm installing an invalid version did not print a nice error message"
 
 # Remove the stuff we're clobbering.
-[ -e ../../v0.9.7 ] && rm -R ../../v0.9.7
-[ -e ../../v0.9.12 ] && rm -R ../../v0.9.12
+[ -e ../../../v0.9.7 ] && rm -R ../../../v0.9.7
+[ -e ../../../v0.9.12 ] && rm -R ../../../v0.9.12
 
 # Install from binary
 nvm install 0.9.7
