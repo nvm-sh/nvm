@@ -1,0 +1,18 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+NVM_TEST_VERSION=v0.8.5
+
+# Remove the stuff we're clobbering.
+[ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
+
+# Install from source implicitly (v0.8.6 is when binaries started)
+nvm install $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
+
+# Check
+[ -d ../../../$NVM_TEST_VERSION ]
+nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || "'nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"
+
