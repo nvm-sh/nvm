@@ -1,7 +1,7 @@
 language: c # defaults to ruby
 install:
   - sudo apt-get install zsh -y # ksh
-  - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s http://registry.npmjs.org/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
+  - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.org/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
