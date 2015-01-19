@@ -1042,17 +1042,28 @@ nvm() {
     ;;
     "uninstall" )
       [ $# -ne 2 ] && nvm help && return
-      PATTERN="$(nvm_ensure_version_prefix "$2")"
+
+      local PATTERN
+      PATTERN="$2"
+      local VERSION
+      case "_$PATTERN" in
+        "_$(nvm_iojs_prefix)" | "_$(nvm_iojs_prefix)-" \
+        | "_$(nvm_node_prefix)" | "_$(nvm_node_prefix)-")
+          VERSION="$(nvm_version $PATTERN)"
+        ;;
+        *)
+          VERSION="$(nvm_version "$PATTERN")"
+        ;;
+      esac
       if [ "_$PATTERN" = "_$(nvm_ls_current)" ]; then
         if nvm_is_iojs_version "$PATTERN"; then
-          echo "nvm: Cannot uninstall currently-active io.js version, $PATTERN." >&2
+          echo "nvm: Cannot uninstall currently-active io.js version, $VERSION (inferred from $PATTERN)." >&2
         else
-          echo "nvm: Cannot uninstall currently-active node version, $PATTERN." >&2
+          echo "nvm: Cannot uninstall currently-active node version, $VERSION (inferred from $PATTERN)." >&2
         fi
         return 1
       fi
-      local VERSION
-      VERSION="$(nvm_version "$PATTERN")"
+
       local VERSION_PATH
       VERSION_PATH="$(nvm_version_path "$VERSION")"
       if [ ! -d "$VERSION_PATH" ]; then
@@ -1063,10 +1074,13 @@ nvm() {
       t="$VERSION-$(nvm_get_os)-$(nvm_get_arch)"
 
       local NVM_PREFIX
-      if nvm_is_iojs_version "$PATTERN"; then
+      local NVM_SUCCESS_MSG
+      if nvm_is_iojs_version "$VERSION"; then
         NVM_PREFIX="$(nvm_iojs_prefix)"
+        NVM_SUCCESS_MSG="Uninstalled io.js $(nvm_strip_iojs_prefix $VERSION)"
       else
         NVM_PREFIX="$(nvm_node_prefix)"
+        NVM_SUCCESS_MSG="Uninstalled node $VERSION"
       fi
       # Delete all files related to target version.
       command rm -rf "$NVM_DIR/src/$NVM_PREFIX-$VERSION" \
@@ -1074,9 +1088,9 @@ nvm() {
              "$NVM_DIR/bin/$NVM_PREFIX-${t}" \
              "$NVM_DIR/bin/$NVM_PREFIX-${t}.tar.gz" \
              "$VERSION_PATH" 2>/dev/null
-      echo "Uninstalled $NVM_PREFIX $VERSION"
+      echo "$NVM_SUCCESS_MSG"
 
-      # Rm any aliases that point to uninstalled version.
+      # rm any aliases that point to uninstalled version.
       for ALIAS in `command grep -l $VERSION "$(nvm_alias_path)/*" 2>/dev/null`
       do
         nvm unalias "$(command basename "$ALIAS")"
