@@ -1309,23 +1309,32 @@ nvm() {
 
       local NVM_LS_REMOTE_EXIT_CODE
       NVM_LS_REMOTE_EXIT_CODE=0
+      local NVM_LS_REMOTE_OUTPUT
+      NVM_LS_REMOTE_OUTPUT=''
       if [ "_$NVM_FLAVOR" != "_$(nvm_iojs_prefix)" ]; then
-        local NVM_LS_REMOTE_OUTPUT
         NVM_LS_REMOTE_OUTPUT=$(nvm_ls_remote "$PATTERN")
         NVM_LS_REMOTE_EXIT_CODE=$?
-        nvm_print_versions "$NVM_LS_REMOTE_OUTPUT"
       fi
 
       local NVM_LS_REMOTE_IOJS_EXIT_CODE
       NVM_LS_REMOTE_IOJS_EXIT_CODE=0
+      local NVM_LS_REMOTE_IOJS_OUTPUT
+      NVM_LS_REMOTE_IOJS_OUTPUT=''
       if [ "_$NVM_FLAVOR" != "_$(nvm_node_prefix)" ]; then
-        local NVM_LS_REMOTE_IOJS_OUTPUT
         NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "$PATTERN")
         NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
-        nvm_print_versions "$NVM_LS_REMOTE_IOJS_OUTPUT"
       fi
 
-      return $NVM_LS_REMOTE_EXIT_CODE && $NVM_LS_REMOTE_IOJS_EXIT_CODE
+      local NVM_OUTPUT
+      NVM_OUTPUT="$(echo "$NVM_LS_REMOTE_OUTPUT
+$NVM_LS_REMOTE_IOJS_OUTPUT" | grep -v "N/A" | sed '/^$/d')"
+      if [ -n "$NVM_OUTPUT" ]; then
+        nvm_print_versions "$NVM_OUTPUT"
+        return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
+      else
+        nvm_print_versions "N/A"
+        return 3
+      fi
     ;;
     "current" )
       nvm_version current
