@@ -5,8 +5,8 @@
 First you'll need to make sure your system has a c++ compiler. For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
 Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are not supported nor developed by us:
- - [nvmw](http://github.com/hakobera/nvmw)
- - [nvm-windows](http://github.com/coreybutler/nvm-windows)
+ - [nvmw](https://github.com/hakobera/nvmw)
+ - [nvm-windows](https://github.com/coreybutler/nvm-windows)
 
 ### Install script
 
@@ -95,10 +95,10 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
 To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
-    export NVM_NODEJS_ORG_MIRROR=http://nodejs.org/dist
+    export NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist
     nvm install 0.10
 
-    NVM_NODEJS_ORG_MIRROR=http://nodejs.org/dist nvm install 0.10
+    NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 0.10
 
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
 
