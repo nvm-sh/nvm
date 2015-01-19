@@ -199,6 +199,11 @@ nvm_version() {
     return $?
   fi
 
+  case "_$PATTERN" in
+    "_$(nvm_node_prefix)" | "_$(nvm_node_prefix)-")
+      PATTERN="stable"
+    ;;
+  esac
   VERSION="$(nvm_ls "$PATTERN" | tail -n1)"
   if [ -z "$VERSION" ] || [ "_$VERSION" = "_N/A" ]; then
     echo "N/A"
