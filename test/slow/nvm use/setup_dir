@@ -1,0 +1,16 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+
+mkdir -p ../../../.nvm_use_bak
+if [ -d "../../../v*" ]; then
+  mv "../../../v*" ../../../.nvm_use_bak/
+fi
+
+for VERSION in "0.8.7" "0.9.1" "0.10.1" "0.11.1"; do
+  nvm install "v$VERSION"
+done
+
+for VERSION in "1.0.0" "1.0.1"; do
+  nvm install "iojs-v$VERSION"
+done

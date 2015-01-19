@@ -200,10 +200,11 @@ nvm_version() {
   fi
 
   VERSION="$(nvm_ls "$PATTERN" | tail -n1)"
-  echo "$VERSION"
-
-  if [ "$VERSION" = 'N/A' ]; then
-    return 3
+  if [ -z "$VERSION" ] || [ "_$VERSION" = "_N/A" ]; then
+    echo "N/A"
+    return 3;
+  else
+    echo "$VERSION"
   fi
 }
 
@@ -278,7 +279,7 @@ nvm_binary_available() {
   # binaries started with node 0.8.6
   local FIRST_VERSION_WITH_BINARY
   FIRST_VERSION_WITH_BINARY="0.8.6"
-  nvm_version_greater_than_or_equal_to "$1" "$FIRST_VERSION_WITH_BINARY"
+  nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix $1)" "$FIRST_VERSION_WITH_BINARY"
 }
 
 nvm_alias() {
@@ -411,20 +412,31 @@ nvm_ls() {
     return
   fi
 
+  case "$PATTERN" in
+    "$(nvm_iojs_prefix)" | "$(nvm_node_prefix)")
+      PATTERN="$PATTERN-"
+    ;;
+    *)
+      PATTERN=$(nvm_ensure_version_prefix $PATTERN)
+    ;;
+  esac
   # If it looks like an explicit version, don't do anything funny
-  PATTERN=$(nvm_ensure_version_prefix $PATTERN)
   if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
     if [ -d "$(nvm_version_path "$PATTERN")" ]; then
       VERSIONS="$PATTERN"
     fi
   else
-    if [ "_$PATTERN" != "_system" ]; then
-      local NUM_VERSION_GROUPS
-      NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
-      if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
-        PATTERN="$(echo "$PATTERN" | command sed -e 's/\.*$//g')."
-      fi
-    fi
+    case "$PATTERN" in
+      "$(nvm_iojs_prefix)-" | "$(nvm_node_prefix)-" | "system")
+      ;;
+      *)
+        local NUM_VERSION_GROUPS
+        NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
+        if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
+          PATTERN="$(echo "$PATTERN" | command sed -e 's/\.*$//g')."
+        fi
+      ;;
+    esac
 
     local ZHS_HAS_SHWORDSPLIT_UNSET
     ZHS_HAS_SHWORDSPLIT_UNSET=1
@@ -435,11 +447,25 @@ nvm_ls() {
 
     local NVM_DIRS_TO_TEST_AND_SEARCH
     local NVM_DIRS_TO_SEARCH
+    local NVM_ADD_SYSTEM
+    NVM_ADD_SYSTEM=false
     if nvm_is_iojs_version "$PATTERN"; then
       NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir iojs)"
       PATTERN="$(nvm_strip_iojs_prefix "$PATTERN")"
+      if nvm_has_system_iojs; then
+        NVM_ADD_SYSTEM=true
+      fi
+    elif [ "_$PATTERN" = "_$(nvm_node_prefix)-" ]; then
+      NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir old) $(nvm_version_dir new)"
+      PATTERN=''
+      if nvm_has_system_node; then
+        NVM_ADD_SYSTEM=true
+      fi
     else
       NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir old) $(nvm_version_dir new) $(nvm_version_dir iojs)"
+      if nvm_has_system_iojs || nvm_has_system_node; then
+        NVM_ADD_SYSTEM=true
+      fi
     fi
     for NVM_VERSION_DIR in $NVM_DIRS_TO_TEST_AND_SEARCH; do
       if [ -d "$NVM_VERSION_DIR" ]; then
@@ -467,7 +493,7 @@ nvm_ls() {
     fi
   fi
 
-  if nvm_has_system_node || nvm_has_system_iojs; then
+  if [ "$NVM_ADD_SYSTEM" = true ]; then
     if [ -z "$PATTERN" ] || [ "_$PATTERN" = "_v" ]; then
       VERSIONS="$VERSIONS$(command printf '\n%s' 'system')"
     elif [ "$PATTERN" = 'system' ]; then
@@ -1080,16 +1106,31 @@ nvm() {
         nvm help
         return 127
       fi
+
       if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
           VERSION="$(nvm_version "$NVM_RC_VERSION")"
         fi
-      elif [ "_$2" != '_system' ]; then
-        VERSION="$(nvm_version "$2")"
       else
-        VERSION="$2"
+        local NVM_IOJS_PREFIX
+        NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+        case "_$2" in
+          "_$NVM_IOJS_PREFIX" | "_io.js")
+            VERSION="$(nvm_add_iojs_prefix $(nvm_ls | command grep "$NVM_IOJS_PREFIX" | tail -n1))"
+          ;;
+          "_$(nvm_node_prefix)")
+            VERSION="$(nvm_version stable)"
+          ;;
+          "_system")
+            VERSION="system"
+          ;;
+          *)
+            VERSION="$(nvm_version "$2")"
+          ;;
+        esac
       fi
+
       if [ -z "$VERSION" ]; then
         nvm help
         return 127
