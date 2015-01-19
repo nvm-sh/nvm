@@ -264,7 +264,13 @@ nvm_num_version_groups() {
 }
 
 nvm_strip_path() {
-  echo "$1" | command sed -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" -e "s#$NVM_DIR/[^/]*$2[^:]*##g"
+  echo "$1" | command sed \
+    -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" \
+    -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" \
+    -e "s#$NVM_DIR/[^/]*$2[^:]*##g" \
+    -e "s#$NVM_DIR/versions/[^/]*/[^/]*$2[^:]*:##g" \
+    -e "s#:$NVM_DIR/versions/[^/]*/[^/]*$2[^:]*##g" \
+    -e "s#$NVM_DIR/versions/[^/]*/[^/]*$2[^:]*##g"
 }
 
 nvm_prepend_path() {
