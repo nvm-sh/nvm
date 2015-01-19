@@ -49,6 +49,10 @@ nvm_has_system_node() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v node)" != '' ]
 }
 
+nvm_has_system_iojs() {
+  [ "$(nvm deactivate >/dev/null 2>&1 && command -v iojs)" != '' ]
+}
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if nvm_has "unsetopt"; then
@@ -463,7 +467,7 @@ nvm_ls() {
     fi
   fi
 
-  if nvm_has_system_node; then
+  if nvm_has_system_node || nvm_has_system_iojs; then
     if [ -z "$PATTERN" ] || [ "_$PATTERN" = "_v" ]; then
       VERSIONS="$VERSIONS$(command printf '\n%s' 'system')"
     elif [ "$PATTERN" = 'system' ]; then
@@ -1095,6 +1099,9 @@ nvm() {
         if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
           echo "Now using system version of node: $(node -v 2>/dev/null)."
           return
+        elif nvm_has_system_iojs && nvm deactivate >/dev/null 2>&1; then
+          echo "Now using system version of io.js: $(iojs --version 2>/dev/null)."
+          return
         else
           echo "System version of node not found." >&2
           return 127
@@ -1274,7 +1281,7 @@ nvm() {
       fi
 
       if [ "_$VERSION" = '_system' ]; then
-        if nvm_has_system_node >/dev/null 2>&1; then
+        if nvm_has_system_iojs >/dev/null 2>&1 || nvm_has_system_node >/dev/null 2>&1; then
           local NVM_BIN
           NVM_BIN="$(nvm use system >/dev/null 2>&1 && command which node)"
           if [ -n "$NVM_BIN" ]; then
@@ -1373,8 +1380,8 @@ nvm() {
 
       local INSTALLS
       if [ "_$PROVIDED_VERSION" = "_system" ]; then
-        if ! nvm_has_system_node; then
-          echo 'No system version of node detected.' >&2
+        if ! nvm_has_system_node && ! nvm_has_system_iojs; then
+          echo 'No system version of node or io.js detected.' >&2
           return 3
         fi
         INSTALLS=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -v npm | command xargs)
