@@ -71,6 +71,10 @@ In place of a version pointer like "0.10", you can use the special default alias
     nvm install unstable
     nvm use stable
     nvm run unstable --version
+    
+If you want to install `io.js`:
+
+    nvm install iojs
 
 If you want to use the system-installed version of node, you can use the special default alias "system":
 
