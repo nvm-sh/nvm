@@ -2,6 +2,6 @@
 
 . ../../../nvm.sh
 
-nvm ls node
+nvm ls node_
 [ "$?" = "3" ]
 

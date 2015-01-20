@@ -1,0 +1,16 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+
+for VERSION in "0.8.7" "0.9.1" "0.10.1" "0.11.1"; do
+  nvm uninstall "$VERSION"
+done
+
+for VERSION in "1.0.0" "1.0.1"; do
+  nvm uninstall "iojs-v$VERSION"
+done
+
+if [ -d ../../../.nvm_use_bak/* ]; then
+  mv ../../../.nvm_use_bak/* ../../../
+fi
+rmdir ../../../.nvm_use_bak
