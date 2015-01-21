@@ -866,9 +866,6 @@ nvm() {
     return
   fi
 
-  # Try to figure out the os and arch for binary fetching
-  local os
-  local arch
   local GREP_OPTIONS
   GREP_OPTIONS=''
 
