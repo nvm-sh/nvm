@@ -217,15 +217,49 @@ nvm_remote_version() {
   local PATTERN
   PATTERN="$1"
   local VERSION
-  if nvm_is_iojs_version "$PATTERN"; then
-    VERSION="$(nvm_ls_remote_iojs "$PATTERN")"
+  if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+    VERSIONS="$(nvm_ls_remote "$PATTERN")"
   else
-    VERSION="$(nvm_ls_remote "$PATTERN")"
+    case "_$PATTERN" in
+      "_$(nvm_node_prefix)")
+        VERSION="$(nvm_ls_remote stable)"
+      ;;
+      *)
+        VERSION="$(nvm_remote_versions "$PATTERN" | tail -n1)"
+      ;;
+    esac
   fi
-  echo "$VERSION" | tail -n1
-
+  echo "$VERSION"
   if [ "_$VERSION" = '_N/A' ]; then
     return 3
+  fi
+}
+
+nvm_remote_versions() {
+  local PATTERN
+  PATTERN="$1"
+  if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+    echo >&2 "Implicit aliases are not supported in nvm_remote_versions."
+    return 1
+  fi
+  case "_$PATTERN" in
+    "_$(nvm_iojs_prefix)" | "_io.js")
+      VERSIONS="$(nvm_ls_remote_iojs)"
+    ;;
+    "_$(nvm_node_prefix)")
+      VERSIONS="$(nvm_ls_remote)"
+    ;;
+    *)
+      VERSIONS="$(echo "$(nvm_ls_remote "$PATTERN")
+$(nvm_ls_remote_iojs "$PATTERN")" | command grep -v "N/A" | command sed '/^$/d')"
+    ;;
+  esac
+
+  if [ -z "$VERSIONS" ]; then
+    echo "N/A"
+    return 3
+  else
+    echo "$VERSIONS"
   fi
 }
 
@@ -951,17 +985,7 @@ nvm() {
         shift
       fi
 
-      case "_$provided_version" in
-        "_$(nvm_iojs_prefix)" | "_io.js")
-          VERSION="$(nvm_add_iojs_prefix $(nvm_ls_remote_iojs | tail -n1))"
-        ;;
-        "_$(nvm_node_prefix)")
-          VERSION="$(nvm_ls_remote stable)"
-        ;;
-        *)
-          VERSION="$(nvm_remote_version "$provided_version")"
-        ;;
-      esac
+      VERSION="$(nvm_remote_version "$provided_version")"
 
       if [ "_$VERSION" = "_N/A" ]; then
         echo "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions." >&2
@@ -1324,7 +1348,7 @@ nvm() {
 
       local NVM_OUTPUT
       NVM_OUTPUT="$(echo "$NVM_LS_REMOTE_OUTPUT
-$NVM_LS_REMOTE_IOJS_OUTPUT" | grep -v "N/A" | sed '/^$/d')"
+$NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       if [ -n "$NVM_OUTPUT" ]; then
         nvm_print_versions "$NVM_OUTPUT"
         return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
@@ -1481,7 +1505,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | grep -v "N/A" | sed '/^$/d')"
         nvm_iojs_prefix nvm_node_prefix \
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
         nvm_is_iojs_version \
-        nvm_ls_remote nvm_ls nvm_remote_version \
+        nvm_ls_remote nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_version nvm_rc_version \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
         nvm_supports_source_options > /dev/null 2>&1
