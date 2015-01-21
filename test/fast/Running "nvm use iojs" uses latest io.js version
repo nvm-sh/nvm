@@ -1,0 +1,22 @@
+#!/bin/sh
+
+die () { echo $@ ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf ../../alias/foo
+}
+
+. ../../nvm.sh
+
+echo 'foo' > ../../alias/foo
+
+OUTPUT="$(nvm use foo 2>&1)"
+EXPECTED_OUTPUT='The alias "foo" leads to an infinite loop. Aborting.'
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
+  || die "'nvm use foo' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+
+EXIT_CODE="$(nvm use foo 2>/dev/null ; echo $?)"
+[ "_$EXIT_CODE" = "_8" ] || die "Expected exit code 8; got $EXIT_CODE"
+
+cleanup;
+
