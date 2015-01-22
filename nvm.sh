@@ -963,6 +963,11 @@ nvm() {
         ;;
       esac
 
+      if [ "_$VERSION" = "_N/A" ]; then
+        echo "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions." >&2
+        return 3
+      fi
+
       ADDITIONAL_PARAMETERS=''
       local PROVIDED_REINSTALL_PACKAGES_FROM
       local REINSTALL_PACKAGES_FROM
@@ -1002,11 +1007,6 @@ nvm() {
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
         return $?
-      fi
-
-      if [ "_$VERSION" = "_N/A" ]; then
-        echo "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions." >&2
-        return 3
       fi
 
       if [ "_$NVM_OS" = "_freebsd" ]; then
