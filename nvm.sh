@@ -527,7 +527,7 @@ nvm_ls_remote() {
   local GREP_OPTIONS
   GREP_OPTIONS=''
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-    PATTERN="$(nvm_remote_version "$(nvm_print_implicit_alias remote "$PATTERN")")"
+    PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | tail -n1)"
   elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
   else
