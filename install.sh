@@ -57,7 +57,7 @@ nvm_download() {
 
 install_nvm_from_git() {
   if [ -d "$NVM_DIR/.git" ]; then
-    echo "=> nvm is already installed in $NVM_DIR, trying to update"
+    echo "=> nvm is already installed in $NVM_DIR, trying to update using git"
     printf "\r=> "
     cd "$NVM_DIR" && (command git fetch 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git fetch' in $NVM_DIR yourself." && exit 1
@@ -82,7 +82,7 @@ install_nvm_as_script() {
   # Downloading to $NVM_DIR
   mkdir -p "$NVM_DIR"
   if [ -d "$NVM_DIR/nvm.sh" ]; then
-    echo "=> nvm is already installed in $NVM_DIR, trying to update"
+    echo "=> nvm is already installed in $NVM_DIR, trying to update the script"
   else
     echo "=> Downloading nvm as script to '$NVM_DIR'"
   fi
