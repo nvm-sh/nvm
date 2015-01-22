@@ -1225,7 +1225,11 @@ nvm() {
       if [ "$NVM_SYMLINK_CURRENT" = true ]; then
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
-      echo "Now using node $VERSION"
+      if nvm_is_iojs_version "$VERSION"; then
+        echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION")"
+      else
+        echo "Now using node $VERSION"
+      fi
     ;;
     "run" )
       local provided_version
