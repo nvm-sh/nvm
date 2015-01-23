@@ -11,7 +11,7 @@ if [ -z "$NVM_DIR" ]; then
 fi
 
 nvm_latest_version() {
-  echo "v0.23.1"
+  echo "v0.23.2"
 }
 
 #
