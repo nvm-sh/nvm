@@ -26,9 +26,18 @@ EXIT_CODE="$(nvm_remote_version iojs-foo >/dev/null 2>&1 ; echo $?)"
 
 
 nvm_ls_remote() {
-  echo "test output"
-  echo "more test output"
-  echo "pattern received: _$1_"
+  if ! nvm_is_iojs_version "$1"; then
+    echo "test output"
+    echo "more test output"
+    echo "pattern received: _$1_"
+  fi
+}
+nvm_ls_remote_iojs() {
+  if nvm_is_iojs_version "$1"; then
+    echo "test iojs output"
+    echo "more iojs test output"
+    echo "iojs pattern received: _$1_"
+  fi
 }
 OUTPUT="$(nvm_remote_version foo)"
 EXIT_CODE="$(nvm_remote_version foo >/dev/null 2>&1 ; echo $?)"
@@ -36,17 +45,17 @@ EXIT_CODE="$(nvm_remote_version foo >/dev/null 2>&1 ; echo $?)"
   || die "nvm_remote_version foo did not return last line only of nvm_ls_remote foo; got $OUTPUT"
 [ "_$EXIT_CODE" = "_0" ] || die "nvm_remote_version foo did not exit with 0, got $EXIT_CODE"
 
-nvm_ls_remote_iojs() {
-  echo "test iojs output"
-  echo "more iojs test output"
-  echo "iojs pattern received: _$1_"
-
-}
 OUTPUT="$(nvm_remote_version iojs-foo)"
 EXIT_CODE="$(nvm_remote_version iojs-foo >/dev/null 2>&1 ; echo $?)"
 [ "_$OUTPUT" = "_iojs pattern received: _iojs-foo_" ] \
   || die "nvm_remote_version iojs-foo did not return last line only of nvm_ls_remote_iojs foo; got $OUTPUT"
 [ "_$EXIT_CODE" = "_0" ] || die "nvm_remote_version iojs-foo did not exit with 0, got $EXIT_CODE"
+
+OUTPUT="$(nvm_remote_version stable)"
+EXIT_CODE="$(nvm_remote_version stable >/dev/null 2>&1 ; echo $?)"
+[ "_$OUTPUT" = "_$(nvm_ls_remote stable)" ] \
+  || die "nvm_remote_version stable did not return contents of nvm_ls_remote stable; got $OUTPUT"
+[ "_$EXIT_CODE" = "_0" ] || die "nvm_remote_version stable did not exit with 0, got $EXIT_CODE"
 
 cleanup
 

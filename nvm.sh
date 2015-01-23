@@ -218,7 +218,7 @@ nvm_remote_version() {
   PATTERN="$1"
   local VERSION
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-    VERSIONS="$(nvm_ls_remote "$PATTERN")"
+    VERSION="$(nvm_ls_remote "$PATTERN")"
   else
     case "_$PATTERN" in
       "_$(nvm_node_prefix)")
