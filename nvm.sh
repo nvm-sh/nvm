@@ -1448,7 +1448,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '$3' does not exist." >&2
       fi
-      echo "$3" > "$NVM_ALIAS_DIR/$2"
+      echo "$3" | tee "$NVM_ALIAS_DIR/$2"
       if [ ! "_$3" = "_$VERSION" ]; then
         echo "$2 -> $3 (-> $VERSION)"
       else
