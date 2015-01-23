@@ -104,6 +104,13 @@ To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
     NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 0.10
 
+To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
+
+    export NVM_IOJS_ORG_MIRROR=https://iojs.org/dist
+    nvm install iojs-v1.0.3
+
+    NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
+
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
 
 ## License
