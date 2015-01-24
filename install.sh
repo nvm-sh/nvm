@@ -120,6 +120,42 @@ nvm_detect_profile() {
   fi
 }
 
+#
+# Check whether the user has any globally-installed npm modules in their system
+# Node, and warn them if so.
+#
+nvm_check_global_modules() {
+  local NPM_GLOBAL_MODULES
+  NPM_GLOBAL_MODULES=$(npm list -g --depth=0 | sed '/ npm@/d')
+  
+  local MODULE_COUNT
+  MODULE_COUNT=$(
+    printf %s\\n "$NPM_GLOBAL_MODULES" |
+    sed -ne '1!p' |                             # Remove the first line
+    wc -l | tr -d ' '                           # Count entries
+  )
+
+  if [ $MODULE_COUNT -ne 0 ]; then
+    cat <<-'END_MESSAGE'
+	=> You currently have modules installed globally with `npm`. These will no
+	=> longer be linked to the active version of Node when you install a new node
+	=> with `nvm`; and they may (depending on how you construct your `$PATH`)
+	=> override the binaries of modules installed with `nvm`:
+
+	END_MESSAGE
+    printf %s\\n "$NPM_GLOBAL_MODULES"
+    cat <<-'END_MESSAGE'
+
+	=> If you wish to uninstall them at a later point (or re-install them under your
+	=> `nvm` Nodes), you can remove them from the system Node as follows:
+
+	     $ nvm use system
+	     $ npm uninstall -g a_module
+
+	END_MESSAGE
+  fi
+}
+
 nvm_do_install() {
   if [ -z "$METHOD" ]; then
     # Autodetect install method
@@ -168,6 +204,8 @@ nvm_do_install() {
       echo "=> Source string already in $NVM_PROFILE"
     fi
   fi
+
+  nvm_check_global_modules
 
   echo "=> Close and reopen your terminal to start using nvm"
   nvm_reset

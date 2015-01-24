@@ -1,0 +1,40 @@
+#!/bin/sh
+
+cleanup () {
+  rm -rf "$npm_config_prefix/lib" >/dev/null 2>&1
+  unset npm_config_prefix
+
+  unset -f setup cleanup die skip
+  unset message
+}
+die () { echo $@ ; cleanup ; exit 1; }
+
+NVM_ENV=testing . ../../install.sh
+
+setup () {
+  npm_config_prefix="$(pwd)"
+  export npm_config_prefix
+  mkdir -p "$npm_config_prefix/lib"
+}
+
+
+setup
+
+npm install -g nop >/dev/null 2>&1
+message=$(nvm_check_global_modules)
+[ ! -z "$message" ] || die "nvm_check_global_modules should have printed a notice when npm had global modules installed"
+
+npm uninstall -g nop >/dev/null 2>&1
+message=$(nvm_check_global_modules)
+[ -z "$message" ] || die "nvm_check_global_modules should not have printed a notice when npm had no global modules installed"
+
+# Faking an installation of npm
+mkdir -p "$npm_config_prefix/lib/node_modules/npm"
+cat <<'JSON' >"$npm_config_prefix/lib/node_modules/npm/package.json"
+{ "name": "npm", "version": "0.0.1fake" }
+JSON
+
+message=$(nvm_check_global_modules)
+[ -z "$message" ] || die "nvm_check_global_modules should have not printed a notice when npm had only itself installed as a global module"
+
+cleanup
