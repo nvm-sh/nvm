@@ -3,6 +3,7 @@
 . ../../nvm.sh
 nvm deactivate
 nvm uninstall iojs-v1.0.0
+nvm uninstall iojs-v1.0.3
 
 if [ -f ".nvmrc" ]; then
   rm .nvmrc

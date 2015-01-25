@@ -1719,6 +1719,73 @@ nvm_get_make_jobs() {
   fi
 }
 
+nvm_install_iojs_source() {
+  local VERSION
+  VERSION="$(nvm_strip_iojs_prefix "$1")"
+  local PREFIXED_VERSION
+  PREFIXED_VERSION="$(nvm_add_iojs_prefix "$VERSION")"
+  local ADDITIONAL_PARAMETERS
+  ADDITIONAL_PARAMETERS="$2"
+
+  local NVM_ARCH
+  NVM_ARCH="$(nvm_get_arch)"
+  if [ $NVM_ARCH = "armv6l" ] || [ $NVM_ARCH = "armv7l" ]; then
+    ADDITIONAL_PARAMETERS="--without-snapshot $ADDITIONAL_PARAMETERS"
+  fi
+
+  if [ -n "$ADDITIONAL_PARAMETERS" ]; then
+    echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
+  fi
+
+  local VERSION_PATH
+  VERSION_PATH="$(nvm_version_path "$PREFIXED_VERSION")"
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+
+  local tarball
+  tarball=''
+  local sum
+  sum=''
+  local make
+  make='make'
+  if [ "_$NVM_OS" = "_freebsd" ]; then
+    make='gmake'
+    MAKE_CXX="CXX=c++"
+  fi
+  local tmpdir
+  tmpdir="$NVM_DIR/src"
+  local tmptarball
+  tmptarball="$tmpdir/iojs-$VERSION.tar.gz"
+
+  if [ "`nvm_download -L -s -I "$NVM_IOJS_ORG_MIRROR/$VERSION/iojs-$VERSION.tar.gz" -o - 2>&1 | command grep '200 OK'`" != '' ]; then
+    tarball="$NVM_IOJS_ORG_MIRROR/$VERSION/iojs-$VERSION.tar.gz"
+    sum="$(nvm_download -L -s $NVM_IOJS_ORG_MIRROR/$VERSION/SHASUMS256.txt -o - | command grep "iojs-$VERSION.tar.gz" | command awk '{print $1}')"
+  elif [ "`nvm_download -L -s -I "$NVM_IOJS_ORG_MIRROR/iojs-$VERSION.tar.gz" -o - | command grep '200 OK'`" != '' ]; then
+    tarball="$NVM_IOJS_ORG_MIRROR/iojs-$VERSION.tar.gz"
+  fi
+
+  if (
+    [ -n "$tarball" ] && \
+    command mkdir -p "$tmpdir" && \
+    nvm_download -L --progress-bar "$tarball" -o "$tmptarball" && \
+    echo "WARNING: checksums are currently disabled for io.js" >&2 && \
+    # nvm_checksum "$tmptarball" "$sum" && \
+    command tar -xzf "$tmptarball" -C "$tmpdir" && \
+    cd "$tmpdir/$PREFIXED_VERSION" && \
+    ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
+    $make -j $MAKE_CXX && \
+    command rm -f "$VERSION_PATH" 2>/dev/null && \
+    $make -j $MAKE_CXX install
+  ); then
+    return 0
+  else
+    echo "nvm: install $PREFIXED_VERSION from source failed!" >&2
+    return 105
+  fi
+
+  return $?
+}
+
 nvm_install_node_source() {
   local VERSION
   VERSION="${1}"
@@ -2286,9 +2353,9 @@ nvm() {
 
         case "true" in
           "$NVM_IOJS")
-            # nvm_install_iojs_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
-            nvm_err 'Installing iojs from source is not currently supported'
-            return 105
+            if nvm_install_iojs_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
+              NVM_INSTALL_SUCCESS=true
+            fi
             ;;
           "$NVM_NODE_MERGED")
             # nvm_install_merged_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
