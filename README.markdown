@@ -72,7 +72,7 @@ In place of a version pointer like "0.10", you can use the special default alias
     nvm use stable
     nvm run unstable --version
 
-If you want to install `io.js`:
+If you want to install [io.js](https://github.com/iojs/io.js/):
 
     nvm install iojs
 
