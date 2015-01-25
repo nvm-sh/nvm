@@ -469,6 +469,8 @@ nvm_ls() {
   if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
     if [ -d "$(nvm_version_path "$PATTERN")" ]; then
       VERSIONS="$PATTERN"
+    elif [ -d "$(nvm_version_path "$(nvm_add_iojs_prefix "$PATTERN")")" ]; then
+      VERSIONS="$(nvm_add_iojs_prefix "$PATTERN")"
     fi
   else
     case "$PATTERN" in
@@ -1081,8 +1083,8 @@ nvm() {
           VERSION="$(nvm_version "$PATTERN")"
         ;;
       esac
-      if [ "_$PATTERN" = "_$(nvm_ls_current)" ]; then
-        if nvm_is_iojs_version "$PATTERN"; then
+      if [ "_$VERSION" = "_$(nvm_ls_current)" ]; then
+        if nvm_is_iojs_version "$VERSION"; then
           echo "nvm: Cannot uninstall currently-active io.js version, $VERSION (inferred from $PATTERN)." >&2
         else
           echo "nvm: Cannot uninstall currently-active node version, $VERSION (inferred from $PATTERN)." >&2
