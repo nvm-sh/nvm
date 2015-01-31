@@ -604,9 +604,9 @@ nvm_ls_remote_iojs() {
 
 nvm_checksum() {
   if nvm_has "sha1sum"; then
-    checksum="$(sha1sum "$1" | command awk '{print $1}')"
+    checksum="$(command sha1sum "$1" | command awk '{print $1}')"
   elif nvm_has "sha1"; then
-    checksum="$(sha1 -q "$1")"
+    checksum="$(command sha1 -q "$1")"
   else
     checksum="$(shasum "$1" | command awk '{print $1}')"
   fi
