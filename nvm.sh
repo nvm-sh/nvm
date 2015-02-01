@@ -263,6 +263,22 @@ $(nvm_ls_remote_iojs "$PATTERN")" | command grep -v "N/A" | command sed '/^$/d')
   fi
 }
 
+nvm_is_valid_version() {
+  if nvm_validate_implicit_alias "$1" 2> /dev/null; then
+    return 0
+  fi
+  case "$1" in
+    "$(nvm_iojs_prefix)" | "$(nvm_node_prefix)")
+      return 0
+    ;;
+    *)
+      local VERSION
+      VERSION="$(nvm_strip_iojs_prefix "$1")"
+      nvm_version_greater "$VERSION"
+    ;;
+  esac
+}
+
 nvm_normalize_version() {
   echo "$1" | command sed -e 's/^v//' | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
