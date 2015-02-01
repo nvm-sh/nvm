@@ -1271,7 +1271,7 @@ nvm() {
       provided_version=$1
       if [ -n "$provided_version" ]; then
         VERSION="$(nvm_version "$provided_version")"
-        if [ "_$VERSION" = "_N/A" ]; then
+        if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
           provided_version=''
           if [ $has_checked_nvmrc -ne 1 ]; then
             nvm_rc_version && has_checked_nvmrc=1
@@ -1290,16 +1290,20 @@ nvm() {
       local ARGS
       ARGS="$@"
       local OUTPUT
+      local EXIT_CODE
 
-      if [ "$NVM_IOJS" = true ]; then
+      if [ "_$VERSION" = "_N/A" ]; then
+        echo "$(nvm_ensure_version_prefix "$provided_version") is not installed yet" >&2
+        EXIT_CODE=1
+      elif [ "$NVM_IOJS" = true ]; then
         echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")"
         OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs "$ARGS")"
+        EXIT_CODE="$?"
       else
         echo "Running node $VERSION"
         OUTPUT="$(nvm use "$VERSION" >/dev/null && node "$ARGS")"
+        EXIT_CODE="$?"
       fi
-      local EXIT_CODE
-      EXIT_CODE="$?"
       if [ -n "$OUTPUT" ]; then
         echo "$OUTPUT"
       fi
