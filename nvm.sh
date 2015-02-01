@@ -1284,7 +1284,9 @@ nvm() {
       fi
       local EXIT_CODE
       EXIT_CODE="$?"
-      echo "$OUTPUT"
+      if [ -n "$OUTPUT" ]; then
+        echo "$OUTPUT"
+      fi
       return $EXIT_CODE
     ;;
     "exec" )
