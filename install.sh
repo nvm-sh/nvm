@@ -125,6 +125,13 @@ nvm_detect_profile() {
 # Node, and warn them if so.
 #
 nvm_check_global_modules() {
+  command -v npm >/dev/null 2>&1 || return 0
+
+  local NPM_VERSION
+  NPM_VERSION="$(npm --version)"
+  NPM_VERSION="${NPM_VERSION:-0}"
+  [ "${NPM_VERSION%%[!0-9]*}" -gt 1 ] || return 0
+
   local NPM_GLOBAL_MODULES
   NPM_GLOBAL_MODULES=$(npm list -g --depth=0 | sed '/ npm@/d')
   
