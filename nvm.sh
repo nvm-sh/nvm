@@ -541,6 +541,7 @@ nvm_ls() {
     fi
     VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" \
       | command sed "s#$(nvm_version_dir iojs)/#"$(nvm_iojs_prefix)"-#" \
+      | command grep -v "$(nvm_version_dir iojs)" \
       | command sed "s#^$NVM_DIR/##" \
       | command grep -v -e '^versions$' \
       | command sed 's#^versions/##' \
