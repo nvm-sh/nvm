@@ -1090,11 +1090,10 @@ nvm() {
 
       local PATTERN
       PATTERN="$2"
-      local VERSION
       case "_$PATTERN" in
         "_$(nvm_iojs_prefix)" | "_$(nvm_iojs_prefix)-" \
         | "_$(nvm_node_prefix)" | "_$(nvm_node_prefix)-")
-          VERSION="$(nvm_version $PATTERN)"
+          VERSION="$(nvm_version "$PATTERN")"
         ;;
         *)
           VERSION="$(nvm_version "$PATTERN")"
