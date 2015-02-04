@@ -133,14 +133,14 @@ nvm_check_global_modules() {
   [ "${NPM_VERSION%%[!0-9]*}" -gt 1 ] || return 0
 
   local NPM_GLOBAL_MODULES
-  NPM_GLOBAL_MODULES=$(npm list -g --depth=0 | sed '/ npm@/d')
-  
+  NPM_GLOBAL_MODULES="$(npm list -g --depth=0 | sed '/ npm@/d')"
+
   local MODULE_COUNT
-  MODULE_COUNT=$(
+  MODULE_COUNT="$(
     printf %s\\n "$NPM_GLOBAL_MODULES" |
     sed -ne '1!p' |                             # Remove the first line
     wc -l | tr -d ' '                           # Count entries
-  )
+  )"
 
   if [ $MODULE_COUNT -ne 0 ]; then
     cat <<-'END_MESSAGE'

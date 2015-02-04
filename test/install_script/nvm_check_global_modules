@@ -25,11 +25,11 @@ setup () {
 
 setup
 
-npm install -g nop >/dev/null 2>&1
+npm install -g nop >/dev/null
 message=$(nvm_check_global_modules)
 [ ! -z "$message" ] || die "nvm_check_global_modules should have printed a notice when npm had global modules installed"
 
-npm uninstall -g nop >/dev/null 2>&1
+npm uninstall -g nop >/dev/null
 message=$(nvm_check_global_modules)
 [ -z "$message" ] || die "nvm_check_global_modules should not have printed a notice when npm had no global modules installed"
 
