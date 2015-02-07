@@ -8,6 +8,10 @@ Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/n
  - [nvmw](https://github.com/hakobera/nvmw)
  - [nvm-windows](https://github.com/coreybutler/nvm-windows)
 
+Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Two alternatives exist, which are not supported nor developed by us:
+ - [nvm-fish-wrapper](https://github.com/passcod/nvm-fish-wrapper)
+ - [nvm-fish](https://github.com/Alex7Kom/nvm-fish) (does not support iojs)
+
 ### Install script
 
 To install you could use the [install script][2] using cURL:
@@ -201,13 +205,8 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
 
     nvm install -s 0.8.6
 
-The [Fish] shell cannot run nvm. There exists an outdated but still functional [port to native fish][nvm-fish], or a more recent and simple wrapper:
-
-https://github.com/passcod/nvm-fish-wrapper
-
 [1]: https://github.com/creationix/nvm.git
 [2]: https://github.com/creationix/nvm/blob/v0.23.3/install.sh
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
-[nvm-fish]: https://github.com/Alex7Kom/nvm-fish
