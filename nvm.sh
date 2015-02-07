@@ -1292,17 +1292,26 @@ nvm() {
       local OUTPUT
       local EXIT_CODE
 
+      local ZHS_HAS_SHWORDSPLIT_UNSET
+      ZHS_HAS_SHWORDSPLIT_UNSET=1
+      if nvm_has "setopt"; then
+        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
+        setopt shwordsplit
+      fi
       if [ "_$VERSION" = "_N/A" ]; then
         echo "$(nvm_ensure_version_prefix "$provided_version") is not installed yet" >&2
         EXIT_CODE=1
       elif [ "$NVM_IOJS" = true ]; then
         echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")"
-        OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs "$ARGS")"
+        OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs $ARGS)"
         EXIT_CODE="$?"
       else
         echo "Running node $VERSION"
-        OUTPUT="$(nvm use "$VERSION" >/dev/null && node "$ARGS")"
+        OUTPUT="$(nvm use "$VERSION" >/dev/null && node $ARGS)"
         EXIT_CODE="$?"
+      fi
+      if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
+        unsetopt shwordsplit
       fi
       if [ -n "$OUTPUT" ]; then
         echo "$OUTPUT"
