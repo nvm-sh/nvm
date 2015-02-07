@@ -189,11 +189,11 @@ If you try to install a node version and the installation fails, be sure to dele
 
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
-Where's my 'sudo node'? Checkout this link:
+Where's my 'sudo node'? Check out this link:
 
 https://github.com/creationix/nvm/issues/43
 
-on Arch Linux and other systems using python3 by default, before running *install* you need to
+On Arch Linux and other systems using python3 by default, before running *install* you need to
 
       export PYTHON=python2
 
@@ -201,8 +201,13 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
 
     nvm install -s 0.8.6
 
+The [Fish] shell cannot run nvm. There exists an outdated but still functional [port to native fish][nvm-fish], or a more recent and simple wrapper:
+
+https://github.com/passcod/nvm-fish-wrapper
+
 [1]: https://github.com/creationix/nvm.git
 [2]: https://github.com/creationix/nvm/blob/v0.23.3/install.sh
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
-
+[Fish]: http://fishshell.com
+[nvm-fish]: https://github.com/Alex7Kom/nvm-fish
