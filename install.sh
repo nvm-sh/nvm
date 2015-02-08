@@ -150,9 +150,9 @@ nvm_check_global_modules() {
 
   local NPM_VERSION
   NPM_VERSION="$(npm --version)"
-  NPM_VERSION="${NPM_VERSION:-0}"
+  NPM_VERSION="${NPM_VERSION:--1}"
   [ "$NVM_DEBUG" = 0 ] && debug "NPM detected (at version ${NPM_VERSION}.)"
-  [ "${NPM_VERSION%%[!0-9]*}" -gt 1 ] || return 0
+  [ "${NPM_VERSION%%[!0-9]*}" -gt 0 ] || return 0
 
   local NPM_GLOBAL_MODULES
   NPM_GLOBAL_MODULES="$(npm list -g --depth=0 | sed '/ npm@/d')"
