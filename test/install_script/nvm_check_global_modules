@@ -27,7 +27,7 @@ setup () {
 setup
 
 
-npm install -g nop >/dev/null
+npm install -g nop >/dev/null || die 'nvm_check_global_modules cannot be tested because `npm` cannot install the `nop` package'
 message=$(nvm_check_global_modules)
 [ ! -z "$message" ] || {
   puts '-- `npm --version`: '"$(npm --version)"
