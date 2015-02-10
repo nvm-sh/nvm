@@ -473,8 +473,19 @@ nvm_ls() {
     return
   fi
 
+  local NVM_IOJS_PREFIX
+  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local NVM_NODE_PREFIX
+  NVM_NODE_PREFIX="$(nvm_node_prefix)"
+  local NVM_VERSION_DIR_IOJS
+  NVM_VERSION_DIR_IOJS="$(nvm_version_dir iojs)"
+  local NVM_VERSION_DIR_NEW
+  NVM_VERSION_DIR_NEW="$(nvm_version_dir new)"
+  local NVM_VERSION_DIR_OLD
+  NVM_VERSION_DIR_OLD="$(nvm_version_dir old)"
+
   case "$PATTERN" in
-    "$(nvm_iojs_prefix)" | "$(nvm_node_prefix)")
+    "$NVM_IOJS_PREFIX" | "$NVM_NODE_PREFIX" )
       PATTERN="$PATTERN-"
     ;;
     *)
@@ -490,8 +501,7 @@ nvm_ls() {
     fi
   else
     case "$PATTERN" in
-      "$(nvm_iojs_prefix)-" | "$(nvm_node_prefix)-" | "system")
-      ;;
+      "$NVM_IOJS_PREFIX-" | "$NVM_NODE_PREFIX-" | "system") ;;
       *)
         local NUM_VERSION_GROUPS
         NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
@@ -513,19 +523,19 @@ nvm_ls() {
     local NVM_ADD_SYSTEM
     NVM_ADD_SYSTEM=false
     if nvm_is_iojs_version "$PATTERN"; then
-      NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir iojs)"
+      NVM_DIRS_TO_TEST_AND_SEARCH="$NVM_VERSION_DIR_IOJS"
       PATTERN="$(nvm_strip_iojs_prefix "$PATTERN")"
       if nvm_has_system_iojs; then
         NVM_ADD_SYSTEM=true
       fi
-    elif [ "_$PATTERN" = "_$(nvm_node_prefix)-" ]; then
-      NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir old) $(nvm_version_dir new)"
+    elif [ "_$PATTERN" = "_$NVM_NODE_PREFIX-" ]; then
+      NVM_DIRS_TO_TEST_AND_SEARCH="$NVM_VERSION_DIR_OLD $NVM_VERSION_DIR_NEW"
       PATTERN=''
       if nvm_has_system_node; then
         NVM_ADD_SYSTEM=true
       fi
     else
-      NVM_DIRS_TO_TEST_AND_SEARCH="$(nvm_version_dir old) $(nvm_version_dir new) $(nvm_version_dir iojs)"
+      NVM_DIRS_TO_TEST_AND_SEARCH="$NVM_VERSION_DIR_OLD $NVM_VERSION_DIR_NEW $NVM_VERSION_DIR_IOJS"
       if nvm_has_system_iojs || nvm_has_system_node; then
         NVM_ADD_SYSTEM=true
       fi
@@ -540,17 +550,17 @@ nvm_ls() {
       PATTERN='v'
     fi
     VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" \
-      | command sed "s#$(nvm_version_dir iojs)/#"$(nvm_iojs_prefix)"-#" \
-      | command grep -v "$(nvm_version_dir iojs)" \
+      | command sed "s#$NVM_VERSION_DIR_IOJS/#"$NVM_IOJS_PREFIX"-#" \
+      | command grep -v "$NVM_VERSION_DIR_IOJS" \
       | command sed "s#^$NVM_DIR/##" \
       | command grep -v -e '^versions$' \
       | command sed 's#^versions/##' \
-      | sed -e 's/^v/node-v/' \
-      | sed -e 's#^\(iojs\)[-/]v#\1.v#' | sed -e 's#^\(node\)[-/]v#\1.v#' \
+      | sed -e "s/^v/$NVM_NODE_PREFIX-v/" \
+      | sed -e "s#^\($NVM_IOJS_PREFIX\)[-/]v#\1.v#" | sed -e "s#^\($NVM_NODE_PREFIX\)[-/]v#\1.v#" \
       | command sort -t. -u -k 2.2,2n -k 3,3n -k 4,4n \
       | command sort -s -t- -k1.1,1.1 \
-      | command sed 's/^\(iojs\)\./\1-/' \
-      | command sed 's/^node\.//')"
+      | command sed "s/^\($NVM_IOJS_PREFIX\)\./\1-/" \
+      | command sed "s/^$NVM_NODE_PREFIX\.//")"
 
     if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
       unsetopt shwordsplit
