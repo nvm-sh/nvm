@@ -1,15 +1,6 @@
 #!/bin/bash
+
 set -e
-
-puts()  (IFS=" "; printf %s\\n "$*" ;)
-error() (IFS=" "; printf %s\\n "$*" >&2 ;)
-debug() (IFS=" "; printf %s\\n ".. $*" >&2 ;)
-
-if [ "$DEBUG" = 'nvm:*' ] || [ "$DEBUG" = 'nvm:install' ]; then
-  NVM_DEBUG=0
-  debug 'Script debugging enabled (in: `install.sh`).'
-fi
-
 
 nvm_has() {
   type "$1" > /dev/null 2>&1
@@ -51,9 +42,7 @@ nvm_source() {
 
 nvm_download() {
   if nvm_has "curl"; then
-    [ "$NVM_DEBUG" = 0 ] && set +x
     curl $*
-    [ "$NVM_DEBUG" = 0 ] && set -x
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
@@ -62,9 +51,7 @@ nvm_download() {
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
-    [ "$NVM_DEBUG" = 0 ] && set +x
     wget $ARGS
-    [ "$NVM_DEBUG" = 0 ] && set +x
   fi
 }
 
@@ -79,18 +66,10 @@ install_nvm_from_git() {
     # Cloning to $NVM_DIR
     echo "=> Downloading nvm from git to '$NVM_DIR'"
     printf "\r=> "
-    [ "$NVM_DEBUG" = 0 ] && set +x
     mkdir -p "$NVM_DIR"
     command git clone "$(nvm_source git)" "$NVM_DIR"
-    [ "$NVM_DEBUG" = 0 ] && set -x
   fi
-  
-  [ "$NVM_DEBUG" = 0 ] && set +x
-  cd "$NVM_DIR" || return $?
-  command git checkout --quiet $(nvm_latest_version) || return $?
-  command git branch --quiet -D master >/dev/null 2>&1 || return $?
-  [ "$NVM_DEBUG" = 0 ] && set +x
-  
+  cd "$NVM_DIR" && command git checkout --quiet $(nvm_latest_version) && command git branch --quiet -D master >/dev/null 2>&1
   return
 }
 
@@ -151,7 +130,6 @@ nvm_check_global_modules() {
   local NPM_VERSION
   NPM_VERSION="$(npm --version)"
   NPM_VERSION="${NPM_VERSION:--1}"
-  [ "$NVM_DEBUG" = 0 ] && debug "NPM detected (at version ${NPM_VERSION}.)"
   [ "${NPM_VERSION%%[!-0-9]*}" -gt 0 ] || return 0
 
   local NPM_GLOBAL_MODULES
@@ -167,9 +145,6 @@ nvm_check_global_modules() {
     sed -ne '1!p' |                             # Remove the first line
     wc -l | tr -d ' '                           # Count entries
   )"
-  [ "$NVM_DEBUG" = 0 ] && {
-    debug "(${MODULE_COUNT}) global modules detected:"
-    error "$NPM_GLOBAL_MODULES" ;}
 
   if [ $MODULE_COUNT -ne 0 ]; then
     cat <<-'END_MESSAGE'
@@ -252,11 +227,9 @@ nvm_do_install() {
 # during the execution of the install script
 #
 nvm_reset() {
-  unset -f puts error debug \
-    nvm_reset nvm_has nvm_latest_version \
+  unset -f nvm_reset nvm_has nvm_latest_version \
     nvm_source nvm_download install_nvm_as_script install_nvm_from_git \
     nvm_detect_profile nvm_check_global_modules nvm_do_install 
-  unset NPM_DEBUG
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install

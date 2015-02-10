@@ -5,7 +5,7 @@ install:
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
-  - DEBUG='nvm:*' NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL
+  - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL
 env:
   - SHELL=sh TEST_SUITE=install_script
   - SHELL=dash TEST_SUITE=install_script

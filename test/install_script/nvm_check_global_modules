@@ -1,5 +1,4 @@
 #!/bin/sh
-puts() (IFS=" "; printf %s\\n "$*" ;)
 
 cleanup () {
   rm -rf "$npm_config_prefix/lib" >/dev/null 2>&1
@@ -11,8 +10,7 @@ cleanup () {
   unset -f setup cleanup die
   unset message ORIGINAL_PATH
 }
-
-die () { puts "!! $@" ; cleanup ; exit 1; }
+die () { echo $@ ; cleanup ; exit 1; }
 
 NVM_ENV=testing . ../../install.sh
 
@@ -24,32 +22,16 @@ setup () {
   mkdir -p "$npm_config_prefix/lib"
 }
 
-setup
 
+setup
 
 npm install -g nop >/dev/null || die 'nvm_check_global_modules cannot be tested because `npm` cannot install the `nop` package'
 message=$(nvm_check_global_modules)
-[ ! -z "$message" ] || {
-  puts '-- `npm --version`: '"$(npm --version)"
-  puts '-- `npm list -g`:'
-  npm list -g --depth=0
-  puts '-- Printed message:'
-  puts "'''$message'''"
-
-  die "nvm_check_global_modules should have printed a notice when npm had global modules installed" ;}
-
+[ ! -z "$message" ] || die "nvm_check_global_modules should have printed a notice when npm had global modules installed"
 
 npm uninstall -g nop >/dev/null
 message=$(nvm_check_global_modules)
-[ -z "$message" ] || {
-  puts '-- `npm --version`: '"$(npm --version)"
-  puts '-- `npm list -g`:'
-  npm list -g --depth=0
-  puts '-- Printed message:'
-  puts "'''$message'''"
-
-  die "nvm_check_global_modules should not have printed a notice when npm had no global modules installed" ;}
-
+[ -z "$message" ] || die "nvm_check_global_modules should not have printed a notice when npm had no global modules installed"
 
 # Faking an installation of npm
 mkdir -p "$npm_config_prefix/lib/node_modules/npm"
@@ -58,16 +40,7 @@ cat <<'JSON' >"$npm_config_prefix/lib/node_modules/npm/package.json"
 JSON
 
 message=$(nvm_check_global_modules)
-[ -z "$message" ] || {
-  puts '-- `which npm`: '     "$(which npm)"
-  puts '-- `npm --version`: ' "$(npm --version)"
-  puts '-- `npm list -g`:'
-  npm list -g --depth=0
-  puts '-- Printed message:'
-  puts "'''$message'''"
-
-  die "nvm_check_global_modules should not have printed a notice when npm had only itself installed as a global module" ;}
-
+[ -z "$message" ] || die "nvm_check_global_modules should have not printed a notice when npm had only itself installed as a global module"
 
 # Faking the absence of npm
 PATH=".:$PATH"
@@ -75,13 +48,7 @@ touch npm
 chmod +x npm
 
 message=$(nvm_check_global_modules)
-[ -z "$message" ] || {
-  puts '-- `which npm`: '     "$(which npm)"
-  puts '-- `npm --version`: ' "$(npm --version)"
-  puts '-- Printed message:'
-  puts "'''$message'''"
-
-  die "nvm_check_global_modules should not have printed a notice when npm was unavailable" ;}
+[ -z "$message" ] || die "nvm_check_global_modules should have not printed a notice when npm was unavailable"
 
 
 cleanup
