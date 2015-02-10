@@ -1,6 +1,15 @@
 #!/bin/bash
-
 set -e
+
+puts()  (IFS=" "; printf %s\\n "$*" ;)
+error() (IFS=" "; printf %s\\n "$*" >&2 ;)
+debug() (IFS=" "; printf %s\\n ".. $*" >&2 ;)
+
+if [ "$DEBUG" = 'nvm:*' ] || [ "$DEBUG" = 'nvm:install' ]; then
+  NVM_DEBUG=0
+  debug 'Script debugging enabled (in: `install.sh`).'
+fi
+
 
 nvm_has() {
   type "$1" > /dev/null 2>&1
@@ -42,7 +51,9 @@ nvm_source() {
 
 nvm_download() {
   if nvm_has "curl"; then
+    [ "$NVM_DEBUG" = 0 ] && set +x
     curl $*
+    [ "$NVM_DEBUG" = 0 ] && set -x
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
@@ -51,7 +62,9 @@ nvm_download() {
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
+    [ "$NVM_DEBUG" = 0 ] && set +x
     wget $ARGS
+    [ "$NVM_DEBUG" = 0 ] && set +x
   fi
 }
 
@@ -66,10 +79,18 @@ install_nvm_from_git() {
     # Cloning to $NVM_DIR
     echo "=> Downloading nvm from git to '$NVM_DIR'"
     printf "\r=> "
+    [ "$NVM_DEBUG" = 0 ] && set +x
     mkdir -p "$NVM_DIR"
     command git clone "$(nvm_source git)" "$NVM_DIR"
+    [ "$NVM_DEBUG" = 0 ] && set -x
   fi
-  cd "$NVM_DIR" && command git checkout --quiet $(nvm_latest_version) && command git branch --quiet -D master >/dev/null 2>&1
+  
+  [ "$NVM_DEBUG" = 0 ] && set +x
+  cd "$NVM_DIR" || return $?
+  command git checkout --quiet $(nvm_latest_version) || return $?
+  command git branch --quiet -D master >/dev/null 2>&1 || return $?
+  [ "$NVM_DEBUG" = 0 ] && set +x
+  
   return
 }
 
@@ -117,6 +138,57 @@ nvm_detect_profile() {
     echo "$HOME/.zshrc"
   elif [ -f "$HOME/.profile" ]; then
     echo "$HOME/.profile"
+  fi
+}
+
+#
+# Check whether the user has any globally-installed npm modules in their system
+# Node, and warn them if so.
+#
+nvm_check_global_modules() {
+  command -v npm >/dev/null 2>&1 || return 0
+
+  local NPM_VERSION
+  NPM_VERSION="$(npm --version)"
+  NPM_VERSION="${NPM_VERSION:--1}"
+  [ "$NVM_DEBUG" = 0 ] && debug "NPM detected (at version ${NPM_VERSION}.)"
+  [ "${NPM_VERSION%%[!-0-9]*}" -gt 0 ] || return 0
+
+  local NPM_GLOBAL_MODULES
+  NPM_GLOBAL_MODULES="$(
+    npm list -g --depth=0 |
+    sed '/ npm@/d' |
+    sed '/ (empty)$/d'
+  )"
+
+  local MODULE_COUNT
+  MODULE_COUNT="$(
+    printf %s\\n "$NPM_GLOBAL_MODULES" |
+    sed -ne '1!p' |                             # Remove the first line
+    wc -l | tr -d ' '                           # Count entries
+  )"
+  [ "$NVM_DEBUG" = 0 ] && {
+    debug "(${MODULE_COUNT}) global modules detected:"
+    error "$NPM_GLOBAL_MODULES" ;}
+
+  if [ $MODULE_COUNT -ne 0 ]; then
+    cat <<-'END_MESSAGE'
+	=> You currently have modules installed globally with `npm`. These will no
+	=> longer be linked to the active version of Node when you install a new node
+	=> with `nvm`; and they may (depending on how you construct your `$PATH`)
+	=> override the binaries of modules installed with `nvm`:
+
+	END_MESSAGE
+    printf %s\\n "$NPM_GLOBAL_MODULES"
+    cat <<-'END_MESSAGE'
+
+	=> If you wish to uninstall them at a later point (or re-install them under your
+	=> `nvm` Nodes), you can remove them from the system Node as follows:
+
+	     $ nvm use system
+	     $ npm uninstall -g a_module
+
+	END_MESSAGE
   fi
 }
 
@@ -169,6 +241,8 @@ nvm_do_install() {
     fi
   fi
 
+  nvm_check_global_modules
+
   echo "=> Close and reopen your terminal to start using nvm"
   nvm_reset
 }
@@ -178,7 +252,11 @@ nvm_do_install() {
 # during the execution of the install script
 #
 nvm_reset() {
-  unset -f nvm_do_install nvm_has nvm_download install_nvm_as_script install_nvm_from_git nvm_reset nvm_detect_profile nvm_latest_version
+  unset -f puts error debug \
+    nvm_reset nvm_has nvm_latest_version \
+    nvm_source nvm_download install_nvm_as_script install_nvm_from_git \
+    nvm_detect_profile nvm_check_global_modules nvm_do_install 
+  unset NPM_DEBUG
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
