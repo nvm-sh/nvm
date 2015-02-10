@@ -6,4 +6,6 @@ for i in $(seq 1 10)
   mkdir -p ../../../v0.0.$i
   echo 0.1.$i > ../../../alias/test-unstable-$i
   mkdir -p ../../../v0.1.$i
+  echo 0.2.$i > ../../../alias/test-iojs-$i
+  mkdir -p ../../../versions/io.js/v0.2.$i
 done

@@ -218,16 +218,16 @@ nvm_remote_version() {
   PATTERN="$1"
   local VERSION
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-    VERSION="$(nvm_ls_remote "$PATTERN")"
-  else
     case "_$PATTERN" in
-      "_$(nvm_node_prefix)")
-        VERSION="$(nvm_ls_remote stable)"
+      "_$(nvm_iojs_prefix)")
+        VERSION="$(nvm_ls_remote_iojs | tail -n1)"
       ;;
       *)
-        VERSION="$(nvm_remote_versions "$PATTERN" | tail -n1)"
+        VERSION="$(nvm_ls_remote "$PATTERN")"
       ;;
     esac
+  else
+    VERSION="$(nvm_remote_versions "$PATTERN" | tail -n1)"
   fi
   echo "$VERSION"
   if [ "_$VERSION" = '_N/A' ]; then
@@ -236,20 +236,24 @@ nvm_remote_version() {
 }
 
 nvm_remote_versions() {
+  local NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
   local PATTERN
   PATTERN="$1"
-  if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-    echo >&2 "Implicit aliases are not supported in nvm_remote_versions."
-    return 1
+  if [ "_$PATTERN" = "_io.js" ]; then
+    PATTERN="$NVM_IOJS_PREFIX"
   fi
   case "_$PATTERN" in
-    "_$(nvm_iojs_prefix)" | "_io.js")
+    "_$NVM_IOJS_PREFIX")
       VERSIONS="$(nvm_ls_remote_iojs)"
     ;;
     "_$(nvm_node_prefix)")
       VERSIONS="$(nvm_ls_remote)"
     ;;
     *)
+      if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
+        echo >&2 "Implicit aliases are not supported in nvm_remote_versions."
+        return 1
+      fi
       VERSIONS="$(echo "$(nvm_ls_remote "$PATTERN")
 $(nvm_ls_remote_iojs "$PATTERN")" | command grep -v "N/A" | command sed '/^$/d')"
     ;;
@@ -469,10 +473,6 @@ nvm_ls() {
     return
   fi
 
-  if nvm_resolve_alias "$PATTERN"; then
-    return
-  fi
-
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
   local NVM_NODE_PREFIX
@@ -489,6 +489,9 @@ nvm_ls() {
       PATTERN="$PATTERN-"
     ;;
     *)
+      if nvm_resolve_alias "$PATTERN"; then
+        return
+      fi
       PATTERN=$(nvm_ensure_version_prefix $PATTERN)
     ;;
   esac
@@ -669,10 +672,20 @@ nvm_print_versions() {
 }
 
 nvm_validate_implicit_alias() {
-  if [ "_$1" != "_stable" ] && [ "_$1" != "_unstable" ]; then
-    echo "Only implicit aliases 'stable' and 'unstable' are supported." >&2
-    return 1
-  fi
+  local NVM_IOJS_PREFIX
+  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local NVM_NODE_PREFIX
+  NVM_NODE_PREFIX="$(nvm_node_prefix)"
+
+  case "$1" in
+    "stable" | "unstable" | "$NVM_IOJS_PREFIX" | "$NVM_NODE_PREFIX" )
+      return
+    ;;
+    *)
+      echo "Only implicit aliases 'stable', 'unstable', '$NVM_IOJS_PREFIX', and '$NVM_NODE_PREFIX' are supported." >&2
+      return 1
+    ;;
+  esac
 }
 
 nvm_print_implicit_alias() {
@@ -685,18 +698,67 @@ nvm_print_implicit_alias() {
     return 2
   fi
 
+  local ZHS_HAS_SHWORDSPLIT_UNSET
+
+  local NVM_IOJS_PREFIX
+  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local NVM_NODE_PREFIX
+  NVM_NODE_PREFIX="$(nvm_node_prefix)"
+  local NVM_COMMAND
   local LAST_TWO
-  if [ "_$1" = "_local" ]; then
-    LAST_TWO=$(nvm_ls | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
-  else
-    LAST_TWO=$(nvm_ls_remote | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
-  fi
+  case "$2" in
+    "$NVM_IOJS_PREFIX")
+      NVM_COMMAND="nvm_ls_remote_iojs"
+      if [ "_$1" = "_local" ]; then
+        NVM_COMMAND="nvm_ls iojs"
+      fi
+
+      ZHS_HAS_SHWORDSPLIT_UNSET=1
+      if nvm_has "setopt"; then
+        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
+        setopt shwordsplit
+      fi
+
+      local NVM_IOJS_VERSION
+      NVM_IOJS_VERSION="$($NVM_COMMAND | sed "s/^"$NVM_IOJS_PREFIX"-//" | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq | tail -1)"
+      local EXIT_CODE
+      EXIT_CODE="$?"
+
+      if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
+        unsetopt shwordsplit
+      fi
+
+      echo "$(nvm_add_iojs_prefix "$NVM_IOJS_VERSION")"
+      return $EXIT_CODE
+    ;;
+    "$NVM_NODE_PREFIX")
+      echo "stable"
+      return
+    ;;
+    *)
+      NVM_COMMAND="nvm_ls_remote"
+      if [ "_$1" = "_local" ]; then
+        NVM_COMMAND="nvm_ls node"
+      fi
+
+      ZHS_HAS_SHWORDSPLIT_UNSET=1
+      if nvm_has "setopt"; then
+        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
+        setopt shwordsplit
+      fi
+
+      LAST_TWO=$($NVM_COMMAND | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
+
+      if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
+        unsetopt shwordsplit
+      fi
+    ;;
+  esac
   local MINOR
   local STABLE
   local UNSTABLE
   local MOD
 
-  local ZHS_HAS_SHWORDSPLIT_UNSET
   ZHS_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
     ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
@@ -1189,12 +1251,11 @@ nvm() {
       else
         local NVM_IOJS_PREFIX
         NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+        local NVM_NODE_PREFIX
+        NVM_NODE_PREFIX="$(nvm_node_prefix)"
         case "_$2" in
           "_$NVM_IOJS_PREFIX" | "_io.js")
-            VERSION="$(nvm_add_iojs_prefix $(nvm_ls | command grep "$NVM_IOJS_PREFIX" | tail -n1))"
-          ;;
-          "_$(nvm_node_prefix)")
-            VERSION="$(nvm_version stable)"
+            VERSION="$(nvm_version $NVM_IOJS_PREFIX)"
           ;;
           "_system")
             VERSION="system"
@@ -1469,7 +1530,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
           fi
         done
 
-        for ALIAS in "stable" "unstable"; do
+        for ALIAS in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
           if [ ! -f "$NVM_ALIAS_DIR/$ALIAS" ]; then
             if [ $# -lt 2 ] || [ "~$ALIAS" = "~$2" ]; then
               DEST="$(nvm_print_implicit_alias local "$ALIAS")"

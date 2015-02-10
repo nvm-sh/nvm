@@ -6,12 +6,16 @@ die () { echo $@ ; cleanup ; exit 1; }
 cleanup () {
   rm -rf ../../../alias/stable
   rm -rf ../../../alias/unstable
+  rm -rf ../../../alias/node
+  rm -rf ../../../alias/iojs
   rm -rf ../../../v0.8.1
   rm -rf ../../../v0.9.1
+  rm -rf ../../../versions/io.js/v0.2.1
 }
 
 mkdir ../../../v0.8.1
 mkdir ../../../v0.9.1
+mkdir -p ../../../versions/io.js/v0.2.1
 
 EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
 STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"
@@ -24,14 +28,22 @@ UNSTABLE_VERSION="$(nvm_version "$EXPECTED_UNSTABLE")"
 
 nvm alias stable "$EXPECTED_UNSTABLE"
 nvm alias unstable "$EXPECTED_STABLE"
+nvm alias node stable
+nvm alias iojs unstable
 
 NVM_ALIAS_OUTPUT=$(nvm alias)
 
-echo "$NVM_ALIAS_OUTPUT" | \grep -e "^stable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION)$" \
+echo "$NVM_ALIAS_OUTPUT" | command grep -e "^stable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION)$" \
   || die "nvm alias did not contain the overridden 'stable' alias"
 
-echo "$NVM_ALIAS_OUTPUT" | \grep -e "^unstable -> $EXPECTED_STABLE (-> $STABLE_VERSION)$" \
+echo "$NVM_ALIAS_OUTPUT" | command grep -e "^unstable -> $EXPECTED_STABLE (-> $STABLE_VERSION)$" \
   || die "nvm alias did not contain the overridden 'unstable' alias"
+
+echo "$NVM_ALIAS_OUTPUT" | command grep -e "^node -> stable (-> $UNSTABLE_VERSION)$" \
+  || die "nvm alias did not contain the overridden 'node' alias"
+
+echo "$NVM_ALIAS_OUTPUT" | command grep -e "^iojs -> unstable (-> $STABLE_VERSION)$" \
+  || die "nvm alias did not contain the overridden 'iojs' alias"
 
 cleanup
 

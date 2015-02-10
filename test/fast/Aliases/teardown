@@ -6,8 +6,11 @@ for i in $(seq 1 10)
   rm -rf "../../../v0.0.$i"
   rm -f "../../../alias/test-unstable-$i"
   rm -rf "../../../v0.1.$i"
+  rm -rf "../../../alias/test-iojs-$i"
+  rm -rf "../../../versions/io.js/v0.2.$i"
 done
 
 rm -f "../../../alias/stable"
 rm -f "../../../alias/unstable"
-
+rm -f "../../../alias/node"
+rm -f "../../../alias/iojs"
