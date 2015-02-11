@@ -18,26 +18,26 @@ nvm_latest_version() {
 # Outputs the location to NVM depending on:
 # * The availability of $NVM_SOURCE
 # * The method used ("script" or "git" in the script, defaults to "git")
-# NVM_SOURCE always takes precedence
+# NVM_SOURCE always takes precedence unless the method is "script-nvm-exec"
 #
 nvm_source() {
   local NVM_METHOD
   NVM_METHOD="$1"
-  if [ -z "$NVM_SOURCE" ]; then
-    local NVM_SOURCE
+  local NVM_SOURCE_URL
+  NVM_SOURCE_URL="$NVM_SOURCE"
+  if [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
+    NVM_SOURCE_URL="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm-exec"
+  elif [ -z "$NVM_SOURCE_URL" ]; then
     if [ "_$NVM_METHOD" = "_script" ]; then
-      NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm.sh"
-    elif [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
-      NVM_SOURCE="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm-exec"
+      NVM_SOURCE_URL="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm.sh"
     elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
-      NVM_SOURCE="https://github.com/creationix/nvm.git"
+      NVM_SOURCE_URL="https://github.com/creationix/nvm.git"
     else
       echo >&2 "Unexpected value \"$NVM_METHOD\" for \$NVM_METHOD"
       return 1
     fi
   fi
-  echo "$NVM_SOURCE"
-  return 0
+  echo "$NVM_SOURCE_URL"
 }
 
 nvm_download() {
@@ -74,8 +74,8 @@ install_nvm_from_git() {
 }
 
 install_nvm_as_script() {
-  local NVM_SOURCE
-  NVM_SOURCE=$(nvm_source script)
+  local NVM_SOURCE_LOCAL
+  NVM_SOURCE_LOCAL=$(nvm_source script)
   local NVM_EXEC_SOURCE
   NVM_EXEC_SOURCE=$(nvm_source script-nvm-exec)
 
@@ -86,8 +86,8 @@ install_nvm_as_script() {
   else
     echo "=> Downloading nvm as script to '$NVM_DIR'"
   fi
-  nvm_download -s "$NVM_SOURCE" -o "$NVM_DIR/nvm.sh" || {
-    echo >&2 "Failed to download '$NVM_SOURCE'"
+  nvm_download -s "$NVM_SOURCE_LOCAL" -o "$NVM_DIR/nvm.sh" || {
+    echo >&2 "Failed to download '$NVM_SOURCE_LOCAL'"
     return 1
   }
   nvm_download -s "$NVM_EXEC_SOURCE" -o "$NVM_DIR/nvm-exec" || {
