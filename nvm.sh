@@ -686,6 +686,7 @@ nvm_ls_remote_iojs() {
 
 nvm_checksum() {
   local NVM_CHECKSUM
+
   if nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
     NVM_CHECKSUM="$(command sha1sum "$1" | command awk '{print $1}')"
   elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
@@ -698,6 +699,39 @@ nvm_checksum() {
   fi
 
   if [ "_$NVM_CHECKSUM" = "_$2" ]; then
+    return
+  elif [ -z "$2" ]; then
+    echo 'Checksums empty' #missing in raspberry pi binary
+    return
+  else
+    echo 'Checksums do not match.' >&2
+    return 1
+  fi
+}
+
+# For iojs, with a view to supporting SHA256 for Node > 0.10 soon as well.
+# https://github.com/creationix/nvm/pull/664
+nvm_checksum_256() {
+  local NVM_CHECKSUM_256
+
+  if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
+    NVM_CHECKSUM_256="$(command sha256sum "$1" | command awk '{gsub(/^ +| +$/,"")} {print $1}')"
+  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    NVM_CHECKSUM_256="$(shasum -a 256 "$1" | command awk '{gsub(/^ +| +$/,"")} {print $1}')"
+  elif nvm_has "sha2sum" && ! nvm_is_alias "sha2sum"; then
+    NVM_CHECKSUM_256="$(command sha2sum "$1" | command awk '{gsub(/^ +| +$/,"")} {print $1}')"
+  elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+    NVM_CHECKSUM_256="$(command openssl dgst -sha256 "$1" | command awk '{gsub(/^ +| +$/,"")} {print $2}')"
+  elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
+    NVM_CHECKSUM_256="$(command libressl dgst -sha256 "$1" | command awk '{gsub(/^ +| +$/,"")} {print $2}')"
+  elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+    NVM_CHECKSUM_256="$(command bssl sha256sum "$1" | command awk '{gsub(/^ +| +$/,"")} {print $1}')"
+  else
+    echo "Unaliased sha256sum, sha2sum, shasum, openssl, libressl, or bssl not found." >&2
+    return 2
+  fi
+
+  if [ "_$NVM_CHECKSUM_256" = "_$2" ]; then
     return
   elif [ -z "$2" ]; then
     echo 'Checksums empty' #missing in raspberry pi binary
@@ -889,7 +923,7 @@ nvm_install_iojs_binary() {
     if nvm_binary_available "$VERSION"; then
       t="$VERSION-$NVM_OS-$(nvm_get_arch)"
       url="$NVM_IOJS_ORG_MIRROR/$VERSION/$(nvm_iojs_prefix)-${t}.tar.gz"
-      sum="$(nvm_download -L -s $NVM_IOJS_ORG_MIRROR/$VERSION/SHASUMS256.txt -o - | command grep $(nvm_iojs_prefix)-${t}.tar.gz | command awk '{print $1}')"
+      sum="$(nvm_download -L -s $NVM_IOJS_ORG_MIRROR/$VERSION/SHASUMS256.txt -o - | command grep $(nvm_iojs_prefix)-${t}.tar.gz | command awk '{gsub(/^ +| +$/,"")} {print $1}')"
       local tmpdir
       tmpdir="$NVM_DIR/bin/iojs-${t}"
       local tmptarball
@@ -897,8 +931,10 @@ nvm_install_iojs_binary() {
       if (
         command mkdir -p "$tmpdir" && \
         nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
-        echo "WARNING: checksums are currently disabled for io.js" >&2 && \
-        # nvm_checksum "$tmptarball" $sum && \
+        nvm_checksum_256 "$tmptarball" $sum && \
+        echo "SHA256 Checksum expected is $sum" && \
+        echo "SHA256 Checksum received was" && \
+        command openssl dgst -sha256 "$tmptarball" | command awk '{gsub(/^ +| +$/,"")} {print $2}' && \
         command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
         command rm -f "$tmptarball" && \
         command mkdir -p "$VERSION_PATH" && \
@@ -1679,7 +1715,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       echo "0.23.3"
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum \
+      unset -f nvm nvm_print_versions nvm_checksum nvm_checksum_256 \
         nvm_iojs_prefix nvm_node_prefix \
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
         nvm_is_iojs_version \
