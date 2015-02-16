@@ -73,7 +73,7 @@ __nvm ()
   previous_word="${COMP_WORDS[COMP_CWORD-1]}"
 
   case "$previous_word" in
-  use|run|ls|list|uninstall) __nvm_installed_nodes ;;
+  use|run|exec|ls|list|uninstall) __nvm_installed_nodes ;;
   alias|unalias)  __nvm_alias ;;
   *)              __nvm_commands ;;
   esac
