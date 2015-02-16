@@ -12,6 +12,10 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
+nvm_is_alias() {
+  command alias "$1" > /dev/null 2>&1
+}
+
 nvm_get_latest() {
   local NVM_LATEST_URL
   if nvm_has "curl"; then
@@ -633,15 +637,19 @@ nvm_ls_remote_iojs() {
 }
 
 nvm_checksum() {
-  if nvm_has "sha1sum"; then
-    checksum="$(command sha1sum "$1" | command awk '{print $1}')"
-  elif nvm_has "sha1"; then
-    checksum="$(command sha1 -q "$1")"
+  local NVM_CHECKSUM
+  if nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
+    NVM_CHECKSUM="$(command sha1sum "$1" | command awk '{print $1}')"
+  elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
+    NVM_CHECKSUM="$(command sha1 -q "$1")"
+  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    NVM_CHECKSUM="$(shasum "$1" | command awk '{print $1}')"
   else
-    checksum="$(shasum "$1" | command awk '{print $1}')"
+    echo "Unaliased sha1sum, sha1, or shasum not found." >&2
+    return 2
   fi
 
-  if [ "_$checksum" = "_$2" ]; then
+  if [ "_$NVM_CHECKSUM" = "_$2" ]; then
     return
   elif [ -z "$2" ]; then
     echo 'Checksums empty' #missing in raspberry pi binary
