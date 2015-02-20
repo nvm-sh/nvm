@@ -13,7 +13,8 @@ nvm_has() {
 }
 
 nvm_is_alias() {
-  command alias "$1" > /dev/null 2>&1
+  # this is intentionally not "command alias" so it works in zsh.
+  \alias "$1" > /dev/null 2>&1
 }
 
 nvm_get_latest() {
