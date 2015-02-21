@@ -425,7 +425,7 @@ nvm_resolve_alias() {
     if [ "_$ALIAS" = "_∞" ]; then
       echo "$ALIAS"
     else
-      nvm_version "$ALIAS"
+      nvm_ensure_version_prefix "$ALIAS"
     fi
     return 0
   fi
@@ -434,13 +434,31 @@ nvm_resolve_alias() {
     local IMPLICIT
     IMPLICIT="$(nvm_print_implicit_alias local "$PATTERN" 2> /dev/null)"
     if [ -n "$IMPLICIT" ]; then
-      nvm_version "$IMPLICIT"
-      return $?
+      nvm_ensure_version_prefix "$IMPLICIT"
     fi
-    return 3
   fi
 
   return 2
+}
+
+nvm_resolve_local_alias() {
+  if [ -z "$1" ]; then
+    return 1
+  fi
+
+  local VERSION
+  local EXIT_CODE
+  VERSION="$(nvm_resolve_alias "$1")"
+  EXIT_CODE=$?
+  if [ -z "$VERSION" ]; then
+    echo "N/A"
+    return $EXIT_CODE
+  fi
+  if [ "_$VERSION" != "_∞" ]; then
+    nvm_version "$VERSION"
+  else
+    echo "$VERSION"
+  fi
 }
 
 nvm_iojs_prefix() {
@@ -494,7 +512,7 @@ nvm_ls() {
       PATTERN="$PATTERN-"
     ;;
     *)
-      if nvm_resolve_alias "$PATTERN"; then
+      if nvm_resolve_local_alias "$PATTERN"; then
         return
       fi
       PATTERN=$(nvm_ensure_version_prefix $PATTERN)

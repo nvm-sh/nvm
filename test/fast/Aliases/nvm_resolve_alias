@@ -21,13 +21,13 @@ EXIT_CODE=$(nvm_resolve_alias nonexistent ; echo $?)
 [ $EXIT_CODE = "2" ] || die "'nvm_resolve_alias nonexistent' did not return 2; got $EXIT_CODE"
 
 STABLE="$(nvm_resolve_alias stable)"
-[ "_$STABLE" = "_v0.0.10" ] || die "'nvm_resolve_alias stable' was not v0.0.10; got $STABLE"
+[ "_$STABLE" = "_v0.0" ] || die "'nvm_resolve_alias stable' was not v0.0; got $STABLE"
 
 NODE="$(nvm_resolve_alias node)"
-[ "_$NODE" = "_v0.0.10" ] || die "'nvm_resolve_alias node' was not v0.0.10; got $NODE"
+[ "_$NODE" = "_stable" ] || die "'nvm_resolve_alias node' was not stable; got $NODE"
 
 UNSTABLE="$(nvm_resolve_alias unstable)"
-[ "_$UNSTABLE" = "_v0.1.10" ] || die "'nvm_resolve_alias unstable' was not v0.1.10; got $UNSTABLE"
+[ "_$UNSTABLE" = "_v0.1" ] || die "'nvm_resolve_alias unstable' was not v0.1; got $UNSTABLE"
 
 IOJS="$(nvm_resolve_alias iojs)"
-[ "_$IOJS" = "_iojs-v0.2.10" ] || die "'nvm_resolve_alias iojs' was not iojs-v0.2.10; got $IOJS"
+[ "_$IOJS" = "_iojs-v0.2" ] || die "'nvm_resolve_alias iojs' was not iojs-v0.2; got $IOJS"
