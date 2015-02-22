@@ -1343,12 +1343,15 @@ nvm() {
         return 8
       fi
 
+      nvm_ensure_version_installed "$2"
+      EXIT_CODE=$?
+      if [ "$EXIT_CODE" != "0" ]; then
+        return $EXIT_CODE
+      fi
+
       local NVM_VERSION_DIR
       NVM_VERSION_DIR="$(nvm_version_path "$VERSION")"
-      if [ ! -d "$NVM_VERSION_DIR" ]; then
-        echo "$VERSION version is not installed yet" >&2
-        return 1
-      fi
+
       # Strip other version from PATH
       PATH="$(nvm_strip_path "$PATH" "/bin")"
       # Prepend current version
@@ -1453,20 +1456,20 @@ nvm() {
       if [ -n "$provided_version" ]; then
         VERSION="$(nvm_version "$provided_version")"
         if [ "_$VERSION" = "_N/A" ]; then
-          provided_version=''
           nvm_rc_version
-          VERSION="$(nvm_version "$NVM_RC_VERSION")"
+          provided_version="$NVM_RC_VERSION"
+          VERSION="$(nvm_version "$provided_version")"
         else
           shift
         fi
       fi
 
-      local NVM_VERSION_DIR
-      NVM_VERSION_DIR="$(nvm_version_path "$VERSION")"
-      if [ ! -d "$NVM_VERSION_DIR" ]; then
-        echo "$VERSION version is not installed yet" >&2
-        return 1
+      nvm_ensure_version_installed "$provided_version"
+      EXIT_CODE=$?
+      if [ "$EXIT_CODE" != "0" ]; then
+        return $EXIT_CODE
       fi
+
       echo "Running node $VERSION"
       NODE_VERSION="$VERSION" $NVM_DIR/nvm-exec "$@"
     ;;
@@ -1525,13 +1528,16 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       nvm_version current
     ;;
     "which" )
+      local provided_version
+      provided_version="$2"
       if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
+          provided_version="$NVM_RC_VERSION"
           VERSION=$(nvm_version "$NVM_RC_VERSION")
         fi
       elif [ "_$2" != '_system' ]; then
-        VERSION="$(nvm_version "$2")"
+        VERSION="$(nvm_version "$provided_version")"
       else
         VERSION="$2"
       fi
@@ -1559,12 +1565,13 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
         return 8
       fi
 
+      nvm_ensure_version_installed "$provided_version"
+      EXIT_CODE=$?
+      if [ "$EXIT_CODE" != "0" ]; then
+        return $EXIT_CODE
+      fi
       local NVM_VERSION_DIR
       NVM_VERSION_DIR="$(nvm_version_path "$VERSION")"
-      if [ ! -d "$NVM_VERSION_DIR" ]; then
-        echo "$VERSION version is not installed yet" >&2
-        return 1
-      fi
       echo "$NVM_VERSION_DIR/bin/node"
     ;;
     "alias" )
