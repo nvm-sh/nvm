@@ -229,7 +229,7 @@ nvm_do_install() {
 nvm_reset() {
   unset -f nvm_reset nvm_has nvm_latest_version \
     nvm_source nvm_download install_nvm_as_script install_nvm_from_git \
-    nvm_detect_profile nvm_check_global_modules nvm_do_install 
+    nvm_detect_profile nvm_check_global_modules nvm_do_install
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
