@@ -189,6 +189,24 @@ nvm_version_path() {
   fi
 }
 
+nvm_ensure_version_installed() {
+  local PROVIDED_VERSION
+  PROVIDED_VERSION="$1"
+  local LOCAL_VERSION
+  LOCAL_VERSION="$(nvm_version "$PROVIDED_VERSION")"
+  local NVM_VERSION_DIR
+  NVM_VERSION_DIR="$(nvm_version_path "$LOCAL_VERSION")"
+  if [ ! -d "$NVM_VERSION_DIR" ]; then
+    VERSION="$(nvm_resolve_alias "$PROVIDED_VERSION")"
+    if [ $? -eq 0 ]; then
+      echo "N/A: version \"$PROVIDED_VERSION -> $VERSION\" is not yet installed" >&2
+    else
+      echo "N/A: version \"$(nvm_ensure_version_prefix "$PROVIDED_VERSION")\" is not yet installed" >&2
+    fi
+    return 1
+  fi
+}
+
 # Expand a version using the version cache
 nvm_version() {
   local PATTERN

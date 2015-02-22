@@ -1,0 +1,23 @@
+#!/bin/sh
+
+die () { echo $@ ; cleanup ; exit 1; }
+cleanup () {
+  rm -rf "$(nvm_version_path v0.1.2)"
+}
+
+. ../../../nvm.sh
+
+mkdir -p "$(nvm_version_path v0.1.2)"
+
+OUTPUT="$(nvm_ensure_version_installed foo 2>&1)"
+EXIT_CODE=$?
+EXPECTED_OUTPUT='N/A: version "foo" is not yet installed'
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed foo' to give $EXPECTED_OUTPUT, got $OUTPUT"
+[ "_$EXIT_CODE" = "_1" ] || die "expected 'nvm_ensure_version_installed foo' to exit with 1, got $EXIT_CODE"
+
+OUTPUT="$(nvm_ensure_version_installed 0.1)"
+EXIT_CODE=$?
+[ "_$OUTPUT" = "_" ] || die "expected 'nvm_ensure_version_installed 0.1' to have no output, got $OUTPUT"
+[ "_$EXIT_CODE" = "_0" ] || die "expected 'nvm_ensure_version_installed 0.1' to exit with 0, got $EXIT_CODE"
+
+cleanup
