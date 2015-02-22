@@ -422,11 +422,20 @@ nvm_resolve_alias() {
   done
 
   if [ -n "$ALIAS" ] && [ "_$ALIAS" != "_$PATTERN" ]; then
-    if [ "_$ALIAS" = "_∞" ]; then
-      echo "$ALIAS"
-    else
-      nvm_ensure_version_prefix "$ALIAS"
-    fi
+    local NVM_IOJS_PREFIX
+    NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+    local NVM_NODE_PREFIX
+    NVM_NODE_PREFIX="$(nvm_node_prefix)"
+    case "_$ALIAS" in
+      "_∞" | \
+      "_$NVM_IOJS_PREFIX" | "_$NVM_IOJS_PREFIX-" | \
+      "_$NVM_NODE_PREFIX" )
+        echo "$ALIAS"
+      ;;
+      *)
+        nvm_ensure_version_prefix "$ALIAS"
+      ;;
+    esac
     return 0
   fi
 
