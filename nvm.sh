@@ -859,7 +859,6 @@ nvm_get_arch() {
   case "$NVM_UNAME" in
     *x86_64*) NVM_ARCH=x64 ;;
     *i*86*) NVM_ARCH=x86 ;;
-    *armv6l*) NVM_ARCH=arm-pi ;;
     *) NVM_ARCH="$(uname -m)" ;;
   esac
   echo "$NVM_ARCH"
