@@ -936,7 +936,8 @@ nvm_install_node_binary() {
 
   if [ -n "$NVM_OS" ]; then
     if nvm_binary_available "$VERSION"; then
-      nvm_arch="$(nvm_get_arch)"
+      local NVM_ARCH
+      NVM_ARCH="$(nvm_get_arch)"
       if [ $nvm_arch = "armv6l" ]; then
          nvm_arch="arm-pi"
       fi
