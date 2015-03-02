@@ -938,8 +938,8 @@ nvm_install_node_binary() {
     if nvm_binary_available "$VERSION"; then
       local NVM_ARCH
       NVM_ARCH="$(nvm_get_arch)"
-      if [ $nvm_arch = "armv6l" ]; then
-         nvm_arch="arm-pi"
+      if [ $NVM_ARCH == "armv6l" ]; then
+         NVM_ARCH="arm-pi"
       fi
       t="$VERSION-$NVM_OS-$nvm_arch"
       url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
