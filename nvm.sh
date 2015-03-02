@@ -938,10 +938,10 @@ nvm_install_node_binary() {
     if nvm_binary_available "$VERSION"; then
       local NVM_ARCH
       NVM_ARCH="$(nvm_get_arch)"
-      if [ $NVM_ARCH == "armv6l" ]; then
+      if [ $NVM_ARCH = "armv6l" ]; then
          NVM_ARCH="arm-pi"
       fi
-      t="$VERSION-$NVM_OS-$nvm_arch"
+      t="$VERSION-$NVM_OS-$NVM_ARCH"
       url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
       sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-${t}.tar.gz | command awk '{print $1}'`
       local tmpdir
