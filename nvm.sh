@@ -1303,17 +1303,20 @@ nvm() {
         return 127
       fi
 
+      local PROVIDED_VERSION
       if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
-          VERSION="$(nvm_version "$NVM_RC_VERSION")"
+          PROVIDED_VERSION="$NVM_RC_VERSION"
+          VERSION="$(nvm_version "$PROVIDED_VERSION")"
         fi
       else
         local NVM_IOJS_PREFIX
         NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
         local NVM_NODE_PREFIX
         NVM_NODE_PREFIX="$(nvm_node_prefix)"
-        case "_$2" in
+        PROVIDED_VERSION="$2"
+        case "_$PROVIDED_VERSION" in
           "_$NVM_IOJS_PREFIX" | "_io.js")
             VERSION="$(nvm_version $NVM_IOJS_PREFIX)"
           ;;
@@ -1321,7 +1324,7 @@ nvm() {
             VERSION="system"
           ;;
           *)
-            VERSION="$(nvm_version "$2")"
+            VERSION="$(nvm_version "$PROVIDED_VERSION")"
           ;;
         esac
       fi
@@ -1343,11 +1346,11 @@ nvm() {
           return 127
         fi
       elif [ "_$VERSION" = "_∞" ]; then
-        echo "The alias \"$2\" leads to an infinite loop. Aborting." >&2
+        echo "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting." >&2
         return 8
       fi
 
-      nvm_ensure_version_installed "$2"
+      nvm_ensure_version_installed "$PROVIDED_VERSION"
       EXIT_CODE=$?
       if [ "$EXIT_CODE" != "0" ]; then
         return $EXIT_CODE
