@@ -69,7 +69,10 @@ install_nvm_from_git() {
     mkdir -p "$NVM_DIR"
     command git clone "$(nvm_source git)" "$NVM_DIR"
   fi
-  cd "$NVM_DIR" && command git checkout --quiet $(nvm_latest_version) && command git branch --quiet -D master >/dev/null 2>&1
+  cd "$NVM_DIR" && command git checkout --quiet $(nvm_latest_version)
+  if [ ! -z "$(cd "$NVM_DIR" && git show-ref refs/heads/master)" ]; then
+    cd "$NVM_DIR" && command git branch --quiet -D master >/dev/null 2>&1
+  fi
   return
 }
 
