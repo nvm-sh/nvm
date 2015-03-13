@@ -41,6 +41,7 @@ nvm_download() {
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
+                           -e 's/--silent /--quiet /'
                            -e 's/-L //' \
                            -e 's/-I /--server-response /' \
                            -e 's/-s /-q /' \
@@ -869,10 +870,18 @@ nvm_install_iojs_binary() {
   PREFIXED_VERSION="$1"
   local REINSTALL_PACKAGES_FROM
   REINSTALL_PACKAGES_FROM="$2"
+  local QUIET
+  QUIET="$3"
+  local PROGRESS_BAR
+  PROGRESS_BAR="--progress-bar "
 
   if ! nvm_is_iojs_version "$PREFIXED_VERSION"; then
     echo 'nvm_install_iojs_binary requires an iojs-prefixed version.' >&2
     return 10
+  fi
+
+  if [ "$QUIET" == '1' ]; then
+    PROGRESS_BAR="--silent "
   fi
 
   local VERSION
@@ -896,7 +905,7 @@ nvm_install_iojs_binary() {
       tmptarball="$tmpdir/iojs-${t}.tar.gz"
       if (
         command mkdir -p "$tmpdir" && \
-        nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
+        nvm_download -L -C - "$PROGRESS_BAR" $url -o "$tmptarball" && \
         echo "WARNING: checksums are currently disabled for io.js" >&2 && \
         # nvm_checksum "$tmptarball" $sum && \
         command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
@@ -920,10 +929,18 @@ nvm_install_node_binary() {
   VERSION="$1"
   local REINSTALL_PACKAGES_FROM
   REINSTALL_PACKAGES_FROM="$2"
+  local QUIET
+  QUIET="$3"
+  local PROGRESS_BAR
+  PROGRESS_BAR="--progress-bar "
 
   if nvm_is_iojs_version "$PREFIXED_VERSION"; then
     echo 'nvm_install_node_binary does not allow an iojs-prefixed version.' >&2
     return 10
+  fi
+
+  if [ "$QUIET" == '1' ]; then
+    PROGRESS_BAR="--silent "
   fi
 
   local VERSION_PATH
@@ -950,7 +967,7 @@ nvm_install_node_binary() {
       tmptarball="$tmpdir/node-${t}.tar.gz"
       if (
         command mkdir -p "$tmpdir" && \
-        nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
+        nvm_download -L -C - "$PROGRESS_BAR" $url -o "$tmptarball" && \
         nvm_checksum "$tmptarball" $sum && \
         command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
         command rm -f "$tmptarball" && \
@@ -975,9 +992,27 @@ nvm_install_node_source() {
   REINSTALL_PACKAGES_FROM="$2"
   local ADDITIONAL_PARAMETERS
   ADDITIONAL_PARAMETERS="$3"
+  local QUIET
+  QUIET="$4"
+  local PROGRESS_BAR
+  PROGRESS_BAR="--progress-bar "
+
+  local REDIRECT_OUTPUT
+  REDIRECT_OUTPUT=""
+  local LOGS_DIR
+  LOGS_DIR="$NVM_DIR/logs"
+  local LOG_FILE
+  LOG_FILE="$LOGS_DIR/$VERSION.log"
 
   if [ -n "$ADDITIONAL_PARAMETERS" ]; then
     echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
+  fi
+
+  if [ "$QUIET" == '1' ]; then
+    PROGRESS_BAR="--silent "
+    mkdir -p "$LOGS_DIR"
+    rm -rf "$LOG_FILE"
+    REDIRECT_OUTPUT=">> $LOG_FILE 2>&1"
   fi
 
   local VERSION_PATH
@@ -1010,14 +1045,14 @@ nvm_install_node_source() {
   if (
     [ -n "$tarball" ] && \
     command mkdir -p "$tmpdir" && \
-    nvm_download -L --progress-bar $tarball -o "$tmptarball" && \
+    nvm_download -L "$PROGRESS_BAR" $tarball -o "$tmptarball" && \
     nvm_checksum "$tmptarball" $sum && \
     command tar -xzf "$tmptarball" -C "$tmpdir" && \
     cd "$tmpdir/node-$VERSION" && \
-    ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
-    $make $MAKE_CXX && \
+    eval ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS ${REDIRECT_OUTPUT} && \
+    eval $make $MAKE_CXX ${REDIRECT_OUTPUT} && \
     command rm -f "$VERSION_PATH" 2>/dev/null && \
-    $make $MAKE_CXX install
+    eval $make $MAKE_CXX install ${REDIRECT_OUTPUT}
     )
   then
     if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
@@ -1067,7 +1102,7 @@ nvm() {
       echo "Usage:"
       echo "  nvm help                              Show this message"
       echo "  nvm --version                         Print out the latest released version of nvm"
-      echo "  nvm install [-s] <version>            Download and install a <version>, [-s] from source. Uses .nvmrc if available"
+      echo "  nvm install [-s] [-q] <version>       Download and install a <version>, [-s] from source, [-q] for quiet. Uses .nvmrc if available"
       echo "  nvm uninstall <version>               Uninstall a version"
       echo "  nvm use <version>                     Modify PATH to use <version>. Uses .nvmrc if available"
       echo "  nvm run <version> [<args>]            Run <version> with <args> as arguments. Uses .nvmrc if available for <version>"
@@ -1097,6 +1132,7 @@ nvm() {
 
     "install" | "i" )
       local nobinary
+      local quiet
       local version_not_provided
       version_not_provided=0
       local provided_version
@@ -1120,12 +1156,16 @@ nvm() {
       shift
 
       nobinary=0
-      if [ "_$1" = "_-s" ]; then
-        nobinary=1
-        shift
-      fi
+      quiet=0
 
-      provided_version="$1"
+      while [[ "$#" -gt 0 ]]; do
+        case $1 in
+          -s) nobinary=1;;
+          -q) quiet=1;;
+          *) provided_version="$1"
+        esac
+        shift
+      done
 
       if [ -z "$provided_version" ]; then
         if [ $version_not_provided -ne 1 ]; then
@@ -1194,9 +1234,9 @@ nvm() {
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
         local NVM_INSTALL_SUCCESS
-        if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+        if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary "$VERSION" "$REINSTALL_PACKAGES_FROM" "$quiet"; then
           NVM_INSTALL_SUCCESS=true
-        elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+        elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM" "$quiet"; then
           NVM_INSTALL_SUCCESS=true
         fi
 
@@ -1214,7 +1254,7 @@ nvm() {
         echo "Installing iojs from source is not currently supported" >&2
         return 105
       else
-        nvm_install_node_source "$VERSION" "$REINSTALL_PACKAGES_FROM" "$ADDITIONAL_PARAMETERS"
+        nvm_install_node_source "$VERSION" "$REINSTALL_PACKAGES_FROM" "$ADDITIONAL_PARAMETERS" "$quiet"
       fi
     ;;
     "uninstall" )
