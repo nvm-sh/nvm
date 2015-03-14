@@ -6,16 +6,19 @@ die () { echo "$@" ; exit 1; }
 
 nvm use 0.10.28
 
-EXPECTED_PACKAGES="autoprefixer bower david eslint grunt-cli grunth-cli http-server jshint marked node-gyp recursive-blame uglify-js yo"
+EXPECTED_PACKAGES="autoprefixer bower david eslint grunt-cli grunth-cli http-server jshint marked node-gyp npmlist recursive-blame uglify-js yo"
 
 echo "$EXPECTED_PACKAGES" | xargs npm install -g --quiet
 
+get_packages() {
+  npm list -g --depth=0 | \sed -e '1 d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' | xargs
+}
+
 nvm use 0.10.29
-ORIGINAL_PACKAGES=$(npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | sort | uniq | xargs)
+ORIGINAL_PACKAGES=$(get_packages)
 
 nvm reinstall-packages 0.10.28
-FINAL_PACKAGES=$(npm list -g --depth=0 | tail -n +2 | \grep -o -e ' [^@]*' | cut -c 2- | \grep -v npm | sort | uniq | xargs)
+FINAL_PACKAGES=$(get_packages)
 
 [ "$FINAL_PACKAGES" = "$EXPECTED_PACKAGES" ] || die "final packages ($FINAL_PACKAGES) did not match expected packages ($EXPECTED_PACKAGES)"
 [ "$ORIGINAL_PACKAGES" != "$FINAL_PACKAGES" ] || die "original packages matched final packages ($ORIGINAL_PACKAGES)"
-
