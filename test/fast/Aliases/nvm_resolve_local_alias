@@ -20,7 +20,7 @@ done
 OUTPUT="$(nvm_resolve_local_alias nonexistent)"
 EXIT_CODE=$(nvm_resolve_local_alias nonexistent > /dev/null 2>&1 ; echo $?)
 [ "_$EXIT_CODE" = "_2" ] || die "'nvm_resolve_local_alias nonexistent' did not return 2; got $EXIT_CODE"
-[ "_$OUTPUT" = "_N/A" ] || die "'nvm_resolve_local_alias nonexistent' did not output N/A; got $OUTPUT"
+[ "_$OUTPUT" = "_" ] || die "'nvm_resolve_local_alias nonexistent' did not have empty output; got $OUTPUT"
 
 STABLE="$(nvm_resolve_local_alias stable)"
 [ "_$STABLE" = "_v0.0.10" ] || die "'nvm_resolve_local_alias stable' was not v0.0.10; got $STABLE"

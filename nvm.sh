@@ -478,7 +478,6 @@ nvm_resolve_local_alias() {
   VERSION="$(nvm_resolve_alias "$1")"
   EXIT_CODE=$?
   if [ -z "$VERSION" ]; then
-    echo "N/A"
     return $EXIT_CODE
   fi
   if [ "_$VERSION" != "_∞" ]; then
