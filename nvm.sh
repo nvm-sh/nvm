@@ -1112,8 +1112,8 @@ nvm() {
         version_not_provided=1
         nvm_rc_version
         if [ -z "$NVM_RC_VERSION" ]; then
-          nvm help
-          return
+          >&2 nvm help
+          return 127
         fi
       fi
 
@@ -1218,7 +1218,10 @@ nvm() {
       fi
     ;;
     "uninstall" )
-      [ $# -ne 2 ] && nvm help && return
+      if [ $# -ne 2 ]; then
+        >&2 nvm help
+        return 127
+      fi
 
       local PATTERN
       PATTERN="$2"
@@ -1298,11 +1301,6 @@ nvm() {
       fi
     ;;
     "use" )
-      if [ $# -eq 0 ]; then
-        nvm help
-        return 127
-      fi
-
       local PROVIDED_VERSION
       if [ $# -eq 1 ]; then
         nvm_rc_version
@@ -1330,7 +1328,7 @@ nvm() {
       fi
 
       if [ -z "$VERSION" ]; then
-        nvm help
+        >&2 nvm help
         return 127
       fi
 
@@ -1400,7 +1398,7 @@ nvm() {
           VERSION='N/A'
         fi
         if [ $VERSION = "N/A" ]; then
-          nvm help
+          >&2 nvm help
           return 127
         fi
       fi
@@ -1549,7 +1547,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
         VERSION="$2"
       fi
       if [ -z "$VERSION" ]; then
-        nvm help
+        >&2 nvm help
         return 127
       fi
 
@@ -1633,14 +1631,17 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       local NVM_ALIAS_DIR
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "$NVM_ALIAS_DIR"
-      [ $# -ne 2 ] && nvm help && return 127
+      if [ $# -ne 2 ]; then
+        >&2 nvm help
+        return 127
+      fi
       [ ! -f "$NVM_ALIAS_DIR/$2" ] && echo "Alias $2 doesn't exist!" >&2 && return
       command rm -f "$NVM_ALIAS_DIR/$2"
       echo "Deleted alias $2"
     ;;
     "reinstall-packages" | "copy-packages" )
       if [ $# -ne 2 ]; then
-        nvm help
+        >&2 nvm help
         return 127
       fi
 
@@ -1690,7 +1691,8 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
-      nvm help
+      >&2 nvm help
+      return 127
     ;;
   esac
 }
