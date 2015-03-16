@@ -1658,11 +1658,11 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
           echo 'No system version of node or io.js detected.' >&2
           return 3
         fi
-        INSTALLS=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -v npm | command xargs)
+        INSTALLS=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -vx npm | command xargs)
       else
         local VERSION
         VERSION="$(nvm_version "$PROVIDED_VERSION")"
-        INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -v npm | command xargs)
+        INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -vx npm | command xargs)
       fi
 
       echo "Copying global packages from $VERSION..."
