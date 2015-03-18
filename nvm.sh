@@ -1697,7 +1697,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
 }
 
 nvm_supports_source_options() {
-  [ "_$(echo 'echo $1' | . /dev/stdin yes)" = "_yes" ]
+  [ "_$(echo 'echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
 }
 
 if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
