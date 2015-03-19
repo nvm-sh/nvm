@@ -1652,21 +1652,32 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
         return 2
       fi
 
-      local INSTALLS
+      local NPMLIST
       if [ "_$PROVIDED_VERSION" = "_system" ]; then
         if ! nvm_has_system_node && ! nvm_has_system_iojs; then
           echo 'No system version of node or io.js detected.' >&2
           return 3
         fi
-        INSTALLS=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -vx npm | command xargs)
+        NPMLIST=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2)
       else
         local VERSION
         VERSION="$(nvm_version "$PROVIDED_VERSION")"
-        INSTALLS=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2 | command grep -o -e ' [^@]*' | command cut -c 2- | command grep -vx npm | command xargs)
+        NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2)
       fi
+
+      local INSTALLS
+      INSTALLS=$(echo "$NPMLIST" | command sed -e '/ -> / d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' | command xargs)
 
       echo "Copying global packages from $VERSION..."
       echo "$INSTALLS" | command xargs npm install -g --quiet
+
+      local LINKS
+      LINKS=$(echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')
+
+      echo "Linking global packages from $VERSION..."
+      for LINK in $LINKS; do
+        (cd "$LINK" && npm link)
+      done
     ;;
     "clear-cache" )
       command rm -f $NVM_DIR/v* "$(nvm_version_dir)" 2>/dev/null
@@ -1712,4 +1723,3 @@ elif nvm ls default >/dev/null; then
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
 fi
-
