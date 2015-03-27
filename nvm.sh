@@ -1718,7 +1718,7 @@ if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
   elif nvm_rc_version >/dev/null 2>&1; then
     nvm install >/dev/null
   fi
-elif nvm ls default >/dev/null; then
+elif nvm_alias default >/dev/null 2>&1; then
   nvm use default >/dev/null
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
