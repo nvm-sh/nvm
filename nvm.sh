@@ -1347,6 +1347,8 @@ nvm() {
         return 8
       fi
 
+      # This nvm_ensure_version_installed call can be a performance bottleneck
+      # on shell startup. Perhaps we can optimize it away or make it faster.
       nvm_ensure_version_installed "$PROVIDED_VERSION"
       EXIT_CODE=$?
       if [ "$EXIT_CODE" != "0" ]; then
@@ -1718,7 +1720,7 @@ if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
   elif nvm_rc_version >/dev/null 2>&1; then
     nvm install >/dev/null
   fi
-elif nvm ls default >/dev/null; then
+elif nvm_alias default >/dev/null 2>&1; then
   nvm use default >/dev/null
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
