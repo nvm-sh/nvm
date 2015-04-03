@@ -603,17 +603,20 @@ nvm_ls() {
     fi
     if [ -n "$NVM_DIRS_TO_SEARCH" ]; then
       VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" \
-        | command sed "s#$NVM_VERSION_DIR_IOJS/#"$NVM_IOJS_PREFIX"-#" \
-        | command grep -v "$NVM_VERSION_DIR_IOJS" \
-        | command sed "s#^$NVM_DIR/##" \
-        | command grep -v -e '^versions$' \
-        | command sed 's#^versions/##' \
-        | sed -e "s/^v/$NVM_NODE_PREFIX-v/" \
-        | sed -e "s#^\($NVM_IOJS_PREFIX\)[-/]v#\1.v#" | sed -e "s#^\($NVM_NODE_PREFIX\)[-/]v#\1.v#" \
+        | command sed "
+            s#$NVM_VERSION_DIR_IOJS/#$NVM_IOJS_PREFIX-#;
+            \#$NVM_VERSION_DIR_IOJS# d;
+            s#^$NVM_DIR/##;
+            \#^versions\$# d;
+            s#^versions/##;
+            s#^v#$NVM_NODE_PREFIX-v#;
+            s#^\($NVM_IOJS_PREFIX\)[-/]v#\1.v#;
+            s#^\($NVM_NODE_PREFIX\)[-/]v#\1.v#" \
         | command sort -t. -u -k 2.2,2n -k 3,3n -k 4,4n \
         | command sort -s -t- -k1.1,1.1 \
-        | command sed "s/^\($NVM_IOJS_PREFIX\)\./\1-/" \
-        | command sed "s/^$NVM_NODE_PREFIX\.//")"
+        | command sed "
+            s/^\($NVM_IOJS_PREFIX\)\./\1-/;
+            s/^$NVM_NODE_PREFIX\.//")"
     fi
 
     if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
