@@ -261,14 +261,12 @@ nvm_remote_version() {
 }
 
 nvm_remote_versions() {
-  local NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local NVM_IOJS_PREFIX
+  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
   local PATTERN
   PATTERN="$1"
-  if [ "_$PATTERN" = "_io.js" ]; then
-    PATTERN="$NVM_IOJS_PREFIX"
-  fi
   case "_$PATTERN" in
-    "_$NVM_IOJS_PREFIX")
+    "_$NVM_IOJS_PREFIX" | "_io.js")
       VERSIONS="$(nvm_ls_remote_iojs)"
     ;;
     "_$(nvm_node_prefix)")
