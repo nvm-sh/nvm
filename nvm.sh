@@ -222,8 +222,10 @@ nvm_version() {
     return $?
   fi
 
+  local NVM_NODE_PREFIX
+  NVM_NODE_PREFIX="$(nvm_node_prefix)"
   case "_$PATTERN" in
-    "_$(nvm_node_prefix)" | "_$(nvm_node_prefix)-")
+    "_$NVM_NODE_PREFIX" | "_$NVM_NODE_PREFIX-")
       PATTERN="stable"
     ;;
   esac
