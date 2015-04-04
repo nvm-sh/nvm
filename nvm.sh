@@ -1716,15 +1716,15 @@ nvm_supports_source_options() {
   [ "_$(echo 'echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
 }
 
+VERSION="$(nvm_alias default 2>/dev/null)"
 if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
-  VERSION="$(nvm_alias default 2>/dev/null)"
   if [ -n "$VERSION" ]; then
     nvm install "$VERSION" >/dev/null
   elif nvm_rc_version >/dev/null 2>&1; then
     nvm install >/dev/null
   fi
-elif nvm_alias default >/dev/null 2>&1; then
-  nvm use default >/dev/null
+elif [ -n "$VERSION" ]; then
+  nvm use "$VERSION" >/dev/null
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
 fi
