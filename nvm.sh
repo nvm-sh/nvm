@@ -495,7 +495,8 @@ nvm_node_prefix() {
 }
 
 nvm_is_iojs_version() {
-  [ "_$(echo "$1" | cut -c1-5)" = "_iojs-" ]
+  case "$1" in iojs-*) return 0 ;; esac
+  return 1
 }
 
 nvm_add_iojs_prefix() {
@@ -545,7 +546,12 @@ nvm_ls() {
     ;;
   esac
   # If it looks like an explicit version, don't do anything funny
-  if [ "_$(echo "$PATTERN" | cut -c1-1)" = "_v" ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
+  local NVM_PATTERN_STARTS_WITH_V
+  case $PATTERN in
+    v*) NVM_PATTERN_STARTS_WITH_V=true ;;
+    *) NVM_PATTERN_STARTS_WITH_V=false ;;
+  esac
+  if [ $NVM_PATTERN_STARTS_WITH_V = true ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
     if [ -d "$(nvm_version_path "$PATTERN")" ]; then
       VERSIONS="$PATTERN"
     elif [ -d "$(nvm_version_path "$(nvm_add_iojs_prefix "$PATTERN")")" ]; then
@@ -1151,15 +1157,19 @@ nvm() {
 
       while [ $# -ne 0 ]
       do
-        if [ "_$(echo "$1" | command cut -c 1-26)" = "_--reinstall-packages-from=" ]; then
-          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | command cut -c 27-)"
-          REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
-        elif [ "_$(echo "$1" | command cut -c 1-21)" = "_--copy-packages-from=" ]; then
-          PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | command cut -c 22-)"
-          REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
-        else
-          ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
-        fi
+        case "$1" in
+          --reinstall-packages-from=*)
+            PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | command cut -c 27-)"
+            REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
+          ;;
+          --copy-packages-from=*)
+            PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | command cut -c 22-)"
+            REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
+          ;;
+          *)
+            ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
+          ;;
+        esac
         shift
       done
 
