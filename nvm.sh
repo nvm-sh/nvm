@@ -980,10 +980,8 @@ nvm_install_node_binary() {
 nvm_install_node_source() {
   local VERSION
   VERSION="$1"
-  local REINSTALL_PACKAGES_FROM
-  REINSTALL_PACKAGES_FROM="$2"
   local ADDITIONAL_PARAMETERS
-  ADDITIONAL_PARAMETERS="$3"
+  ADDITIONAL_PARAMETERS="$2"
 
   if [ -n "$ADDITIONAL_PARAMETERS" ]; then
     echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
@@ -1029,9 +1027,6 @@ nvm_install_node_source() {
     $make $MAKE_CXX install
     )
   then
-    if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
-      nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
-    fi
     if ! nvm_has "npm" ; then
       echo "Installing npm..."
       if nvm_version_greater 0.2.0 "$VERSION"; then
@@ -1204,31 +1199,29 @@ nvm() {
         # io.js does not have a SunOS binary
         nobinary=1
       fi
+      local NVM_INSTALL_SUCCESS
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-        local NVM_INSTALL_SUCCESS
         if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
           NVM_INSTALL_SUCCESS=true
         elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
           NVM_INSTALL_SUCCESS=true
         fi
+      elif [ "$NVM_IOJS" = true ]; then
+        # nvm_install_iojs_source "$VERSION" "$ADDITIONAL_PARAMETERS"
+        echo "Installing iojs from source is not currently supported" >&2
+        return 105
+      elif nvm_install_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"; then
+        NVM_INSTALL_SUCCESS=true
+      fi
 
-        if [ "$NVM_INSTALL_SUCCESS" = true ] \
-          && nvm use "$VERSION" \
-          && [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
+      if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
+        if [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
-        return $?
       fi
-
-      if [ "$NVM_IOJS" = true ]; then
-        # nvm_install_iojs_source "$VERSION" "$REINSTALL_PACKAGES_FROM" "$ADDITIONAL_PARAMETERS"
-        echo "Installing iojs from source is not currently supported" >&2
-        return 105
-      else
-        nvm_install_node_source "$VERSION" "$REINSTALL_PACKAGES_FROM" "$ADDITIONAL_PARAMETERS"
-      fi
+      return $?
     ;;
     "uninstall" )
       if [ $# -ne 2 ]; then
