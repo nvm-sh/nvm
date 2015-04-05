@@ -1451,6 +1451,13 @@ nvm() {
       if [ "_$VERSION" = "_N/A" ]; then
         echo "$(nvm_ensure_version_prefix "$provided_version") is not installed yet" >&2
         EXIT_CODE=1
+      elif [ -z "$ARGS" ]; then
+        if [ "$NVM_IOJS" = true ]; then
+          nvm exec "$VERSION" iojs
+        else
+          nvm exec "$VERSION" node
+        fi
+        EXIT_CODE="$?"
       elif [ "$NVM_IOJS" = true ]; then
         echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")"
         OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs $ARGS)"
