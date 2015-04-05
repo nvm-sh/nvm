@@ -873,6 +873,25 @@ nvm_get_arch() {
   echo "$NVM_ARCH"
 }
 
+nvm_ensure_default_set() {
+  local VERSION
+  VERSION="$1"
+  if [ -z "$VERSION" ]; then
+    echo 'nvm_ensure_default_set: a version is required' >&2
+    return 1
+  fi
+  if nvm_alias default >/dev/null 2>&1; then
+    # default already set
+    return 0
+  fi
+  local OUTPUT
+  OUTPUT="$(nvm alias default "$VERSION")"
+  local EXIT_CODE
+  EXIT_CODE="$?"
+  echo "Creating default alias: $OUTPUT"
+  return $EXIT_CODE
+}
+
 nvm_install_iojs_binary() {
   local PREFIXED_VERSION
   PREFIXED_VERSION="$1"
