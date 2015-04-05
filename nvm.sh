@@ -307,7 +307,7 @@ nvm_is_valid_version() {
 }
 
 nvm_normalize_version() {
-  echo "$1" | command sed -e 's/^v//' | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
+  echo "${1#v*}" | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_ensure_version_prefix() {
@@ -324,8 +324,7 @@ nvm_format_version() {
   local VERSION
   VERSION="$(nvm_ensure_version_prefix "$1")"
   if [ "_$(nvm_num_version_groups "$VERSION")" != "_3" ]; then
-    VERSION="$(echo "$VERSION" | command sed -e 's/\.*$/.0/')"
-    nvm_format_version "$VERSION"
+    nvm_format_version "${VERSION%*\.}.0"
   else
     echo "$VERSION"
   fi
@@ -338,10 +337,12 @@ nvm_num_version_groups() {
     echo "0"
     return
   fi
+  VERSION="${VERSION#v*}"
+  VERSION="${VERSION%\.}"
   local NVM_NUM_DOTS
-  NVM_NUM_DOTS=$(echo "$VERSION" | command sed -e 's/^v//' | command sed -e 's/\.$//' | command sed -e 's/[^\.]//g')
+  NVM_NUM_DOTS=$(echo "$VERSION" | command sed -e 's/[^\.]//g')
   local NVM_NUM_GROUPS
-  NVM_NUM_GROUPS=".$NVM_NUM_DOTS"
+  NVM_NUM_GROUPS=".$NVM_NUM_DOTS" # add extra dot, since it's (n - 1) dots at this point
   echo "${#NVM_NUM_GROUPS}"
 }
 
@@ -509,7 +510,7 @@ nvm_strip_iojs_prefix() {
   if [ "_$1" = "_$NVM_IOJS_PREFIX" ]; then
     echo
   else
-    echo "$1" | command sed "s/^$NVM_IOJS_PREFIX-//"
+    echo "${1#"$NVM_IOJS_PREFIX"-*}"
   fi
 }
 
@@ -564,7 +565,7 @@ nvm_ls() {
         local NUM_VERSION_GROUPS
         NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
         if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
-          PATTERN="$(echo "$PATTERN" | command sed -e 's/\.*$//g')."
+          PATTERN="${PATTERN%*\.}."
         fi
       ;;
     esac
