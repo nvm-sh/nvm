@@ -10,7 +10,12 @@ die () { echo $@ ; cleanup ; exit 1; }
 
 return_zero () { return 0; }
 
-[ "$(nvm deactivate > /dev/null 2>&1 ; nvm_ls_current)" = "system" ] || die 'when deactivated, did not return "system"'
+if nvm_has_system_node || nvm_has_system_iojs; then
+  EXPECTED_SYSTEM_NODE="system"
+else
+  EXPECTED_SYSTEM_NODE="none"
+fi
+[ "_$(nvm deactivate > /dev/null 2>&1 ; nvm_ls_current)" = "_$EXPECTED_SYSTEM_NODE" ] || die "when deactivated, did not return $EXPECTED_SYSTEM_NODE"
 
 rm -rf "$TEST_DIR"
 mkdir "$TEST_DIR"
