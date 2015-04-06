@@ -307,7 +307,7 @@ nvm_is_valid_version() {
 }
 
 nvm_normalize_version() {
-  echo "${1#v*}" | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
+  echo "${1#v}" | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_ensure_version_prefix() {
@@ -324,7 +324,7 @@ nvm_format_version() {
   local VERSION
   VERSION="$(nvm_ensure_version_prefix "$1")"
   if [ "_$(nvm_num_version_groups "$VERSION")" != "_3" ]; then
-    nvm_format_version "${VERSION%*\.}.0"
+    nvm_format_version "${VERSION%.}.0"
   else
     echo "$VERSION"
   fi
@@ -510,7 +510,7 @@ nvm_strip_iojs_prefix() {
   if [ "_$1" = "_$NVM_IOJS_PREFIX" ]; then
     echo
   else
-    echo "${1#"$NVM_IOJS_PREFIX"-*}"
+    echo "${1#"$NVM_IOJS_PREFIX"-}"
   fi
 }
 
@@ -565,7 +565,7 @@ nvm_ls() {
         local NUM_VERSION_GROUPS
         NUM_VERSION_GROUPS="$(nvm_num_version_groups "$PATTERN")"
         if [ "_$NUM_VERSION_GROUPS" = "_2" ] || [ "_$NUM_VERSION_GROUPS" = "_1" ]; then
-          PATTERN="${PATTERN%*\.}."
+          PATTERN="${PATTERN%.}."
         fi
       ;;
     esac
@@ -681,9 +681,10 @@ nvm_ls_remote_iojs() {
     PATTERN=".*"
   fi
   VERSIONS="$(nvm_download -L -s $NVM_IOJS_ORG_VERSION_LISTING -o - \
-    | command sed 1d \
-    | command sed "s/^/$(nvm_iojs_prefix)-/" \
-    | command cut -f1 \
+    | command sed "
+        1d;
+        s/^/$(nvm_iojs_prefix)-/;
+        s/[[:blank:]].*//" \
     | command grep -w "$PATTERN" \
     | command sort)"
   if [ -z "$VERSIONS" ]; then
