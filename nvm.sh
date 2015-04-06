@@ -333,12 +333,12 @@ nvm_format_version() {
 nvm_num_version_groups() {
   local VERSION
   VERSION="$1"
+  VERSION="${VERSION#v}"
+  VERSION="${VERSION%.}"
   if [ -z "$VERSION" ]; then
     echo "0"
     return
   fi
-  VERSION="${VERSION#v*}"
-  VERSION="${VERSION%\.}"
   local NVM_NUM_DOTS
   NVM_NUM_DOTS=$(echo "$VERSION" | command sed -e 's/[^\.]//g')
   local NVM_NUM_GROUPS
