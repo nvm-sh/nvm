@@ -1360,7 +1360,9 @@ nvm() {
 
       if [ "_$VERSION" = '_system' ]; then
         local NPM_VERSION
-        NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
+        if nvm_has "npm"; then
+            NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
+        fi
         if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
           echo "Now using system version of node: $(node -v 2>/dev/null) $NPM_VERSION"
           return
@@ -1409,7 +1411,9 @@ nvm() {
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
       local NPM_VERSION
-      NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
+      if nvm_has "npm"; then
+        NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
+      fi
       if nvm_is_iojs_version "$VERSION"; then
         echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION") $NPM_VERSION"
       else
