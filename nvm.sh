@@ -1359,11 +1359,13 @@ nvm() {
       fi
 
       if [ "_$VERSION" = '_system' ]; then
+        local NPM_VERSION
+        NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
         if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
-          echo "Now using system version of node: $(node -v 2>/dev/null) (npm v$(npm --version 2>/dev/null))"
+          echo "Now using system version of node: $(node -v 2>/dev/null) $NPM_VERSION"
           return
         elif nvm_has_system_iojs && nvm deactivate >/dev/null 2>&1; then
-          echo "Now using system version of io.js: $(iojs --version 2>/dev/null) (npm v$(npm --version 2>/dev/null))"
+          echo "Now using system version of io.js: $(iojs --version 2>/dev/null) $NPM_VERSION"
           return
         else
           echo "System version of node not found." >&2
@@ -1406,12 +1408,13 @@ nvm() {
       if [ "$NVM_SYMLINK_CURRENT" = true ]; then
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
+      local NPM_VERSION
+      NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
       if nvm_is_iojs_version "$VERSION"; then
-        echo -n "Now using io.js $(nvm_strip_iojs_prefix "$VERSION")"
+        echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION") $NPM_VERSION"
       else
-        echo -n "Now using node $VERSION"
+        echo "Now using node $VERSION $NPM_VERSION"
       fi
-      echo " (npm v$(npm --version 2>/dev/null))"
     ;;
     "run" )
       local provided_version
