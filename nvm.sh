@@ -1554,8 +1554,7 @@ nvm() {
       fi
 
       local NVM_OUTPUT
-      NVM_OUTPUT="$(echo "$NVM_LS_REMOTE_OUTPUT
-$NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
+      NVM_OUTPUT="$(echo "$NVM_LS_REMOTE_OUTPUT $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       if [ -n "$NVM_OUTPUT" ]; then
         nvm_print_versions "$NVM_OUTPUT"
         return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
