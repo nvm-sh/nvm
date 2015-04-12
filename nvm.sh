@@ -58,6 +58,12 @@ nvm_has_system_iojs() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v iojs)" != '' ]
 }
 
+nvm_print_npm_version() {
+  if nvm_has "npm"; then
+    npm --version 2>/dev/null | command xargs printf " (npm v%s)"
+  fi
+}
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if nvm_has "unsetopt"; then
@@ -1359,15 +1365,11 @@ nvm() {
       fi
 
       if [ "_$VERSION" = '_system' ]; then
-        local NPM_VERSION
-        if nvm_has "npm"; then
-            NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
-        fi
         if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
-          echo "Now using system version of node: $(node -v 2>/dev/null) $NPM_VERSION"
+          echo "Now using system version of node: $(node -v 2>/dev/null)$(nvm_print_npm_version)"
           return
         elif nvm_has_system_iojs && nvm deactivate >/dev/null 2>&1; then
-          echo "Now using system version of io.js: $(iojs --version 2>/dev/null) $NPM_VERSION"
+          echo "Now using system version of io.js: $(iojs --version 2>/dev/null)$(nvm_print_npm_version)"
           return
         else
           echo "System version of node not found." >&2
@@ -1410,14 +1412,10 @@ nvm() {
       if [ "$NVM_SYMLINK_CURRENT" = true ]; then
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
-      local NPM_VERSION
-      if nvm_has "npm"; then
-        NPM_VERSION="(npm v$(npm --version 2>/dev/null))"
-      fi
       if nvm_is_iojs_version "$VERSION"; then
-        echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION") $NPM_VERSION"
+        echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
       else
-        echo "Now using node $VERSION $NPM_VERSION"
+        echo "Now using node $VERSION$(nvm_print_npm_version)"
       fi
     ;;
     "run" )
