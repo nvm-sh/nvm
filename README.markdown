@@ -186,6 +186,20 @@ nvm uninstall
 
 	$ nvm uninstall [tab][tab]
 	my_alias        default        v0.6.21        v0.8.26       v0.10.28
+	
+## Compatibility Issues
+`nvm` will encounter some issues if you have some non-default settings set. (see [#606](/../../issues/606))
+The following are known to cause issues:
+
+Inside `~/.npmrc`
+```
+prefix='some/path'
+```
+Environment Variables:
+```
+$NPM_CONFIG_PREFIX
+$PREFIX
+```
 
 ## Problems
 
