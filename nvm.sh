@@ -700,20 +700,24 @@ nvm_ls_remote_iojs() {
   echo "$VERSIONS"
 }
 
-nvm_checksum() {
-  local NVM_CHECKSUM
-  if nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
-    NVM_CHECKSUM="$(command sha1sum "$1" | command awk '{print $1}')"
-  elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
-    NVM_CHECKSUM="$(command sha1 -q "$1")"
-  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
-    NVM_CHECKSUM="$(shasum "$1" | command awk '{print $1}')"
-  else
-    echo "Unaliased sha1sum, sha1, or shasum not found." >&2
-    return 2
-  fi
+nvm_checksig() {
+    if nvm_has 'gpg'; then
+        if ! LC_ALL=C gpg --verify $1; then
+            return 1
+        fi
+    else
+        echo "You should install GnuPG to verify the authenticity of the archives to download: https://www.gnupg.org/" >&2
+    fi
+}
 
-  if [ "_$NVM_CHECKSUM" = "_$2" ]; then
+nvm_checksum() {
+  local tmptarball_path=$1
+  local archive_name=$2
+  local sum_file_path=$3
+  local SUM=$(command grep $archive_name $sum_file_path | command awk '{print $1}')
+  local NVM_CHECKSUM="$(command sha256sum "$tmptarball_path" | command awk '{print $1}')"
+
+  if [ "_$NVM_CHECKSUM" = "_$SUM" ]; then
     return
   elif [ -z "$2" ]; then
     echo 'Checksums empty' #missing in raspberry pi binary
@@ -977,18 +981,22 @@ nvm_install_node_binary() {
          NVM_ARCH="arm-pi"
       fi
       t="$VERSION-$NVM_OS-$NVM_ARCH"
-      url="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-${t}.tar.gz"
-      sum=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt -o - | command grep node-${t}.tar.gz | command awk '{print $1}'`
       local tmpdir
       tmpdir="$NVM_DIR/bin/node-${t}"
+      command mkdir -p "$tmpdir"
+      archive_name=node-${t}.tar.gz
+      url="$NVM_NODEJS_ORG_MIRROR/$VERSION/$archive_name"
+      sum_file_name=SHASUMS256.txt.asc
+      sum_file_url="$NVM_NODEJS_ORG_MIRROR/$VERSION/$sum_file_name"
+      sum_file_path="$tmpdir/$sum_file_name"
       local tmptarball
       tmptarball="$tmpdir/node-${t}.tar.gz"
       if (
-        command mkdir -p "$tmpdir" && \
+        nvm_download -L -s --progress-bar $sum_file_url -o "$sum_file_path" && \
+        nvm_checksig $sum_file_path && \
         nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
-        nvm_checksum "$tmptarball" $sum && \
+        nvm_checksum "$tmptarball" $archive_name $sum_file_path && \
         command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
-        command rm -f "$tmptarball" && \
         command mkdir -p "$VERSION_PATH" && \
         command mv "$tmpdir"/* "$VERSION_PATH"
       ); then
