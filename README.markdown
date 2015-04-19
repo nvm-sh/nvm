@@ -39,7 +39,7 @@ Or if you have `git` installed, then just clone it, and check out the latest ver
 
 To activate nvm, you need to source it from your shell:
 
-    source ~/.nvm/nvm.sh
+    . ~/.nvm/nvm.sh
 
 I always add this line to my `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login.
 Often I also put in a line to use a specific version of node.
