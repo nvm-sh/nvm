@@ -929,9 +929,16 @@ nvm_install_iojs_binary() {
       tmpdir="$NVM_DIR/bin/iojs-${t}"
       local tmptarball
       tmptarball="$tmpdir/iojs-${t}.tar.gz"
+      local NVM_INSTALL_ERRORED
+      command mkdir -p "$tmpdir" && \
+        nvm_download -L -C - --progress-bar $url -o "$tmptarball" || \
+        NVM_INSTALL_ERRORED=true
+      if grep '404 Not Found' "$tmptarball" >/dev/null; then
+        NVM_INSTALL_ERRORED=true
+        echo >&2 "HTTP 404 at URL $url";
+      fi
       if (
-        command mkdir -p "$tmpdir" && \
-        nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
+        [ "$NVM_INSTALL_ERRORED" != true ] && \
         echo "WARNING: checksums are currently disabled for io.js" >&2 && \
         # nvm_checksum "$tmptarball" $sum && \
         command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
@@ -941,7 +948,7 @@ nvm_install_iojs_binary() {
       ); then
         return 0
       else
-        echo "Binary download failed, trying source." >&2
+        echo >&2 "Binary download failed, trying source." >&2
         command rm -rf "$tmptarball" "$tmpdir"
         return 1
       fi
@@ -983,9 +990,16 @@ nvm_install_node_binary() {
       tmpdir="$NVM_DIR/bin/node-${t}"
       local tmptarball
       tmptarball="$tmpdir/node-${t}.tar.gz"
+      local NVM_INSTALL_ERRORED
+      command mkdir -p "$tmpdir" && \
+        nvm_download -L -C - --progress-bar $url -o "$tmptarball" || \
+        NVM_INSTALL_ERRORED=true
+      if grep '404 Not Found' "$tmptarball" >/dev/null; then
+        NVM_INSTALL_ERRORED=true
+        echo >&2 "HTTP 404 at URL $url";
+      fi
       if (
-        command mkdir -p "$tmpdir" && \
-        nvm_download -L -C - --progress-bar $url -o "$tmptarball" && \
+        [ "$NVM_INSTALL_ERRORED" != true ] && \
         nvm_checksum "$tmptarball" $sum && \
         command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
         command rm -f "$tmptarball" && \
@@ -994,7 +1008,7 @@ nvm_install_node_binary() {
       ); then
         return 0
       else
-        echo "Binary download failed, trying source." >&2
+        echo >&2 "Binary download failed, trying source."
         command rm -rf "$tmptarball" "$tmpdir"
         return 1
       fi
