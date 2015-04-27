@@ -15,7 +15,7 @@ safe_type() {
 safe_type nvm_reset || die 'nvm_reset is not available'
 
 # Apply nvm_reset
-nvm_reset
+nvm_reset || die 'nvm_reset failed'
 
 # The names should be unset
 ! safe_type nvm_do_install || die 'nvm_do_install is still available'

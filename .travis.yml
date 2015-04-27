@@ -10,11 +10,7 @@ install:
 script:
   - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL
 env:
-  - SHELL=sh TEST_SUITE=install_script
-  - SHELL=dash TEST_SUITE=install_script
   - SHELL=bash TEST_SUITE=install_script
-  - SHELL=zsh TEST_SUITE=install_script
-#  - SHELL=ksh TEST_SUITE=install_script
   - SHELL=sh TEST_SUITE=fast
   - SHELL=dash TEST_SUITE=fast
   - SHELL=bash TEST_SUITE=fast
