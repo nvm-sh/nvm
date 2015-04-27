@@ -1247,12 +1247,15 @@ nvm() {
         elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
           NVM_INSTALL_SUCCESS=true
         fi
-      elif [ "$NVM_IOJS" = true ]; then
-        # nvm_install_iojs_source "$VERSION" "$ADDITIONAL_PARAMETERS"
-        echo "Installing iojs from source is not currently supported" >&2
-        return 105
-      elif nvm_install_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"; then
-        NVM_INSTALL_SUCCESS=true
+      fi
+      if [ "$NVM_INSTALL_SUCCESS" != true ]; then
+        if [ "$NVM_IOJS" = true ]; then
+          # nvm_install_iojs_source "$VERSION" "$ADDITIONAL_PARAMETERS"
+          echo "Installing iojs from source is not currently supported" >&2
+          return 105
+        elif nvm_install_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"; then
+          NVM_INSTALL_SUCCESS=true
+        fi
       fi
 
       if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
