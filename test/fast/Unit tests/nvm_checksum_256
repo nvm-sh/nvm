@@ -1,0 +1,18 @@
+#!/bin/sh
+
+cleanup () {
+  rm tmp/emptyfile256 tmp/testfile256
+  rmdir tmp
+}
+die () { echo $@ ; cleanup; exit 1; }
+
+. ../../../nvm.sh
+
+mkdir -p tmp
+touch tmp/emptyfile256
+echo -n "test" > tmp/testfile256
+
+nvm_checksum_256 tmp/emptyfile256 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" || die "nvm_checksum_256 on an empty file did not match the SHA256 digest of the empty string"
+nvm_checksum_256 tmp/testfile256 "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08" && echo $_$NVM_CHECKSUM_256 && die "nvm_checksum_256 allowed a bad checksum"
+
+cleanup
