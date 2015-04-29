@@ -870,12 +870,12 @@ nvm_get_os() {
 
 nvm_get_arch() {
   local NVM_UNAME
-  NVM_UNAME="$(uname -a)"
+  NVM_UNAME="$(uname -m)"
   local NVM_ARCH
   case "$NVM_UNAME" in
-    *x86_64*) NVM_ARCH=x64 ;;
-    *i*86*) NVM_ARCH=x86 ;;
-    *) NVM_ARCH="$(uname -m)" ;;
+    x86_64) NVM_ARCH="x64" ;;
+    i*86) NVM_ARCH="x86" ;;
+    *) NVM_ARCH="$NVM_UNAME" ;;
   esac
   echo "$NVM_ARCH"
 }
