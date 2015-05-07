@@ -16,7 +16,7 @@ Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creati
 
 To install you could use the [install script][2] using cURL:
 
-    curl https://raw.githubusercontent.com/creationix/nvm/v0.25.1/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.1/install.sh | bash
 
 or Wget:
 
