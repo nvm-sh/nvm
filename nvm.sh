@@ -1712,14 +1712,15 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       fi
 
       local NPMLIST
+      local VERSION
       if [ "_$PROVIDED_VERSION" = "_system" ]; then
         if ! nvm_has_system_node && ! nvm_has_system_iojs; then
           echo 'No system version of node or io.js detected.' >&2
           return 3
         fi
+        VERSION="system"
         NPMLIST=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2)
       else
-        local VERSION
         VERSION="$(nvm_version "$PROVIDED_VERSION")"
         NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2)
       fi
