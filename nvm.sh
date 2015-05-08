@@ -1728,7 +1728,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       fi
 
       local INSTALLS
-      INSTALLS=$(echo "$NPMLIST" | command sed -e '/ -> / d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' | command xargs)
+      INSTALLS=$(echo "$NPMLIST" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' | command xargs)
 
       echo "Copying global packages from $VERSION..."
       echo "$INSTALLS" | command xargs npm install -g --quiet
