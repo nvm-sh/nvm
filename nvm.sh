@@ -6,6 +6,8 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
+{ # this ensures the entire script is downloaded #
+
 NVM_SCRIPT_SOURCE="$_"
 
 nvm_has() {
@@ -1783,3 +1785,5 @@ elif [ -n "$VERSION" ]; then
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
 fi
+
+} # this ensures the entire script is downloaded #
