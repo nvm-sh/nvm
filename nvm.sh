@@ -1141,6 +1141,17 @@ nvm() {
       echo
     ;;
 
+    "debug" )
+      echo >&2 "\$SHELL: $SHELL"
+      echo >&2 "\$NVM_DIR: $(echo $NVM_DIR | sed "s#$HOME#\$HOME#g")"
+      for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
+      do
+        local NVM_DEBUG_OUTPUT="$($NVM_DEBUG_COMMAND | sed "s#$NVM_DIR#\$NVM_DIR#g")"
+        echo >&2 "$NVM_DEBUG_COMMAND: ${NVM_DEBUG_OUTPUT}"
+      done
+      return 42
+    ;;
+
     "install" | "i" )
       local nobinary
       local version_not_provided
