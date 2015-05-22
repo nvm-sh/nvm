@@ -1784,7 +1784,7 @@ nvm_supports_source_options() {
   [ "_$(echo 'echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
 }
 
-VERSION="$(nvm_alias default 2>/dev/null)"
+VERSION="$(nvm_alias default 2>/dev/null || echo)"
 if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
   if [ -n "$VERSION" ]; then
     nvm install "$VERSION" >/dev/null
