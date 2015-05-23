@@ -294,6 +294,8 @@ nvm_do_install() {
   INSTALL_DIR="$(nvm_install_dir)"
 
   SOURCE_STR="\nexport NVM_DIR=\"$INSTALL_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\n"
+  COMPLETION_STR="[ -s \"\$NVM_DIR/bash_completion\" ] && \\. \"\$NVM_DIR/bash_completion\"  # This loads nvm bash_completion\n"
+  BASH_OR_ZSH=false
 
   if [ -z "${NVM_PROFILE-}" ] ; then
     echo "=> Profile not found. Tried ${NVM_PROFILE} (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
@@ -303,12 +305,28 @@ nvm_do_install() {
     echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
   else
+    case "${NVM_PROFILE-}" in
+      ".bashrc" | ".bash_profile" | ".zshrc")
+        BASH_OR_ZSH=true
+      ;;
+    esac
     if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
-      echo "=> Appending source string to $NVM_PROFILE"
-      command printf "$SOURCE_STR" >> "$NVM_PROFILE"
+      echo "=> Appending nvm source string to $NVM_PROFILE"
+      command printf "${SOURCE_STR}" >> "$NVM_PROFILE"
     else
-      echo "=> Source string already in ${NVM_PROFILE}"
+      echo "=> nvm source string already in ${NVM_PROFILE}"
     fi
+    # shellcheck disable=SC2016
+    if ${BASH_OR_ZSH} && ! command grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
+      echo "=> Appending bash_completion source string to $NVM_PROFILE"
+      command printf "$COMPLETION_STR" >> "$NVM_PROFILE"
+    else
+      echo "=> bash_completion source string already in ${NVM_PROFILE}"
+    fi
+  fi
+  if ${BASH_OR_ZSH} && [ -z "${NVM_PROFILE-}" ] ; then
+    echo "=> Please also append the following lines to the if you are using bash/zsh shell:"
+    command printf "${COMPLETION_STR}"
   fi
 
   # Source nvm
@@ -322,7 +340,10 @@ nvm_do_install() {
   nvm_reset
 
   echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
-  command printf "$SOURCE_STR"
+  command printf "${SOURCE_STR}"
+  if ${BASH_OR_ZSH} ; then
+    command printf " && ${COMPLETION_STR}"
+  fi
 }
 
 #
