@@ -91,9 +91,6 @@ fi
 if [ -z "$NVM_IOJS_ORG_MIRROR" ]; then
   export NVM_IOJS_ORG_MIRROR="https://iojs.org/dist"
 fi
-if [ -z "$NVM_IOJS_ORG_VERSION_LISTING" ]; then
-  export NVM_IOJS_ORG_VERSION_LISTING="$NVM_IOJS_ORG_MIRROR/index.tab"
-fi
 
 nvm_tree_contains_path() {
   local tree
@@ -688,7 +685,7 @@ nvm_ls_remote_iojs() {
   else
     PATTERN=".*"
   fi
-  VERSIONS="$(nvm_download -L -s $NVM_IOJS_ORG_VERSION_LISTING -o - \
+  VERSIONS="$(nvm_download -L -s "$NVM_IOJS_ORG_MIRROR/index.tab" -o - \
     | command sed "
         1d;
         s/^/$(nvm_iojs_prefix)-/;
