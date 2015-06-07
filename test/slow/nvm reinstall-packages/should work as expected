@@ -7,7 +7,7 @@ die () { echo "$@" ; exit 1; }
 nvm use 0.10.28
 (cd test-npmlink && npm link)
 
-EXPECTED_PACKAGES="autoprefixer bower david eslint grunt-cli grunth-cli http-server jshint marked node-gyp npmlist recursive-blame test-npmlink uglify-js yo"
+EXPECTED_PACKAGES="autoprefixer bower david eslint grunt-cli grunth-cli http-server jshint marked node-gyp npmlist recursive-blame spawn-sync test-npmlink uglify-js yo"
 
 echo "$EXPECTED_PACKAGES" | xargs npm install -g --quiet
 
