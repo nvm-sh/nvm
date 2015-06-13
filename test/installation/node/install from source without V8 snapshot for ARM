@@ -23,3 +23,4 @@ nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || "'nvm run $NVM_T
 
 # Check V8 snapshot isn't compiled
 nvm run $NVM_TEST_VERSION -p process.config | grep "v8_use_snapshot: false" || "'nvm run $NVM_TEST_VERSION -p process.config | grep \"v8_use_snapshot: false\"' failed"
+
