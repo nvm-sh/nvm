@@ -17,9 +17,6 @@ nvm_get_arch() {
 # Install from source
 nvm install -s $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
 
-# Use new version
-nvm use $NVM_TEST_VERSION
-
 # Check Install
 [ -d ../../../$NVM_TEST_VERSION ]
 node --version | grep $NVM_TEST_VERSION || "'node --version | grep $NVM_TEST_VERSION' failed"
