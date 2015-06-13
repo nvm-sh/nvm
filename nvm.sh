@@ -1024,8 +1024,8 @@ nvm_install_node_source() {
 
   local NVM_ARCH
   NVM_ARCH="$(nvm_get_arch)"
-  if [[ $NVM_ARCH = *"arm"* ]]; then
-    ADDITIONAL_PARAMETERS+=" --without-snapshot"
+  if [ $NVM_ARCH = "armv6l" ] || [ $NVM_ARCH = "armv7l" ]; then
+    ADDITIONAL_PARAMETERS="--without-snapshot $ADDITIONAL_PARAMETERS"
   fi
 
   if [ -n "$ADDITIONAL_PARAMETERS" ]; then
