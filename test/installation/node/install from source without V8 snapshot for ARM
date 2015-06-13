@@ -17,10 +17,12 @@ nvm_get_arch() {
 # Install from source
 nvm install -s $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
 
+# Use new version
+nvm use $NVM_TEST_VERSION
+
 # Check Install
 [ -d ../../../$NVM_TEST_VERSION ]
-nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || "'nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"
+node --version | grep $NVM_TEST_VERSION || "'node --version | grep $NVM_TEST_VERSION' failed"
 
 # Check V8 snapshot isn't compiled
-nvm run $NVM_TEST_VERSION -p process.config | grep "v8_use_snapshot: false" || "'nvm run $NVM_TEST_VERSION -p process.config | grep \"v8_use_snapshot: false\"' failed"
-
+node -p "if(! process.config.variables.v8_use_snapshot) { console.log('no-snapshot'); }" | grep "no-snapshot" || "'node -p \"if(! process.config.variables.v8_use_snapshot) { console.log('no-snapshot'); }\" | grep \"no-snapshot\"' failed"
