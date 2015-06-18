@@ -1022,6 +1022,12 @@ nvm_install_node_source() {
   local ADDITIONAL_PARAMETERS
   ADDITIONAL_PARAMETERS="$2"
 
+  local NVM_ARCH
+  NVM_ARCH="$(nvm_get_arch)"
+  if [ $NVM_ARCH = "armv6l" ] || [ $NVM_ARCH = "armv7l" ]; then
+    ADDITIONAL_PARAMETERS="--without-snapshot $ADDITIONAL_PARAMETERS"
+  fi
+
   if [ -n "$ADDITIONAL_PARAMETERS" ]; then
     echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
   fi
