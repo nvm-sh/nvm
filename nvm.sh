@@ -62,7 +62,7 @@ nvm_has_system_iojs() {
 
 nvm_print_npm_version() {
   if nvm_has "npm"; then
-    npm --version 2>/dev/null | command xargs printf " (npm v%s)"
+    echo " (npm v$(npm --version 2>/dev/null))"
   fi
 }
 
