@@ -198,10 +198,14 @@ nvm_ensure_version_installed() {
   local PROVIDED_VERSION
   PROVIDED_VERSION="$1"
   local LOCAL_VERSION
+  local EXIT_CODE
   LOCAL_VERSION="$(nvm_version "$PROVIDED_VERSION")"
+  EXIT_CODE="$?"
   local NVM_VERSION_DIR
-  NVM_VERSION_DIR="$(nvm_version_path "$LOCAL_VERSION")"
-  if [ ! -d "$NVM_VERSION_DIR" ]; then
+  if [ "_$EXIT_CODE" = "_0" ]; then
+    NVM_VERSION_DIR="$(nvm_version_path "$LOCAL_VERSION")"
+  fi
+  if [ "_$EXIT_CODE" != "_0" ] || [ ! -d "$NVM_VERSION_DIR" ]; then
     VERSION="$(nvm_resolve_alias "$PROVIDED_VERSION")"
     if [ $? -eq 0 ]; then
       echo "N/A: version \"$PROVIDED_VERSION -> $VERSION\" is not yet installed" >&2
