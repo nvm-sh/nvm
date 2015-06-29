@@ -1094,6 +1094,24 @@ nvm_install_node_source() {
   return $?
 }
 
+nvm_match_version() {
+  local NVM_IOJS_PREFIX
+  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local PROVIDED_VERSION
+  PROVIDED_VERSION="$1"
+  case "_$PROVIDED_VERSION" in
+    "_$NVM_IOJS_PREFIX" | "_io.js")
+      echo "$(nvm_version $NVM_IOJS_PREFIX)"
+    ;;
+    "_system")
+      echo "system"
+    ;;
+    *)
+      echo "$(nvm_version "$PROVIDED_VERSION")"
+    ;;
+  esac
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -1383,22 +1401,8 @@ nvm() {
           VERSION="$(nvm_version "$PROVIDED_VERSION")"
         fi
       else
-        local NVM_IOJS_PREFIX
-        NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
-        local NVM_NODE_PREFIX
-        NVM_NODE_PREFIX="$(nvm_node_prefix)"
         PROVIDED_VERSION="$2"
-        case "_$PROVIDED_VERSION" in
-          "_$NVM_IOJS_PREFIX" | "_io.js")
-            VERSION="$(nvm_version $NVM_IOJS_PREFIX)"
-          ;;
-          "_system")
-            VERSION="system"
-          ;;
-          *)
-            VERSION="$(nvm_version "$PROVIDED_VERSION")"
-          ;;
-        esac
+        VERSION="$(nvm_match_version "$PROVIDED_VERSION")"
       fi
 
       if [ -z "$VERSION" ]; then
