@@ -1145,13 +1145,22 @@ nvm() {
     ;;
 
     "debug" )
+      local ZHS_HAS_SHWORDSPLIT_UNSET
+      if nvm_has "setopt"; then
+        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
+        setopt shwordsplit
+      fi
       echo >&2 "\$SHELL: $SHELL"
       echo >&2 "\$NVM_DIR: $(echo $NVM_DIR | sed "s#$HOME#\$HOME#g")"
+      local NVM_DEBUG_OUTPUT
       for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
       do
-        local NVM_DEBUG_OUTPUT="$($NVM_DEBUG_COMMAND | sed "s#$NVM_DIR#\$NVM_DIR#g")"
-        echo >&2 "$NVM_DEBUG_COMMAND: ${NVM_DEBUG_OUTPUT}"
+        NVM_DEBUG_OUTPUT="$($NVM_DEBUG_COMMAND 2>&1 | sed "s#$NVM_DIR#\$NVM_DIR#g")"
+        echo >&2 "$NVM_DEBUG_COMMAND: $NVM_DEBUG_OUTPUT"
       done
+      if [ "_$ZHS_HAS_SHWORDSPLIT_UNSET" = "_1" ] && nvm_has "unsetopt"; then
+        unsetopt shwordsplit
+      fi
       return 42
     ;;
 
