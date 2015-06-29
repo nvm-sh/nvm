@@ -1742,17 +1742,19 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       fi
 
       local INSTALLS
-      INSTALLS=$(echo "$NPMLIST" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' | command xargs)
+      INSTALLS=$(echo "$NPMLIST" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
 
       echo "Reinstalling global packages from $VERSION..."
       echo "$INSTALLS" | command xargs npm install -g --quiet
 
       local LINKS
-      LINKS=$(echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')
+      LINKS="$(echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')" # | command sed -e '/^ *$/d;s/.*/"&"/')
 
       echo "Linking global packages from $VERSION..."
-      for LINK in $LINKS; do
-        (cd "$LINK" && npm link)
+      for LINK in "$LINKS"; do
+        if [ -n "$LINK" ]; then
+          (cd "$LINK" && npm link)
+        fi
       done
     ;;
     "clear-cache" )

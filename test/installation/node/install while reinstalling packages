@@ -18,8 +18,8 @@ nvm use 0.9.7
 
 node --version | grep v0.9.7 > /dev/null || die "nvm use 0.9.7 failed"
 
-npm install -g is-nan@1.0.1 || die "npm install -g is-nan failed"
-npm list --global | grep is-nan > /dev/null || die "is-nan isn't installed"
+npm install -g object-is@0.0.0 || die "npm install -g object-is failed"
+npm list --global | grep object-is > /dev/null || die "object-is isn't installed"
 
 nvm ls 0.9 | grep v0.9.7 > /dev/null || die "nvm ls 0.9 didn't show v0.9.7"
 
@@ -30,5 +30,5 @@ nvm install 0.9.12 --reinstall-packages-from=0.9 || die "nvm install 0.9.12 --re
 nvm use 0.9
 node --version | grep v0.9.12 > /dev/null || die "nvm ls 0.9 didn't use v0.9.12"
 
-npm list --global | grep is-nan > /dev/null || die "is-nan isn't installed"
+npm list --global | grep object-is > /dev/null || die "object-is isn't installed"
 

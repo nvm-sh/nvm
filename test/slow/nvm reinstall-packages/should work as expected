@@ -4,12 +4,15 @@ die () { echo "$@" ; exit 1; }
 
 . ../../../nvm.sh
 
+nvm exec 0.10.28 npm install -g npm@~1.4.11 # this is required because before 1.4.10, npm ls doesn't indicated linked packages
+nvm exec 0.10.29 npm install -g npm@~1.4.11 # this is required because before 1.4.10, npm ls doesn't indicated linked packages
+
 nvm use 0.10.28
 (cd test-npmlink && npm link)
 
 EXPECTED_PACKAGES="autoprefixer bower david eslint grunt-cli grunth-cli http-server jshint marked node-gyp npmlist recursive-blame spawn-sync test-npmlink uglify-js yo"
 
-echo "$EXPECTED_PACKAGES" | xargs npm install -g --quiet
+echo "$EXPECTED_PACKAGES" | sed -e 's/test-npmlink //' | xargs npm install -g --quiet
 
 get_packages() {
   npm list -g --depth=0 | \sed -e '1 d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' | xargs
