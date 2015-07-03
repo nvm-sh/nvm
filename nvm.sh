@@ -1765,14 +1765,18 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       echo "$INSTALLS" | command xargs npm install -g --quiet
 
       local LINKS
-      LINKS="$(echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')" # | command sed -e '/^ *$/d;s/.*/"&"/')
+      LINKS="$(echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')"
 
       echo "Linking global packages from $VERSION..."
-      for LINK in "$LINKS"; do
+      set -f; IFS='
+' # necessary to turn off variable expansion except for newlines
+      for LINK in $LINKS; do
+        set +f; unset IFS # restore variable expansion
         if [ -n "$LINK" ]; then
           (cd "$LINK" && npm link)
         fi
       done
+      set +f; unset IFS # restore variable expansion in case $LINKS was empty
     ;;
     "clear-cache" )
       command rm -f $NVM_DIR/v* "$(nvm_version_dir)" 2>/dev/null
