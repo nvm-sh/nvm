@@ -1116,6 +1116,25 @@ nvm_match_version() {
   esac
 }
 
+nvm_npm_global_modules() {
+  local NPMLIST
+  local VERSION
+  VERSION="$1"
+  if [ "_$VERSION" = "_system" ]; then
+    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 | command tail -n +2)
+  else
+    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2)
+  fi
+
+  local INSTALLS
+  INSTALLS=$(echo "$NPMLIST" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
+
+  local LINKS
+  LINKS="$(echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')"
+
+  echo "$INSTALLS //// $LINKS"
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -1744,7 +1763,6 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
         return 2
       fi
 
-      local NPMLIST
       local VERSION
       if [ "_$PROVIDED_VERSION" = "_system" ]; then
         if ! nvm_has_system_node && ! nvm_has_system_iojs; then
@@ -1752,20 +1770,19 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
           return 3
         fi
         VERSION="system"
-        NPMLIST=$(nvm deactivate > /dev/null && npm list -g --depth=0 | command tail -n +2)
       else
         VERSION="$(nvm_version "$PROVIDED_VERSION")"
-        NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2)
       fi
 
+      local NPMLIST
+      NPMLIST="$(nvm_npm_global_modules "$VERSION")"
       local INSTALLS
-      INSTALLS=$(echo "$NPMLIST" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
+      local LINKS
+      INSTALLS="${NPMLIST%% //// *}"
+      LINKS="${NPMLIST##* //// }"
 
       echo "Reinstalling global packages from $VERSION..."
       echo "$INSTALLS" | command xargs npm install -g --quiet
-
-      local LINKS
-      LINKS="$(echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')"
 
       echo "Linking global packages from $VERSION..."
       set -f; IFS='
@@ -1796,6 +1813,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
         nvm_ls_remote nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_version nvm_rc_version \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
+        nvm_npm_global_modules \
         nvm_supports_source_options > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
