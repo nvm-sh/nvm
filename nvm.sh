@@ -670,7 +670,7 @@ nvm_ls_remote() {
     PATTERN=".*"
   fi
   VERSIONS=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/ -o - \
-              | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
+              | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+(-rc\d+)?' \
               | command grep -w "${PATTERN}" \
               | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
   if [ -z "$VERSIONS" ]; then
