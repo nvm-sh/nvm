@@ -61,7 +61,7 @@ nvm_has_system_iojs() {
 }
 
 nvm_print_npm_version() {
-  if nvm_has "npm"; then
+  if [ "$NVM_SILENT" != "true" ] && nvm_has "npm"; then
     echo " (npm v$(npm --version 2>/dev/null))"
   fi
 }
@@ -1882,7 +1882,9 @@ if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
     nvm install >/dev/null
   fi
 elif [ -n "$VERSION" ]; then
+  NVM_SILENT="true"
   nvm use "$VERSION" >/dev/null
+  unset NVM_SILENT
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use >/dev/null
 fi
