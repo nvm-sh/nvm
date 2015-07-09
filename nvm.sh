@@ -1476,11 +1476,11 @@ nvm() {
           [ $silent -ne 1 ] && echo "Now using system version of io.js: $(iojs --version 2>/dev/null)$(nvm_print_npm_version)"
           return
         else
-          echo "System version of node not found." >&2
+          [ $silent -ne 1 ] && echo "System version of node not found." >&2
           return 127
         fi
       elif [ "_$VERSION" = "_∞" ]; then
-        echo "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting." >&2
+        [ $silent -ne 1 ] && echo "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting." >&2
         return 8
       fi
 
