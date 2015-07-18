@@ -1445,10 +1445,10 @@ nvm() {
     ;;
     "use" )
       local PROVIDED_VERSION
-      local silent
-      silent=0
+      local NVM_USE_SILENT
+      NVM_USE_SILENT=0
       if [ "$2" = '--silent' ]; then
-        silent=1
+        NVM_USE_SILENT=1
         shift
       fi
 
@@ -1470,23 +1470,23 @@ nvm() {
 
       if [ "_$VERSION" = '_system' ]; then
         if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
-          if [ $silent -ne 1 ]; then
+          if [ $NVM_USE_SILENT -ne 1 ]; then
             echo "Now using system version of node: $(node -v 2>/dev/null)$(nvm_print_npm_version)"
           fi
           return
         elif nvm_has_system_iojs && nvm deactivate >/dev/null 2>&1; then
-          if [ $silent -ne 1 ]; then
+          if [ $NVM_USE_SILENT -ne 1 ]; then
             echo "Now using system version of io.js: $(iojs --version 2>/dev/null)$(nvm_print_npm_version)"
           fi
           return
         else
-          if [ $silent -ne 1 ]; then
+          if [ $NVM_USE_SILENT -ne 1 ]; then
             echo "System version of node not found." >&2
           fi
           return 127
         fi
       elif [ "_$VERSION" = "_∞" ]; then
-        if [ $silent -ne 1 ]; then
+        if [ $NVM_USE_SILENT -ne 1 ]; then
           echo "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting." >&2
         fi
         return 8
@@ -1525,11 +1525,11 @@ nvm() {
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
       if nvm_is_iojs_version "$VERSION"; then
-        if [ $silent -ne 1 ]; then
+        if [ $NVM_USE_SILENT -ne 1 ]; then
           echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
         fi
       else
-        if [ $silent -ne 1 ]; then
+        if [ $NVM_USE_SILENT -ne 1 ]; then
           echo "Now using node $VERSION$(nvm_print_npm_version)"
         fi
       fi
