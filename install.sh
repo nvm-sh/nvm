@@ -227,8 +227,9 @@ nvm_do_install() {
   fi
 
   nvm_check_global_modules
-
-  echo "=> Close and reopen your terminal to start using nvm"
+  
+  . $NVM_DIR/nvm.sh
+  echo "=> You can now start using nvm"
   nvm_reset
 }
 
