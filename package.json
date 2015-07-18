@@ -31,7 +31,7 @@
   "homepage": "https://github.com/creationix/nvm",
   "devDependencies": {
     "replace": "^0.3.0",
-    "semver": "^4.3.4",
+    "semver": "^5.0.1",
     "urchin": "^0.0.5"
   }
 }
