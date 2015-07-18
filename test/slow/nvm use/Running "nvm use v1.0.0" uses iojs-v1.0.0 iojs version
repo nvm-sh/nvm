@@ -12,3 +12,9 @@ EXPECTED_OUTPUT="$(nvm_version v1.0.0)"
 
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
   || die "'nvm use v1.0.0' + 'nvm current' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+
+OUTPUT="$(nvm use --silent 'v1.0.0')"
+EXPECTED_OUTPUT=""
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
+  || die "'nvm use --silent v1.0.0' output was not silenced '$EXPECTED_OUTPUT'; got '$OUTPUT'"

@@ -1187,7 +1187,7 @@ nvm() {
       echo "  nvm --version                         Print out the latest released version of nvm"
       echo "  nvm install [-s] <version>            Download and install a <version>, [-s] from source. Uses .nvmrc if available"
       echo "  nvm uninstall <version>               Uninstall a version"
-      echo "  nvm use <version>                     Modify PATH to use <version>. Uses .nvmrc if available"
+      echo "  nvm use [--silent] <version>          Modify PATH to use <version>. Uses .nvmrc if available"
       echo "  nvm run <version> [<args>]            Run <version> with <args> as arguments. Uses .nvmrc if available for <version>"
       echo "  nvm current                           Display currently activated version"
       echo "  nvm ls                                List installed versions"
@@ -1445,6 +1445,13 @@ nvm() {
     ;;
     "use" )
       local PROVIDED_VERSION
+      local silent
+      silent=0
+      if [ "$2" = '--silent' ]; then
+        silent=1
+        shift
+      fi
+
       if [ $# -eq 1 ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
@@ -1463,17 +1470,25 @@ nvm() {
 
       if [ "_$VERSION" = '_system' ]; then
         if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
-          echo "Now using system version of node: $(node -v 2>/dev/null)$(nvm_print_npm_version)"
+          if [ $silent -ne 1 ]; then
+            echo "Now using system version of node: $(node -v 2>/dev/null)$(nvm_print_npm_version)"
+          fi
           return
         elif nvm_has_system_iojs && nvm deactivate >/dev/null 2>&1; then
-          echo "Now using system version of io.js: $(iojs --version 2>/dev/null)$(nvm_print_npm_version)"
+          if [ $silent -ne 1 ]; then
+            echo "Now using system version of io.js: $(iojs --version 2>/dev/null)$(nvm_print_npm_version)"
+          fi
           return
         else
-          echo "System version of node not found." >&2
+          if [ $silent -ne 1 ]; then
+            echo "System version of node not found." >&2
+          fi
           return 127
         fi
       elif [ "_$VERSION" = "_∞" ]; then
-        echo "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting." >&2
+        if [ $silent -ne 1 ]; then
+          echo "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting." >&2
+        fi
         return 8
       fi
 
@@ -1510,9 +1525,13 @@ nvm() {
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
       if nvm_is_iojs_version "$VERSION"; then
-        echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
+        if [ $silent -ne 1 ]; then
+          echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
+        fi
       else
-        echo "Now using node $VERSION$(nvm_print_npm_version)"
+        if [ $silent -ne 1 ]; then
+          echo "Now using node $VERSION$(nvm_print_npm_version)"
+        fi
       fi
     ;;
     "run" )
@@ -1882,9 +1901,9 @@ if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
     nvm install >/dev/null
   fi
 elif [ -n "$VERSION" ]; then
-  nvm use "$VERSION" >/dev/null
+  nvm use --silent "$VERSION" >/dev/null
 elif nvm_rc_version >/dev/null 2>&1; then
-  nvm use >/dev/null
+  nvm use --silent >/dev/null
 fi
 
 } # this ensures the entire script is downloaded #
