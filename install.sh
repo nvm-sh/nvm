@@ -117,16 +117,38 @@ install_nvm_as_script() {
 # Otherwise, an empty string is returned
 #
 nvm_detect_profile() {
-  if [ -f "$PROFILE" ]; then
-    echo "$PROFILE"
-  elif [ -f "$HOME/.bashrc" ]; then
-    echo "$HOME/.bashrc"
-  elif [ -f "$HOME/.bash_profile" ]; then
-    echo "$HOME/.bash_profile"
-  elif [ -f "$HOME/.zshrc" ]; then
-    echo "$HOME/.zshrc"
-  elif [ -f "$HOME/.profile" ]; then
-    echo "$HOME/.profile"
+
+  local DETECTED_PROFILE
+  DETECTED_PROFILE=''
+  local SHELLTYPE
+  SHELLTYPE="$(basename /$SHELL)"
+
+  if [ $SHELLTYPE = "bash" ]; then
+    if [ -f "$HOME/.bashrc" ]; then
+      DETECTED_PROFILE="$HOME/.bashrc"
+    elif [ -f "$HOME/.bash_profile" ]; then
+      DETECTED_PROFILE="$HOME/.bash_profile"
+    fi
+  elif [ $SHELLTYPE = "zsh" ]; then
+    DETECTED_PROFILE="$HOME/.zshrc"
+  fi
+
+  if [ -z $DETECTED_PROFILE ]; then
+    if [ -f "$PROFILE" ]; then
+      DETECTED_PROFILE="$PROFILE"
+    elif [ -f "$HOME/.profile" ]; then
+      DETECTED_PROFILE="$HOME/.profile"
+    elif [ -f "$HOME/.bashrc" ]; then
+      DETECTED_PROFILE="$HOME/.bashrc"
+    elif [ -f "$HOME/.bash_profile" ]; then
+      DETECTED_PROFILE="$HOME/.bash_profile"
+    elif [ -f "$HOME/.zshrc" ]; then
+      DETECTED_PROFILE="$HOME/.zshrc"
+    fi
+  fi
+
+  if [ ! -z $DETECTED_PROFILE ]; then
+    echo "$DETECTED_PROFILE"
   fi
 }
 
