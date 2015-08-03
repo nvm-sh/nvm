@@ -1149,9 +1149,9 @@ nvm_npm_global_modules() {
   local VERSION
   VERSION="$1"
   if [ "_$VERSION" = "_system" ]; then
-    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 | command tail -n +2)
+    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null | command tail -n +2)
   else
-    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 | command tail -n +2)
+    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | command tail -n +2)
   fi
 
   local INSTALLS
