@@ -78,12 +78,24 @@ In place of a version pointer like "0.10", you can use the special default alias
 
 If you want to install a new version of Node.js and migrate npm packages from a previous version:
 
+    nvm install node --reinstall-packages-from=node
+
+This will first use "nvm version node" to identify the current version you're migrating packages from. Then it resolves the new version to install from the remote server and installs it. Lastly, it runs "nvm reinstall-packages" to reinstall the npm packages from your prior version of Node to the new one.
+
+You can also install and migrate npm packages from specific versions of Node like this:
+
     nvm install v0.10.40 --reinstall-packages-from=0.10.39
     nvm install v0.12.7 --reinstall-packages-from=0.12.6
 
 If you want to install [io.js](https://github.com/iojs/io.js/):
 
     nvm install iojs
+
+If you want to install a new version of io.js and migrate npm packages from a previous version:
+
+    nvm install iojs --reinstall-packages-from=iojs
+
+The same guidelines mentioned for migrating npm packages in Node.js are applicable to io.js.
 
 If you want to use the system-installed version of node, you can use the special default alias "system":
 
