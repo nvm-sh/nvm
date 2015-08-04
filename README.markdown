@@ -76,6 +76,11 @@ In place of a version pointer like "0.10", you can use the special default alias
     nvm use stable
     nvm run unstable --version
 
+If you want to install a new version of Node.js and migrate packages from a previous version:
+
+    nvm install v0.10.40 --reinstall-packages-from=0.10.39
+    nvm install v0.12.7 --reinstall-packages-from=0.12.6
+
 If you want to install [io.js](https://github.com/iojs/io.js/):
 
     nvm install iojs
