@@ -1193,6 +1193,8 @@ nvm() {
       echo "  nvm ls                                List installed versions"
       echo "  nvm ls <version>                      List versions matching a given description"
       echo "  nvm ls-remote                         List remote versions available for install"
+      echo "  nvm version <version>                 Resolve the given description to a single local version"
+      echo "  nvm version-remote <version>          Resolve the given description to a single remote version"
       echo "  nvm deactivate                        Undo effects of \`nvm\` on current shell"
       echo "  nvm alias [<pattern>]                 Show all aliases beginning with <pattern>"
       echo "  nvm alias <name> <version>            Set an alias named <name> pointing to <version>"
@@ -1851,7 +1853,10 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       echo "Cache cleared."
     ;;
     "version" )
-      nvm_version $2
+      nvm_version "$2"
+    ;;
+    "version-remote" )
+      nvm_remote_version "$2"
     ;;
     "--version" )
       echo "0.25.4"
