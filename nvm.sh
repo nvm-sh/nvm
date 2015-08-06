@@ -1191,37 +1191,37 @@ nvm() {
       echo "  - default (built-in) aliases: $NVM_NODE_PREFIX, stable, unstable, $NVM_IOJS_PREFIX, system"
       echo '  - custom aliases you define with `nvm alias foo`'
       echo
-      echo "Usage:"
-      echo "  nvm help                              Show this message"
-      echo "  nvm --version                         Print out the latest released version of nvm"
-      echo "  nvm install [-s] <version>            Download and install a <version>, [-s] from source. Uses .nvmrc if available"
-      echo "    --reinstall-packages-from=<version> When installing, reinstall packages installed in <node|iojs|node version number>"
-      echo "  nvm uninstall <version>               Uninstall a version"
-      echo "  nvm use [--silent] <version>          Modify PATH to use <version>. Uses .nvmrc if available"
-      echo "  nvm run <version> [<args>]            Run <version> with <args> as arguments. Uses .nvmrc if available for <version>"
-      echo "  nvm current                           Display currently activated version"
-      echo "  nvm ls                                List installed versions"
-      echo "  nvm ls <version>                      List versions matching a given description"
-      echo "  nvm ls-remote                         List remote versions available for install"
-      echo "  nvm version <version>                 Resolve the given description to a single local version"
-      echo "  nvm version-remote <version>          Resolve the given description to a single remote version"
-      echo "  nvm deactivate                        Undo effects of \`nvm\` on current shell"
-      echo "  nvm alias [<pattern>]                 Show all aliases beginning with <pattern>"
-      echo "  nvm alias <name> <version>            Set an alias named <name> pointing to <version>"
-      echo "  nvm unalias <name>                    Deletes the alias named <name>"
-      echo "  nvm reinstall-packages <version>      Reinstall global \`npm\` packages contained in <version> to current version"
-      echo "  nvm unload                            Unload \`nvm\` from shell"
-      echo "  nvm which [<version>]                 Display path to installed node version. Uses .nvmrc if available"
+      echo 'Usage:'
+      echo '  nvm help                              Show this message'
+      echo '  nvm --version                         Print out the latest released version of nvm'
+      echo '  nvm install [-s] <version>            Download and install a <version>, [-s] from source. Uses .nvmrc if available'
+      echo '    --reinstall-packages-from=<version> When installing, reinstall packages installed in <node|iojs|node version number>'
+      echo '  nvm uninstall <version>               Uninstall a version'
+      echo '  nvm use [--silent] <version>          Modify PATH to use <version>. Uses .nvmrc if available'
+      echo '  nvm run <version> [<args>]            Run <version> with <args> as arguments. Uses .nvmrc if available for <version>'
+      echo '  nvm current                           Display currently activated version'
+      echo '  nvm ls                                List installed versions'
+      echo '  nvm ls <version>                      List versions matching a given description'
+      echo '  nvm ls-remote                         List remote versions available for install'
+      echo '  nvm version <version>                 Resolve the given description to a single local version'
+      echo '  nvm version-remote <version>          Resolve the given description to a single remote version'
+      echo '  nvm deactivate                        Undo effects of `nvm` on current shell'
+      echo '  nvm alias [<pattern>]                 Show all aliases beginning with <pattern>'
+      echo '  nvm alias <name> <version>            Set an alias named <name> pointing to <version>'
+      echo '  nvm unalias <name>                    Deletes the alias named <name>'
+      echo '  nvm reinstall-packages <version>      Reinstall global `npm` packages contained in <version> to current version'
+      echo '  nvm unload                            Unload `nvm` from shell'
+      echo '  nvm which [<version>]                 Display path to installed node version. Uses .nvmrc if available'
       echo
-      echo "Example:"
-      echo "  nvm install v0.10.32                  Install a specific version number"
-      echo "  nvm use 0.10                          Use the latest available 0.10.x release"
-      echo "  nvm run 0.10.32 app.js                Run app.js using node v0.10.32"
-      echo "  nvm exec 0.10.32 node app.js          Run \`node app.js\` with the PATH pointing to node v0.10.32"
-      echo "  nvm alias default 0.10.32             Set default node version on a shell"
+      echo 'Example:'
+      echo '  nvm install v0.10.32                  Install a specific version number'
+      echo '  nvm use 0.10                          Use the latest available 0.10.x release'
+      echo '  nvm run 0.10.32 app.js                Run app.js using node v0.10.32'
+      echo '  nvm exec 0.10.32 node app.js          Run `node app.js` with the PATH pointing to node v0.10.32'
+      echo '  nvm alias default 0.10.32             Set default node version on a shell'
       echo
-      echo "Note:"
-      echo "  to remove, delete, or uninstall nvm - just remove ~/.nvm, ~/.npm, and ~/.bower folders"
+      echo 'Note:'
+      echo '  to remove, delete, or uninstall nvm - just remove the `$NVM_DIR` folder (usually `~/.nvm`)'
       echo
     ;;
 
