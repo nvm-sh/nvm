@@ -1186,6 +1186,7 @@ nvm() {
       echo "  nvm help                              Show this message"
       echo "  nvm --version                         Print out the latest released version of nvm"
       echo "  nvm install [-s] <version>            Download and install a <version>, [-s] from source. Uses .nvmrc if available"
+      echo "    --reinstall-packages-from=<version> When installing, reinstall packages installed in <node|iojs|node version number>"
       echo "  nvm uninstall <version>               Uninstall a version"
       echo "  nvm use [--silent] <version>          Modify PATH to use <version>. Uses .nvmrc if available"
       echo "  nvm run <version> [<args>]            Run <version> with <args> as arguments. Uses .nvmrc if available for <version>"
