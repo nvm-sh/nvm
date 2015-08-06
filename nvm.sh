@@ -1179,8 +1179,17 @@ nvm() {
 
   case $1 in
     "help" )
+      local NVM_IOJS_PREFIX
+      NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+      local NVM_NODE_PREFIX
+      NVM_NODE_PREFIX="$(nvm_node_prefix)"
       echo
       echo "Node Version Manager"
+      echo
+      echo 'Note: <version> refers to any version-like string nvm understands. This includes:'
+      echo '  - full or partial version numbers, starting with an optional "v" (0.10, v0.1.2, v1)'
+      echo "  - default (built-in) aliases: $NVM_NODE_PREFIX, stable, unstable, $NVM_IOJS_PREFIX, system"
+      echo '  - custom aliases you define with `nvm alias foo`'
       echo
       echo "Usage:"
       echo "  nvm help                              Show this message"
