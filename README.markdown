@@ -4,11 +4,11 @@
 
 First you'll need to make sure your system has a c++ compiler. For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
-Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are not supported nor developed by us:
+Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
  - [nvmw](https://github.com/hakobera/nvmw)
  - [nvm-windows](https://github.com/coreybutler/nvm-windows)
 
-Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Two alternatives exist, which are not supported nor developed by us:
+Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Two alternatives exist, which are neither supported nor developed by us:
  - [nvm-fish-wrapper](https://github.com/passcod/nvm-fish-wrapper)
  - [nvm-fish](https://github.com/Alex7Kom/nvm-fish) (does not support iojs)
 
