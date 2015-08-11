@@ -49,6 +49,8 @@ Often I also put in a line to use a specific version of node.
 You can create an `.nvmrc` file containing version number in the project root directory (or any parent directory).
 `nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied.
 
+Please note that your `.nvmrc` file must include a string used by `nvm` to identify a version. This means `stable` and  `iojs` are valid, as is `v0.12.7`, but `0.12` will not be understood.
+
 To download, compile, and install the latest v0.10.x release of node, do this:
 
     nvm install 0.10
