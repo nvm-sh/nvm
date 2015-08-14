@@ -1869,7 +1869,7 @@ $NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
       nvm_remote_version "$2"
     ;;
     "--version" )
-      echo "0.25.4"
+      echo "0.26.0"
     ;;
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum \
