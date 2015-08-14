@@ -249,7 +249,7 @@ nvm_do_install() {
   fi
 
   nvm_check_global_modules
-  
+
   . $NVM_DIR/nvm.sh
   echo "=> You can now start using nvm"
   nvm_reset
