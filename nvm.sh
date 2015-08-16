@@ -24,7 +24,7 @@ nvm_get_latest() {
   if nvm_has "curl"; then
     NVM_LATEST_URL="$(curl -q -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
-    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
     >&2 echo 'nvm needs curl or wget to proceed.'
     return 1
@@ -33,7 +33,7 @@ nvm_get_latest() {
     >&2 echo "http://latest.nvm.sh did not redirect to the latest release on Github"
     return 2
   else
-    echo "$NVM_LATEST_URL" | awk -F'/' '{print $NF}'
+    echo "$NVM_LATEST_URL" | command awk -F'/' '{print $NF}'
   fi
 }
 
@@ -238,7 +238,7 @@ nvm_version() {
       PATTERN="stable"
     ;;
   esac
-  VERSION="$(nvm_ls "$PATTERN" | tail -n1)"
+  VERSION="$(nvm_ls "$PATTERN" | command tail -n1)"
   if [ -z "$VERSION" ] || [ "_$VERSION" = "_N/A" ]; then
     echo "N/A"
     return 3;
@@ -254,14 +254,14 @@ nvm_remote_version() {
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
     case "_$PATTERN" in
       "_$(nvm_iojs_prefix)")
-        VERSION="$(nvm_ls_remote_iojs | tail -n1)"
+        VERSION="$(nvm_ls_remote_iojs | command tail -n1)"
       ;;
       *)
         VERSION="$(nvm_ls_remote "$PATTERN")"
       ;;
     esac
   else
-    VERSION="$(nvm_remote_versions "$PATTERN" | tail -n1)"
+    VERSION="$(nvm_remote_versions "$PATTERN" | command tail -n1)"
   fi
   echo "$VERSION"
   if [ "_$VERSION" = '_N/A' ]; then
@@ -317,7 +317,7 @@ nvm_is_valid_version() {
 }
 
 nvm_normalize_version() {
-  echo "${1#v}" | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
+  echo "${1#v}" | command awk -F. '{ command printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_ensure_version_prefix() {
@@ -441,7 +441,7 @@ nvm_resolve_alias() {
     fi
 
     if [ -n "$ALIAS_TEMP" ] \
-      && printf "$SEEN_ALIASES" | command grep -e "^$ALIAS_TEMP$" > /dev/null; then
+      && command printf "$SEEN_ALIASES" | command grep -e "^$ALIAS_TEMP$" > /dev/null; then
       ALIAS="∞"
       break
     fi
@@ -665,7 +665,7 @@ nvm_ls_remote() {
   local GREP_OPTIONS
   GREP_OPTIONS=''
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-    PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | tail -n1)"
+    PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command tail -n1)"
   elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
   else
@@ -674,7 +674,7 @@ nvm_ls_remote() {
   VERSIONS=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/ -o - \
               | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
               | command grep -w "${PATTERN}" \
-              | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
+              | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
     return 3
@@ -757,7 +757,7 @@ nvm_print_versions() {
     else
       FORMAT='%15s'
     fi
-    printf "$FORMAT\n" $VERSION
+    command printf "$FORMAT\n" $VERSION
   done
 }
 
@@ -814,7 +814,7 @@ nvm_print_implicit_alias() {
       fi
 
       local NVM_IOJS_VERSION
-      NVM_IOJS_VERSION="$($NVM_COMMAND | sed "s/^"$NVM_IMPLICIT"-//" | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq | tail -1)"
+      NVM_IOJS_VERSION="$($NVM_COMMAND | sed "s/^"$NVM_IMPLICIT"-//" | command grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
       local EXIT_CODE
       EXIT_CODE="$?"
 
@@ -841,7 +841,7 @@ nvm_print_implicit_alias() {
         setopt shwordsplit
       fi
 
-      LAST_TWO=$($NVM_COMMAND | command grep -e '^v' | cut -c2- | cut -d . -f 1,2 | uniq)
+      LAST_TWO=$($NVM_COMMAND | command grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq)
 
       if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
@@ -1693,7 +1693,7 @@ nvm() {
 
       local NVM_OUTPUT
       NVM_OUTPUT="$(echo "$NVM_LS_REMOTE_OUTPUT
-$NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | sed '/^$/d')"
+$NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | command sed '/^$/d')"
       if [ -n "$NVM_OUTPUT" ]; then
         nvm_print_versions "$NVM_OUTPUT"
         return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
