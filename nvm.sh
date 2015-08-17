@@ -317,7 +317,7 @@ nvm_is_valid_version() {
 }
 
 nvm_normalize_version() {
-  echo "${1#v}" | command awk -F. '{ command printf("%d%06d%06d\n", $1,$2,$3); }'
+  echo "${1#v}" | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
 }
 
 nvm_ensure_version_prefix() {
