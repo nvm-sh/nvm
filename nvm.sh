@@ -852,6 +852,7 @@ nvm_print_implicit_alias() {
   local STABLE
   local UNSTABLE
   local MOD
+  local NORMALIZED_VERSION
 
   ZHS_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
@@ -859,11 +860,16 @@ nvm_print_implicit_alias() {
     setopt shwordsplit
   fi
   for MINOR in $LAST_TWO; do
-    MOD=$(expr "$(nvm_normalize_version "$MINOR")" \/ 1000000 \% 2)
-    if [ $MOD -eq 0 ]; then
+    NORMALIZED_VERSION="$(nvm_normalize_version "$MINOR")"
+    if [ "_0${NORMALIZED_VERSION#?}" != "_$NORMALIZED_VERSION" ]; then
       STABLE="$MINOR"
-    elif [ $MOD -eq 1 ]; then
-      UNSTABLE="$MINOR"
+    else
+      MOD=$(expr "$NORMALIZED_VERSION" \/ 1000000 \% 2)
+      if [ $MOD -eq 0 ]; then
+        STABLE="$MINOR"
+      elif [ $MOD -eq 1 ]; then
+        UNSTABLE="$MINOR"
+      fi
     fi
   done
   if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
