@@ -931,6 +931,71 @@ nvm_is_merged_node_version() {
    nvm_version_greater_than_or_equal_to "$1" v4.0.0
 }
 
+nvm_install_merged_node_binary() {
+  local NVM_NODE_TYPE
+  NVM_NODE_TYPE="$1"
+  local MIRROR
+  if [ "_$NVM_NODE_TYPE" = "_std" ]; then
+    MIRROR="$NVM_NODEJS_ORG_MIRROR"
+  else
+    echo "unknown type of node.js release" >&2
+    return 4
+  fi
+  local VERSION
+  VERSION="$2"
+  local REINSTALL_PACKAGES_FROM
+  REINSTALL_PACKAGES_FROM="$3"
+
+  if nvm_is_merged_node_version "$VERSION" || nvm_is_iojs_version "$VERSION"; then
+    echo 'nvm_install_merged_node_binary requires a node version v4.0 or greater.' >&2
+    return 10
+  fi
+
+  local VERSION_PATH
+  VERSION_PATH="$(nvm_version_path "$VERSION")"
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+  local t
+  local url
+  local sum
+  local NODE_PREFIX
+  NODE_PREFIX="$(nvm_node_prefix)"
+
+  if [ -n "$NVM_OS" ]; then
+    t="$VERSION-$NVM_OS-$(nvm_get_arch)"
+    url="$MIRROR/$VERSION/$NODE_PREFIX-${t}.tar.gz"
+    sum="$(nvm_download -L -s $MIRROR/$VERSION/SHASUMS256.txt -o - | command grep $NODE_PREFIX-${t}.tar.gz | command awk '{print $1}')"
+    local tmpdir
+    tmpdir="$NVM_DIR/bin/node-${t}"
+    local tmptarball
+    tmptarball="$tmpdir/node-${t}.tar.gz"
+    local NVM_INSTALL_ERRORED
+    command mkdir -p "$tmpdir" && \
+      nvm_download -L -C - --progress-bar $url -o "$tmptarball" || \
+      NVM_INSTALL_ERRORED=true
+    if grep '404 Not Found' "$tmptarball" >/dev/null; then
+      NVM_INSTALL_ERRORED=true
+      echo >&2 "HTTP 404 at URL $url";
+    fi
+    if (
+      [ "$NVM_INSTALL_ERRORED" != true ] && \
+      echo "WARNING: checksums are currently disabled for node.js v4.0 and later" >&2 && \
+      # nvm_checksum "$tmptarball" $sum && \
+      command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
+      command rm -f "$tmptarball" && \
+      command mkdir -p "$VERSION_PATH" && \
+      command mv "$tmpdir"/* "$VERSION_PATH"
+    ); then
+      return 0
+    else
+      echo >&2 "Binary download failed, trying source." >&2
+      command rm -rf "$tmptarball" "$tmpdir"
+      return 1
+    fi
+  fi
+  return 2
+}
+
 nvm_install_iojs_binary() {
   local NVM_IOJS_TYPE
   NVM_IOJS_TYPE="$1"
