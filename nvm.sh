@@ -1398,9 +1398,12 @@ nvm() {
         return 5
       fi
 
+      local NVM_NODE_MERGED
       local NVM_IOJS
       if nvm_is_iojs_version "$VERSION"; then
         NVM_IOJS=true
+      elif nvm_is_merged_node_version "$VERSION"; then
+        NVM_NODE_MERGED=true
       fi
 
       local VERSION_PATH
@@ -1416,7 +1419,7 @@ nvm() {
       if [ "_$NVM_OS" = "_freebsd" ]; then
         # node.js and io.js do not have a FreeBSD binary
         nobinary=1
-      elif [ "_$NVM_OS" = "_sunos" ] && [ "$NVM_IOJS" = true ]; then
+      elif [ "_$NVM_OS" = "_sunos" ] && [ "$NVM_IOJS" = true ] || [ "$NVM_NODE_MERGED" = true ]; then
         # io.js does not have a SunOS binary
         nobinary=1
       fi
@@ -1424,6 +1427,8 @@ nvm() {
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
         if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary std "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+          NVM_INSTALL_SUCCESS=true
+        elif [ "$NVM_NODE_MERGED" = true ] && nvm_install_merged_node_binary std "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
           NVM_INSTALL_SUCCESS=true
         elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
           NVM_INSTALL_SUCCESS=true
@@ -1434,6 +1439,10 @@ nvm() {
           # nvm_install_iojs_source "$VERSION" "$ADDITIONAL_PARAMETERS"
           echo "Installing iojs from source is not currently supported" >&2
           return 105
+        elif [ "$NVM_NODE_MERGED" = true ]; then
+         # nvm_install_merged_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"
+         echo "Installing node v1.0 and greater from source is not currently supported" >&2
+         return 106
         elif nvm_install_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"; then
           NVM_INSTALL_SUCCESS=true
         fi
