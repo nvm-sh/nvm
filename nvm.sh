@@ -927,6 +927,10 @@ nvm_ensure_default_set() {
   return $EXIT_CODE
 }
 
+nvm_is_merged_node_version() {
+   nvm_version_greater_than_or_equal_to "$1" v4.0.0
+}
+
 nvm_install_iojs_binary() {
   local NVM_IOJS_TYPE
   NVM_IOJS_TYPE="$1"
