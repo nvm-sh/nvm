@@ -1992,15 +1992,15 @@ nvm_supports_source_options() {
   [ "_$(echo 'echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
 }
 
-VERSION="$(nvm_alias default 2>/dev/null || echo)"
+NVM_VERSION="$(nvm_alias default 2>/dev/null || echo)"
 if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
-  if [ -n "$VERSION" ]; then
-    nvm install "$VERSION" >/dev/null
+  if [ -n "$NVM_VERSION" ]; then
+    nvm install "$NVM_VERSION" >/dev/null
   elif nvm_rc_version >/dev/null 2>&1; then
     nvm install >/dev/null
   fi
-elif [ -n "$VERSION" ]; then
-  nvm use --silent "$VERSION" >/dev/null
+elif [ -n "$NVM_VERSION" ]; then
+  nvm use --silent "$NVM_VERSION" >/dev/null
 elif nvm_rc_version >/dev/null 2>&1; then
   nvm use --silent >/dev/null
 fi
