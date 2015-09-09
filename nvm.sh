@@ -999,16 +999,24 @@ nvm_install_merged_node_binary() {
   local url
   local sum
   local NODE_PREFIX
+  local compression
+  compression="gz"
+  local tar_compression_flag
+  tar_compression_flag="x"
+  if nvm_supports_xz "$VERSION"; then
+    compression="xz"
+    tar_compression_flag="J"
+  fi
   NODE_PREFIX="$(nvm_node_prefix)"
 
   if [ -n "$NVM_OS" ]; then
     t="$VERSION-$NVM_OS-$(nvm_get_arch)"
-    url="$MIRROR/$VERSION/$NODE_PREFIX-${t}.tar.gz"
-    sum="$(nvm_download -L -s $MIRROR/$VERSION/SHASUMS256.txt -o - | command grep $NODE_PREFIX-${t}.tar.gz | command awk '{print $1}')"
+    url="$MIRROR/$VERSION/$NODE_PREFIX-${t}.tar.${compression}"
+    sum="$(nvm_download -L -s $MIRROR/$VERSION/SHASUMS256.txt -o - | command grep $NODE_PREFIX-${t}.tar.${compression} | command awk '{print $1}')"
     local tmpdir
     tmpdir="$NVM_DIR/bin/node-${t}"
     local tmptarball
-    tmptarball="$tmpdir/node-${t}.tar.gz"
+    tmptarball="$tmpdir/node-${t}.tar.${compression}"
     local NVM_INSTALL_ERRORED
     command mkdir -p "$tmpdir" && \
       echo "Downloading $url..." && \
@@ -1022,7 +1030,7 @@ nvm_install_merged_node_binary() {
       [ "$NVM_INSTALL_ERRORED" != true ] && \
       echo "WARNING: checksums are currently disabled for node.js v4.0 and later" >&2 && \
       # nvm_checksum "$tmptarball" $sum && \
-      command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
+      command tar -x${tar_compression_flag}f "$tmptarball" -C "$tmpdir" --strip-components 1 && \
       command rm -f "$tmptarball" && \
       command mkdir -p "$VERSION_PATH" && \
       command mv "$tmpdir"/* "$VERSION_PATH"
@@ -1066,16 +1074,24 @@ nvm_install_iojs_binary() {
   local t
   local url
   local sum
+  local compression
+  compression="gz"
+  local tar_compression_flag
+  tar_compression_flag="x"
+  if nvm_supports_xz "$VERSION"; then
+    compression="xz"
+    tar_compression_flag="J"
+  fi
 
   if [ -n "$NVM_OS" ]; then
     if nvm_binary_available "$VERSION"; then
       t="$VERSION-$NVM_OS-$(nvm_get_arch)"
-      url="$MIRROR/$VERSION/$(nvm_iojs_prefix)-${t}.tar.gz"
-      sum="$(nvm_download -L -s $MIRROR/$VERSION/SHASUMS256.txt -o - | command grep $(nvm_iojs_prefix)-${t}.tar.gz | command awk '{print $1}')"
+      url="$MIRROR/$VERSION/$(nvm_iojs_prefix)-${t}.tar.${compression}"
+      sum="$(nvm_download -L -s $MIRROR/$VERSION/SHASUMS256.txt -o - | command grep $(nvm_iojs_prefix)-${t}.tar.${compression} | command awk '{print $1}')"
       local tmpdir
       tmpdir="$NVM_DIR/bin/iojs-${t}"
       local tmptarball
-      tmptarball="$tmpdir/iojs-${t}.tar.gz"
+      tmptarball="$tmpdir/iojs-${t}.tar.${compression}"
       local NVM_INSTALL_ERRORED
       command mkdir -p "$tmpdir" && \
         echo "Downloading $url..." && \
@@ -1089,7 +1105,7 @@ nvm_install_iojs_binary() {
         [ "$NVM_INSTALL_ERRORED" != true ] && \
         echo "WARNING: checksums are currently disabled for io.js" >&2 && \
         # nvm_checksum "$tmptarball" $sum && \
-        command tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
+        command tar -x${tar_compression_flag}f "$tmptarball" -C "$tmpdir" --strip-components 1 && \
         command rm -f "$tmptarball" && \
         command mkdir -p "$VERSION_PATH" && \
         command mv "$tmpdir"/* "$VERSION_PATH"
@@ -1662,9 +1678,9 @@ nvm() {
       fi
       # Delete all files related to target version.
       command rm -rf "$NVM_DIR/src/$NVM_PREFIX-$VERSION" \
-             "$NVM_DIR/src/$NVM_PREFIX-$VERSION.tar.gz" \
+             "$NVM_DIR/src/$NVM_PREFIX-$VERSION.tar.*" \
              "$NVM_DIR/bin/$NVM_PREFIX-${t}" \
-             "$NVM_DIR/bin/$NVM_PREFIX-${t}.tar.gz" \
+             "$NVM_DIR/bin/$NVM_PREFIX-${t}.tar.*" \
              "$VERSION_PATH" 2>/dev/null
       echo "$NVM_SUCCESS_MSG"
 
@@ -2200,7 +2216,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_print_npm_version nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has nvm_get_latest \
-        nvm_supports_source_options > /dev/null 2>&1
+        nvm_supports_source_options nvm_supports_xz > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
@@ -2212,6 +2228,11 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
 
 nvm_supports_source_options() {
   [ "_$(echo 'echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
+}
+
+nvm_supports_xz() {
+  command which xz 2>&1 >/dev/null && \
+    nvm_version_greater_than_or_equal_to "$1" "2.3.2" 
 }
 
 NVM_VERSION="$(nvm_alias default 2>/dev/null || echo)"
