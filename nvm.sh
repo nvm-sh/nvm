@@ -1759,10 +1759,16 @@ nvm() {
 
       local NVM_LS_REMOTE_EXIT_CODE
       NVM_LS_REMOTE_EXIT_CODE=0
-      local NVM_LS_REMOTE_OUTPUT
-      NVM_LS_REMOTE_OUTPUT=''
+      local NVM_LS_REMOTE_PRE_MERGED_OUTPUT
+      NVM_LS_REMOTE_PRE_MERGED_OUTPUT=''
+      local NVM_LS_REMOTE_POST_MERGED_OUTPUT
+      NVM_LS_REMOTE_POST_MERGED_OUTPUT=''
       if [ "_$NVM_FLAVOR" != "_$NVM_IOJS_PREFIX" ]; then
+        local NVM_LS_REMOTE_OUTPUT
         NVM_LS_REMOTE_OUTPUT=$(nvm_ls_remote "$PATTERN")
+        # split output into two
+        NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%v4\.0\.0*}"
+        NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#$NVM_LS_REMOTE_PRE_MERGED_OUTPUT}"
         NVM_LS_REMOTE_EXIT_CODE=$?
       fi
 
@@ -1776,8 +1782,9 @@ nvm() {
       fi
 
       local NVM_OUTPUT
-      NVM_OUTPUT="$(echo "$NVM_LS_REMOTE_OUTPUT
-$NVM_LS_REMOTE_IOJS_OUTPUT" | command grep -v "N/A" | command sed '/^$/d')"
+      NVM_OUTPUT="$(echo "$NVM_LS_REMOTE_PRE_MERGED_OUTPUT
+$NVM_LS_REMOTE_IOJS_OUTPUT
+$NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d')"
       if [ -n "$NVM_OUTPUT" ]; then
         nvm_print_versions "$NVM_OUTPUT"
         return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
