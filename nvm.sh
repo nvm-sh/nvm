@@ -814,15 +814,22 @@ nvm_print_implicit_alias() {
       fi
 
       local NVM_IOJS_VERSION
-      NVM_IOJS_VERSION="$($NVM_COMMAND | sed "s/^"$NVM_IMPLICIT"-//" | command grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
       local EXIT_CODE
+      NVM_IOJS_VERSION="$($NVM_COMMAND)"
       EXIT_CODE="$?"
+      if [ "_$EXIT_CODE" = "_0" ]; then
+        NVM_IOJS_VERSION="$(echo "$NVM_IOJS_VERSION" | sed "s/^"$NVM_IMPLICIT"-//" | command grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
+      fi
 
       if [ $ZHS_HAS_SHWORDSPLIT_UNSET -eq 1 ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
       fi
 
-      echo "$($NVM_ADD_PREFIX_COMMAND "$NVM_IOJS_VERSION")"
+      if [ "_$NVM_IOJS_VERSION" = "_N/A" ]; then
+        echo "N/A"
+      else
+        echo "$($NVM_ADD_PREFIX_COMMAND "$NVM_IOJS_VERSION")"
+      fi
       return $EXIT_CODE
     ;;
     "$NVM_NODE_PREFIX")
