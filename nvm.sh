@@ -1868,7 +1868,11 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
               DEST="$(nvm_print_implicit_alias local "$ALIAS")"
               if [ "_$DEST" != "_" ]; then
                 VERSION="$(nvm_version "$DEST")"
-                echo "$ALIAS -> $DEST (-> $VERSION) (default)"
+                if [ "_$DEST" = "_$VERSION" ]; then
+                  echo "$ALIAS -> $DEST (default)"
+                else
+                  echo "$ALIAS -> $DEST (-> $VERSION) (default)"
+                fi
               fi
             fi
           fi
