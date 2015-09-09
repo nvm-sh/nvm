@@ -946,7 +946,7 @@ nvm_install_merged_node_binary() {
   local REINSTALL_PACKAGES_FROM
   REINSTALL_PACKAGES_FROM="$3"
 
-  if nvm_is_merged_node_version "$VERSION" || nvm_is_iojs_version "$VERSION"; then
+  if ! nvm_is_merged_node_version "$VERSION" || nvm_is_iojs_version "$VERSION"; then
     echo 'nvm_install_merged_node_binary requires a node version v4.0 or greater.' >&2
     return 10
   fi
@@ -1419,7 +1419,7 @@ nvm() {
       if [ "_$NVM_OS" = "_freebsd" ]; then
         # node.js and io.js do not have a FreeBSD binary
         nobinary=1
-      elif [ "_$NVM_OS" = "_sunos" ] && [ "$NVM_IOJS" = true ] || [ "$NVM_NODE_MERGED" = true ]; then
+      elif [ "_$NVM_OS" = "_sunos" ] && ([ "$NVM_IOJS" = true ] || [ "$NVM_NODE_MERGED" = true ]); then
         # io.js does not have a SunOS binary
         nobinary=1
       fi
