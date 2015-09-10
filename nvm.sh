@@ -1442,7 +1442,11 @@ nvm() {
         fi
       fi
       if [ "$NVM_INSTALL_SUCCESS" != true ]; then
-        if [ "$NVM_IOJS" = true ]; then
+        if [ "$NVM_IOJS" != true ] &&  [ "$NVM_NODE_MERGED" != true ]; then
+          if nvm_install_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"; then
+            NVM_INSTALL_SUCCESS=true
+          fi
+        elif [ "$NVM_IOJS" = true ]; then
           # nvm_install_iojs_source "$VERSION" "$ADDITIONAL_PARAMETERS"
           echo "Installing iojs from source is not currently supported" >&2
           return 105
@@ -1450,8 +1454,6 @@ nvm() {
          # nvm_install_merged_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"
          echo "Installing node v1.0 and greater from source is not currently supported" >&2
          return 106
-        elif nvm_install_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"; then
-          NVM_INSTALL_SUCCESS=true
         fi
       fi
 
