@@ -210,7 +210,9 @@ nvm_ensure_version_installed() {
     if [ $? -eq 0 ]; then
       echo "N/A: version \"$PROVIDED_VERSION -> $VERSION\" is not yet installed" >&2
     else
-      echo "N/A: version \"$(nvm_ensure_version_prefix "$PROVIDED_VERSION")\" is not yet installed" >&2
+      local PREFIXED_VERSION
+      PREFIXED_VERSION="$(nvm_ensure_version_prefix "$PROVIDED_VERSION")"
+      echo "N/A: version \"${PREFIXED_VERSION:-$PROVIDED_VERSION}\" is not yet installed" >&2
     fi
     return 1
   fi

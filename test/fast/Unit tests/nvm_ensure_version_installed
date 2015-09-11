@@ -20,4 +20,11 @@ EXIT_CODE=$?
 [ "_$OUTPUT" = "_" ] || die "expected 'nvm_ensure_version_installed 0.1' to have no output, got $OUTPUT"
 [ "_$EXIT_CODE" = "_0" ] || die "expected 'nvm_ensure_version_installed 0.1' to exit with 0, got $EXIT_CODE"
 
+# Special case for "iojs"
+OUTPUT="$(nvm_ensure_version_installed iojs 2>&1)"
+EXIT_CODE=$?
+EXPECTED_OUTPUT='N/A: version "iojs" is not yet installed'
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed iojs' to give $EXPECTED_OUTPUT, got $OUTPUT"
+[ "_$EXIT_CODE" = "_1" ] || die "expected 'nvm_ensure_version_installed iojs' to exit with 1, got $EXIT_CODE"
+
 cleanup
