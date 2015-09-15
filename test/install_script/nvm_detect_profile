@@ -31,6 +31,15 @@ _PROFILE=$(nvm_detect_profile)
                                          echo "_\$_PROFILE: _$_PROFILE" &&
                                          die "nvm_detect_profile didn't pick $SHELL and $HOME/.bashrc" )
 
+# But $PROFILE should override
+PROFILE=test_profile
+_PROFILE=$(nvm_detect_profile)
+[ "_$_PROFILE" = "_$PROFILE" ] || ( echo "_\$_PROFILE: _$_PROFILE" &&
+                                    echo "_\$PROFILE: _$PROFILE" &&
+                                    die "nvm_detect_profile didn't pick \$PROFILE" )
+unset PROFILE
+
+
 #Let's force $SHELL to be zsh
 SHELL="/usr/bin/zsh"
 
@@ -39,6 +48,14 @@ _PROFILE=$(nvm_detect_profile)
 [ "_$_PROFILE" = "_$HOME/.zshrc" ] || ( echo "_\$HOME/.zshrc: _$HOME/.zshrc" &&
                                         echo "_\$_PROFILE: _$_PROFILE" &&
                                         die "nvm_detect_profile didn't pick $SHELL and $HOME/.zshrc" )
+
+# But $PROFILE should override
+PROFILE=test_profile
+_PROFILE=$(nvm_detect_profile)
+[ "_$_PROFILE" = "_$PROFILE" ] || ( echo "_\$_PROFILE: _$_PROFILE" &&
+                                    echo "_\$PROFILE: _$PROFILE" &&
+                                    die "nvm_detect_profile didn't pick \$PROFILE" )
+unset PROFILE
 
 # if we unset shell it looks for the files
 unset SHELL
