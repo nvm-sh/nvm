@@ -558,6 +558,9 @@ nvm_ls() {
       PATTERN=$(nvm_ensure_version_prefix $PATTERN)
     ;;
   esac
+  if [ "_$PATTERN" = "_N/A" ]; then
+    return
+  fi
   # If it looks like an explicit version, don't do anything funny
   local NVM_PATTERN_STARTS_WITH_V
   case $PATTERN in
