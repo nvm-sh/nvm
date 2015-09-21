@@ -1250,6 +1250,44 @@ nvm_npm_global_modules() {
   echo "$INSTALLS //// $LINKS"
 }
 
+nvm_die_on_prefix() {
+  local NVM_DELETE_PREFIX
+  NVM_DELETE_PREFIX="$1"
+  case "$NVM_DELETE_PREFIX" in
+    0|1) ;;
+    *)
+      echo >&2 'First argument "delete the prefix" must be zero or one'
+      return 1
+    ;;
+  esac
+  local NVM_COMMAND
+  NVM_COMMAND="$2"
+  if [ -z "$NVM_COMMAND" ]; then
+    echo >&2 'Second argument "nvm command" must be nonempty'
+    return 2
+  fi
+
+  if ! nvm_has 'npm'; then
+    return
+  fi
+  local NVM_NPM_PREFIX
+  NVM_NPM_PREFIX="$(npm config get prefix)"
+  if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
+    if [ "_$NVM_DELETE_PREFIX" = "_1" ]; then
+      npm config delete prefix
+    else
+      nvm deactivate >/dev/null 2>&1
+      echo >&2 "nvm is not compatible with the npm config \"prefix\" option: currently set to \"$NVM_NPM_PREFIX\""
+      if nvm_has 'npm'; then
+        echo >&2 "Run \`npm config delete prefix\` or \`$NVM_COMMAND\` to unset it."
+      else
+        echo >&2 "Run \`$NVM_COMMAND\` to unset it."
+      fi
+      return 3
+    fi
+  fi
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
