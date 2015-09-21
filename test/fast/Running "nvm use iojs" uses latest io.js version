@@ -23,8 +23,16 @@ EXPECTED_OUTPUT=''
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
   || die "'nvm use --silent foo' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
 
+OUTPUT="$(nvm use foo --silent 2>&1)"
+EXPECTED_OUTPUT=''
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
+  || die "'nvm use foo --silent' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+
 EXIT_CODE="$(nvm use --silent foo 2>/dev/null ; echo $?)"
 [ "_$EXIT_CODE" = "_8" ] || die "Expected exit code 8 from 'nvm use --silent foo'; got $EXIT_CODE"
+
+EXIT_CODE="$(nvm use foo --silent 2>/dev/null ; echo $?)"
+[ "_$EXIT_CODE" = "_8" ] || die "Expected exit code 8 from 'nvm use foo --silent'; got $EXIT_CODE"
 
 cleanup;
 

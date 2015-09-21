@@ -1557,19 +1557,27 @@ nvm() {
       local PROVIDED_VERSION
       local NVM_USE_SILENT
       NVM_USE_SILENT=0
-      if [ "$2" = '--silent' ]; then
-        NVM_USE_SILENT=1
+      shift # remove "use"
+      while [ $# -ne 0 ]
+      do
+        case "$1" in
+          --silent) NVM_USE_SILENT=1 ;;
+          *)
+            if [ -n "$1" ]; then
+              PROVIDED_VERSION="$1"
+            fi
+          ;;
+        esac
         shift
-      fi
+      done
 
-      if [ $# -eq 1 ]; then
+      if [ -z "$PROVIDED_VERSION" ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
           PROVIDED_VERSION="$NVM_RC_VERSION"
           VERSION="$(nvm_version "$PROVIDED_VERSION")"
         fi
       else
-        PROVIDED_VERSION="$2"
         VERSION="$(nvm_match_version "$PROVIDED_VERSION")"
       fi
 
