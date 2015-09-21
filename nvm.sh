@@ -1267,9 +1267,17 @@ nvm_die_on_prefix() {
     return 2
   fi
 
+  if [ -n "$PREFIX" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$PREFIX" >/dev/null 2>&1); then
+    nvm deactivate >/dev/null 2>&1
+    echo >&2 "nvm is not compatible with the \"PREFIX\" environment variable: currently set to \"$PREFIX\""
+    echo >&2 "Run \`unset PREFIX\` to unset it."
+    return 3
+  fi
+
   if ! nvm_has 'npm'; then
     return
   fi
+
   local NVM_NPM_PREFIX
   NVM_NPM_PREFIX="$(npm config get prefix)"
   if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
@@ -1283,7 +1291,7 @@ nvm_die_on_prefix() {
       else
         echo >&2 "Run \`$NVM_COMMAND\` to unset it."
       fi
-      return 3
+      return 4
     fi
   fi
 }
@@ -1596,11 +1604,15 @@ nvm() {
       local PROVIDED_VERSION
       local NVM_USE_SILENT
       NVM_USE_SILENT=0
+      local NVM_DELETE_PREFIX
+      NVM_DELETE_PREFIX=0
+
       shift # remove "use"
       while [ $# -ne 0 ]
       do
         case "$1" in
           --silent) NVM_USE_SILENT=1 ;;
+          --delete-prefix) NVM_DELETE_PREFIX=1 ;;
           *)
             if [ -n "$1" ]; then
               PROVIDED_VERSION="$1"
@@ -1688,6 +1700,19 @@ nvm() {
       else
         if [ $NVM_USE_SILENT -ne 1 ]; then
           echo "Now using node $VERSION$(nvm_print_npm_version)"
+        fi
+      fi
+      if [ "_$VERSION" != "_system" ]; then
+        local NVM_USE_CMD
+        NVM_USE_CMD="nvm use --delete-prefix"
+        if [ -n "$PROVIDED_VERSION" ]; then
+          NVM_USE_CMD="$NVM_USE_CMD $VERSION"
+        fi
+        if [ $NVM_USE_SILENT -eq 1 ]; then
+          NVM_USE_CMD="$NVM_USE_CMD --silent"
+        fi
+        if ! nvm_die_on_prefix "$NVM_DELETE_PREFIX" "$NVM_USE_CMD"; then
+          return 11
         fi
       fi
     ;;
