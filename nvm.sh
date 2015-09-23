@@ -1274,6 +1274,13 @@ nvm_die_on_prefix() {
     return 3
   fi
 
+  if [ -n "$NPM_CONFIG_PREFIX" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$NPM_CONFIG_PREFIX" >/dev/null 2>&1); then
+    nvm deactivate >/dev/null 2>&1
+    echo >&2 "nvm is not compatible with the \"NPM_CONFIG_PREFIX\" environment variable: currently set to \"$NPM_CONFIG_PREFIX\""
+    echo >&2 "Run \`unset NPM_CONFIG_PREFIX\` to unset it."
+    return 4
+  fi
+
   if ! nvm_has 'npm'; then
     return
   fi
@@ -1291,7 +1298,7 @@ nvm_die_on_prefix() {
       else
         echo >&2 "Run \`$NVM_COMMAND\` to unset it."
       fi
-      return 4
+      return 10
     fi
   fi
 }

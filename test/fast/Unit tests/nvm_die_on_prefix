@@ -50,6 +50,13 @@ EXIT_CODE="$(PREFIX=bar nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo $?)"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'PREFIX=bar nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT'; got '$OUTPUT'"
 [ "_$EXIT_CODE" = "_3" ] || die "'PREFIX=bar nvm_die_on_prefix 0 foo' did not exit with 3; got '$EXIT_CODE'"
 
+OUTPUT="$(NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo 2>&1)"
+EXPECTED_OUTPUT='nvm is not compatible with the "NPM_CONFIG_PREFIX" environment variable: currently set to "bar"
+Run `unset NPM_CONFIG_PREFIX` to unset it.'
+EXIT_CODE="$(NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo $?)"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+[ "_$EXIT_CODE" = "_4" ] || die "'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not exit with 4; got '$EXIT_CODE'"
+
 npm() {
   local args
   args="$@"
@@ -62,6 +69,6 @@ EXPECTED_OUTPUT="nvm is not compatible with the npm config \"prefix\" option: cu
 Run \`npm config delete prefix\` or \`foo\` to unset it."
 EXIT_CODE="$(nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo $?)"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT' with bad prefix set; got '$OUTPUT'"
-[ "_$EXIT_CODE" = "_4" ] || die "'nvm_die_on_prefix 0 foo' did not exit with 4 with bad prefix set; got '$EXIT_CODE'"
+[ "_$EXIT_CODE" = "_10" ] || die "'nvm_die_on_prefix 0 foo' did not exit with 10 with bad prefix set; got '$EXIT_CODE'"
 
 cleanup
