@@ -8,13 +8,10 @@
 
 { # this ensures the entire script is downloaded #
 
-unset NVM_DIR
-unset NVM_NODEJS_ORG_MIRROR
-unset NVM_IOJS_ORG_MIRROR
-unset NVM_RC_VERSION
-unset NODE_PATH
-unset NVM_PATH
-unset NVM_BIN
+# Unload any existing environment variables
+if type nvm | grep -i function > /dev/null; then
+   nvm unload
+fi
 
 NVM_SCRIPT_SOURCE="$_"
 
