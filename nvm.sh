@@ -2096,7 +2096,8 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has nvm_get_latest \
         nvm_supports_source_options > /dev/null 2>&1
-      unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
+        unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR \
+          NVM_DIR NVM_CD_FLAGS NODE_PATH NVM_PATH NVM_BIN > /dev/null 2>&1
     ;;
     * )
       >&2 nvm help
