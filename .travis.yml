@@ -4,10 +4,10 @@ addons:
   - zsh
   - ksh
 install:
-  - (cd /usr/local/bin && wget https://raw.github.com/tlevine/urchin/master/urchin && chmod +x urchin)
+    - (cd /tmp && wget https://raw.github.com/tlevine/urchin/master/urchin && chmod +x urchin)
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
-  - urchin -f -s "$TEST_SHELL" "test/$TEST_SUITE"
+  - /tmp/urchin -f -s "$TEST_SHELL" "test/$TEST_SUITE"
 env:
   - TEST_SHELL=bash TEST_SUITE=install_script
   - TEST_SHELL=sh TEST_SUITE=fast
