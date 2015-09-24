@@ -8,6 +8,14 @@
 
 { # this ensures the entire script is downloaded #
 
+unset NVM_DIR
+unset NVM_NODEJS_ORG_MIRROR
+unset NVM_IOJS_ORG_MIRROR
+unset NVM_RC_VERSION
+unset NODE_PATH
+unset NVM_PATH
+unset NVM_BIN
+
 NVM_SCRIPT_SOURCE="$_"
 
 nvm_has() {
