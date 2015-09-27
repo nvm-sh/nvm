@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 { # this ensures the entire script is downloaded #
 
 nvm_has() {
