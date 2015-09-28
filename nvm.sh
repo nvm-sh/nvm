@@ -909,13 +909,30 @@ nvm_get_os() {
 }
 
 nvm_get_arch() {
-  local NVM_UNAME
-  NVM_UNAME="$(uname -m)"
+  local HOST_ARCH
+  local NVM_OS
+  local EXIT_CODE
+
+  NVM_OS="$(nvm_get_os)"
+  # If the OS is SunOS, first try to use pkgsrc to guess
+  # the most appropriate arch. If it's not available, use
+  # isainfo to get the instruction set supported by the
+  # kernel.
+  if [ "_$NVM_OS" = "_sunos" ]; then
+    HOST_ARCH=$(pkg_info -Q MACHINE_ARCH pkg_install)
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -ne 0 ]; then
+      HOST_ARCH=$(isainfo -n)
+    fi
+  else
+     HOST_ARCH="$(uname -m)"
+  fi
+
   local NVM_ARCH
-  case "$NVM_UNAME" in
-    x86_64) NVM_ARCH="x64" ;;
+  case "$HOST_ARCH" in
+    x86_64 | amd64) NVM_ARCH="x64" ;;
     i*86) NVM_ARCH="x86" ;;
-    *) NVM_ARCH="$NVM_UNAME" ;;
+    *) NVM_ARCH="$HOST_ARCH" ;;
   esac
   echo "$NVM_ARCH"
 }
@@ -1303,6 +1320,54 @@ nvm_die_on_prefix() {
   fi
 }
 
+# Succeeds if $IOJS_VERSION represents an io.js version that has a
+# Solaris binary, fails otherwise.
+# Currently, only io.js 3.3.1 has a Solaris binary available, and it's the
+# latest io.js version available. The expectation is that any potential io.js
+# version later than v3.3.1 will also have Solaris binaries.
+iojs_version_has_solaris_binary() {
+  local IOJS_VERSION=$1
+  local STRIPPED_IOJS_VERSION="$(nvm_strip_iojs_prefix $IOJS_VERSION)"
+  if [ "_$STRIPPED_IOJS_VERSION" = "$IOJS_VERSION" ]; then
+    return 1
+  fi
+
+  # io.js started shipping Solaris binaries with io.js v3.3.1
+  nvm_version_greater_than_or_equal_to "$STRIPPED_IOJS_VERSION" v3.3.1
+}
+
+# Succeeds if $NODE_VERSION represents a node version that has a
+# Solaris binary, fails otherwise.
+# Currently, node versions starting from v0.8.6 have a Solaris binary
+# avaliable.
+node_version_has_solaris_binary() {
+  local NODE_VERSION=$1
+  # Error out if $NODE_VERSION is actually an io.js version
+  local STRIPPED_IOJS_VERSION="$(nvm_strip_iojs_prefix $NODE_VERSION)"
+  if [ "_$STRIPPED_IOJS_VERSION" != "_$NODE_VERSION" ]; then
+    return 1
+  fi
+
+  # node (unmerged) started shipping Solaris binaries with v0.8.6 and
+  # node versions v1.0.0 or greater are not considered valid "unmerged" node
+  # versions.
+  nvm_version_greater_than_or_equal_to "$NODE_VERSION" v0.8.6 &&
+  ! nvm_version_greater_than_or_equal_to "$NODE_VERSION" v1.0.0
+}
+
+# Succeeds if $VERSION represents a version (node, io.js or merged) that has a
+# Solaris binary, fails otherwise.
+nvm_has_solaris_binary() {
+  local VERSION=$1
+  if nvm_is_merged_node_version "$VERSION"; then
+    return 0 # All merged node versions have a Solaris binary
+  elif nvm_is_iojs_version "$VERSION"; then
+    iojs_version_has_solaris_binary "$VERSION"
+  else
+    node_version_has_solaris_binary "$VERSION"
+  fi
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -1485,9 +1550,11 @@ nvm() {
       if [ "_$NVM_OS" = "_freebsd" ]; then
         # node.js and io.js do not have a FreeBSD binary
         nobinary=1
-      elif [ "_$NVM_OS" = "_sunos" ] && ([ "$NVM_IOJS" = true ] || [ "$NVM_NODE_MERGED" = true ]); then
-        # io.js does not have a SunOS binary
-        nobinary=1
+      elif [ "_$NVM_OS" = "_sunos" ]; then
+        # Not all node/io.js versions have a Solaris binary
+          if ! nvm_has_solaris_binary "$VERSION"; then
+            nobinary=1
+        fi
       fi
       local NVM_INSTALL_SUCCESS
       # skip binary install if "nobinary" option specified.
