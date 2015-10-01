@@ -1367,6 +1367,15 @@ nvm_has_solaris_binary() {
   fi
 }
 
+nvm_sanitize_path() {
+  local SANITIZED_PATH
+  SANITIZED_PATH="$1"
+  if [ "_$1" != "_$NVM_DIR" ]; then
+    SANITIZED_PATH="$(echo "$SANITIZED_PATH" | sed "s#$NVM_DIR#\$NVM_DIR#g")"
+  fi
+  echo "$SANITIZED_PATH" | sed "s#$HOME#\$HOME#g"
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -1437,12 +1446,12 @@ nvm() {
         setopt shwordsplit
       fi
       echo >&2 "\$SHELL: $SHELL"
-      echo >&2 "\$NVM_DIR: $(echo $NVM_DIR | sed "s#$HOME#\$HOME#g")"
+      echo >&2 "\$NVM_DIR: $(nvm_sanitize_path "$NVM_DIR")"
       local NVM_DEBUG_OUTPUT
       for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
       do
-        NVM_DEBUG_OUTPUT="$($NVM_DEBUG_COMMAND 2>&1 | sed "s#$NVM_DIR#\$NVM_DIR#g")"
-        echo >&2 "$NVM_DEBUG_COMMAND: $NVM_DEBUG_OUTPUT"
+        NVM_DEBUG_OUTPUT="$($NVM_DEBUG_COMMAND 2>&1)"
+        echo >&2 "$NVM_DEBUG_COMMAND: $(nvm_sanitize_path "$NVM_DEBUG_OUTPUT")"
       done
       if [ "_$ZHS_HAS_SHWORDSPLIT_UNSET" = "_1" ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
