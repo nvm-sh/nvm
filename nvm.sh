@@ -635,7 +635,6 @@ nvm_ls() {
             s#^\($NVM_IOJS_PREFIX\)[-/]v#\1.v#;
             s#^\($NVM_NODE_PREFIX\)[-/]v#\1.v#" \
         | command sort -t. -u -k 2.2,2n -k 3,3n -k 4,4n \
-        | command sort -s -t- -k1.1,1.1 \
         | command sed "
             s/^\($NVM_IOJS_PREFIX\)\./\1-/;
             s/^$NVM_NODE_PREFIX\.//" \
