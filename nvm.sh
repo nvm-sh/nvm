@@ -1446,7 +1446,9 @@ nvm() {
         setopt shwordsplit
       fi
       echo >&2 "\$SHELL: $SHELL"
-      echo >&2 "\$NVM_DIR: $(nvm_sanitize_path "$NVM_DIR")"
+      echo >&2 "\$NVM_DIR: '$(nvm_sanitize_path "$NVM_DIR")'"
+      echo >&2 "\$PREFIX: '$(nvm_sanitize_path "$PREFIX")'"
+      echo >&2 "\$NPM_CONFIG_PREFIX: '$(nvm_sanitize_path "$NPM_CONFIG_PREFIX")'"
       local NVM_DEBUG_OUTPUT
       for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
       do
