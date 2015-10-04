@@ -398,7 +398,7 @@ nvm_alias() {
     return 2
   fi
 
-  cat "$NVM_ALIAS_PATH"
+  command cat "$NVM_ALIAS_PATH"
 }
 
 nvm_ls_current() {
