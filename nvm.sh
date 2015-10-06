@@ -8,6 +8,37 @@
 
 { # this ensures the entire script is downloaded #
 
+nvm_unload() {
+  unset -f nvm nvm_print_versions nvm_checksum \
+    nvm_iojs_prefix nvm_node_prefix \
+    nvm_add_iojs_prefix nvm_strip_iojs_prefix \
+    nvm_is_iojs_version nvm_is_alias \
+    nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_iojs_org \
+    nvm_ls nvm_remote_version nvm_remote_versions \
+    nvm_install_iojs_binary nvm_install_node_binary \
+    nvm_install_node_source \
+    nvm_version nvm_rc_version nvm_match_version \
+    nvm_ensure_default_set nvm_get_arch nvm_get_os \
+    nvm_print_implicit_alias nvm_validate_implicit_alias \
+    nvm_resolve_alias nvm_ls_current nvm_alias \
+    nvm_binary_available nvm_prepend_path nvm_strip_path \
+    nvm_num_version_groups nvm_format_version nvm_ensure_version_prefix \
+    nvm_normalize_version nvm_is_valid_version \
+    nvm_ensure_version_installed \
+    nvm_version_path nvm_alias_path nvm_version_dir \
+    nvm_find_nvmrc nvm_find_up nvm_tree_contains_path \
+    nvm_version_greater nvm_version_greater_than_or_equal_to \
+    nvm_print_npm_version nvm_npm_global_modules \
+    nvm_has_system_node nvm_has_system_iojs \
+    nvm_download nvm_get_latest nvm_has nvm_get_latest \
+    nvm_supports_source_options > /dev/null 2>&1
+  unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR \
+    NVM_DIR NVM_CD_FLAGS NODE_PATH NVM_PATH NVM_BIN > /dev/null 2>&1
+}
+
+# Unload any existing environment variables
+nvm_unload
+
 NVM_SCRIPT_SOURCE="$_"
 
 nvm_has() {
@@ -2152,30 +2183,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       echo "0.28.0"
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum \
-        nvm_iojs_prefix nvm_node_prefix \
-        nvm_add_iojs_prefix nvm_strip_iojs_prefix \
-        nvm_is_iojs_version nvm_is_alias \
-        nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_iojs_org \
-        nvm_ls nvm_remote_version nvm_remote_versions \
-        nvm_install_iojs_binary nvm_install_node_binary \
-        nvm_install_node_source \
-        nvm_version nvm_rc_version nvm_match_version \
-        nvm_ensure_default_set nvm_get_arch nvm_get_os \
-        nvm_print_implicit_alias nvm_validate_implicit_alias \
-        nvm_resolve_alias nvm_ls_current nvm_alias \
-        nvm_binary_available nvm_prepend_path nvm_strip_path \
-        nvm_num_version_groups nvm_format_version nvm_ensure_version_prefix \
-        nvm_normalize_version nvm_is_valid_version \
-        nvm_ensure_version_installed \
-        nvm_version_path nvm_alias_path nvm_version_dir \
-        nvm_find_nvmrc nvm_find_up nvm_tree_contains_path \
-        nvm_version_greater nvm_version_greater_than_or_equal_to \
-        nvm_print_npm_version nvm_npm_global_modules \
-        nvm_has_system_node nvm_has_system_iojs \
-        nvm_download nvm_get_latest nvm_has nvm_get_latest \
-        nvm_supports_source_options > /dev/null 2>&1
-      unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
+      nvm_unload
     ;;
     * )
       >&2 nvm help
