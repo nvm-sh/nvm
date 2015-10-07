@@ -1789,13 +1789,14 @@ nvm() {
       if [ "$NVM_SYMLINK_CURRENT" = true ]; then
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
+      local NVM_USE_OUTPUT
       if nvm_is_iojs_version "$VERSION"; then
         if [ $NVM_USE_SILENT -ne 1 ]; then
-          echo "Now using io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
+          NVM_USE_OUTPUT="Now using io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
         fi
       else
         if [ $NVM_USE_SILENT -ne 1 ]; then
-          echo "Now using node $VERSION$(nvm_print_npm_version)"
+          NVM_USE_OUTPUT="Now using node $VERSION$(nvm_print_npm_version)"
         fi
       fi
       if [ "_$VERSION" != "_system" ]; then
@@ -1810,6 +1811,9 @@ nvm() {
         if ! nvm_die_on_prefix "$NVM_DELETE_PREFIX" "$NVM_USE_CMD"; then
           return 11
         fi
+      fi
+      if [ -n "$NVM_USE_OUTPUT" ]; then
+        echo "$NVM_USE_OUTPUT"
       fi
     ;;
     "run" )
