@@ -78,7 +78,7 @@ if [ -z "$NVM_DIR" ]; then
   if [ -n "$BASH_SOURCE" ]; then
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
-  export NVM_DIR=$(cd $NVM_CD_FLAGS $(dirname "${NVM_SCRIPT_SOURCE:-$0}") > /dev/null && \pwd)
+  export NVM_DIR="$(cd $NVM_CD_FLAGS $(dirname "${NVM_SCRIPT_SOURCE:-$0}") > /dev/null && \pwd)"
 fi
 unset NVM_SCRIPT_SOURCE 2> /dev/null
 
@@ -221,7 +221,7 @@ nvm_ensure_version_installed() {
 # Expand a version using the version cache
 nvm_version() {
   local PATTERN
-  PATTERN=$1
+  PATTERN="$1"
   local VERSION
   # The default version is the current one
   if [ -z "$PATTERN" ]; then
