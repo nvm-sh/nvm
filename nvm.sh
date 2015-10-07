@@ -592,39 +592,51 @@ nvm_ls() {
       setopt shwordsplit
     fi
 
-    local NVM_DIRS_TO_TEST_AND_SEARCH
-    local NVM_DIRS_TO_SEARCH
+    local NVM_DIRS_TO_SEARCH1
+    NVM_DIRS_TO_SEARCH1=''
+    local NVM_DIRS_TO_SEARCH2
+    NVM_DIRS_TO_SEARCH2=''
+    local NVM_DIRS_TO_SEARCH3
+    NVM_DIRS_TO_SEARCH3=''
     local NVM_ADD_SYSTEM
     NVM_ADD_SYSTEM=false
     if nvm_is_iojs_version "$PATTERN"; then
-      NVM_DIRS_TO_TEST_AND_SEARCH="$NVM_VERSION_DIR_IOJS"
+      NVM_DIRS_TO_SEARCH1="$NVM_VERSION_DIR_IOJS"
       PATTERN="$(nvm_strip_iojs_prefix "$PATTERN")"
       if nvm_has_system_iojs; then
         NVM_ADD_SYSTEM=true
       fi
     elif [ "_$PATTERN" = "_$NVM_NODE_PREFIX-" ]; then
-      NVM_DIRS_TO_TEST_AND_SEARCH="$NVM_VERSION_DIR_OLD $NVM_VERSION_DIR_NEW"
+      NVM_DIRS_TO_SEARCH1="$NVM_VERSION_DIR_OLD"
+      NVM_DIRS_TO_SEARCH2="$NVM_VERSION_DIR_NEW"
       PATTERN=''
       if nvm_has_system_node; then
         NVM_ADD_SYSTEM=true
       fi
     else
-      NVM_DIRS_TO_TEST_AND_SEARCH="$NVM_VERSION_DIR_OLD $NVM_VERSION_DIR_NEW $NVM_VERSION_DIR_IOJS"
+      NVM_DIRS_TO_SEARCH1="$NVM_VERSION_DIR_OLD"
+      NVM_DIRS_TO_SEARCH2="$NVM_VERSION_DIR_NEW"
+      NVM_DIRS_TO_SEARCH3="$NVM_VERSION_DIR_IOJS"
       if nvm_has_system_iojs || nvm_has_system_node; then
         NVM_ADD_SYSTEM=true
       fi
     fi
-    for NVM_VERSION_DIR in $NVM_DIRS_TO_TEST_AND_SEARCH; do
-      if [ -d "$NVM_VERSION_DIR" ]; then
-        NVM_DIRS_TO_SEARCH="$NVM_VERSION_DIR $NVM_DIRS_TO_SEARCH"
-      fi
-    done
+
+    if ! [ -d "$NVM_DIRS_TO_SEARCH1" ]; then
+      NVM_DIRS_TO_SEARCH1=''
+    fi
+    if ! [ -d "$NVM_DIRS_TO_SEARCH2" ]; then
+      NVM_DIRS_TO_SEARCH2="$NVM_DIRS_TO_SEARCH1"
+    fi
+    if ! [ -d "$NVM_DIRS_TO_SEARCH3" ]; then
+      NVM_DIRS_TO_SEARCH3="$NVM_DIRS_TO_SEARCH2"
+    fi
 
     if [ -z "$PATTERN" ]; then
       PATTERN='v'
     fi
-    if [ -n "$NVM_DIRS_TO_SEARCH" ]; then
-      VERSIONS="$(command find $NVM_DIRS_TO_SEARCH -maxdepth 1 -type d -name "$PATTERN*" \
+    if [ -n "$NVM_DIRS_TO_SEARCH1$NVM_DIRS_TO_SEARCH2$NVM_DIRS_TO_SEARCH3" ]; then
+      VERSIONS="$(command find "$NVM_DIRS_TO_SEARCH1" "$NVM_DIRS_TO_SEARCH2" "$NVM_DIRS_TO_SEARCH3" -maxdepth 1 -type d -name "$PATTERN*" \
         | command sed "
             s#$NVM_VERSION_DIR_IOJS/#$NVM_IOJS_PREFIX-#;
             \#$NVM_VERSION_DIR_IOJS# d;
