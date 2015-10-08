@@ -1876,16 +1876,6 @@ nvm() {
         fi
       fi
 
-      if [ -n "$NVM_RC_VERSION" ]; then
-        nvm_ensure_version_installed "$NVM_RC_VERSION"
-      else
-        nvm_ensure_version_installed "$provided_version"
-      fi
-      EXIT_CODE=$?
-      if [ "$EXIT_CODE" != "0" ]; then
-        return $EXIT_CODE
-      fi
-
       local NVM_IOJS
       if nvm_is_iojs_version "$VERSION"; then
         NVM_IOJS=true
@@ -1902,7 +1892,10 @@ nvm() {
         ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
         setopt shwordsplit
       fi
-      if [ -z "$ARGS" ]; then
+      if [ "_$VERSION" = "_N/A" ]; then
+        nvm_ensure_version_installed "$provided_version"
+        EXIT_CODE=$?
+      elif [ -z "$ARGS" ]; then
         if [ "$NVM_IOJS" = true ]; then
           nvm exec "$VERSION" iojs
         else
