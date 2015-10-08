@@ -1011,6 +1011,7 @@ nvm_install_merged_node_binary() {
     tmptarball="$tmpdir/node-${t}.tar.gz"
     local NVM_INSTALL_ERRORED
     command mkdir -p "$tmpdir" && \
+      echo "Downloading $url..." && \
       nvm_download -L -C - --progress-bar $url -o "$tmptarball" || \
       NVM_INSTALL_ERRORED=true
     if grep '404 Not Found' "$tmptarball" >/dev/null; then
@@ -1077,6 +1078,7 @@ nvm_install_iojs_binary() {
       tmptarball="$tmpdir/iojs-${t}.tar.gz"
       local NVM_INSTALL_ERRORED
       command mkdir -p "$tmpdir" && \
+        echo "Downloading $url..." && \
         nvm_download -L -C - --progress-bar $url -o "$tmptarball" || \
         NVM_INSTALL_ERRORED=true
       if grep '404 Not Found' "$tmptarball" >/dev/null; then
@@ -1209,6 +1211,7 @@ nvm_install_node_source() {
   if (
     [ -n "$tarball" ] && \
     command mkdir -p "$tmpdir" && \
+    echo "Downloading $tarball..." && \
     nvm_download -L --progress-bar $tarball -o "$tmptarball" && \
     nvm_checksum "$tmptarball" $sum && \
     command tar -xzf "$tmptarball" -C "$tmpdir" && \
