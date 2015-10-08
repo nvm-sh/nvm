@@ -5,5 +5,5 @@ die () { echo $@ ; exit 1; }
 
 . ../../../nvm.sh
 
-[ "$(nvm run 0.2 --version 2>&1)" = "v0.2 is not installed yet" ] || die "\`nvm run\` with an uninstalled node version failed to error out correctly"
-[ "$(nvm run iojs-0.2 --version 2>&1)" = "iojs-v0.2 is not installed yet" ] || die "\`nvm run\` with an uninstalled iojs version failed to error out correctly"
+[ "$(nvm run 0.2 --version 2>&1)" = 'N/A: version "v0.2" is not yet installed' ] || die "\`nvm run\` with an uninstalled node version failed to error out correctly"
+[ "$(nvm run iojs-0.2 --version 2>&1)" = 'N/A: version "iojs-v0.2" is not yet installed' ] || die "\`nvm run\` with an uninstalled iojs version failed to error out correctly"

@@ -1846,7 +1846,7 @@ nvm() {
         fi
       fi
 
-      provided_version=$1
+      provided_version="$1"
       if [ -n "$provided_version" ]; then
         VERSION="$(nvm_version "$provided_version")"
         if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
@@ -1858,6 +1858,16 @@ nvm() {
         else
           shift
         fi
+      fi
+
+      if [ -n "$NVM_RC_VERSION" ]; then
+        nvm_ensure_version_installed "$NVM_RC_VERSION"
+      else
+        nvm_ensure_version_installed "$provided_version"
+      fi
+      EXIT_CODE=$?
+      if [ "$EXIT_CODE" != "0" ]; then
+        return $EXIT_CODE
       fi
 
       local NVM_IOJS
@@ -1876,10 +1886,7 @@ nvm() {
         ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
         setopt shwordsplit
       fi
-      if [ "_$VERSION" = "_N/A" ]; then
-        echo "$(nvm_ensure_version_prefix "$provided_version") is not installed yet" >&2
-        EXIT_CODE=1
-      elif [ -z "$ARGS" ]; then
+      if [ -z "$ARGS" ]; then
         if [ "$NVM_IOJS" = true ]; then
           nvm exec "$VERSION" iojs
         else
