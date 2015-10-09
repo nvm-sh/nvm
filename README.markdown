@@ -15,11 +15,11 @@ Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creati
 
 To install or update nvm, you can use the [install script][2] using cURL:
 
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.28.0/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.29.0/install.sh | bash
 
 or Wget:
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.28.0/install.sh | bash
+    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.29.0/install.sh | bash
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
 
@@ -236,7 +236,7 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
     nvm install -s 0.8.6
 
 [1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.28.0/install.sh
+[2]: https://github.com/creationix/nvm/blob/v0.29.0/install.sh
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
