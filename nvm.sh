@@ -1933,7 +1933,7 @@ nvm() {
       provided_version="$1"
       if [ -n "$provided_version" ]; then
         VERSION="$(nvm_version "$provided_version")"
-        if [ "_$VERSION" = "_N/A" ]; then
+        if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
           nvm_rc_version
           provided_version="$NVM_RC_VERSION"
           VERSION="$(nvm_version "$provided_version")"
