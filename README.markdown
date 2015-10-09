@@ -216,6 +216,10 @@ Environment Variables:
 $NPM_CONFIG_PREFIX
 $PREFIX
 ```
+Shell settings:
+```
+set -e
+```
 
 ## Problems
 
