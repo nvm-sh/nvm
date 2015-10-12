@@ -2235,7 +2235,7 @@ nvm_supports_xz() {
 }
 
 NVM_VERSION="$(nvm_alias default 2>/dev/null || echo)"
-if nvm_supports_source_options && [ "_$1" = "_--install" ]; then
+if nvm_supports_source_options && [ "$#" -gt 0 ] && [ "_$1" = "_--install" ]; then
   if [ -n "$NVM_VERSION" ]; then
     nvm install "$NVM_VERSION" >/dev/null
   elif nvm_rc_version >/dev/null 2>&1; then
