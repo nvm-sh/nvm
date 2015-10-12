@@ -2231,8 +2231,7 @@ nvm_supports_source_options() {
 }
 
 nvm_supports_xz() {
-  command which xz 2>&1 >/dev/null && \
-    nvm_version_greater_than_or_equal_to "$1" "2.3.2" 
+  command which xz >/dev/null 2>&1 && nvm_version_greater_than_or_equal_to "$1" "2.3.2"
 }
 
 NVM_VERSION="$(nvm_alias default 2>/dev/null || echo)"
