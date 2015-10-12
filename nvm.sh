@@ -1357,8 +1357,10 @@ nvm_die_on_prefix() {
 # latest io.js version available. The expectation is that any potential io.js
 # version later than v3.3.1 will also have Solaris binaries.
 iojs_version_has_solaris_binary() {
-  local IOJS_VERSION=$1
-  local STRIPPED_IOJS_VERSION="$(nvm_strip_iojs_prefix $IOJS_VERSION)"
+  local IOJS_VERSION
+  IOJS_VERSION="$1"
+  local STRIPPED_IOJS_VERSION
+  STRIPPED_IOJS_VERSION="$(nvm_strip_iojs_prefix "$IOJS_VERSION")"
   if [ "_$STRIPPED_IOJS_VERSION" = "$IOJS_VERSION" ]; then
     return 1
   fi
@@ -1372,9 +1374,11 @@ iojs_version_has_solaris_binary() {
 # Currently, node versions starting from v0.8.6 have a Solaris binary
 # avaliable.
 node_version_has_solaris_binary() {
-  local NODE_VERSION=$1
+  local NODE_VERSION
+  NODE_VERSION="$1"
   # Error out if $NODE_VERSION is actually an io.js version
-  local STRIPPED_IOJS_VERSION="$(nvm_strip_iojs_prefix $NODE_VERSION)"
+  local STRIPPED_IOJS_VERSION
+  STRIPPED_IOJS_VERSION="$(nvm_strip_iojs_prefix $NODE_VERSION)"
   if [ "_$STRIPPED_IOJS_VERSION" != "_$NODE_VERSION" ]; then
     return 1
   fi
