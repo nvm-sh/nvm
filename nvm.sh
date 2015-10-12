@@ -137,7 +137,7 @@ nvm_rc_version() {
   local NVMRC_PATH
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ -e "$NVMRC_PATH" ]; then
-    read NVM_RC_VERSION < "$NVMRC_PATH"
+    read -r NVM_RC_VERSION < "$NVMRC_PATH"
     echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
   else
     >&2 echo "No .nvmrc file found"
@@ -764,7 +764,7 @@ nvm_print_versions() {
   local FORMAT
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
-  echo "$1" | while read VERSION; do
+  echo "$1" | while read -r VERSION; do
     if [ "_$VERSION" = "_$NVM_CURRENT" ]; then
       FORMAT='\033[0;32m-> %12s\033[0m'
     elif [ "$VERSION" = "system" ]; then
