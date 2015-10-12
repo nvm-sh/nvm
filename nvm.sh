@@ -327,7 +327,7 @@ nvm_ensure_version_prefix() {
   local NVM_VERSION
   NVM_VERSION="$(nvm_strip_iojs_prefix "$1" | command sed -e 's/^\([0-9]\)/v\1/g')"
   if nvm_is_iojs_version "$1"; then
-    echo "$(nvm_add_iojs_prefix "$NVM_VERSION")"
+    nvm_add_iojs_prefix "$NVM_VERSION"
   else
     echo "$NVM_VERSION"
   fi
@@ -408,7 +408,7 @@ nvm_ls_current() {
   if [ $? -ne 0 ]; then
     echo 'none'
   elif nvm_tree_contains_path "$(nvm_version_dir iojs)" "$NVM_LS_CURRENT_NODE_PATH"; then
-    echo "$(nvm_add_iojs_prefix $(iojs --version 2>/dev/null))"
+    nvm_add_iojs_prefix "$(iojs --version 2>/dev/null)"
   elif nvm_tree_contains_path "$NVM_DIR" "$NVM_LS_CURRENT_NODE_PATH"; then
     local VERSION
     VERSION="$(node --version 2>/dev/null)"
@@ -1268,13 +1268,13 @@ nvm_match_version() {
   PROVIDED_VERSION="$1"
   case "_$PROVIDED_VERSION" in
     "_$NVM_IOJS_PREFIX" | "_io.js")
-      echo "$(nvm_version $NVM_IOJS_PREFIX)"
+      nvm_version "$NVM_IOJS_PREFIX"
     ;;
     "_system")
       echo "system"
     ;;
     *)
-      echo "$(nvm_version "$PROVIDED_VERSION")"
+      nvm_version "$PROVIDED_VERSION"
     ;;
   esac
 }
