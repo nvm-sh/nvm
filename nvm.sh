@@ -845,7 +845,7 @@ nvm_print_implicit_alias() {
       if [ "_$NVM_IOJS_VERSION" = "_N/A" ]; then
         echo "N/A"
       else
-        echo "$($NVM_ADD_PREFIX_COMMAND "$NVM_IOJS_VERSION")"
+        $NVM_ADD_PREFIX_COMMAND "$NVM_IOJS_VERSION"
       fi
       return $EXIT_CODE
     ;;
