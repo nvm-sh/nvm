@@ -1857,7 +1857,11 @@ nvm() {
       fi
 
       if [ $# -lt 1 ]; then
-        nvm_rc_version && has_checked_nvmrc=1
+        if [ "$NVM_SILENT" -eq 1 ]; then
+          nvm_rc_version >/dev/null 2>&1 && has_checked_nvmrc=1
+        else
+          nvm_rc_version && has_checked_nvmrc=1
+        fi
         if [ -n "$NVM_RC_VERSION" ]; then
           VERSION="$(nvm_version "$NVM_RC_VERSION")"
         else
@@ -1875,7 +1879,11 @@ nvm() {
         if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
           provided_version=''
           if [ $has_checked_nvmrc -ne 1 ]; then
-            nvm_rc_version && has_checked_nvmrc=1
+            if [ "$NVM_SILENT" -eq 1 ]; then
+              nvm_rc_version >/dev/null 2>&1 && has_checked_nvmrc=1
+            else
+              nvm_rc_version && has_checked_nvmrc=1
+            fi
           fi
           VERSION="$(nvm_version "$NVM_RC_VERSION")"
         else
@@ -1941,7 +1949,11 @@ nvm() {
       if [ -n "$provided_version" ]; then
         VERSION="$(nvm_version "$provided_version")"
         if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
-          nvm_rc_version
+          if [ "$NVM_SILENT" -eq 1 ]; then
+            nvm_rc_version >/dev/null 2>&1
+          else
+            nvm_rc_version
+          fi
           provided_version="$NVM_RC_VERSION"
           VERSION="$(nvm_version "$provided_version")"
         else
