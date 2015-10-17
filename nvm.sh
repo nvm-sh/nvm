@@ -700,34 +700,47 @@ nvm_ls_remote() {
 }
 
 nvm_ls_remote_iojs() {
-  nvm_ls_remote_iojs_org std "$NVM_IOJS_ORG_MIRROR" "$1"
+  nvm_ls_remote_index_tab iojs std "$NVM_IOJS_ORG_MIRROR" "$1"
 }
 
-nvm_ls_remote_iojs_org() {
-  local PREFIX
-  if [ "_$1" = "_std" ]; then
-    PREFIX="$(nvm_iojs_prefix)"
-  else
-    echo "unknown type of io.js release" >&2
-    return 4
+nvm_ls_remote_index_tab() {
+  if [ "$#" -lt 4 ]; then
+    echo "not enough arguments" >&2
+    return 5
   fi
+  local TYPE
+  TYPE="$1"
+  local PREFIX
+  case "$TYPE-$2" in
+    iojs-std) PREFIX="$(nvm_iojs_prefix)-" ;;
+    iojs-*)
+      echo "unknown type of io.js release" >&2
+      return 4
+    ;;
+  esac
+  local SORT_COMMAND
+  SORT_COMMAND='sort'
   local MIRROR
-  MIRROR="$2"
+  MIRROR="$3"
   local PATTERN
-  PATTERN="$3"
+  PATTERN="$4"
   local VERSIONS
   if [ -n "$PATTERN" ]; then
-    PATTERN="$(nvm_ensure_version_prefix "$(nvm_strip_iojs_prefix "$PATTERN")")"
+    if [ "_$TYPE" = "_iojs" ]; then
+      PATTERN="$(nvm_ensure_version_prefix "$(nvm_strip_iojs_prefix "$PATTERN")")"
+    else
+      PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
+    fi
   else
     PATTERN=".*"
   fi
   VERSIONS="$(nvm_download -L -s "$MIRROR/index.tab" -o - \
     | command sed "
         1d;
-        s/^/$PREFIX-/;
+        s/^/$PREFIX/;
         s/[[:blank:]].*//" \
     | command grep -w "$PATTERN" \
-    | command sort)"
+    | $SORT_COMMAND)"
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
     return 3
@@ -2210,7 +2223,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_iojs_prefix nvm_node_prefix \
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
         nvm_is_iojs_version nvm_is_alias \
-        nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_iojs_org \
+        nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_iojs_binary nvm_install_node_binary \
         nvm_install_node_source \
