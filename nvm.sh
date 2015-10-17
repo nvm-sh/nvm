@@ -678,9 +678,6 @@ nvm_ls() {
 nvm_ls_remote() {
   local PATTERN
   PATTERN="$1"
-  local VERSIONS
-  local GREP_OPTIONS
-  GREP_OPTIONS=''
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
     PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command tail -n1)"
   elif [ -n "$PATTERN" ]; then
@@ -688,15 +685,7 @@ nvm_ls_remote() {
   else
     PATTERN=".*"
   fi
-  VERSIONS=`nvm_download -L -s $NVM_NODEJS_ORG_MIRROR/ -o - \
-              | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' \
-              | command grep -w "${PATTERN}" \
-              | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
-  if [ -z "$VERSIONS" ]; then
-    echo "N/A"
-    return 3
-  fi
-  echo "$VERSIONS"
+  nvm_ls_remote_index_tab node std "$NVM_NODEJS_ORG_MIRROR" "$PATTERN"
 }
 
 nvm_ls_remote_iojs() {
@@ -713,13 +702,21 @@ nvm_ls_remote_index_tab() {
   local PREFIX
   case "$TYPE-$2" in
     iojs-std) PREFIX="$(nvm_iojs_prefix)-" ;;
+    node-std) PREFIX='' ;;
     iojs-*)
       echo "unknown type of io.js release" >&2
+      return 4
+    ;;
+    node-*)
+      echo "unknown type of node.js release" >&2
       return 4
     ;;
   esac
   local SORT_COMMAND
   SORT_COMMAND='sort'
+  case "$TYPE" in
+    node) SORT_COMMAND='sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n' ;;
+  esac
   local MIRROR
   MIRROR="$3"
   local PATTERN
@@ -734,6 +731,11 @@ nvm_ls_remote_index_tab() {
   else
     PATTERN=".*"
   fi
+  ZHS_HAS_SHWORDSPLIT_UNSET=1
+  if nvm_has "setopt"; then
+    ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
+    setopt shwordsplit
+  fi
   VERSIONS="$(nvm_download -L -s "$MIRROR/index.tab" -o - \
     | command sed "
         1d;
@@ -741,6 +743,9 @@ nvm_ls_remote_index_tab() {
         s/[[:blank:]].*//" \
     | command grep -w "$PATTERN" \
     | $SORT_COMMAND)"
+  if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+    unsetopt shwordsplit
+  fi
   if [ -z "$VERSIONS" ]; then
     echo "N/A"
     return 3
