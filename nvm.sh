@@ -1352,10 +1352,10 @@ nvm_die_on_prefix() {
   fi
 
   local NVM_NPM_PREFIX
-  NVM_NPM_PREFIX="$(npm config get prefix)"
+  NVM_NPM_PREFIX="$(NPM_CONFIG_LOGLEVEL=warn npm config get prefix)"
   if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
     if [ "_$NVM_DELETE_PREFIX" = "_1" ]; then
-      npm config delete prefix
+      NPM_CONFIG_LOGLEVEL=warn npm config delete prefix
     else
       nvm deactivate >/dev/null 2>&1
       echo >&2 "nvm is not compatible with the npm config \"prefix\" option: currently set to \"$NVM_NPM_PREFIX\""
