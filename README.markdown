@@ -44,6 +44,14 @@ To activate nvm, you need to source it from your shell:
 I always add this line to my `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login.
 Often I also put in a line to use a specific version of node.
 
+### Homebrew
+
+If you are on OS X using Homebrew, you can also install nvm with
+
+```shell
+brew install nvm
+```
+
 ## Usage
 
 You can create an `.nvmrc` file containing version number in the project root directory (or any parent directory).
@@ -176,6 +184,14 @@ To activate, you need to source `bash_completion`:
   	[[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
 
 Put the above sourcing line just below the sourcing line for NVM in your profile (`.bashrc`, `.bash_profile`).
+
+If you installed with Homebrew, the bash completion file is included with
+
+```shell
+for f in $(brew --prefix nvm)/etc/bash_completion.d/*; do
+  source $f
+done
+```
 
 ### Usage
 
