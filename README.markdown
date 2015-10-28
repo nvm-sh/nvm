@@ -185,6 +185,14 @@ To activate, you need to source `bash_completion`:
 
 Put the above sourcing line just below the sourcing line for NVM in your profile (`.bashrc`, `.bash_profile`).
 
+If you installed with Homebrew, the bash completion file is included with
+
+```shell
+for f in $(brew --prefix nvm)/etc/bash_completion.d/*; do
+  source $f
+done
+```
+
 ### Usage
 
 nvm
