@@ -44,6 +44,14 @@ To activate nvm, you need to source it from your shell:
 I always add this line to my `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login.
 Often I also put in a line to use a specific version of node.
 
+### Homebrew
+
+If you are on OS X using Homebrew, you can also install nvm with
+
+```shell
+brew install nvm
+```
+
 ## Usage
 
 You can create an `.nvmrc` file containing version number in the project root directory (or any parent directory).
