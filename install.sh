@@ -89,7 +89,7 @@ install_nvm_as_script() {
 
   # Downloading to $NVM_DIR
   mkdir -p "$NVM_DIR"
-  if [ -d "$NVM_DIR/nvm.sh" ]; then
+  if [ -f "$NVM_DIR/nvm.sh" ]; then
     echo "=> nvm is already installed in $NVM_DIR, trying to update the script"
   else
     echo "=> Downloading nvm as script to '$NVM_DIR'"
