@@ -3,6 +3,9 @@ addons:
   apt_packages:
   - zsh
   - ksh
+before_install:
+  - curl --version
+  - wget --version
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
