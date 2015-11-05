@@ -49,32 +49,32 @@ Often I also put in a line to use a specific version of node.
 You can create an `.nvmrc` file containing version number in the project root directory (or any parent directory).
 `nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied.
 
-To download, compile, and install the latest v0.10.x release of node, do this:
+To download, compile, and install the latest v5.0.x release of node, do this:
 
-    nvm install 0.10
+    nvm install 5.0
 
 And then in any new shell just use the installed version:
 
-    nvm use 0.10
+    nvm use 5.0
 
 Or you can just run it:
 
-    nvm run 0.10 --version
+    nvm run 5.0 --version
 
 Or, you can run any arbitrary command in a subshell with the desired version of node:
 
-    nvm exec 0.10 node --version
+    nvm exec 4.2 node --version
 
 You can also get the path to the executable to where it was installed:
 
-    nvm which 0.10
+    nvm which 5.0
 
-In place of a version pointer like "0.10", you can use the special default aliases "stable" and "unstable":
+In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
 
-    nvm install stable
-    nvm install unstable
-    nvm use stable
-    nvm run unstable --version
+ - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
+ - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
+ - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
+ - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in semver, versions communicate breakage, not stability).
 
 If you want to install a new version of Node.js and migrate npm packages from a previous version:
 
@@ -84,8 +84,8 @@ This will first use "nvm version node" to identify the current version you're mi
 
 You can also install and migrate npm packages from specific versions of Node like this:
 
-    nvm install v0.10.40 --reinstall-packages-from=0.10.39
-    nvm install v0.12.7 --reinstall-packages-from=0.12.6
+    nvm install v5.0 --reinstall-packages-from=4.2
+    nvm install v4.2 --reinstall-packages-from=iojs
 
 If you want to install [io.js](https://github.com/iojs/io.js/):
 
@@ -121,9 +121,9 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
     export NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist
-    nvm install 0.10
+    nvm install node
 
-    NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 0.10
+    NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 4.2
 
 To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
 
