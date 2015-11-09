@@ -31,7 +31,7 @@ Eg: `curl ... | NVM_DIR=/usr/local/nvm bash` for a global install.
 
 ### Manual install
 
-For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in a folder called `nvm`.
+For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm`.
 
 Or if you have `git` installed, then just clone it, and check out the latest version:
 
@@ -41,8 +41,10 @@ To activate nvm, you need to source it from your shell:
 
     . ~/.nvm/nvm.sh
 
-I always add this line to my `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login.
-Often I also put in a line to use a specific version of node.
+Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
+
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
 
 ## Usage
 
