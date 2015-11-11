@@ -1936,11 +1936,11 @@ nvm() {
         fi
         EXIT_CODE="$?"
       elif [ "$NVM_IOJS" = true ]; then
-        [ $NVM_SILENT -eq 1 ] || echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
+        [ $NVM_SILENT -eq 1 ] || echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
         OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs $ARGS)"
         EXIT_CODE="$?"
       else
-        [ $NVM_SILENT -eq 1 ] || echo "Running node $VERSION$(nvm_print_npm_version)"
+        [ $NVM_SILENT -eq 1 ] || echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
         OUTPUT="$(nvm use "$VERSION" >/dev/null && node $ARGS)"
         EXIT_CODE="$?"
       fi
@@ -1985,7 +1985,7 @@ nvm() {
         return $EXIT_CODE
       fi
 
-      [ $NVM_SILENT -eq 1 ] || echo "Running node $VERSION$(nvm_print_npm_version)"
+      [ $NVM_SILENT -eq 1 ] || echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
       NODE_VERSION="$VERSION" "$NVM_DIR/nvm-exec" "$@"
     ;;
     "ls" | "list" )
