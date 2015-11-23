@@ -1461,6 +1461,7 @@ nvm() {
       echo 'Usage:'
       echo '  nvm help                                  Show this message'
       echo '  nvm --version                             Print out the latest released version of nvm'
+      echo '  nvm --upgrade                             Upgrades nvm if newer version is available'
       echo '  nvm install [-s] <version>                Download and install a <version>, [-s] from source. Uses .nvmrc if available'
       echo '    --reinstall-packages-from=<version>     When installing, reinstall packages installed in <node|iojs|node version number>'
       echo '  nvm uninstall <version>                   Uninstall a version'
@@ -2222,6 +2223,9 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
     ;;
     "--version" )
       echo "0.29.0"
+    ;;
+    "--upgrade" )
+      nvm_get_latest
     ;;
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum \
