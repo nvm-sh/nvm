@@ -15,7 +15,10 @@ Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creati
 
 Note: We still have some problems with FreeBSD, because there is no pre-built binary from official for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc), see the issue ticket:
  - [[#900] [Bug] nodejs on FreeBSD need to be patched ](https://github.com/creationix/nvm/issues/900)
- - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
+ - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)  
+
+Note: On OSX, if you do not have XCode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:  
+ - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
 
 ### Install script
 
