@@ -1616,10 +1616,12 @@ nvm() {
       if [ "_$NVM_OS" = "_freebsd" ]; then
         # node.js and io.js do not have a FreeBSD binary
         nobinary=1
+        echo "Currently, there is no binary for $NVM_OS" >&2
       elif [ "_$NVM_OS" = "_sunos" ]; then
         # Not all node/io.js versions have a Solaris binary
           if ! nvm_has_solaris_binary "$VERSION"; then
             nobinary=1
+            echo "Currently, there is no binary of version $VERSION for $NVM_OS" >&2
         fi
       fi
       local NVM_INSTALL_SUCCESS
