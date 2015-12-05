@@ -1232,27 +1232,29 @@ nvm_install_node_source() {
     MAKE_CXX="CXX=c++"
   fi
 
-  if [ "_$NVM_OS" = "_linux" ]; then
-    CPU_THREADS="$(grep -c 'core id' /proc/cpuinfo)"
-  elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
-    CPU_THREADS="$(sysctl -n hw.ncpu)"
-  elif [ "_$NVM_OS" = "_sunos" ]; then
-    CPU_THREADS="$(psrinfo | wc -l)"
-  fi
-  local CPU_THREAD_VALID
-  CPU_THREAD_VALID=$(nvm_is_natural_num $CPU_THREADS)
-  if [ -z "$CPU_THREADS" ] || [ "$CPU_THREAD_VALID" != "true" ] ; then
-    echo "Can not determine how many thread(s) we can use, set to only 1 now." 1>&2
-    echo "Please report an issue on GitHub to help us make it better and run it faster on your computer!" 1>&2
-    MAKE_JOBS="1"
-  else
-    echo "Detected that you have $CPU_THREADS CPU thread(s)"
-    if [ $CPU_THREADS -gt 2 ]; then
-      MAKE_JOBS=$(($CPU_THREADS - 1))
-      echo "Set the number of jobs to $CPU_THREADS - 1 = $MAKE_JOBS jobs to speed up the build"
+  if [ -z "$MAKE_JOBS" ]; then
+    if [ "_$NVM_OS" = "_linux" ]; then
+      CPU_THREADS="$(grep -c 'core id' /proc/cpuinfo)"
+    elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
+      CPU_THREADS="$(sysctl -n hw.ncpu)"
+    elif [ "_$NVM_OS" = "_sunos" ]; then
+      CPU_THREADS="$(psrinfo | wc -l)"
+    fi
+    local CPU_THREAD_VALID
+    CPU_THREAD_VALID=$(nvm_is_natural_num $CPU_THREADS)
+    if [ -z "$CPU_THREADS" ] || [ "$CPU_THREAD_VALID" != "true" ] ; then
+      echo "Can not determine how many thread(s) we can use, set to only 1 now." 1>&2
+      echo "Please report an issue on GitHub to help us make it better and run it faster on your computer!" 1>&2
+      MAKE_JOBS="1"
     else
-      MAKE_JOBS=1
-      echo "Number of CPU thread(s) less or equal to 2 will have only one job a time for 'make'"
+      echo "Detected that you have $CPU_THREADS CPU thread(s)"
+      if [ $CPU_THREADS -gt 2 ]; then
+        MAKE_JOBS=$(($CPU_THREADS - 1))
+        echo "Set the number of jobs to $CPU_THREADS - 1 = $MAKE_JOBS jobs to speed up the build"
+      else
+        MAKE_JOBS=1
+        echo "Number of CPU thread(s) less or equal to 2 will have only one job a time for 'make'"
+      fi
     fi
   fi
   local tmpdir
@@ -1579,6 +1581,21 @@ nvm() {
       if [ "_$1" = "_-s" ]; then
         nobinary=1
         shift
+        if [ "_$1" = "_-j" ]; then
+          shift
+          local CPU_THREAD_VALID
+          CPU_THREAD_VALID=$(nvm_is_natural_num $1)
+          if [ "$CPU_THREAD_VALID" = "true" ]; then
+            MAKE_JOBS=$1
+            echo "Set number of jobs to $MAKE_JOBS for 'make' utility"
+          else
+            unset MAKE_JOBS
+            echo >&2 "$1 is invalid for CPU threads, should be a natural number"
+          fi
+          shift
+        else
+          unset MAKE_JOBS
+        fi
       fi
 
       provided_version="$1"
