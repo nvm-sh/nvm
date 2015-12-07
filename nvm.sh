@@ -1836,12 +1836,10 @@ nvm() {
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
       local NVM_USE_OUTPUT
-      if nvm_is_iojs_version "$VERSION"; then
-        if [ $NVM_USE_SILENT -ne 1 ]; then
+      if [ $NVM_USE_SILENT -ne 1 ]; then
+        if nvm_is_iojs_version "$VERSION"; then
           NVM_USE_OUTPUT="Now using io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm_print_npm_version)"
-        fi
-      else
-        if [ $NVM_USE_SILENT -ne 1 ]; then
+        else
           NVM_USE_OUTPUT="Now using node $VERSION$(nvm_print_npm_version)"
         fi
       fi
