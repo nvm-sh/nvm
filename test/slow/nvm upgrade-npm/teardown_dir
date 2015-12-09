@@ -1,0 +1,6 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+
+#remove installed version
+[ -e ../../../versions/node/v4.2.3 ] && rm -R ../../../versions/node/v4.2.3
