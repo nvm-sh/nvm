@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+
+# ensure version does not already exist
+[ -e ../../../versions/node/v4.2.3 ] && rm -R ../../../versions/node/v4.2.3
+
+nvm install 4.2.3
+
