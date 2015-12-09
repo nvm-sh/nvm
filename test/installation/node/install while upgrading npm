@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+# Remove the stuff we're clobbering.
+[ -e ../../../versions/node/v4.2.3 ] && rm -R ../../../versions/node/v4.2.3
+
+# Install from binary
+nvm install 4.2.3 --upgrade-npm=3.5.1
+
+# Check
+[ -d ../../../versions/node/v4.2.3 ] || die "nvm install 4.2.3 didn't install"
+
+npm --version | grep 3.5.1 || die "nvm install did not upgrade NPM"
+
