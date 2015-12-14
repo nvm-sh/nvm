@@ -5,7 +5,6 @@
 First you'll need to make sure your system has a c++ compiler. For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
 Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Three alternatives exist, which are neither supported nor developed by us:
- - [nvmw](https://github.com/hakobera/nvmw)
  - [nvm-windows](https://github.com/coreybutler/nvm-windows)
  - [nodist](https://github.com/marcelklehr/nodist)
 
