@@ -2163,8 +2163,10 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         return 127
       fi
       [ ! -f "$NVM_ALIAS_DIR/$2" ] && echo "Alias $2 doesn't exist!" >&2 && return
+      local NVM_ALIAS_ORIGINAL
+      NVM_ALIAS_ORIGINAL="$(nvm_alias "$2")"
       command rm -f "$NVM_ALIAS_DIR/$2"
-      echo "Deleted alias $2"
+      echo "Deleted alias $2 - restore it with \`nvm alias $2 "$NVM_ALIAS_ORIGINAL"\`"
     ;;
     "reinstall-packages" | "copy-packages" )
       if [ $# -ne 2 ]; then
