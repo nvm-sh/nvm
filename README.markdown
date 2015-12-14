@@ -29,7 +29,8 @@ or Wget:
 
     wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.29.0/install.sh | bash
 
-<sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub>
+<sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc` or `~/.profile`).</sub> 
+Eg. `source ~/.profile`
 
 You can customize the install source, directory and profile using the `NVM_SOURCE`, `NVM_DIR`, and `PROFILE` variables.
 Eg: `curl ... | NVM_DIR="path/to/nvm" bash`
