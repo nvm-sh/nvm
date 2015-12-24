@@ -10,4 +10,4 @@ else
   nvm use > /dev/null || (echo "No .nvmrc file found" >&2 && exit 127)
 fi
 
-exec $@
+exec "$@"
