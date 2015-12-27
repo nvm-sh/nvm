@@ -1231,6 +1231,32 @@ nvm_install_node_source() {
     make='gmake'
     MAKE_CXX="CXX=c++"
   fi
+
+  if [ -z "$NVM_MAKE_JOBS" ]; then
+    if [ "_$NVM_OS" = "_linux" ]; then
+      NVM_CPU_THREADS="$(grep -c 'core id' /proc/cpuinfo)"
+    elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
+      NVM_CPU_THREADS="$(sysctl -n hw.ncpu)"
+    elif [ "_$NVM_OS" = "_sunos" ]; then
+      NVM_CPU_THREADS="$(psrinfo | wc -l)"
+    fi
+    local NVM_CPU_THREAD_VALID
+    NVM_CPU_THREAD_VALID=$(nvm_is_natural_num $NVM_CPU_THREADS)
+    if [ -z "$NVM_CPU_THREADS" ] || [ "$NVM_CPU_THREAD_VALID" != "true" ] ; then
+      echo "Can not determine how many thread(s) we can use, set to only 1 now." 1>&2
+      echo "Please report an issue on GitHub to help us make it better and run it faster on your computer!" 1>&2
+      NVM_MAKE_JOBS="1"
+    else
+      echo "Detected that you have $NVM_CPU_THREADS CPU thread(s)"
+      if [ $NVM_CPU_THREADS -gt 2 ]; then
+        NVM_MAKE_JOBS=$(($NVM_CPU_THREADS - 1))
+        echo "Set the number of jobs to $NVM_CPU_THREADS - 1 = $NVM_MAKE_JOBS jobs to speed up the build"
+      else
+        NVM_MAKE_JOBS=1
+        echo "Number of CPU thread(s) less or equal to 2 will have only one job a time for 'make'"
+      fi
+    fi
+  fi
   local tmpdir
   tmpdir="$NVM_DIR/src"
   local tmptarball
@@ -1252,9 +1278,9 @@ nvm_install_node_source() {
     command tar -xzf "$tmptarball" -C "$tmpdir" && \
     cd "$tmpdir/node-$VERSION" && \
     ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
-    $make $MAKE_CXX && \
+    $make -j $NVM_MAKE_JOBS $MAKE_CXX && \
     command rm -f "$VERSION_PATH" 2>/dev/null && \
-    $make $MAKE_CXX install
+    $make -j $NVM_MAKE_JOBS $MAKE_CXX install
     )
   then
     if ! nvm_has "npm" ; then
@@ -1430,6 +1456,16 @@ nvm_sanitize_path() {
   echo "$SANITIZED_PATH" | command sed "s#$HOME#\$HOME#g"
 }
 
+nvm_is_natural_num() {
+  echo $1 | command egrep -q '^[0-9]{1,}$' &> /dev/null
+  local IS_NATURAL_NUM=$?
+  if [ "$IS_NATURAL_NUM" = "0" ]; then
+    echo true
+  else
+    echo false
+  fi
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -1545,6 +1581,21 @@ nvm() {
       if [ "_$1" = "_-s" ]; then
         nobinary=1
         shift
+        if [ "_$1" = "_-j" ]; then
+          shift
+          local NVM_CPU_THREAD_VALID
+          NVM_CPU_THREAD_VALID=$(nvm_is_natural_num $1)
+          if [ "$NVM_CPU_THREAD_VALID" = "true" ]; then
+            NVM_MAKE_JOBS=$1
+            echo "Set number of jobs to $MAKE_JOBS for 'make' utility"
+          else
+            unset NVM_MAKE_JOBS
+            echo >&2 "$1 is invalid for CPU threads, should be a natural number"
+          fi
+          shift
+        else
+          unset NVM_MAKE_JOBS
+        fi
       fi
 
       provided_version="$1"
