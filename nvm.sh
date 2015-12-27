@@ -1240,9 +1240,7 @@ nvm_install_node_source() {
     elif [ "_$NVM_OS" = "_sunos" ]; then
       NVM_CPU_THREADS="$(psrinfo | wc -l)"
     fi
-    local NVM_CPU_THREAD_VALID
-    NVM_CPU_THREAD_VALID=$(nvm_is_natural_num $NVM_CPU_THREADS)
-    if [ -z "$NVM_CPU_THREADS" ] || [ "$NVM_CPU_THREAD_VALID" != "true" ] ; then
+    if [ ! nvm_is_natural_num "$NVM_CPU_THREADS" ] ; then
       echo "Can not determine how many thread(s) we can use, set to only 1 now." 1>&2
       echo "Please report an issue on GitHub to help us make it better and run it faster on your computer!" 1>&2
       NVM_MAKE_JOBS="1"
@@ -1457,13 +1455,16 @@ nvm_sanitize_path() {
 }
 
 nvm_is_natural_num() {
-  echo $1 | command egrep -q '^[0-9]{1,}$' &> /dev/null
-  local IS_NATURAL_NUM=$?
-  if [ "$IS_NATURAL_NUM" = "0" ]; then
-    echo true
-  else
-    echo false
+  if [ -z "$1" ]; then
+    return 4
   fi
+  case "$1" in
+    0) return 1 ;;
+    -*) return 3 ;; # some BSDs return false positives for double-negated args
+    *)
+      [ $1 -eq $1 2> /dev/null ] # returns 2 if it doesn't match
+    ;;
+  esac
 }
 
 nvm() {
@@ -1586,9 +1587,7 @@ nvm() {
           ;;
           -j)
             shift # consume "-j"
-            local NVM_CPU_THREAD_VALID
-            NVM_CPU_THREAD_VALID=$(nvm_is_natural_num $1)
-            if [ "$NVM_CPU_THREAD_VALID" = "true" ]; then
+            if [ nvm_is_natural_num "$1" ]; then
               NVM_MAKE_JOBS=$1
               echo "number of \`make\` jobs: $NVM_MAKE_JOBS"
             else
