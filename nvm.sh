@@ -1554,10 +1554,8 @@ nvm() {
     ;;
 
     "install" | "i" )
-      local nobinary
       local version_not_provided
       version_not_provided=0
-      local provided_version
       local NVM_OS
       NVM_OS="$(nvm_get_os)"
 
@@ -1577,27 +1575,35 @@ nvm() {
 
       shift
 
+      local nobinary
       nobinary=0
-      if [ "_$1" = "_-s" ]; then
-        nobinary=1
-        shift
-        if [ "_$1" = "_-j" ]; then
-          shift
-          local NVM_CPU_THREAD_VALID
-          NVM_CPU_THREAD_VALID=$(nvm_is_natural_num $1)
-          if [ "$NVM_CPU_THREAD_VALID" = "true" ]; then
-            NVM_MAKE_JOBS=$1
-            echo "Set number of jobs to $MAKE_JOBS for 'make' utility"
-          else
-            unset NVM_MAKE_JOBS
-            echo >&2 "$1 is invalid for CPU threads, should be a natural number"
-          fi
-          shift
-        else
-          unset NVM_MAKE_JOBS
-        fi
-      fi
+      while [ $# -ne 0 ]
+      do
+        case "$1" in
+          -s)
+            shift # consume "-s"
+            nobinary=1
+          ;;
+          -j)
+            shift # consume "-j"
+            local NVM_CPU_THREAD_VALID
+            NVM_CPU_THREAD_VALID=$(nvm_is_natural_num $1)
+            if [ "$NVM_CPU_THREAD_VALID" = "true" ]; then
+              NVM_MAKE_JOBS=$1
+              echo "number of \`make\` jobs: $NVM_MAKE_JOBS"
+            else
+              unset NVM_MAKE_JOBS
+              echo >&2 "$1 is invalid for number of \`make\` jobs, must be a natural number"
+            fi
+            shift # consume job count
+          ;;
+          *)
+            break # stop parsing args
+          ;;
+        esac
+      done
 
+      local provided_version
       provided_version="$1"
 
       if [ -z "$provided_version" ]; then

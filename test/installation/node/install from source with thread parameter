@@ -11,7 +11,7 @@ NVM_TEST_VERSION=v0.10.41
 # Remove the stuff we're clobbering.
 [ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
 
-# Install from source with 1 CPU thread parameter
+# Install from source with 1 make job
 nvm install -s -j 1 $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
 
 # Check
@@ -25,8 +25,8 @@ nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || "'nvm run $NVM_T
 # Remove the stuff we're clobbering.
 [ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
 
-# Install from source with 2 CPU threads parameter
-nvm install -s -j 2 $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
+# Install from source with 2 make jobs (and swapped arg order)
+nvm install -j 2 -s $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
 
 # Check
 [ -d ../../../$NVM_TEST_VERSION ]
