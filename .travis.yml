@@ -1,4 +1,6 @@
 language: generic
+sudo: required
+dist: trusty
 addons:
   apt_packages:
   - zsh
