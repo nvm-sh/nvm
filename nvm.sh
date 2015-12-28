@@ -1200,11 +1200,48 @@ nvm_install_node_binary() {
   return 2
 }
 
+nvm_get_make_jobs() {
+  if nvm_is_natural_num "$1"; then
+    NVM_MAKE_JOBS="$1"
+    echo "number of \`make\` jobs: $NVM_MAKE_JOBS"
+    return
+  elif [ -n "$1" ]; then
+    unset NVM_MAKE_JOBS
+    echo >&2 "$1 is invalid for number of \`make\` jobs, must be a natural number"
+  fi
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+  local NVM_CPU_THREADS
+  if [ "_$NVM_OS" = "_linux" ]; then
+    NVM_CPU_THREADS="$(grep -c 'core id' /proc/cpuinfo)"
+  elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
+    NVM_CPU_THREADS="$(sysctl -n hw.ncpu)"
+  elif [ "_$NVM_OS" = "_sunos" ]; then
+    NVM_CPU_THREADS="$(psrinfo | wc -l)"
+  fi
+  if ! nvm_is_natural_num "$NVM_CPU_THREADS" ; then
+    echo "Can not determine how many thread(s) we can use, set to only 1 now." >&2
+    echo "Please report an issue on GitHub to help us make it better and run it faster on your computer!" >&2
+    NVM_MAKE_JOBS=1
+  else
+    echo "Detected that you have $NVM_CPU_THREADS CPU thread(s)"
+    if [ $NVM_CPU_THREADS -gt 2 ]; then
+      NVM_MAKE_JOBS=$(($NVM_CPU_THREADS - 1))
+      echo "Set the number of jobs to $NVM_CPU_THREADS - 1 = $NVM_MAKE_JOBS jobs to speed up the build"
+    else
+      NVM_MAKE_JOBS=1
+      echo "Number of CPU thread(s) less or equal to 2 will have only one job a time for 'make'"
+    fi
+  fi
+}
+
 nvm_install_node_source() {
   local VERSION
   VERSION="$1"
+  local NVM_MAKE_JOBS
+  NVM_MAKE_JOBS="$2"
   local ADDITIONAL_PARAMETERS
-  ADDITIONAL_PARAMETERS="$2"
+  ADDITIONAL_PARAMETERS="$3"
 
   local NVM_ARCH
   NVM_ARCH="$(nvm_get_arch)"
@@ -1232,29 +1269,6 @@ nvm_install_node_source() {
     MAKE_CXX="CXX=c++"
   fi
 
-  if [ -z "$NVM_MAKE_JOBS" ]; then
-    if [ "_$NVM_OS" = "_linux" ]; then
-      NVM_CPU_THREADS="$(grep -c 'core id' /proc/cpuinfo)"
-    elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
-      NVM_CPU_THREADS="$(sysctl -n hw.ncpu)"
-    elif [ "_$NVM_OS" = "_sunos" ]; then
-      NVM_CPU_THREADS="$(psrinfo | wc -l)"
-    fi
-    if ! nvm_is_natural_num "$NVM_CPU_THREADS" ; then
-      echo "Can not determine how many thread(s) we can use, set to only 1 now." 1>&2
-      echo "Please report an issue on GitHub to help us make it better and run it faster on your computer!" 1>&2
-      NVM_MAKE_JOBS="1"
-    else
-      echo "Detected that you have $NVM_CPU_THREADS CPU thread(s)"
-      if [ $NVM_CPU_THREADS -gt 2 ]; then
-        NVM_MAKE_JOBS=$(($NVM_CPU_THREADS - 1))
-        echo "Set the number of jobs to $NVM_CPU_THREADS - 1 = $NVM_MAKE_JOBS jobs to speed up the build"
-      else
-        NVM_MAKE_JOBS=1
-        echo "Number of CPU thread(s) less or equal to 2 will have only one job a time for 'make'"
-      fi
-    fi
-  fi
   local tmpdir
   tmpdir="$NVM_DIR/src"
   local tmptarball
@@ -1578,6 +1592,7 @@ nvm() {
 
       local nobinary
       nobinary=0
+      local make_jobs
       while [ $# -ne 0 ]
       do
         case "$1" in
@@ -1587,13 +1602,7 @@ nvm() {
           ;;
           -j)
             shift # consume "-j"
-            if nvm_is_natural_num "$1"; then
-              NVM_MAKE_JOBS=$1
-              echo "number of \`make\` jobs: $NVM_MAKE_JOBS"
-            else
-              unset NVM_MAKE_JOBS
-              echo >&2 "$1 is invalid for number of \`make\` jobs, must be a natural number"
-            fi
+            nvm_get_make_jobs "$1"
             shift # consume job count
           ;;
           *)
@@ -1693,15 +1702,15 @@ nvm() {
       fi
       if [ "$NVM_INSTALL_SUCCESS" != true ]; then
         if [ "$NVM_IOJS" != true ] &&  [ "$NVM_NODE_MERGED" != true ]; then
-          if nvm_install_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"; then
+          if nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
             NVM_INSTALL_SUCCESS=true
           fi
         elif [ "$NVM_IOJS" = true ]; then
-          # nvm_install_iojs_source "$VERSION" "$ADDITIONAL_PARAMETERS"
+          # nvm_install_iojs_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
           echo "Installing iojs from source is not currently supported" >&2
           return 105
         elif [ "$NVM_NODE_MERGED" = true ]; then
-         # nvm_install_merged_node_source "$VERSION" "$ADDITIONAL_PARAMETERS"
+         # nvm_install_merged_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
          echo "Installing node v1.0 and greater from source is not currently supported" >&2
          return 106
         fi
