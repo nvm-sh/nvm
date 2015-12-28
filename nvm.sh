@@ -1240,7 +1240,7 @@ nvm_install_node_source() {
     elif [ "_$NVM_OS" = "_sunos" ]; then
       NVM_CPU_THREADS="$(psrinfo | wc -l)"
     fi
-    if [ ! nvm_is_natural_num "$NVM_CPU_THREADS" ] ; then
+    if ! nvm_is_natural_num "$NVM_CPU_THREADS" ; then
       echo "Can not determine how many thread(s) we can use, set to only 1 now." 1>&2
       echo "Please report an issue on GitHub to help us make it better and run it faster on your computer!" 1>&2
       NVM_MAKE_JOBS="1"
@@ -1587,7 +1587,7 @@ nvm() {
           ;;
           -j)
             shift # consume "-j"
-            if [ nvm_is_natural_num "$1" ]; then
+            if nvm_is_natural_num "$1"; then
               NVM_MAKE_JOBS=$1
               echo "number of \`make\` jobs: $NVM_MAKE_JOBS"
             else
