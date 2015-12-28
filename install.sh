@@ -131,7 +131,7 @@ nvm_detect_profile() {
     DETECTED_PROFILE="$HOME/.zshrc"
   fi
 
-  if [ -z $DETECTED_PROFILE ]; then
+  if [ -z "$DETECTED_PROFILE" ]; then
     if [ -f "$PROFILE" ]; then
       DETECTED_PROFILE="$PROFILE"
     elif [ -f "$HOME/.profile" ]; then
@@ -145,7 +145,7 @@ nvm_detect_profile() {
     fi
   fi
 
-  if [ ! -z $DETECTED_PROFILE ]; then
+  if [ ! -z "$DETECTED_PROFILE" ]; then
     echo "$DETECTED_PROFILE"
   fi
 }
