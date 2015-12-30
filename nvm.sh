@@ -1546,6 +1546,7 @@ nvm() {
 
     "debug" )
       local ZHS_HAS_SHWORDSPLIT_UNSET
+      ZHS_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
         ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
         setopt shwordsplit
