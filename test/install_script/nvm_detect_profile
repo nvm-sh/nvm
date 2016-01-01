@@ -32,7 +32,7 @@ _PROFILE=$(nvm_detect_profile)
                                          die "nvm_detect_profile didn't pick $SHELL and $HOME/.bashrc" )
 
 # But $PROFILE should override
-PROFILE=test_profile
+_PROFILE="$(PROFILE=test_profile nvm_detect_profile)"
 _PROFILE=$(nvm_detect_profile)
 [ "_$_PROFILE" = "_$PROFILE" ] || ( echo "_\$_PROFILE: _$_PROFILE" &&
                                     echo "_\$PROFILE: _$PROFILE" &&
@@ -50,7 +50,7 @@ _PROFILE=$(nvm_detect_profile)
                                         die "nvm_detect_profile didn't pick $SHELL and $HOME/.zshrc" )
 
 # But $PROFILE should override
-PROFILE=test_profile
+_PROFILE="$(PROFILE=test_profile nvm_detect_profile)"
 _PROFILE=$(nvm_detect_profile)
 [ "_$_PROFILE" = "_$PROFILE" ] || ( echo "_\$_PROFILE: _$_PROFILE" &&
                                     echo "_\$PROFILE: _$PROFILE" &&
