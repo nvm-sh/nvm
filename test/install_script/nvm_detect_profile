@@ -27,25 +27,25 @@ setup
 #
 
 # .bashrc should be detected for bash
-NVM_DETECT_PROFILE="$(declare SHELL="/bin/bash"; unset PROFILE; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/bin/bash"; unset PROFILE; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
   die "nvm_detect_profile didn't pick \$HOME/.bashrc for bash"
 fi
 
 # $PROFILE should override .bashrc profile detection
-NVM_DETECT_PROFILE="$(declare SHELL="/bin/bash"; declare PROFILE="test_profile"; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/bin/bash"; PROFILE="test_profile"; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
   die "nvm_detect_profile ignored \$PROFILE"
 fi
 
 # .zshrc should be detected for zsh
-NVM_DETECT_PROFILE="$(declare SHELL="/usr/bin/zsh"; unset PROFILE; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/usr/bin/zsh"; unset PROFILE; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.zshrc" ]; then
   die "nvm_detect_profile didn't pick \$HOME/.zshrc for zsh"
 fi
 
 # $PROFILE should override .zshrc profile detection
-NVM_DETECT_PROFILE="$(declare SHELL="/usr/bin/zsh"; declare PROFILE="test_profile"; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/usr/bin/zsh"; PROFILE="test_profile"; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
  die "nvm_detect_profile ignored \$PROFILE"
 fi
@@ -56,14 +56,14 @@ fi
 #
 
 # $PROFILE is a valid file
-NVM_DETECT_PROFILE="$(declare PROFILE="test_profile"; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(PROFILE="test_profile"; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
   die "nvm_detect_profile didn't pick \$PROFILE when it was a valid file"
 fi
 
 # $PROFILE is not a valid file
 rm "test_profile"
-NVM_DETECT_PROFILE="$(declare PROFILE="test_profile"; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(PROFILE="test_profile"; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" = "test_profile" ]; then
   die "nvm_detect_profile picked \$PROFILE when it was an invalid file"
 fi
