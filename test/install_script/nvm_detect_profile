@@ -18,7 +18,7 @@ cleanup () {
   rm -f ".bashrc" ".bash_profile" ".zshrc" ".profile" "test_profile" > "/dev/null" 2>&1
 }
 
-die () { echo "$@"; cleanup; exit 1; }
+die () { echo "$@" '$NVM_DETECT_PROFILE:' "$NVM_DETECT_PROFILE"; cleanup; exit 1; }
 
 setup
 
@@ -77,7 +77,7 @@ fi
 # It should favor .profile if file exists
 NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.profile" ]; then
-  die "nvm_detect_profile should have selected .profile ($NVM_DETECT_PROFILE) ($SHELL)"
+  die "nvm_detect_profile should have selected .profile"
 fi
 
 # Otherwise, it should favor .bashrc if file exists
