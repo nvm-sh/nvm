@@ -115,6 +115,10 @@ install_nvm_as_script() {
 # Otherwise, an empty string is returned
 #
 nvm_detect_profile() {
+  if [ -n "$PROFILE" -a -f "$PROFILE" ]; then
+    echo "$PROFILE"
+    return
+  fi
 
   local DETECTED_PROFILE
   DETECTED_PROFILE=''
@@ -132,9 +136,7 @@ nvm_detect_profile() {
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then
-    if [ -f "$PROFILE" ]; then
-      DETECTED_PROFILE="$PROFILE"
-    elif [ -f "$HOME/.profile" ]; then
+    if [ -f "$HOME/.profile" ]; then
       DETECTED_PROFILE="$HOME/.profile"
     elif [ -f "$HOME/.bashrc" ]; then
       DETECTED_PROFILE="$HOME/.bashrc"
