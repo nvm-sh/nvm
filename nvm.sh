@@ -1340,9 +1340,9 @@ nvm_npm_global_modules() {
   local VERSION
   VERSION="$1"
   if [ "_$VERSION" = "_system" ]; then
-    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null | command tail -n +2)
+    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null |grep -e '^.── '|awk -F '── ' '{print $2}' | command tail -n +2)
   else
-    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | command tail -n +2)
+    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null |grep -e '^.── '|awk -F '── ' '{print $2}' | command tail -n +2)
   fi
 
   local INSTALLS
@@ -1546,7 +1546,6 @@ nvm() {
 
     "debug" )
       local ZHS_HAS_SHWORDSPLIT_UNSET
-      ZHS_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
         ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; echo $?)
         setopt shwordsplit
@@ -2264,19 +2263,27 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       INSTALLS="${NPMLIST%% //// *}"
       LINKS="${NPMLIST##* //// }"
 
-      echo "Reinstalling global packages from $VERSION..."
-      echo "$INSTALLS" | command xargs npm install -g --quiet
+      #used to check if install lists are empty
+      local whitespace
+      whitespace=$(printf '\n\t ')
 
+      echo "Reinstalling global packages from $VERSION..."
+      case "$INSTALLS" in
+        *[!$whitespace]*) echo "$INSTALLS" | command xargs npm install -g --quiet;;
+        *) echo "No global packages to install.";;
+      esac
+      
       echo "Linking global packages from $VERSION..."
-      set -f; IFS='
-' # necessary to turn off variable expansion except for newlines
-      for LINK in $LINKS; do
-        set +f; unset IFS # restore variable expansion
-        if [ -n "$LINK" ]; then
-          (cd "$LINK" && npm link)
-        fi
-      done
-      set +f; unset IFS # restore variable expansion in case $LINKS was empty
+      case "$LINKS" in
+        *[!$whitespace]*) 
+          for LINK in $LINKS; do
+            if [ -n "$LINK" ]; then
+              (cd "$LINK" && npm link)
+            fi
+          done
+        ;;
+        *) echo "No global packages to link.";;
+      esac
     ;;
     "clear-cache" )
       command rm -f "$NVM_DIR/v*" "$(nvm_version_dir)" 2>/dev/null
