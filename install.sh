@@ -6,7 +6,7 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
-if [ -z "$NVM_DIR" ]; then
+if [ -z "$NVM_DIR" ] || [[ -n $(uname -a | grep Ubuntu) ]]; then
   NVM_DIR="$HOME/.nvm"
 fi
 
