@@ -22,9 +22,17 @@ nvm_is_alias() {
 nvm_get_latest() {
   local NVM_LATEST_URL
   if nvm_has "curl"; then
-    NVM_LATEST_URL="$(curl -q -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
+    if nvm_has_http_proxy; then
+      NVM_LATEST_URL="$(curl -q -x $NVM_HTTP_PROXY -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
+    else
+      NVM_LATEST_URL="$(curl -q -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
+    fi
   elif nvm_has "wget"; then
-    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    if nvm_has_http_proxy; then
+      NVM_LATEST_URL="$(wget http://latest.nvm.sh -e use_proxy=yes -e http_proxy=$NVM_HTTP_PROXY --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    else
+      NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    fi
   else
     >&2 echo 'nvm needs curl or wget to proceed.'
     return 1
@@ -39,7 +47,11 @@ nvm_get_latest() {
 
 nvm_download() {
   if nvm_has "curl"; then
-    curl -q $*
+    if nvm_has_http_proxy; then
+      curl -q -x $NVM_HTTP_PROXY $*
+    else
+      curl -q $*
+    fi
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
@@ -48,7 +60,11 @@ nvm_download() {
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
-    eval wget $ARGS
+    if nvm_has_http_proxy; then
+      eval wget -e use_proxy=yes -e http_proxy=$NVM_HTTP_PROXY $ARGS
+    else
+      eval wget $ARGS
+    fi
   fi
 }
 
@@ -58,6 +74,10 @@ nvm_has_system_node() {
 
 nvm_has_system_iojs() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v iojs)" != '' ]
+}
+
+nvm_has_http_proxy() {
+  [ "$NVM_HTTP_PROXY" != '' ]
 }
 
 nvm_print_npm_version() {
