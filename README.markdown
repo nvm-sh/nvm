@@ -39,7 +39,7 @@ Eg: `curl ... | NVM_DIR="path/to/nvm" bash`
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
 optional: in case you're getting `nvm: command not found` error, you can activate nvm by sourcing it from your shell:
-` ~/.nvm/nvm.sh`
+`. ~/.nvm/nvm.sh`
 
 ### Manual install
 
