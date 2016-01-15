@@ -55,6 +55,12 @@ Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
 
+### Manual upgrade
+
+For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
+
+    cd "$NVM_DIR" && git pull origin master && git checkout `git describe --abbrev=0 --tags`
+
 ## Usage
 
 You can create an `.nvmrc` file containing version number in the project root directory (or any parent directory).
