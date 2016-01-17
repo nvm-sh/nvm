@@ -68,13 +68,16 @@ nvm_print_npm_version() {
 
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
+if [ -z "${NVM_CD_FLAGS-}"]; then
+  export NVM_CD_FLAGS=''
+fi
 if nvm_has "unsetopt"; then
   unsetopt nomatch 2>/dev/null
   NVM_CD_FLAGS="-q"
 fi
 
 # Auto detect the NVM_DIR when not set
-if [ -z "$NVM_DIR" ]; then
+if [ -z "${NVM_DIR-}" ]; then
   if [ -n "$BASH_SOURCE" ]; then
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
@@ -85,7 +88,7 @@ unset NVM_SCRIPT_SOURCE 2> /dev/null
 
 
 # Setup mirror location if not already set
-if [ -z "$NVM_NODEJS_ORG_MIRROR" ]; then
+if [ -z "${NVM_NODEJS_ORG_MIRROR-}" ]; then
   export NVM_NODEJS_ORG_MIRROR="https://nodejs.org/dist"
 fi
 
@@ -529,7 +532,7 @@ nvm_strip_iojs_prefix() {
 
 nvm_ls() {
   local PATTERN
-  PATTERN="$1"
+  PATTERN="${1-}"
   local VERSIONS
   VERSIONS=''
   if [ "$PATTERN" = 'current' ]; then
@@ -659,7 +662,7 @@ nvm_ls() {
     fi
   fi
 
-  if [ "$NVM_ADD_SYSTEM" = true ]; then
+  if [ "${NVM_ADD_SYSTEM-}" = true ]; then
     if [ -z "$PATTERN" ] || [ "_$PATTERN" = "_v" ]; then
       VERSIONS="$VERSIONS$(command printf '\n%s' 'system')"
     elif [ "$PATTERN" = 'system' ]; then
@@ -700,6 +703,7 @@ nvm_ls_remote_index_tab() {
   local TYPE
   TYPE="$1"
   local PREFIX
+  PREFIX=''
   case "$TYPE-$2" in
     iojs-std) PREFIX="$(nvm_iojs_prefix)-" ;;
     node-std) PREFIX='' ;;
@@ -835,7 +839,7 @@ nvm_print_implicit_alias() {
   local NVM_ADD_PREFIX_COMMAND
   local LAST_TWO
   case "$NVM_IMPLICIT" in
-    "$NVM_IOJS_PREFIX" | "$NVM_IOJS_RC_PREFIX")
+    "$NVM_IOJS_PREFIX")
       NVM_COMMAND="nvm_ls_remote_iojs"
       NVM_ADD_PREFIX_COMMAND="nvm_add_iojs_prefix"
       if [ "_$1" = "_local" ]; then
@@ -1146,7 +1150,7 @@ nvm_install_node_binary() {
   local REINSTALL_PACKAGES_FROM
   REINSTALL_PACKAGES_FROM="$2"
 
-  if nvm_is_iojs_version "$PREFIXED_VERSION"; then
+  if nvm_is_iojs_version "$VERSION"; then
     echo 'nvm_install_node_binary does not allow an iojs-prefixed version.' >&2
     return 10
   fi
@@ -1201,11 +1205,11 @@ nvm_install_node_binary() {
 }
 
 nvm_get_make_jobs() {
-  if nvm_is_natural_num "$1"; then
+  if nvm_is_natural_num "${1-}"; then
     NVM_MAKE_JOBS="$1"
     echo "number of \`make\` jobs: $NVM_MAKE_JOBS"
     return
-  elif [ -n "$1" ]; then
+  elif [ -n "${1-}" ]; then
     unset NVM_MAKE_JOBS
     echo >&2 "$1 is invalid for number of \`make\` jobs, must be a natural number"
   fi
@@ -1290,9 +1294,9 @@ nvm_install_node_source() {
     command tar -xzf "$tmptarball" -C "$tmpdir" && \
     cd "$tmpdir/node-$VERSION" && \
     ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
-    $make -j $NVM_MAKE_JOBS $MAKE_CXX && \
+    $make -j $NVM_MAKE_JOBS ${MAKE_CXX-} && \
     command rm -f "$VERSION_PATH" 2>/dev/null && \
-    $make -j $NVM_MAKE_JOBS $MAKE_CXX install
+    $make -j $NVM_MAKE_JOBS ${MAKE_CXX-} install
     )
   then
     if ! nvm_has "npm" ; then
@@ -1371,14 +1375,14 @@ nvm_die_on_prefix() {
     return 2
   fi
 
-  if [ -n "$PREFIX" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$PREFIX" >/dev/null 2>&1); then
+  if [ -n "${PREFIX-}" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$PREFIX" >/dev/null 2>&1); then
     nvm deactivate >/dev/null 2>&1
     echo >&2 "nvm is not compatible with the \"PREFIX\" environment variable: currently set to \"$PREFIX\""
     echo >&2 "Run \`unset PREFIX\` to unset it."
     return 3
   fi
 
-  if [ -n "$NPM_CONFIG_PREFIX" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$NPM_CONFIG_PREFIX" >/dev/null 2>&1); then
+  if [ -n "${NPM_CONFIG_PREFIX-}" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$NPM_CONFIG_PREFIX" >/dev/null 2>&1); then
     nvm deactivate >/dev/null 2>&1
     echo >&2 "nvm is not compatible with the \"NPM_CONFIG_PREFIX\" environment variable: currently set to \"$NPM_CONFIG_PREFIX\""
     echo >&2 "Run \`unset NPM_CONFIG_PREFIX\` to unset it."
@@ -1702,6 +1706,9 @@ nvm() {
         fi
       fi
       if [ "$NVM_INSTALL_SUCCESS" != true ]; then
+        if [ -z "${NVM_MAKE_JOBS-}" ]; then
+          nvm_get_make_jobs
+        fi
         if [ "$NVM_IOJS" != true ] &&  [ "$NVM_NODE_MERGED" != true ]; then
           if nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
             NVM_INSTALL_SUCCESS=true
@@ -1794,18 +1801,22 @@ nvm() {
         echo "$NVM_DIR/*/bin removed from \$PATH"
       fi
 
-      NEWPATH="$(nvm_strip_path "$MANPATH" "/share/man")"
-      if [ "_$MANPATH" = "_$NEWPATH" ]; then
-        echo "Could not find $NVM_DIR/*/share/man in \$MANPATH" >&2
-      else
-        export MANPATH="$NEWPATH"
-        echo "$NVM_DIR/*/share/man removed from \$MANPATH"
+      if [ -n "${MANPATH-}" ]; then
+        NEWPATH="$(nvm_strip_path "$MANPATH" "/share/man")"
+        if [ "_$MANPATH" = "_$NEWPATH" ]; then
+          echo "Could not find $NVM_DIR/*/share/man in \$MANPATH" >&2
+        else
+          export MANPATH="$NEWPATH"
+          echo "$NVM_DIR/*/share/man removed from \$MANPATH"
+        fi
       fi
 
-      NEWPATH="$(nvm_strip_path "$NODE_PATH" "/lib/node_modules")"
-      if [ "_$NODE_PATH" != "_$NEWPATH" ]; then
-        export NODE_PATH="$NEWPATH"
-        echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
+      if [ -n "${NODE_PATH-}" ]; then
+        NEWPATH="$(nvm_strip_path "$NODE_PATH" "/lib/node_modules")"
+        if [ "_$NODE_PATH" != "_$NEWPATH" ]; then
+          export NODE_PATH="$NEWPATH"
+          echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
+        fi
       fi
     ;;
     "use" )
@@ -1898,7 +1909,7 @@ nvm() {
       hash -r
       export NVM_PATH="$NVM_VERSION_DIR/lib/node"
       export NVM_BIN="$NVM_VERSION_DIR/bin"
-      if [ "$NVM_SYMLINK_CURRENT" = true ]; then
+      if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
       fi
       local NVM_USE_OUTPUT
@@ -2057,7 +2068,7 @@ nvm() {
     "ls" | "list" )
       local NVM_LS_OUTPUT
       local NVM_LS_EXIT_CODE
-      NVM_LS_OUTPUT=$(nvm_ls "$2")
+      NVM_LS_OUTPUT=$(nvm_ls "${2-}")
       NVM_LS_EXIT_CODE=$?
       nvm_print_versions "$NVM_LS_OUTPUT"
       if [ $# -eq 1 ]; then
@@ -2067,7 +2078,7 @@ nvm() {
     ;;
     "ls-remote" | "list-remote" )
       local PATTERN
-      PATTERN="$2"
+      PATTERN="${2-}"
       local NVM_IOJS_PREFIX
       NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
       local NVM_NODE_PREFIX
@@ -2172,7 +2183,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       command mkdir -p "$NVM_ALIAS_DIR"
       if [ $# -le 2 ]; then
         local DEST
-        for ALIAS_PATH in "$NVM_ALIAS_DIR"/"$2"*; do
+        for ALIAS_PATH in "$NVM_ALIAS_DIR"/"${2-}"*; do
           ALIAS="$(command basename "$ALIAS_PATH")"
           DEST="$(nvm_alias "$ALIAS" 2> /dev/null)"
           if [ -n "$DEST" ]; then
@@ -2202,7 +2213,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         done
         return
       fi
-      if [ -z "$3" ]; then
+      if [ -z "${3-}" ]; then
         command rm -f "$NVM_ALIAS_DIR/$2"
         echo "$2 -> *poof*"
         return
