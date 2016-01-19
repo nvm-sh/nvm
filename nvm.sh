@@ -68,7 +68,7 @@ nvm_print_npm_version() {
 
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
-if [ -z "${NVM_CD_FLAGS-}"]; then
+if [ -z "${NVM_CD_FLAGS-}" ]; then
   export NVM_CD_FLAGS=''
 fi
 if nvm_has "unsetopt"; then
