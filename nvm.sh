@@ -2325,7 +2325,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_print_npm_version nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has nvm_get_latest \
-        nvm_supports_source_options nvm_supports_xz > /dev/null 2>&1
+        nvm_supports_source_options nvm_auto nvm_supports_xz > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
@@ -2343,17 +2343,41 @@ nvm_supports_xz() {
   command which xz >/dev/null 2>&1 && nvm_version_greater_than_or_equal_to "$1" "2.3.2"
 }
 
-NVM_VERSION="$(nvm_alias default 2>/dev/null || echo)"
-if nvm_supports_source_options && [ "$#" -gt 0 ] && [ "_$1" = "_--install" ]; then
-  if [ -n "$NVM_VERSION" ]; then
-    nvm install "$NVM_VERSION" >/dev/null
-  elif nvm_rc_version >/dev/null 2>&1; then
-    nvm install >/dev/null
+nvm_auto() {
+  local NVM_MODE
+  NVM_MODE="${1-}"
+  local VERSION
+  if [ "_$NVM_MODE" = '_install' ]; then
+    VERSION="$(nvm_alias default 2>/dev/null || echo)"
+    if [ -n "$VERSION" ]; then
+      nvm install "$VERSION" >/dev/null
+    elif nvm_rc_version >/dev/null 2>&1; then
+      nvm install >/dev/null
+    fi
+  elif [ "_$NVM_MODE" = '_use' ]; then
+    VERSION="$(nvm_alias default 2>/dev/null || echo)"
+    if [ -n "$VERSION" ]; then
+      nvm use --silent "$VERSION" >/dev/null
+    elif nvm_rc_version >/dev/null 2>&1; then
+      nvm use --silent >/dev/null
+    fi
+  elif [ "_$NVM_MODE" != '_none' ]; then
+    echo >&2 'Invalid auto mode supplied.'
+    return 1
   fi
-elif [ -n "$NVM_VERSION" ]; then
-  nvm use --silent "$NVM_VERSION" >/dev/null
-elif nvm_rc_version >/dev/null 2>&1; then
-  nvm use --silent >/dev/null
+}
+
+NVM_AUTO_MODE='use'
+if nvm_supports_source_options; then
+  while [ $# -ne 0 ]
+  do
+    case "$1" in
+      --install) NVM_AUTO_MODE='install' ;;
+      --no-use) NVM_AUTO_MODE='none' ;;
+    esac
+    shift
+  done
 fi
+nvm_auto "$NVM_AUTO_MODE"
 
 } # this ensures the entire script is downloaded #

@@ -2,7 +2,7 @@
 
 DIR="$(command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-source "$DIR/nvm.sh"
+. "$DIR/nvm.sh" --no-use
 
 if [ -n "$NODE_VERSION" ]; then
   nvm use $NODE_VERSION > /dev/null || (echo "NODE_VERSION not set" >&2 && exit 127)
