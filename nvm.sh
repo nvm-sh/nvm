@@ -759,15 +759,37 @@ nvm_ls_remote_index_tab() {
 
 nvm_checksum() {
   local NVM_CHECKSUM
-  if nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
-    NVM_CHECKSUM="$(command sha1sum "$1" | command awk '{print $1}')"
-  elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
-    NVM_CHECKSUM="$(command sha1 -q "$1")"
-  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
-    NVM_CHECKSUM="$(shasum "$1" | command awk '{print $1}')"
+  if [ -z "$3" ] || [ "$3" == "sha1" ]; then
+    if nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
+      NVM_CHECKSUM="$(command sha1sum "$1" | command awk '{print $1}')"
+    elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
+      NVM_CHECKSUM="$(command sha1 -q "$1")"
+    elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+      NVM_CHECKSUM="$(shasum "$1" | command awk '{print $1}')"
+    else
+      echo "Unaliased sha1sum, sha1, or shasum not found." >&2
+      return 2
+    fi
   else
-    echo "Unaliased sha1sum, sha1, or shasum not found." >&2
-    return 2
+    if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
+      NVM_CHECKSUM="$(sha256sum "$1" | awk '{print $1}')"
+    elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+      NVM_CHECKSUM="$(shasum -a 256 "$1" | awk '{print $1}')"
+    elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
+      NVM_CHECKSUM="$(sha256 -q "$1" | awk '{print $1}')"
+    elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
+      NVM_CHECKSUM="$(gsha256sum "$1" | awk '{print $1}')"
+    elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+      NVM_CHECKSUM="$(openssl dgst -sha256 "$1" | rev | awk '{print $1}' | rev)"
+    elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
+      NVM_CHECKSUM="$(libressl dgst -sha256 "$1" | rev | awk '{print $1}' | rev)"
+    elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+      NVM_CHECKSUM="$(bssl sha256sum "$1" | awk '{print $1}')"
+    else
+      echo "Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, libressl, or bssl not found." >&2
+      echo "WARNING: Continuing *without checksum verification*" >&2
+      return
+    fi
   fi
 
   if [ "_$NVM_CHECKSUM" = "_$2" ]; then
@@ -1051,8 +1073,7 @@ nvm_install_merged_node_binary() {
     fi
     if (
       [ "$NVM_INSTALL_ERRORED" != true ] && \
-      echo "WARNING: checksums are currently disabled for node.js v4.0 and later" >&2 && \
-      # nvm_checksum "$tmptarball" "$sum" && \
+      nvm_checksum "$tmptarball" "$sum" "sha256" && \
       command tar -x${tar_compression_flag}f "$tmptarball" -C "$tmpdir" --strip-components 1 && \
       command rm -f "$tmptarball" && \
       command mkdir -p "$VERSION_PATH" && \
@@ -1126,8 +1147,7 @@ nvm_install_iojs_binary() {
       fi
       if (
         [ "$NVM_INSTALL_ERRORED" != true ] && \
-        echo "WARNING: checksums are currently disabled for io.js" >&2 && \
-        # nvm_checksum "$tmptarball" "$sum" && \
+        nvm_checksum "$tmptarball" "$sum" "sha256" && \
         command tar -x${tar_compression_flag}f "$tmptarball" -C "$tmpdir" --strip-components 1 && \
         command rm -f "$tmptarball" && \
         command mkdir -p "$VERSION_PATH" && \
