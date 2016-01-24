@@ -786,7 +786,7 @@ nvm_checksum() {
     elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
       NVM_CHECKSUM="$(bssl sha256sum "$1" | awk '{print $1}')"
     else
-      echo "Unaliased sha256sum, sha256, or gsha256sum not found." >&2
+      echo "Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, libressl, or bssl not found." >&2
       echo "WARNING: Continuing *without checksum verification*" >&2
       return
     fi
