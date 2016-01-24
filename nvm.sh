@@ -772,14 +772,23 @@ nvm_checksum() {
     fi
   else
     if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
-      NVM_CHECKSUM="$(command sha256sum "$1" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(sha256sum "$1" | awk '{print $1}')"
+    elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+      NVM_CHECKSUM="$(shasum -a 256 "$1" | awk '{print $1}')"
     elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
-      NVM_CHECKSUM="$(command sha256 -q "$1")"
+      NVM_CHECKSUM="$(sha256 -q "$1" | awk '{print $1}')"
     elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
-      NVM_CHECKSUM="$(gsha256sum "$1" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(gsha256sum "$1" | awk '{print $1}')"
+    elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+      NVM_CHECKSUM="$(openssl dgst -sha256 "$1" | rev | awk '{print $1}' | rev)"
+    elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
+      NVM_CHECKSUM="$(libressl dgst -sha256 "$1" | rev | awk '{print $1}' | rev)"
+    elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+      NVM_CHECKSUM="$(bssl sha256sum "$1" | awk '{print $1}')"
     else
       echo "Unaliased sha256sum, sha256, or gsha256sum not found." >&2
-      return 2
+      echo "WARNING: Continuing *without checksum verification*" >&2
+      return
     fi
   fi
 
