@@ -59,7 +59,7 @@ Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it
 
 For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
 
-    cd "$NVM_DIR" && git pull origin master && git checkout `git describe --abbrev=0 --tags`
+    cd "$NVM_DIR" && git pull origin master --tags && git checkout `git describe --abbrev=0 --tags`
 
 ## Usage
 
