@@ -1730,6 +1730,7 @@ nvm() {
         if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
+        nvm_ensure_default_set "$provided_version"
         return $?
       fi
 
@@ -1775,6 +1776,7 @@ nvm() {
       fi
 
       if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
+        nvm_ensure_default_set "$provided_version"
         if [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
