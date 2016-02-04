@@ -995,6 +995,34 @@ nvm_get_arch() {
   echo "$NVM_ARCH"
 }
 
+nvm_get_minor_version() {
+  local VERSION
+  VERSION="$1"
+
+  if [ -z "$VERSION" ]; then
+    echo 'a version is required' >&2
+    return 1
+  fi
+
+  case "$VERSION" in
+    v | .* | *..* | v*[!.0123456789]* | [!v]*[!.0123456789]* | [!v0123456789]* | v[!0123456789]*)
+      echo 'invalid version number' >&2
+      return 2
+    ;;
+  esac
+
+  local PREFIXED_VERSION
+  PREFIXED_VERSION="$(nvm_format_version "$VERSION")"
+
+  local MINOR
+  MINOR="$(echo "$PREFIXED_VERSION" | command grep -e '^v' | command cut -c2- | command cut -d . -f 1,2)"
+  if [ -z "$MINOR" ]; then
+    echo 'invalid version number! (please report this)' >&2
+    return 3
+  fi
+  echo "$MINOR"
+}
+
 nvm_ensure_default_set() {
   local VERSION
   VERSION="$1"
