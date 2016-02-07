@@ -1,0 +1,15 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../../nvm.sh
+
+EXPECTED_VERSION="3.5.1"
+
+OLD_VERSION=$(npm --version)
+[ "$EXPECTED_VERSION" != "$OLD_VERSION" ] || die "NPM version already at $EXPECTED_VERSION"
+
+nvm upgrade-npm $EXPECTED_VERSION
+ACTUAL_VERSION=$(npm --version)
+
+[ "$EXPECTED_VERSION" = "$ACTUAL_VERSION" ] || die "NPM package was not upgraded"

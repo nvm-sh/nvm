@@ -1568,6 +1568,7 @@ nvm() {
       echo '  nvm --version                             Print out the latest released version of nvm'
       echo '  nvm install [-s] <version>                Download and install a <version>, [-s] from source. Uses .nvmrc if available'
       echo '    --reinstall-packages-from=<version>     When installing, reinstall packages installed in <node|iojs|node version number>'
+      echo '    --upgrade-npm=<version>                 When installing, upgrades NPM to the specified version'
       echo '  nvm uninstall <version>                   Uninstall a version'
       echo '  nvm use [--silent] <version>              Modify PATH to use <version>. Uses .nvmrc if available'
       echo '  nvm exec [--silent] <version> [<command>] Run <command> on <version>. Uses .nvmrc if available'
@@ -1583,6 +1584,7 @@ nvm() {
       echo '  nvm alias <name> <version>                Set an alias named <name> pointing to <version>'
       echo '  nvm unalias <name>                        Deletes the alias named <name>'
       echo '  nvm reinstall-packages <version>          Reinstall global `npm` packages contained in <version> to current version'
+      echo '  nvm upgrade-npm <version>                 Upgrades NPM to the specified version'
       echo '  nvm unload                                Unload `nvm` from shell'
       echo '  nvm which [<version>]                     Display path to installed node version. Uses .nvmrc if available'
       echo
@@ -1688,6 +1690,7 @@ nvm() {
       ADDITIONAL_PARAMETERS=''
       local PROVIDED_REINSTALL_PACKAGES_FROM
       local REINSTALL_PACKAGES_FROM
+      local UPGRADE_NPM_VERSION
 
       while [ $# -ne 0 ]
       do
@@ -1699,6 +1702,9 @@ nvm() {
           --copy-packages-from=*)
             PROVIDED_REINSTALL_PACKAGES_FROM="$(echo "$1" | command cut -c 22-)"
             REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")"
+          ;;
+          --upgrade-npm=*)
+            UPGRADE_NPM_VERSION="$(echo "$1" | command cut -c 15-)"
           ;;
           *)
             ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
@@ -1775,6 +1781,10 @@ nvm() {
       fi
 
       if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
+        if [ ! -z "$UPGRADE_NPM_VERSION" ]; then
+          nvm upgrade-npm "$UPGRADE_NPM_VERSION"
+        fi
+
         if [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
@@ -2292,6 +2302,18 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       NVM_ALIAS_ORIGINAL="$(nvm_alias "$2")"
       command rm -f "$NVM_ALIAS_DIR/$2"
       echo "Deleted alias $2 - restore it with \`nvm alias $2 "$NVM_ALIAS_ORIGINAL"\`"
+    ;;
+    "upgrade-npm" )
+      if [ $# -ne 2 ]; then
+        >&2 nvm help
+        return 127
+      fi
+
+      local NPM_VERSION
+      NPM_VERSION="$2"
+
+      echo "Upgrading npm version to $NPM_VERSION"
+      npm install -g "npm@$NPM_VERSION"
     ;;
     "reinstall-packages" | "copy-packages" )
       if [ $# -ne 2 ]; then
