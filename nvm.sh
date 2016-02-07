@@ -339,10 +339,12 @@ nvm_ensure_version_prefix() {
 nvm_format_version() {
   local VERSION
   VERSION="$(nvm_ensure_version_prefix "$1")"
-  if [ "_$(nvm_num_version_groups "$VERSION")" != "_3" ]; then
+  local NUM_GROUPS
+  NUM_GROUPS="$(nvm_num_version_groups "$VERSION")"
+  if [ $NUM_GROUPS -lt 3 ]; then
     nvm_format_version "${VERSION%.}.0"
   else
-    echo "$VERSION"
+    echo "$VERSION" | cut -f1-3 -d.
   fi
 }
 
