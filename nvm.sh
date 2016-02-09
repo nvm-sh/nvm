@@ -3089,7 +3089,39 @@ nvm_supports_source_options() {
 }
 
 nvm_supports_xz() {
-  command which xz >/dev/null 2>&1 && nvm_version_greater_than_or_equal_to "$1" "2.3.2"
+  if [ -z "${1-}" ] || ! command which xz >/dev/null 2>&1; then
+    return 1
+  fi
+
+  # all node versions v4.0.0 and later have xz
+  if nvm_is_merged_node_version "${1}"; then
+    return 0
+  fi
+
+  # 0.12x: node v0.12.10 and later have xz
+  if nvm_version_greater_than_or_equal_to "${1}" "0.12.10" \
+    && nvm_version_greater "0.13.0" "${1}"; then
+    return 0
+  fi
+
+  # 0.10x: node v0.10.42 and later have xz
+  if nvm_version_greater_than_or_equal_to "$1" "0.10.42" \
+    && nvm_version_greater "0.11.0" "$1"; then
+    return 0
+  fi
+
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+  case "${NVM_OS}" in
+    darwin)
+      # darwin only has xz for io.js v2.3.2 and later
+      nvm_version_greater_than_or_equal_to "${1}" "2.3.2"
+    ;;
+    *)
+      nvm_version_greater_than_or_equal_to "${1}" "1.0.0"
+    ;;
+  esac
+  return $?
 }
 
 nvm_auto() {
