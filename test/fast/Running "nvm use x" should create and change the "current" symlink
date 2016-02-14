@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export NVM_SYMLINK_CURRENT=true
 . ../../nvm.sh
