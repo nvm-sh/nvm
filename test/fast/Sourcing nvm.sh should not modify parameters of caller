@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -- yes
+. ../../nvm.sh
+[ "$1" = yes ]
