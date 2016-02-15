@@ -2377,7 +2377,8 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_print_npm_version nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has nvm_get_latest \
-        nvm_supports_source_options nvm_auto nvm_supports_xz > /dev/null 2>&1
+        nvm_supports_source_options nvm_auto nvm_supports_xz \
+        nvm_process_parameters > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
@@ -2419,17 +2420,22 @@ nvm_auto() {
   fi
 }
 
-NVM_AUTO_MODE='use'
-if nvm_supports_source_options; then
-  while [ $# -ne 0 ]
-  do
-    case "$1" in
-      --install) NVM_AUTO_MODE='install' ;;
-      --no-use) NVM_AUTO_MODE='none' ;;
-    esac
-    shift
-  done
-fi
-nvm_auto "$NVM_AUTO_MODE"
+nvm_process_parameters() {
+  local NVM_AUTO_MODE
+  NVM_AUTO_MODE='use'
+  if nvm_supports_source_options; then
+    while [ $# -ne 0 ]
+    do
+      case "$1" in
+        --install) NVM_AUTO_MODE='install' ;;
+        --no-use) NVM_AUTO_MODE='none' ;;
+      esac
+      shift
+    done
+  fi
+  nvm_auto "$NVM_AUTO_MODE"
+}
+
+nvm_process_parameters "$@"
 
 } # this ensures the entire script is downloaded #
