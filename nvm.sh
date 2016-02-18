@@ -141,6 +141,7 @@ nvm_rc_version() {
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ -e "$NVMRC_PATH" ]; then
     read -r NVM_RC_VERSION < "$NVMRC_PATH"
+    NVM_RC_VERSION="$(echo "${NVM_RC_VERSION}" | sed -e 's/[[:space:]]*$//')"
     echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
   else
     >&2 echo "No .nvmrc file found"
