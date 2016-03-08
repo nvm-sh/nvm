@@ -157,6 +157,28 @@ To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
 
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
 
+### Deeper Shell Integration
+
+Those options are all optional and not supported. We are accepting pull requests for more examples.
+
+
+#### Zsh
+
+##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
+
+Put this into your `$HOME/.zshrc` to call `nvm use` automatically whenever you enter a directory that contains an
+`.nvmrc` file with a string telling nvm which node to `use`:
+
+```zsh
+autoload -U add-zsh-hook
+load-nvmrc() {
+  if [[ -f .nvmrc && -r .nvmrc ]]; then
+    nvm use
+  fi
+}
+add-zsh-hook chpwd load-nvmrc
+```
+
 ## License
 
 nvm is released under the MIT license.
