@@ -159,8 +159,9 @@ To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
 
 ### Deeper Shell Integration
 
-Those options are all optional and not supported. We are accepting pull requests for more examples.
+You can use [`avn`](https://github.com/wbyoung/avn) to deeply integrate into your shell and automatically invoke `nvm` when changing directories. `avn` is **not** supported by the `nvm` development team. Please [report issues to the `avn` team](https://github.com/wbyoung/avn/issues/new).
 
+If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` development team. We are, however, accepting pull requests for more examples.
 
 #### Zsh
 
