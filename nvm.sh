@@ -60,8 +60,24 @@ nvm_has_system_iojs() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v iojs)" != '' ]
 }
 
+
+# npm --version can report its version, but it typically takes a couple hundred
+# ms to start npm.  If we can load npm's own package.json file, we can scrape
+# the version out of it and avoid that work.  This speeds up `nvm use`
+# substantially, at the cost of some extra complexity here.
 nvm_print_npm_version() {
   if nvm_has "npm"; then
+    local PACKAGE_JSON
+    PACKAGE_JSON="$(dirname "$(dirname "$(which npm 2>/dev/null)")")/lib/node_modules/npm/package.json"
+
+    if [ -f "${package_json}" ]; then
+      local NPM_VERSION
+      NPM_VERSION="$(command awk -F '"' '$2 == "version" { print $4; exit }' < "${PACKAGE_JSON}")"
+      if [ -n "${NPM_VERSION}" ]; then
+        echo " (npm v${NPM_VERSION})"
+        return
+      fi
+    fi
     echo " (npm v$(npm --version 2>/dev/null))"
   fi
 }
