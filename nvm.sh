@@ -1870,6 +1870,7 @@ nvm() {
           echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
         fi
       fi
+      unset NVM_BIN NVM_PATH
     ;;
     "use" )
       local PROVIDED_VERSION
