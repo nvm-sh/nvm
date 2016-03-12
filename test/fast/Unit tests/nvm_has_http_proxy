@@ -1,0 +1,10 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+! nvm_has_http_proxy || die 'nvm_has_http_proxy: no http_proxy defined'
+
+NVM_HTTP_PROXY=127.0.0.1:1234
+nvm_has_http_proxy || die 'nvm_has_http_proxy: http_proxy defined'

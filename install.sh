@@ -6,6 +6,10 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
+nvm_has_http_proxy() {
+  [ "$NVM_HTTP_PROXY" != '' ]
+}
+
 if [ -z "$NVM_DIR" ]; then
   NVM_DIR="$HOME/.nvm"
 fi
@@ -42,7 +46,11 @@ nvm_source() {
 
 nvm_download() {
   if nvm_has "curl"; then
-    curl -q $*
+    if nvm_has_http_proxy; then
+      curl -q -x $NVM_HTTP_PROXY $*
+    else
+      curl -q $*
+    fi
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
@@ -51,7 +59,11 @@ nvm_download() {
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
-    wget $ARGS
+    if nvm_has_http_proxy; then
+      eval wget -e use_proxy=yes -e http_proxy=$NVM_HTTP_PROXY $ARGS
+    else
+      eval wget $ARGS
+    fi
   fi
 }
 
@@ -229,7 +241,11 @@ nvm_do_install() {
   local NVM_PROFILE
   NVM_PROFILE=$(nvm_detect_profile)
 
-  SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
+  if nvm_has_http_proxy; then
+    SOURCE_STR="\nexport NVM_HTTP_PROXY=$NVM_HTTP_PROXY\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
+  else
+    SOURCE_STR="\nexport NVM_DIR=\"$NVM_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
+  fi
 
   if [ -z "$NVM_PROFILE" ] ; then
     echo "=> Profile not found. Tried $NVM_PROFILE (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
