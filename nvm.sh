@@ -92,7 +92,7 @@ if [ -z "${NVM_NODEJS_ORG_MIRROR-}" ]; then
   export NVM_NODEJS_ORG_MIRROR="https://nodejs.org/dist"
 fi
 
-if [ -z "$NVM_IOJS_ORG_MIRROR" ]; then
+if [ -z "${NVM_IOJS_ORG_MIRROR-}" ]; then
   export NVM_IOJS_ORG_MIRROR="https://iojs.org/dist"
 fi
 
