@@ -1,10 +1,10 @@
 # Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3]
 
-## Why? Node has a package manager, NPM, right?
+## Why? Node has a package manager, npm, right?
 
-Yes, it does.  `nvm` manages different versions of the node interpreter and core libraries.  Node is powerful, but the power of the Node ecosystem is the thousands of user-contributed libraries.  If you want additional libraries and tools, you use `npm` for that.
+Yes, it does. `nvm` manages different versions of the node interpreter and core libraries. Node is powerful, but the power of the Node ecosystem is the thousands of user-contributed libraries. If you want additional libraries and tools, you use `npm` for that.
 
-So why `nvm`?  Your operating system typically has one supported version of a programming language environment.  So when developers want you to use any other version but the one installed in your operating system, you can't install these packages with `npm` because you have the wrong version of Node. With `nvm`, you have the power and flexibility to run many different versions of the Node platform simultaneously: for development, for testing, for daily use, the way you see fit.
+So why `nvm`?  Your operating system typically has one supported version of a programming language environment. So when developers want you to use any other version but the one installed in your operating system, you can't install these packages with `npm` because you have the wrong version of Node. With `nvm`, you have the power and flexibility to run many different versions of the Node platform simultaneously: for development, for testing, for daily use, the way you see fit.
 
 ## Installation
 
