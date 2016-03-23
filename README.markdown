@@ -96,7 +96,6 @@ You can also get the path to the executable to where it was installed:
 In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
 
  - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
- - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
  - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in semver, versions communicate breakage, not stability).
 
@@ -109,17 +108,6 @@ This will first use "nvm version node" to identify the current version you're mi
 You can also install and migrate npm packages from specific versions of Node like this:
 
     nvm install v5.0 --reinstall-packages-from=4.2
-    nvm install v4.2 --reinstall-packages-from=iojs
-
-If you want to install [io.js](https://github.com/iojs/io.js/):
-
-    nvm install iojs
-
-If you want to install a new version of io.js and migrate npm packages from a previous version:
-
-    nvm install iojs --reinstall-packages-from=iojs
-
-The same guidelines mentioned for migrating npm packages in Node.js are applicable to io.js.
 
 If you want to use the system-installed version of node, you can use the special default alias "system":
 
@@ -148,13 +136,6 @@ To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
     nvm install node
 
     NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 4.2
-
-To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
-
-    export NVM_IOJS_ORG_MIRROR=https://iojs.org/dist
-    nvm install iojs-v1.0.3
-
-    NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
 
