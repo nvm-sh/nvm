@@ -57,8 +57,8 @@ If the "nvm: command not found" continues to persist, continue to Troubleshootin
 
 Open your .bash_profile file which is located in your Home directory, verify that the line following code exist:
 
-`export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm`
+`export NVM_DIR="$HOME/.nvm"`
+`[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm`
 
 If not, add the above code and save the file.
 
