@@ -39,7 +39,52 @@ Eg: `curl ... | NVM_DIR="path/to/nvm" bash`
 
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
-Note: On OSX, if you get `nvm: command not found` after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simple create one with `touch ~/.bash_profile` and run the install script again.
+#### Troubleshooting
+
+**Step 1:**
+
+If you are running OSX and receive a `nvm: command not found` error after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again.
+
+Exit and quit terminal.
+
+Reopen terminal and enter:
+
+`nvm --version`
+
+If the "nvm: command not found" continues to persist, continue to Troubleshooting Step 2. 
+
+**Step 2:**
+
+Open your .bash_profile file which is located in your Home directory, verify that the line following code exist:
+
+`export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm`
+
+If not, add the above code and save the file.
+
+Exit and quit terminal.
+
+Reopen terminal and enter:
+
+`nvm --version`
+
+If the "nvm: command not found" continues to persist, continue to Troubleshooting Step 3.
+
+**Step 3**
+
+If Troubleshooting Steps 1 and 2 fails to solve your "nvm: command not found" issue, enter the following code into your terminal command line:
+
+`source ~/.nvm/nvm.sh`
+
+Exit and quit terminal.
+
+Reopen terminal and enter:
+
+`nvm --version`
+
+At this point you should see the version number for your NVM install.
+
+**But beware, this is only a session based solution, which will have to be repeated each time you close your terminal.**
 
 ### Manual install
 
