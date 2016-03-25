@@ -43,7 +43,7 @@ Eg: `curl ... | NVM_DIR="path/to/nvm" bash`
 
 **Step 1:**
 
-If you are running OSX and receive a `nvm: command not found` error after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again.
+If you are running OSX and receive a `nvm: command not found` error after running the install script, your system may not have a .bash_profile file where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again.
 
 Exit and quit terminal.
 
@@ -84,7 +84,7 @@ Reopen terminal and enter:
 
 At this point you should see the version number for your NVM install.
 
-**But beware, this is only a session based solution, which will have to be repeated each time you close your terminal.**
+**But beware, this is only a session based solution, which will have to be repeated each time you open a new terminal.**
 
 ### Manual install
 
