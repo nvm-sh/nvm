@@ -20,7 +20,7 @@ Note: We still have some problems with FreeBSD, because there is no pre-built bi
 Note: On OSX, if you do not have XCode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
 
-Homebrew installation is not supported.
+**Homebrew installation is not supported.**
 
 ### Install script
 
