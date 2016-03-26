@@ -70,9 +70,6 @@ After upgrading, don't forget to activate the new version:
 
 ## Usage
 
-You can create an `.nvmrc` file containing version number in the project root directory (or any parent directory).
-`nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied.
-
 To download, compile, and install the latest v5.0.x release of node, do this:
 
     nvm install 5.0
@@ -157,6 +154,21 @@ To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
     NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
+
+### .nvmrc
+
+You can create a `.nvmrc` file containing version number in the project root directory (or any parent directory).
+`nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied.
+
+For example, to make nvm default to the latest 5.9 release for the current directory:
+
+    $ echo "5.9" > .nvmrc
+
+Then when you run nvm:
+
+    $ nvm use
+    Found '/path/to/project/.nvmrc' with version <5.9>
+    Now using node v5.9.1 (npm v3.7.3)
 
 ### Deeper Shell Integration
 
