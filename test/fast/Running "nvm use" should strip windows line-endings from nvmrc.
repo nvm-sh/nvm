@@ -1,0 +1,40 @@
+#!/bin/sh
+
+die () { echo $@ ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf .nvmrc
+}
+
+. ../../nvm.sh
+
+# Use a known different version, first.
+nvm install v5.6.0 >/dev/null 2>/dev/null
+nvm use v5.6.0 >/dev/null 2>/dev/null
+
+# Verify we're using the version we think.
+OUTPUT="$(nvm current)"
+EXPECTED_OUTPUT="v5.6.0"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
+  || die "Expected nvm to be using version $EXPECTED_OUTPUT, but 'nvm current' said $OUTPUT"
+
+# Write out .nvmrc with windows line-endings.
+printf 'v5.5.0\r\n' > .nvmrc
+
+nvm install >/dev/null 2>/dev/null
+EXIT_CODE=$?
+[ "_$EXIT_CODE" = "_0" ] \
+  || die "Expected 'nvm install' to return a successful exit code; got $EXIT_CODE"
+
+nvm use >/dev/null 2>/dev/null
+EXIT_CODE=$?
+[ "_$EXIT_CODE" = "_0" ] \
+  || die "Expected 'nvm use' to return a successful exit code; got $EXIT_CODE"
+
+OUTPUT="$(nvm current)"
+EXPECTED_OUTPUT="v5.5.0"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
+  || die "Expected nvm to be using version $EXPECTED_OUTPUT from .nvmrc, but 'nvm current' said $OUTPUT"
+
+cleanup
+
