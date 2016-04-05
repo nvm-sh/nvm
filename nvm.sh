@@ -140,7 +140,7 @@ nvm_rc_version() {
   local NVMRC_PATH
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ -e "$NVMRC_PATH" ]; then
-    read -r NVM_RC_VERSION < "$NVMRC_PATH"
+    read -r NVM_RC_VERSION < "$NVMRC_PATH" || printf ''
     echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
   else
     >&2 echo "No .nvmrc file found"
