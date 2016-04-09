@@ -63,7 +63,7 @@ Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it
 For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
 
     cd "$NVM_DIR" && git pull origin master && git checkout `git describe --abbrev=0 --tags`
-    
+
 After upgrading, don't forget to activate the new version:
 
     . "$NVM_DIR/nvm.sh"
@@ -191,6 +191,25 @@ load-nvmrc() {
   fi
 }
 add-zsh-hook chpwd load-nvmrc
+```
+
+#### Bash
+
+##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
+
+Put this into your `$HOME/.bashrc` to call `nvm use` automatically whenever you enter a directory that contains an
+`.nvmrc` file with a string telling nvm which node to `use`:
+
+```bash
+function nvm_use_if_needed () {
+    [[ -r ./.nvmrc  && -s ./.nvmrc ]] || return
+    WANTED=$(sed 's/v//' < ./.nvmrc)
+    CURRENT=$(hash node 2>/dev/null && node -v | sed 's/v//')
+    if [ "$WANTED" != "$CURRENT" ]; then
+        nvm use
+    fi
+}
+export PROMPT_COMMAND="$PROMPT_COMMAND ; nvm_use_if_needed"
 ```
 
 ## License
