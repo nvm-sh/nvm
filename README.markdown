@@ -26,11 +26,11 @@ Homebrew installation is not supported.
 
 To install or update nvm, you can use the [install script][2] using cURL:
 
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+    curl -o- https://git.io/v2LXX | bash
 
 or Wget:
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+    wget -qO- https://git.io/v2LXX | bash
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
 
