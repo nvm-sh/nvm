@@ -2316,7 +2316,7 @@ nvm_install_source() {
   make='make'
   local MAKE_CXX
   case "${NVM_OS}" in
-    'freebsd')
+    'freebsd' | 'openbsd')
       make='gmake'
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     ;;
@@ -3273,6 +3273,10 @@ nvm() {
           # node.js and io.js do not have a FreeBSD binary
           nobinary=1
           nvm_err "Currently, there is no binary for FreeBSD"
+        elif [ "_$NVM_OS" = "_openbsd" ]; then
+          # node.js and io.js do not have a OpenBSD binary
+          nobinary=1
+          nvm_err "Currently, there is no binary for OpenBSD"
         elif [ "_${NVM_OS}" = "_sunos" ]; then
           # Not all node/io.js versions have a Solaris binary
           if ! nvm_has_solaris_binary "${VERSION}"; then
