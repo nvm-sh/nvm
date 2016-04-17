@@ -1828,6 +1828,17 @@ nvm() {
         NVM_PREFIX="$(nvm_node_prefix)"
         NVM_SUCCESS_MSG="Uninstalled node $VERSION"
       fi
+
+      # Check version dir permissions
+      local FILES_WITHOUT_WRITE_PERMISIONS="$(find "$VERSION_PATH" -exec [ ! -w "{}" ] \; -exec echo "{}" \;)"
+      if [ "$FILES_WITHOUT_WRITE_PERMISIONS" ]; then
+        >&2 echo 'Cannot uninstall, incorrect permissions on installation folder.'
+        >&2 echo 'This is usually caused by running `npm install -g` as root. Run the following command as root to fix the permissions and then try again.'
+        >&2 echo
+        >&2 echo "  chown -R $(whoami) \"$VERSION_PATH\""
+        return 1
+      fi
+
       # Delete all files related to target version.
       command rm -rf "$NVM_DIR/src/$NVM_PREFIX-$VERSION" \
              "$NVM_DIR/src/$NVM_PREFIX-$VERSION.tar.*" \
