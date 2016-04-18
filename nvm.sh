@@ -979,6 +979,7 @@ nvm_checksum() {
 
 nvm_print_versions() {
   local VERSION
+  local LTS
   local FORMAT
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
@@ -986,7 +987,11 @@ nvm_print_versions() {
   if nvm_has_colors; then
     NVM_HAS_COLORS=1
   fi
-  nvm_echo "$1" | while read -r VERSION; do
+  local LTS_LENGTH
+  local LTS_FORMAT
+  nvm_echo "$1" | while read -r VERSION_LINE; do
+    VERSION="${VERSION_LINE% *}"
+    LTS="${VERSION_LINE#* }"
     FORMAT='%15s'
     if [ "_$VERSION" = "_$NVM_CURRENT" ]; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
@@ -1005,7 +1010,18 @@ nvm_print_versions() {
         FORMAT='%15s *'
       fi
     fi
-    command printf -- "$FORMAT\n" "$VERSION"
+    if [ "$LTS" != "$VERSION" ]; then
+      LTS=" (Latest LTS: $LTS)"
+      LTS_LENGTH="${#LTS}"
+      if [ "${NVM_HAS_COLORS-}" = '1' ]; then
+        LTS_FORMAT="\033[1;32m%${LTS_LENGTH}s\033[0m"
+      else
+        LTS_FORMAT="%${LTS_LENGTH}s"
+      fi
+      command printf -- "${FORMAT}${LTS_FORMAT}\n" "$VERSION" "$LTS"
+    else
+      command printf -- "${FORMAT}\n" "$VERSION"
+    fi
   done
 }
 
