@@ -317,7 +317,14 @@ nvm_remote_version() {
   else
     VERSION="$(nvm_remote_versions "$PATTERN" | command tail -1)"
   fi
-  nvm_echo "$VERSION"
+  if [ -n "${NVM_VERSION_ONLY-}" ]; then
+    command awk 'BEGIN {
+      n = split(ARGV[1], a);
+      print a[1]
+    }' "${VERSION}"
+  else
+    nvm_echo "${VERSION}"
+  fi
   if [ "_$VERSION" = '_N/A' ]; then
     return 3
   fi
@@ -1867,7 +1874,7 @@ nvm() {
         shift
       fi
 
-      VERSION="$(nvm_remote_version "$provided_version")"
+      VERSION="$(NVM_VERSION_ONLY=true nvm_remote_version "$provided_version")"
 
       if [ "_$VERSION" = "_N/A" ]; then
         nvm_err "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions."
@@ -2549,7 +2556,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       nvm_version "$2"
     ;;
     "version-remote" )
-      nvm_remote_version "$2"
+      NVM_VERSION_ONLY=true nvm_remote_version "$2"
     ;;
     "--version" )
       nvm_echo '0.31.2'
