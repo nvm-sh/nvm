@@ -903,7 +903,7 @@ nvm_ls_remote_index_tab() {
       PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
     fi
   else
-    PATTERN=".*"
+    unset PATTERN
   fi
   ZSH_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
@@ -914,8 +914,12 @@ nvm_ls_remote_index_tab() {
     | command sed "
         1d;
         s/^/$PREFIX/;
-        s/[[:blank:]].*//" \
-    | nvm_grep -w "$PATTERN" \
+      " \
+    | command awk -v pattern="${PATTERN-}" '{
+        if (!$1) { next }
+        if (pattern && tolower($1) !~ tolower(pattern)) { next }
+        if ($10 !~ /^\-?$/ && ! a[$10]++) print $1, $10; else print $1
+      }' \
     | $SORT_COMMAND)"
   if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
     unsetopt shwordsplit
