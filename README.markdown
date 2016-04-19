@@ -206,6 +206,7 @@ cd() {
     nvm use default
   fi
 }
+cd .
 ```
 
 Note for [`rvm`](https://github.com/rvm/rvm) users: rvm overrides builtin `cd` function so code should be a bit
@@ -221,6 +222,7 @@ cd() {
     nvm use default
   fi
 }
+cd .
 ```
 
 ## License
