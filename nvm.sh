@@ -1535,6 +1535,20 @@ nvm_is_natural_num() {
   esac
 }
 
+# Check version dir permissions
+nvm_check_file_permissions() {
+  for FILE in $1/* $1/.[!.]* $1/..?* ; do
+      if [ -d "$FILE" ]; then
+        if ! nvm_check_file_permissions "$FILE"; then
+          return 2
+        fi
+      elif [ -e "$FILE" ] && [ ! -w "$FILE" ]; then
+        return 1
+      fi
+  done
+  return 0
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm help
@@ -1829,19 +1843,7 @@ nvm() {
         NVM_SUCCESS_MSG="Uninstalled node $VERSION"
       fi
 
-      # Check version dir permissions
-      local PERMISSIONS_OK=true
-      check_file_permissions() {
-        for FILE in $1/* $1/.[!.]* $1/..?* ; do
-            if [ -d "$FILE" ]; then
-              check_file_permissions "$FILE"
-            elif [ -e "$FILE" ]; then
-              [ ! -w "$FILE" ] && PERMISSIONS_OK=false
-            fi
-        done
-      }
-      check_file_permissions "$VERSION_PATH"
-      if [ "$PERMISSIONS_OK" = false ]; then
+      if ! nvm_check_file_permissions "$VERSION_PATH"; then
         >&2 echo 'Cannot uninstall, incorrect permissions on installation folder.'
         >&2 echo 'This is usually caused by running `npm install -g` as root. Run the following command as root to fix the permissions and then try again.'
         >&2 echo
@@ -2384,7 +2386,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_iojs_binary nvm_install_node_binary \
-        nvm_install_node_source \
+        nvm_install_node_source nvm_check_file_permissions \
         nvm_version nvm_rc_version nvm_match_version \
         nvm_ensure_default_set nvm_get_arch nvm_get_os \
         nvm_print_implicit_alias nvm_validate_implicit_alias \
