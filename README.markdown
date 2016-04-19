@@ -210,7 +210,7 @@ cd() {
 
 Note for [`rvm`](https://github.com/rvm/rvm) users: rvm overrides builtin `cd` function so code should be a bit
 different to make `rvm` and `nvm` work both without conflicts and you should place it after `rvm` sourcing its scripts.
-For example, on Ubuntu it should be placed into `$HOME/.bash_profil`:
+For example, on Ubuntu it should be placed into `$HOME/.bash_profile`:
 
 ```bash
 cd() {
