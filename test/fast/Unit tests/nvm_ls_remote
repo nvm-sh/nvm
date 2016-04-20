@@ -9,7 +9,7 @@ cleanup() {
 . ../../../nvm.sh
 
 # sample output at the time the test was written
-TAB_PATH="$PWD/nodejs.org-dist-index.tab"
+TAB_PATH="$PWD/mocks/nodejs.org-dist-index.tab"
 nvm_download() {
   cat "$TAB_PATH"
 }

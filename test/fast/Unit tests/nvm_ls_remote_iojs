@@ -9,7 +9,7 @@ cleanup() {
 . ../../../nvm.sh
 
 # sample output at the time the test was written
-TAB_PATH="$PWD/iojs.org-dist-index.tab"
+TAB_PATH="$PWD/mocks/iojs.org-dist-index.tab"
 nvm_download() {
   cat "$TAB_PATH"
 }
