@@ -920,6 +920,7 @@ nvm_ls_remote_index_tab() {
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
         if ($10 !~ /^\-?$/ && ! a[$10]++) print $1, $10; else print $1
       }' \
+    | nvm_grep -w "${PATTERN:-.*}" \
     | $SORT_COMMAND)"
   if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
     unsetopt shwordsplit
