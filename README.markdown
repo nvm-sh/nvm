@@ -201,9 +201,9 @@ Put this into your `$HOME/.bashrc` to enable automatic version swithing whenever
 cd() {
   builtin cd "$@"
   if [[ -f .nvmrc && -r .nvmrc ]]; then
-    nvm use
+    nvm use --silent
   elif [[ `nvm current` != `nvm version default` ]]; then
-    nvm use default
+    nvm use --silent default
   fi
 }
 cd .
@@ -217,9 +217,9 @@ For example, on Ubuntu it should be placed at the very bottom of `$HOME/.bash_pr
 cd() {
   __zsh_like_cd cd "$@"
   if [[ -f .nvmrc && -r .nvmrc ]]; then
-    nvm use
+    nvm use --silent
   elif [[ `nvm current` != `nvm version default` ]]; then
-    nvm use default
+    nvm use --silent default
   fi
 }
 cd .
