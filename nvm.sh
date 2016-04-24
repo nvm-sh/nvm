@@ -993,36 +993,52 @@ nvm_print_versions() {
   fi
   local LTS_LENGTH
   local LTS_FORMAT
-  nvm_echo "$1" | while read -r VERSION_LINE; do
-    VERSION="${VERSION_LINE% *}"
+  nvm_echo "$1" \
+  | command sed '1!G;h;$!d' \
+  | command awk '{ if ($2 && a[$2]++) { print $1, "(LTS: " $2 ")" } else if ($2) { print $1, "(Latest LTS: " $2 ")" } else { print $0 } }' \
+  | command sed '1!G;h;$!d' \
+  | while read -r VERSION_LINE; do
+    VERSION="${VERSION_LINE%% *}"
     LTS="${VERSION_LINE#* }"
-    FORMAT='%15s'
+    FORMAT='%15s  '
     if [ "_$VERSION" = "_$NVM_CURRENT" ]; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-        FORMAT='\033[0;32m-> %12s\033[0m'
+        FORMAT='\033[0;32m-> %12s\033[0m  '
       else
         FORMAT='-> %12s *'
       fi
     elif [ "$VERSION" = "system" ]; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-        FORMAT='\033[0;33m%15s\033[0m'
+        FORMAT='\033[0;33m%15s\033[0m  '
       fi
     elif nvm_is_version_installed "$VERSION"; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-        FORMAT='\033[0;34m%15s\033[0m'
+        FORMAT='\033[0;34m%15s\033[0m  '
       else
         FORMAT='%15s *'
       fi
     fi
-    if [ "$LTS" != "$VERSION" ]; then
-      LTS=" (LTS: $LTS)"
-      LTS_LENGTH="${#LTS}"
-      if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-        LTS_FORMAT="\033[1;32m%${LTS_LENGTH}s\033[0m"
-      else
-        LTS_FORMAT="%${LTS_LENGTH}s"
-      fi
-      command printf -- "${FORMAT}${LTS_FORMAT}\n" "$VERSION" "$LTS"
+    if [ "${LTS}" != "${VERSION}" ]; then
+      case "${LTS}" in
+        *Latest*)
+          LTS="${LTS##Latest }"
+          LTS_LENGTH="${#LTS}"
+          if [ "${NVM_HAS_COLORS-}" = '1' ]; then
+            LTS_FORMAT="\033[1;32m%${LTS_LENGTH}s\033[0m"
+          else
+            LTS_FORMAT="%${LTS_LENGTH}s"
+          fi
+        ;;
+        *)
+          LTS_LENGTH="${#LTS}"
+          if [ "${NVM_HAS_COLORS-}" = '1' ]; then
+            LTS_FORMAT="\033[0;37m%${LTS_LENGTH}s\033[0m"
+          else
+            LTS_FORMAT="%${LTS_LENGTH}s"
+          fi
+        ;;
+      esac
+      command printf -- "${FORMAT}${LTS_FORMAT}\n" "$VERSION" " $LTS"
     else
       command printf -- "${FORMAT}\n" "$VERSION"
     fi
