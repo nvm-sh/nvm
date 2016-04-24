@@ -13,6 +13,8 @@ mkdir -p "$MOCKS_DIR"
 
 nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote.txt"
 nvm_ls_remote_iojs > "$MOCKS_DIR/nvm_ls_remote_iojs.txt"
+NVM_LTS=* nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote LTS.txt"
+NVM_LTS=argon nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote LTS argon.txt"
 nvm_download -L -s "$NVM_NODEJS_ORG_MIRROR/index.tab" -o - > "$MOCKS_DIR/nodejs.org-dist-index.tab"
 nvm_download -L -s "$NVM_IOJS_ORG_MIRROR/index.tab" -o - > "$MOCKS_DIR/iojs.org-dist-index.tab"
 

@@ -858,14 +858,16 @@ nvm_ls_remote() {
   else
     PATTERN=".*"
   fi
-  nvm_ls_remote_index_tab node std "$NVM_NODEJS_ORG_MIRROR" "$PATTERN"
+  NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab node std "$NVM_NODEJS_ORG_MIRROR" "$PATTERN"
 }
 
 nvm_ls_remote_iojs() {
-  nvm_ls_remote_index_tab iojs std "$NVM_IOJS_ORG_MIRROR" "$1"
+  NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "$NVM_IOJS_ORG_MIRROR" "$1"
 }
 
 nvm_ls_remote_index_tab() {
+  local LTS
+  LTS="${NVM_LTS-}"
   if [ "$#" -lt 4 ]; then
     nvm_err 'not enough arguments'
     return 5
@@ -915,10 +917,11 @@ nvm_ls_remote_index_tab() {
         1d;
         s/^/$PREFIX/;
       " \
-    | command awk -v pattern="${PATTERN-}" '{
+    | command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
         if (!$1) { next }
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
-        if ($10 !~ /^\-?$/ && ! a[$10]++) print $1, $10; else print $1
+        if (lts == "*" && $10 ~ /^\-?$/) { next }
+        if ($10 !~ /^\-?$/) print $1, $10; else print $1
       }' \
     | nvm_grep -w "${PATTERN:-.*}" \
     | $SORT_COMMAND)"
@@ -1012,7 +1015,7 @@ nvm_print_versions() {
       fi
     fi
     if [ "$LTS" != "$VERSION" ]; then
-      LTS=" (Latest LTS: $LTS)"
+      LTS=" (LTS: $LTS)"
       LTS_LENGTH="${#LTS}"
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
         LTS_FORMAT="\033[1;32m%${LTS_LENGTH}s\033[0m"
@@ -1791,9 +1794,11 @@ nvm() {
       nvm_echo '  nvm run [--silent] <version> [<args>]     Run `node` on <version> with <args> as arguments. Uses .nvmrc if available'
       nvm_echo '  nvm current                               Display currently activated version'
       nvm_echo '  nvm ls                                    List installed versions'
-      nvm_echo '  nvm ls <version>                          List versions matching a given description'
+      nvm_echo '  nvm ls <version>                          List versions matching a given <version>'
       nvm_echo '  nvm ls-remote                             List remote versions available for install'
+      nvm_echo '    --lts                                   When listing, only show LTS (long-term support) versions'
       nvm_echo '  nvm ls-remote <version>                   List remote versions available for install, matching a given <version>'
+      nvm_echo '    --lts                                   When listing, only show LTS (long-term support) versions'
       nvm_echo '  nvm version <version>                     Resolve the given description to a single local version'
       nvm_echo '  nvm version-remote <version>              Resolve the given description to a single remote version'
       nvm_echo '  nvm deactivate                            Undo effects of `nvm` on current shell'
@@ -2370,19 +2375,39 @@ nvm() {
       return $NVM_LS_EXIT_CODE
     ;;
     "ls-remote" | "list-remote" )
-      local PATTERN
-      PATTERN="${2-}"
+      local LTS
       local NVM_IOJS_PREFIX
       NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
       local NVM_NODE_PREFIX
       NVM_NODE_PREFIX="$(nvm_node_prefix)"
+      local PATTERN
       local NVM_FLAVOR
-      case "_$PATTERN" in
-        "_$NVM_IOJS_PREFIX" | "_$NVM_NODE_PREFIX" )
-          NVM_FLAVOR="$PATTERN"
-          PATTERN="$3"
-        ;;
-      esac
+      while [ $# -gt 1 ]
+      do
+        case "$2" in
+          --lts)
+            LTS='*'
+          ;;
+          --*)
+            nvm_err "Unsupported option \"$2\"."
+            return 55;
+          ;;
+          *)
+            if [ -z "$PATTERN" ]; then
+              PATTERN="${2-}"
+              if [ -z "$NVM_FLAVOR" ]; then
+                case "_$PATTERN" in
+                  "_$NVM_IOJS_PREFIX" | "_$NVM_NODE_PREFIX")
+                    NVM_FLAVOR="$PATTERN"
+                    PATTERN=""
+                  ;;
+                esac
+              fi
+            fi
+          ;;
+        esac
+        shift
+      done
 
       local NVM_LS_REMOTE_EXIT_CODE
       NVM_LS_REMOTE_EXIT_CODE=0
@@ -2392,7 +2417,7 @@ nvm() {
       NVM_LS_REMOTE_POST_MERGED_OUTPUT=''
       if [ "_$NVM_FLAVOR" != "_$NVM_IOJS_PREFIX" ]; then
         local NVM_LS_REMOTE_OUTPUT
-        NVM_LS_REMOTE_OUTPUT=$(nvm_ls_remote "$PATTERN")
+        NVM_LS_REMOTE_OUTPUT=$(NVM_LTS="${LTS-}" nvm_ls_remote "$PATTERN")
         # split output into two
         NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%v4\.0\.0*}"
         NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#$NVM_LS_REMOTE_PRE_MERGED_OUTPUT}"
@@ -2404,7 +2429,7 @@ nvm() {
       local NVM_LS_REMOTE_IOJS_OUTPUT
       NVM_LS_REMOTE_IOJS_OUTPUT=''
       if [ "_$NVM_FLAVOR" != "_$NVM_NODE_PREFIX" ]; then
-        NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "$PATTERN")
+        NVM_LS_REMOTE_IOJS_OUTPUT=$(NVM_LTS="${LTS-}" nvm_ls_remote_iojs "$PATTERN")
         NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
       fi
 
