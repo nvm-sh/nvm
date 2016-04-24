@@ -308,14 +308,14 @@ nvm_remote_version() {
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
     case "_$PATTERN" in
       "_$(nvm_iojs_prefix)")
-        VERSION="$(nvm_ls_remote_iojs | command tail -1)"
+        VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs | command tail -1)"
       ;;
       *)
-        VERSION="$(nvm_ls_remote "$PATTERN")"
+        VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$PATTERN")"
       ;;
     esac
   else
-    VERSION="$(nvm_remote_versions "$PATTERN" | command tail -1)"
+    VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "$PATTERN" | command tail -1)"
   fi
   if [ -n "${NVM_VERSION_ONLY-}" ]; then
     command awk 'BEGIN {
@@ -337,18 +337,18 @@ nvm_remote_versions() {
   PATTERN="$1"
   case "_$PATTERN" in
     "_$NVM_IOJS_PREFIX" | "_io.js")
-      VERSIONS="$(nvm_ls_remote_iojs)"
+      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs)"
     ;;
     "_$(nvm_node_prefix)")
-      VERSIONS="$(nvm_ls_remote)"
+      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote)"
     ;;
     *)
       if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
         nvm_err 'Implicit aliases are not supported in nvm_remote_versions.'
         return 1
       fi
-      VERSIONS="$(nvm_echo "$(nvm_ls_remote "$PATTERN")
-$(nvm_ls_remote_iojs "$PATTERN")" | nvm_grep -v "N/A" | command sed '/^$/d')"
+      VERSIONS="$(nvm_echo "$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$PATTERN")
+$(NVM_LTS=${NVM_LTS-} nvm_ls_remote_iojs "$PATTERN")" | nvm_grep -v "N/A" | command sed '/^$/d')"
     ;;
   esac
 
@@ -852,7 +852,7 @@ nvm_ls_remote() {
   local PATTERN
   PATTERN="$1"
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-    PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command tail -1)"
+    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command awk '{ print $1 }' | command tail -1)"
   elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
   else
@@ -1817,6 +1817,7 @@ nvm() {
       nvm_echo '    --lts                                   When listing, only show LTS (long-term support) versions'
       nvm_echo '  nvm version <version>                     Resolve the given description to a single local version'
       nvm_echo '  nvm version-remote <version>              Resolve the given description to a single remote version'
+      nvm_echo '    --lts                                   When listing, only select from LTS (long-term support) versions'
       nvm_echo '  nvm deactivate                            Undo effects of `nvm` on current shell'
       nvm_echo '  nvm alias [<pattern>]                     Show all aliases beginning with <pattern>'
       nvm_echo '  nvm alias <name> <version>                Set an alias named <name> pointing to <version>'
@@ -2444,8 +2445,8 @@ nvm() {
       NVM_LS_REMOTE_IOJS_EXIT_CODE=0
       local NVM_LS_REMOTE_IOJS_OUTPUT
       NVM_LS_REMOTE_IOJS_OUTPUT=''
-      if [ "_$NVM_FLAVOR" != "_$NVM_NODE_PREFIX" ]; then
-        NVM_LS_REMOTE_IOJS_OUTPUT=$(NVM_LTS="${LTS-}" nvm_ls_remote_iojs "$PATTERN")
+      if [ "_$NVM_FLAVOR" != "_$NVM_NODE_PREFIX" ] && [ -z "${LTS-}" ]; then
+        NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "$PATTERN")
         NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
       fi
 
@@ -2618,7 +2619,25 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       nvm_version "$2"
     ;;
     "version-remote" )
-      NVM_VERSION_ONLY=true nvm_remote_version "$2"
+      local NVM_LTS
+      local PATTERN
+      while [ $# -gt 1 ]
+      do
+        case "$2" in
+          --lts)
+            NVM_LTS='*'
+          ;;
+          --*)
+            nvm_err "Unsupported option \"$2\"."
+            return 55;
+          ;;
+          *)
+            PATTERN="${PATTERN:-$2}"
+          ;;
+        esac
+        shift
+      done
+      NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" )
       nvm_echo '0.31.2'
