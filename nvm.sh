@@ -1805,6 +1805,8 @@ nvm() {
       nvm_echo '  nvm --version                             Print out the latest released version of nvm'
       nvm_echo '  nvm install [-s] <version>                Download and install a <version>, [-s] from source. Uses .nvmrc if available'
       nvm_echo '    --reinstall-packages-from=<version>     When installing, reinstall packages installed in <node|iojs|node version number>'
+      nvm_echo '    --lts                                   When installing, only select from LTS (long-term support) versions'
+      nvm_echo '    --lts=<LTS name>                        When installing, only select from versions for a specific LTS line'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
       nvm_echo '  nvm use [--silent] <version>              Modify PATH to use <version>. Uses .nvmrc if available'
       nvm_echo '  nvm exec [--silent] <version> [<command>] Run <command> on <version>. Uses .nvmrc if available'
@@ -1879,17 +1881,13 @@ nvm() {
 
       if [ $# -lt 2 ]; then
         version_not_provided=1
-        nvm_rc_version
-        if [ -z "$NVM_RC_VERSION" ]; then
-          >&2 nvm --help
-          return 127
-        fi
       fi
 
       shift
 
       local nobinary
       nobinary=0
+      local LTS
       while [ $# -ne 0 ]
       do
         case "$1" in
@@ -1902,9 +1900,13 @@ nvm() {
             nvm_get_make_jobs "$1"
             shift # consume job count
           ;;
-          --lts*)
-            nvm_err 'installing based on LTS filtering is not yet supported.'
-            return 12
+          --lts)
+            LTS='*'
+            shift
+          ;;
+          --lts=*)
+            LTS="${1##--lts=}"
+            shift
           ;;
           *)
             break # stop parsing args
@@ -1913,21 +1915,48 @@ nvm() {
       done
 
       local provided_version
-      provided_version="$1"
+      provided_version="${1-}"
 
       if [ -z "$provided_version" ]; then
-        if [ $version_not_provided -ne 1 ]; then
+        if [ "_${LTS-}" = '_*' ]; then
+          nvm_echo 'Installing latest LTS version.'
+          if [ $# -gt 0 ]; then
+            shift
+          fi
+        elif [ "_${LTS-}" != '_' ]; then
+          nvm_echo "Installing with latest version of LTS line: $LTS"
+          if [ $# -gt 0 ]; then
+            shift
+          fi
+        else
           nvm_rc_version
+          if [ $version_not_provided -eq 1 ]; then
+            if [ -z "$NVM_RC_VERSION" ]; then
+              >&2 nvm --help
+              return 127
+            fi
+          fi
+          provided_version="$NVM_RC_VERSION"
         fi
-        provided_version="$NVM_RC_VERSION"
-      else
+      elif [ $# -gt 0 ]; then
         shift
       fi
 
-      VERSION="$(NVM_VERSION_ONLY=true nvm_remote_version "$provided_version")"
+      VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "$provided_version")"
 
       if [ "_$VERSION" = "_N/A" ]; then
-        nvm_err "Version '$provided_version' not found - try \`nvm ls-remote\` to browse available versions."
+        local LTS_MSG
+        local REMOTE_CMD
+        if [ "${LTS-}" = '*' ]; then
+          LTS_MSG='(with LTS filter) '
+          REMOTE_CMD='nvm ls-remote --lts'
+        elif [ -n "${LTS-}" ]; then
+          LTS_MSG="(with LTS filter '$LTS') "
+          REMOTE_CMD="nvm ls-remote --lts=${LTS}"
+        else
+          REMOTE_CMD='nvm ls-remote'
+        fi
+        nvm_err "Version '$provided_version' ${LTS_MSG-}not found - try \`${REMOTE_CMD}\` to browse available versions."
         return 3
       fi
 
@@ -1974,7 +2003,11 @@ nvm() {
         if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
-        nvm_ensure_default_set "$provided_version"
+        if [ -n "${LTS-}" ]; then
+          nvm_ensure_default_set "lts/${LTS}"
+        else
+          nvm_ensure_default_set "$provided_version"
+        fi
         return $?
       fi
 
