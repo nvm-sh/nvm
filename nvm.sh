@@ -921,6 +921,7 @@ nvm_ls_remote_index_tab() {
         if (!$1) { next }
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
         if (lts == "*" && $10 ~ /^\-?$/) { next }
+        if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next }
         if ($10 !~ /^\-?$/) print $1, $10; else print $1
       }' \
     | nvm_grep -w "${PATTERN:-.*}" \
@@ -1815,9 +1816,11 @@ nvm() {
       nvm_echo '    --lts                                   When listing, only show LTS (long-term support) versions'
       nvm_echo '  nvm ls-remote <version>                   List remote versions available for install, matching a given <version>'
       nvm_echo '    --lts                                   When listing, only show LTS (long-term support) versions'
+      nvm_echo '    --lts=<LTS name>                        When listing, only show versions for a specific LTS line'
       nvm_echo '  nvm version <version>                     Resolve the given description to a single local version'
       nvm_echo '  nvm version-remote <version>              Resolve the given description to a single remote version'
       nvm_echo '    --lts                                   When listing, only select from LTS (long-term support) versions'
+      nvm_echo '    --lts=<LTS name>                        When listing, only select from versions for a specific LTS line'
       nvm_echo '  nvm deactivate                            Undo effects of `nvm` on current shell'
       nvm_echo '  nvm alias [<pattern>]                     Show all aliases beginning with <pattern>'
       nvm_echo '  nvm alias <name> <version>                Set an alias named <name> pointing to <version>'
@@ -2405,6 +2408,9 @@ nvm() {
           --lts)
             LTS='*'
           ;;
+          --lts=*)
+            LTS="${2##--lts=}"
+          ;;
           --*)
             nvm_err "Unsupported option \"$2\"."
             return 55;
@@ -2626,6 +2632,9 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         case "$2" in
           --lts)
             NVM_LTS='*'
+          ;;
+          --lts=*)
+            NVM_LTS="${2##--lts=}"
           ;;
           --*)
             nvm_err "Unsupported option \"$2\"."
