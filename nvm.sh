@@ -1902,6 +1902,10 @@ nvm() {
             nvm_get_make_jobs "$1"
             shift # consume job count
           ;;
+          --lts*)
+            nvm_err 'installing based on LTS filtering is not yet supported.'
+            return 12
+          ;;
           *)
             break # stop parsing args
           ;;
