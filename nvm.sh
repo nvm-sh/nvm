@@ -2558,7 +2558,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
     "alias" )
       local NVM_ALIAS_DIR
       NVM_ALIAS_DIR="$(nvm_alias_path)"
-      command mkdir -p "$NVM_ALIAS_DIR"
+      command mkdir -p "$NVM_ALIAS_DIR/lts"
       local NVM_CURRENT
       NVM_CURRENT="$(nvm_ls_current)"
       if [ $# -le 2 ]; then
@@ -2571,6 +2571,14 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         for ALIAS in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
           if [ ! -f "$NVM_ALIAS_DIR/$ALIAS" ] && ([ $# -lt 2 ] || [ "~$ALIAS" = "~${2-}" ]); then
             NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "$ALIAS"
+          fi
+        done
+
+        local LTS_ALIAS
+        for ALIAS_PATH in "$NVM_ALIAS_DIR/lts/${2-}"*; do
+          LTS_ALIAS="$(nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH")"
+          if [ -n "$LTS_ALIAS" ]; then
+            nvm_echo "${LTS_ALIAS-}"
           fi
         done
         return
