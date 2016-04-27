@@ -391,7 +391,7 @@ nvm_binary_available() {
 
 nvm_alias() {
   local ALIAS
-  ALIAS="$1"
+  ALIAS="${1-}"
   if [ -z "$ALIAS" ]; then
     echo >&2 'An alias is required.'
     return 1
@@ -2259,8 +2259,10 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       command mkdir -p "$NVM_ALIAS_DIR"
       if [ $# -le 2 ]; then
         local DEST
-        for ALIAS_PATH in "$NVM_ALIAS_DIR"/"${2-}"*; do
-          ALIAS="$(command basename "$ALIAS_PATH")"
+        local ALIAS
+        local ALIAS_PATH
+        for ALIAS_PATH in "$NVM_ALIAS_DIR/${2-}"*; do
+          ALIAS="${ALIAS_PATH/$NVM_ALIAS_DIR\//}"
           DEST="$(nvm_alias "$ALIAS" 2> /dev/null)"
           if [ -n "$DEST" ]; then
             VERSION="$(nvm_version "$DEST")"
@@ -2291,18 +2293,18 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       fi
       if [ -z "${3-}" ]; then
         command rm -f "$NVM_ALIAS_DIR/$2"
-        echo "$2 -> *poof*"
+        echo "${2-} -> *poof*"
         return
       fi
-      VERSION="$(nvm_version "$3")"
+      VERSION="$(nvm_version "${3-}")"
       if [ $? -ne 0 ]; then
-        echo "! WARNING: Version '$3' does not exist." >&2
+        echo "! WARNING: Version '${3-}' does not exist." >&2
       fi
-      echo "$3" | tee "$NVM_ALIAS_DIR/$2" >/dev/null
+      echo "$3" | tee "$NVM_ALIAS_DIR/${2-}" >/dev/null
       if [ ! "_$3" = "_$VERSION" ]; then
-        echo "$2 -> $3 (-> $VERSION)"
+        echo "${2-} -> ${3-} (-> $VERSION)"
       else
-        echo "$2 -> $3"
+        echo "${2-} -> ${3-}"
       fi
     ;;
     "unalias" )
