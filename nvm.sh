@@ -2318,6 +2318,10 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm unalias "${2-}"
         return $?
       fi
+      if [ "${2#*\/}" != "${2-}" ]; then
+        >&2 echo "Aliases in subdirectories are not supported."
+        return 1
+      fi
       VERSION="$(nvm_version "${3-}")"
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '${3-}' does not exist." >&2
@@ -2336,6 +2340,10 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       if [ $# -ne 2 ]; then
         >&2 nvm help
         return 127
+      fi
+      if [ "${2#*\/}" != "${2-}" ]; then
+        >&2 echo "Aliases in subdirectories are not supported."
+        return 1
       fi
       [ ! -f "$NVM_ALIAS_DIR/$2" ] && echo "Alias $2 doesn't exist!" >&2 && return
       local NVM_ALIAS_ORIGINAL
