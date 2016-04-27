@@ -12,8 +12,8 @@ Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creati
  - [bass](https://github.com/edc/bass) allows to use utilities written for Bash in fish shell
  - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
  - [fin](https://github.com/fisherman/fin) is a pure fish node version manager for fish shell
- - [nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
- 
+ - [plugin-nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
+
 
 
 Note: We still have some problems with FreeBSD, because there is no pre-built binary from official for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc), see the issue ticket:
@@ -46,10 +46,10 @@ Note: On OSX, if you get `nvm: command not found` after running the install scri
 
 ### Verify installation
 
-To verify that nvm has been installed, do 
-    
+To verify that nvm has been installed, do
+
     command -v nvm
-    
+
 which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
 
 ### Manual install
@@ -74,7 +74,7 @@ Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it
 For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
 
     cd "$NVM_DIR" && git pull origin master && git checkout `git describe --abbrev=0 --tags`
-    
+
 After upgrading, don't forget to activate the new version:
 
     . "$NVM_DIR/nvm.sh"
