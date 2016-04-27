@@ -912,11 +912,37 @@ nvm_ls_remote_index_tab() {
     ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
     setopt shwordsplit
   fi
-  VERSIONS="$(nvm_download -L -s "$MIRROR/index.tab" -o - \
+  local VERSION_LIST
+  VERSION_LIST="$(nvm_download -L -s "$MIRROR/index.tab" -o - \
     | command sed "
         1d;
         s/^/$PREFIX/;
       " \
+  )"
+  local LTS_ALIAS
+  local LTS_VERSION
+  nvm_echo "$VERSION_LIST" \
+    | awk '{
+        if ($10 ~ /^\-?$/) { next }
+        if ($10 && !a[tolower($10)]++) {
+          if (alias) { print alias, version }
+          alias = "lts/" tolower($10)
+          version = $1
+        }
+      }
+      END {
+        if (alias) {
+          print alias, version
+          print "lts/*", alias
+        }
+      }' \
+    | while read -r LTS_ALIAS_LINE; do
+      LTS_ALIAS="${LTS_ALIAS_LINE%% *}"
+      LTS_VERSION="${LTS_ALIAS_LINE#* }"
+      nvm_make_alias "$LTS_ALIAS" "$LTS_VERSION" >/dev/null 2>&1
+    done
+
+  VERSIONS="$(nvm_echo "$VERSION_LIST" \
     | command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
         if (!$1) { next }
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
