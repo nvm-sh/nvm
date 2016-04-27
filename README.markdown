@@ -44,6 +44,14 @@ Eg: `curl ... | NVM_DIR="path/to/nvm" bash`
 
 Note: On OSX, if you get `nvm: command not found` after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simple create one with `touch ~/.bash_profile` and run the install script again.
 
+### Verify installation
+
+To verify that nvm has been installed, do 
+    
+    command -v nvm
+    
+which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
+
 ### Manual install
 
 For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm`.
