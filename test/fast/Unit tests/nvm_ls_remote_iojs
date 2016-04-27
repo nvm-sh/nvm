@@ -14,14 +14,16 @@ nvm_download() {
   cat "$TAB_PATH"
 }
 
+EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm_ls_remote_iojs.txt"
+
 OUTPUT="$(nvm_ls_remote_iojs foo)"
 EXIT_CODE="$(nvm_ls_remote_iojs foo >/dev/null 2>&1 ; echo $?)"
 [ "_$OUTPUT" = "_N/A" ] || die "nonexistent version did not report N/A"
 [ "_$EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $EXIT_CODE"
 
 OUTPUT="$(nvm_ls_remote_iojs)"
-EXPECTED_OUTPUT="$(nvm_download | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n | sed -e 's/^/iojs-/')"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm_ls_remote_iojs did not output expected sorted versions; got $(echo "$OUTPUT") expected $(echo "$EXPECTED_OUTPUT")"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm_ls_remote_iojs did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
 
 OUTPUT="$(nvm_ls_remote_iojs 1.0)"
 EXPECTED_OUTPUT="iojs-v1.0.0

@@ -1,4 +1,6 @@
 version	date	files	npm	v8	uv	zlib	openssl	modules	lts
+v6.0.0	2016-04-26	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.8.6	5.0.71.35	1.9.0	1.2.8	1.0.2g	48	-
+v5.11.0	2016-04-21	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.8.6	4.6.85.31	1.8.0	1.2.8	1.0.2g	47	-
 v5.10.1	2016-04-05	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.8.3	4.6.85.31	1.8.0	1.2.8	1.0.2g	47	-
 v5.10.0	2016-04-01	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.8.3	4.6.85.31	1.8.0	1.2.8	1.0.2g	47	-
 v5.9.1	2016-03-22	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.7.3	4.6.85.31	1.8.0	1.2.8	1.0.2g	47	-

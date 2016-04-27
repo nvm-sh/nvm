@@ -14,14 +14,16 @@ nvm_download() {
   cat "$TAB_PATH"
 }
 
+EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm_ls_remote.txt"
+
 OUTPUT="$(nvm_ls_remote foo)"
 EXIT_CODE="$(nvm_ls_remote foo >/dev/null 2>&1 ; echo $?)"
 [ "_$OUTPUT" = "_N/A" ] || die "nonexistent version did not report N/A"
 [ "_$EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $EXIT_CODE"
 
 OUTPUT="$(nvm_ls_remote)"
-EXPECTED_OUTPUT="$(nvm_download | \egrep -o 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n)"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm_ls_remote did not output expected sorted versions; got $(echo "$OUTPUT") expected $(echo "$EXPECTED_OUTPUT")"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm_ls_remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
 
 OUTPUT="$(nvm_ls_remote 0.3)"
 EXPECTED_OUTPUT="v0.3.0
@@ -38,7 +40,7 @@ v0.3.8"
 
 # Sanity checks
 OUTPUT="$(nvm_print_implicit_alias remote stable)"
-EXPECTED_OUTPUT="5.10"
+EXPECTED_OUTPUT="6.0"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
 
 OUTPUT="$(nvm_print_implicit_alias remote unstable)"
@@ -46,7 +48,7 @@ EXPECTED_OUTPUT="0.11"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote unstable did not output $EXPECTED_OUTPUT; got $OUTPUT"
 
 OUTPUT="$(nvm_ls_remote stable)"
-EXPECTED_OUTPUT="v5.10.1"
+EXPECTED_OUTPUT="v6.0.0"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
 
 OUTPUT="$(nvm_ls_remote unstable)"
