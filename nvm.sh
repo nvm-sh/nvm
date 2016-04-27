@@ -2315,9 +2315,8 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         return
       fi
       if [ -z "${3-}" ]; then
-        command rm -f "$NVM_ALIAS_DIR/$2"
-        echo "${2-} -> *poof*"
-        return
+        nvm unalias "${2-}"
+        return $?
       fi
       VERSION="$(nvm_version "${3-}")"
       if [ $? -ne 0 ]; then
