@@ -464,6 +464,22 @@ nvm_print_default_alias() {
   fi
 }
 
+nvm_make_alias() {
+  local ALIAS
+  ALIAS="${1-}"
+  if [ -z "$ALIAS" ]; then
+    >&2 echo "an alias name is required"
+    return 1
+  fi
+  local VERSION
+  VERSION="${2-}"
+  if [ -z "$VERSION" ]; then
+    >&2 echo "an alias target version is required"
+    return 2
+  fi
+  echo "$VERSION" | tee "$(nvm_alias_path)/${ALIAS}" >/dev/null
+}
+
 nvm_alias() {
   local ALIAS
   ALIAS="${1-}"
@@ -2356,11 +2372,11 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       if [ $? -ne 0 ]; then
         echo "! WARNING: Version '${3-}' does not exist." >&2
       fi
-      echo "$3" | tee "$NVM_ALIAS_DIR/${2-}" >/dev/null
-      if [ ! "_$3" = "_$VERSION" ]; then
-        echo "${2-} -> ${3-} (-> $VERSION)"
-      else
+      nvm_make_alias "${2-}" "${3-}"
+      if [ "_$3" = "_$VERSION" ]; then
         echo "${2-} -> ${3-}"
+      else
+        echo "${2-} -> ${3-} (-> $VERSION)"
       fi
     ;;
     "unalias" )
