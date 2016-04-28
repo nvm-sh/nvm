@@ -195,6 +195,7 @@ Put this into your `$HOME/.zshrc` to call `nvm use` automatically whenever you e
 `.nvmrc` file with a string telling nvm which node to `use`:
 
 ```zsh
+# place this after nvm initialization!
 autoload -U add-zsh-hook
 load-nvmrc() {
   if [[ -f .nvmrc && -r .nvmrc ]]; then
@@ -205,6 +206,7 @@ load-nvmrc() {
   fi
 }
 add-zsh-hook chpwd load-nvmrc
+load-nvmrc
 ```
 
 ## License
