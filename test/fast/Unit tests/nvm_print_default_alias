@@ -1,4 +1,5 @@
 #!/bin/sh
+. ../../common.sh
 
 die () { echo $@ ; cleanup ; exit 1; }
 
@@ -12,7 +13,7 @@ nvm_print_implicit_alias() {
   echo ''
 }
 
-OUTPUT="$(nvm_print_default_alias foo)"
+OUTPUT="$(nvm_print_default_alias foo | strip_colors)"
 EXPECTED_OUTPUT=''
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_print_default_alias foo' should produce no output when nvm_print_implicit_alias does not; got '$OUTPUT'"
 
@@ -26,7 +27,7 @@ nvm_version() {
   echo "v$1"
 }
 
-OUTPUT="$(nvm_print_default_alias blah)"
+OUTPUT="$(nvm_print_default_alias blah | strip_colors)"
 EXPECTED_OUTPUT='blah -> "local-blah" (-> v"local-blah") (default)'
 [ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "'nvm_print_default_alias blah' should strip alias dir and print nvm_print_implicit_alias output; got '$OUTPUT', expected '$EXPECTED_OUTPUT'"
 

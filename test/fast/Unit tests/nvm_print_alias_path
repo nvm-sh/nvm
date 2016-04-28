@@ -1,4 +1,5 @@
 #!/bin/sh
+. ../../common.sh
 
 die () { echo $@ ; cleanup ; exit 1; }
 
@@ -22,7 +23,7 @@ nvm_alias() {
   echo ''
 }
 
-OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" foo)"
+OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" foo | strip_colors)"
 EXPECTED_OUTPUT=''
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" foo' should produce no output when nvm_alias does not; got '$OUTPUT'"
 
@@ -36,7 +37,7 @@ nvm_version() {
   echo "v$1"
 }
 
-OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" "$NVM_ALIAS_DIR/blah")"
+OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" "$NVM_ALIAS_DIR/blah" | strip_colors)"
 EXPECTED_OUTPUT='blah -> "blah" (-> v"blah")'
 [ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" \"\$NVM_ALIAS_DIR/blah\"' should strip alias dir and print nvm_alias output; got '$OUTPUT', expected '$EXPECTED_OUTPUT'"
 
