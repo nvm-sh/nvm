@@ -389,6 +389,44 @@ nvm_binary_available() {
   nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix "$1")" "$FIRST_VERSION_WITH_BINARY"
 }
 
+nvm_print_formatted_alias() {
+  local ALIAS
+  ALIAS="${1-}"
+  local DEST
+  DEST="${2-}"
+  local VERSION
+  local VERSION_FORMAT
+  local ALIAS_FORMAT
+  local DEST_FORMAT
+  VERSION="$(nvm_version "$DEST")"
+  ALIAS_FORMAT='%s'
+  DEST_FORMAT='%s'
+  VERSION_FORMAT='%s'
+  if [ "_$VERSION" = "_${NVM_CURRENT-}" ]; then
+    ALIAS_FORMAT='\033[0;32m%s\033[0m'
+    DEST_FORMAT='\033[0;32m%s\033[0m'
+    VERSION_FORMAT='\033[0;32m%s\033[0m'
+  elif [ -d "$(nvm_version_path "$VERSION" 2> /dev/null)" ]; then
+    ALIAS_FORMAT='\033[0;34m%s\033[0m'
+    DEST_FORMAT='\033[0;34m%s\033[0m'
+    VERSION_FORMAT='\033[0;34m%s\033[0m'
+  elif [ "_$VERSION" = '_∞' ] || [ "_$VERSION" = '_N/A' ]; then
+    ALIAS_FORMAT='\033[1;31m%s\033[0m'
+    DEST_FORMAT='\033[1;31m%s\033[0m'
+    VERSION_FORMAT='\033[1;31m%s\033[0m'
+  fi
+  local NEWLINE
+  NEWLINE="\n"
+  if [ "_$DEFAULT" = '_true' ]; then
+    NEWLINE=" \033[0;37m(default)\033[0m\n"
+  fi
+  if [ "_$DEST" = "_$VERSION" ]; then
+    command printf "${ALIAS_FORMAT} \033[0;90m->\033[0m ${VERSION_FORMAT}${NEWLINE}" "$ALIAS" "$DEST"
+  else
+    command printf "${ALIAS_FORMAT} \033[0;90m->\033[0m ${DEST_FORMAT} (\033[0;90m->\033[0m ${VERSION_FORMAT})${NEWLINE}" "$ALIAS" "$DEST" "$VERSION"
+  fi
+}
+
 nvm_print_alias_path() {
   local NVM_ALIAS_DIR
   NVM_ALIAS_DIR="${1-}"
@@ -407,29 +445,21 @@ nvm_print_alias_path() {
   local DEST
   DEST="$(nvm_alias "$ALIAS" 2> /dev/null)"
   if [ -n "$DEST" ]; then
-    local VERSION
-    VERSION="$(nvm_version "$DEST")"
-    if [ "_$DEST" = "_$VERSION" ]; then
-      echo "$ALIAS -> $DEST"
-    else
-      echo "$ALIAS -> $DEST (-> $VERSION)"
-    fi
+    DEFAULT=false nvm_print_formatted_alias "$ALIAS" "$DEST"
   fi
 }
 
 nvm_print_default_alias() {
   local ALIAS
   ALIAS="${1-}"
+  if [ -z "$ALIAS" ]; then
+    >&2 echo 'A default alias is required.'
+    return 1
+  fi
   local DEST
   DEST="$(nvm_print_implicit_alias local "$ALIAS")"
-  if [ "_$DEST" != '_' ]; then
-    local VERSION
-    VERSION="$(nvm_version "$DEST")"
-    if [ "_$DEST" = "_$VERSION" ]; then
-      echo "$ALIAS -> $DEST (default)"
-    else
-      echo "$ALIAS -> $DEST (-> $VERSION) (default)"
-    fi
+  if [ -n "$DEST" ]; then
+    DEFAULT=true nvm_print_formatted_alias "$ALIAS" "$DEST"
   fi
 }
 
@@ -2301,15 +2331,17 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "$NVM_ALIAS_DIR"
       if [ $# -le 2 ]; then
+        local NVM_CURRENT
+        NVM_CURRENT="$(nvm_ls_current)"
         local ALIAS_PATH
         for ALIAS_PATH in "$NVM_ALIAS_DIR/${2-}"*; do
-          nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH"
+          NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH"
         done
 
         local ALIAS
         for ALIAS in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
           if [ ! -f "$NVM_ALIAS_DIR/$ALIAS" ] && ([ $# -lt 2 ] || [ "~$ALIAS" = "~${2-}" ]); then
-            nvm_print_default_alias "$ALIAS"
+            NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "$ALIAS"
           fi
         done
         return
