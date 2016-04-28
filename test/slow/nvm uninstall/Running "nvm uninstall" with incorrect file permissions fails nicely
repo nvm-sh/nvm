@@ -19,7 +19,7 @@ nvm ls | grep "$NVM_TEST_VERSION" || die "Failed to install node"
 
 # Install global module as root
 npm_path=$(which npm)
-sudo "$npm_path" install jspm -g
+sudo -n "$npm_path" install jspm -g || die 'either sudo failed, or `npm install jspm -g` failed`'
 
 # Switch to another version so we can uninstall
 nvm use 0.12.7

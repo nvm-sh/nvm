@@ -60,6 +60,10 @@ nvm_has_system_iojs() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v iojs)" != '' ]
 }
 
+nvm_is_version_installed() {
+  [ -n "${1-}" ] && [ -d "$(nvm_version_path "${1-}" 2> /dev/null)" ]
+}
+
 nvm_print_npm_version() {
   if nvm_has "npm"; then
     echo " (npm v$(npm --version 2>/dev/null))"
@@ -206,10 +210,7 @@ nvm_ensure_version_installed() {
   LOCAL_VERSION="$(nvm_version "$PROVIDED_VERSION")"
   EXIT_CODE="$?"
   local NVM_VERSION_DIR
-  if [ "_$EXIT_CODE" = "_0" ]; then
-    NVM_VERSION_DIR="$(nvm_version_path "$LOCAL_VERSION")"
-  fi
-  if [ "_$EXIT_CODE" != "_0" ] || [ ! -d "$NVM_VERSION_DIR" ]; then
+  if [ "_$EXIT_CODE" != "_0" ] || ! nvm_is_version_installed "$LOCAL_VERSION"; then
     VERSION="$(nvm_resolve_alias "$PROVIDED_VERSION")"
     if [ $? -eq 0 ]; then
       echo "N/A: version \"$PROVIDED_VERSION -> $VERSION\" is not yet installed" >&2
@@ -406,7 +407,7 @@ nvm_print_formatted_alias() {
     ALIAS_FORMAT='\033[0;32m%s\033[0m'
     DEST_FORMAT='\033[0;32m%s\033[0m'
     VERSION_FORMAT='\033[0;32m%s\033[0m'
-  elif [ -d "$(nvm_version_path "$VERSION" 2> /dev/null)" ]; then
+  elif nvm_is_version_installed "$VERSION"; then
     ALIAS_FORMAT='\033[0;34m%s\033[0m'
     DEST_FORMAT='\033[0;34m%s\033[0m'
     VERSION_FORMAT='\033[0;34m%s\033[0m'
@@ -648,9 +649,9 @@ nvm_ls() {
     *) NVM_PATTERN_STARTS_WITH_V=false ;;
   esac
   if [ $NVM_PATTERN_STARTS_WITH_V = true ] && [ "_$(nvm_num_version_groups "$PATTERN")" = "_3" ]; then
-    if [ -d "$(nvm_version_path "$PATTERN")" ]; then
+    if nvm_is_version_installed "$PATTERN"; then
       VERSIONS="$PATTERN"
-    elif [ -d "$(nvm_version_path "$(nvm_add_iojs_prefix "$PATTERN")")" ]; then
+    elif nvm_is_version_installed "$(nvm_add_iojs_prefix "$PATTERN")"; then
       VERSIONS="$(nvm_add_iojs_prefix "$PATTERN")"
     fi
   else
@@ -889,7 +890,7 @@ nvm_print_versions() {
       FORMAT='\033[0;32m-> %12s\033[0m'
     elif [ "$VERSION" = "system" ]; then
       FORMAT='\033[0;33m%15s\033[0m'
-    elif [ -d "$(nvm_version_path "$VERSION" 2> /dev/null)" ]; then
+    elif nvm_is_version_installed "$VERSION"; then
       FORMAT='\033[0;34m%15s\033[0m'
     else
       FORMAT='%15s'
@@ -1810,9 +1811,7 @@ nvm() {
         NVM_NODE_MERGED=true
       fi
 
-      local VERSION_PATH
-      VERSION_PATH="$(nvm_version_path "$VERSION")"
-      if [ -d "$VERSION_PATH" ]; then
+      if nvm_is_version_installed "$VERSION"; then
         echo "$VERSION is already installed." >&2
         if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
@@ -1897,9 +1896,7 @@ nvm() {
         return 1
       fi
 
-      local VERSION_PATH
-      VERSION_PATH="$(nvm_version_path "$VERSION")"
-      if [ ! -d "$VERSION_PATH" ]; then
+      if ! nvm_is_version_installed "$VERSION"; then
         echo "$VERSION version is not installed..." >&2
         return;
       fi
@@ -1916,6 +1913,8 @@ nvm() {
         NVM_SUCCESS_MSG="Uninstalled node $VERSION"
       fi
 
+      local VERSION_PATH
+      VERSION_PATH="$(nvm_version_path "$VERSION")"
       if ! nvm_check_file_permissions "$VERSION_PATH"; then
         >&2 echo 'Cannot uninstall, incorrect permissions on installation folder.'
         >&2 echo 'This is usually caused by running `npm install -g` as root. Run the following command as root to fix the permissions and then try again.'
