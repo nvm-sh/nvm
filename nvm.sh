@@ -342,7 +342,7 @@ nvm_format_version() {
   VERSION="$(nvm_ensure_version_prefix "$1")"
   local NUM_GROUPS
   NUM_GROUPS="$(nvm_num_version_groups "$VERSION")"
-  if [ $NUM_GROUPS -lt 3 ]; then
+  if [ "$NUM_GROUPS" -lt 3 ]; then
     nvm_format_version "${VERSION%.}.0"
   else
     echo "$VERSION" | cut -f1-3 -d.
@@ -1354,7 +1354,7 @@ nvm_get_make_jobs() {
     NVM_MAKE_JOBS=1
   else
     echo "Detected that you have $NVM_CPU_THREADS CPU thread(s)"
-    if [ $NVM_CPU_THREADS -gt 2 ]; then
+    if [ "$NVM_CPU_THREADS" -gt 2 ]; then
       NVM_MAKE_JOBS=$(($NVM_CPU_THREADS - 1))
       echo "Set the number of jobs to $NVM_CPU_THREADS - 1 = $NVM_MAKE_JOBS jobs to speed up the build"
     else
@@ -1419,9 +1419,9 @@ nvm_install_node_source() {
     command tar -xzf "$tmptarball" -C "$tmpdir" && \
     cd "$tmpdir/node-$VERSION" && \
     ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
-    $make -j $NVM_MAKE_JOBS ${MAKE_CXX-} && \
+    $make -j "$NVM_MAKE_JOBS" ${MAKE_CXX-} && \
     command rm -f "$VERSION_PATH" 2>/dev/null && \
-    $make -j $NVM_MAKE_JOBS ${MAKE_CXX-} install
+    $make -j "$NVM_MAKE_JOBS" ${MAKE_CXX-} install
     )
   then
     if ! nvm_has "npm" ; then
@@ -1605,7 +1605,7 @@ nvm_is_natural_num() {
     0) return 1 ;;
     -*) return 3 ;; # some BSDs return false positives for double-negated args
     *)
-      [ $1 -eq $1 2> /dev/null ] # returns 2 if it doesn't match
+      [ "$1" -eq "$1" ] 2> /dev/null # returns 2 if it doesn't match
     ;;
   esac
 }
@@ -1735,7 +1735,6 @@ nvm() {
 
       local nobinary
       nobinary=0
-      local make_jobs
       while [ $# -ne 0 ]
       do
         case "$1" in
@@ -2380,7 +2379,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       local NVM_ALIAS_ORIGINAL
       NVM_ALIAS_ORIGINAL="$(nvm_alias "$2")"
       command rm -f "$NVM_ALIAS_DIR/$2"
-      echo "Deleted alias $2 - restore it with \`nvm alias $2 "$NVM_ALIAS_ORIGINAL"\`"
+      echo "Deleted alias $2 - restore it with \`nvm alias \"$2\" \"$NVM_ALIAS_ORIGINAL\"\`"
     ;;
     "reinstall-packages" | "copy-packages" )
       if [ $# -ne 2 ]; then
