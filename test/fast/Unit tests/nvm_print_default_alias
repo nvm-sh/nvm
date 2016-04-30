@@ -13,6 +13,10 @@ nvm_print_implicit_alias() {
   echo ''
 }
 
+OUTPUT="$(nvm_print_default_alias 2>&1)"
+EXPECTED_OUTPUT='A default alias is required.'
+[ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "'nvm_print_default_alias' produced wrong output; got '$OUTPUT', expected '$EXPECTED_OUTPUT'"
+
 OUTPUT="$(nvm_print_default_alias foo | strip_colors)"
 EXPECTED_OUTPUT=''
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_print_default_alias foo' should produce no output when nvm_print_implicit_alias does not; got '$OUTPUT'"
