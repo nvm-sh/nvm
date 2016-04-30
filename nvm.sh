@@ -491,11 +491,17 @@ nvm_print_formatted_alias() {
       DEST_FORMAT='\033[1;31m%s\033[0m'
       VERSION_FORMAT='\033[1;31m%s\033[0m'
     fi
+    if [ "_${NVM_LTS-}" = '_true' ]; then
+      ALIAS_FORMAT='\033[1;33m%s\033[0m'
+    fi
+    if [ "_${DEST%/*}" = "_lts" ]; then
+      DEST_FORMAT='\033[1;33m%s\033[0m'
+    fi
   fi
   if [ "_$DEST" = "_$VERSION" ]; then
-    command printf "${ALIAS_FORMAT} ${ARROW} ${VERSION_FORMAT}${NEWLINE}" "$ALIAS" "$DEST"
+    command printf -- "${ALIAS_FORMAT} ${ARROW} ${VERSION_FORMAT}${NEWLINE}" "$ALIAS" "$DEST"
   else
-    command printf "${ALIAS_FORMAT} ${ARROW} ${DEST_FORMAT} (${ARROW} ${VERSION_FORMAT})${NEWLINE}" "$ALIAS" "$DEST" "$VERSION"
+    command printf -- "${ALIAS_FORMAT} ${ARROW} ${DEST_FORMAT} (${ARROW} ${VERSION_FORMAT})${NEWLINE}" "$ALIAS" "$DEST" "$VERSION"
   fi
 }
 
@@ -517,7 +523,7 @@ nvm_print_alias_path() {
   local DEST
   DEST="$(nvm_alias "$ALIAS" 2> /dev/null || return 0)"
   if [ -n "$DEST" ]; then
-    DEFAULT=false nvm_print_formatted_alias "$ALIAS" "$DEST"
+    NVM_LTS="${NVM_LTS-}" DEFAULT=false nvm_print_formatted_alias "$ALIAS" "$DEST"
   fi
 }
 
@@ -2602,7 +2608,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
 
         local LTS_ALIAS
         for ALIAS_PATH in "$NVM_ALIAS_DIR/lts/${2-}"*; do
-          LTS_ALIAS="$(nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH")"
+          LTS_ALIAS="$(NVM_LTS=true nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH")"
           if [ -n "$LTS_ALIAS" ]; then
             nvm_echo "${LTS_ALIAS-}"
           fi
