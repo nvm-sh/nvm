@@ -1841,6 +1841,8 @@ nvm() {
       nvm_echo '    --lts=<LTS name>                        When installing, only select from versions for a specific LTS line'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
       nvm_echo '  nvm use [--silent] <version>              Modify PATH to use <version>. Uses .nvmrc if available'
+      nvm_echo '    --lts                                   Uses automatic LTS (long-term support) alias `lts/*`, if available.'
+      nvm_echo '    --lts=<LTS name>                        Uses automatic alias for provided LTS line, if available.'
       nvm_echo '  nvm exec [--silent] <version> [<command>] Run <command> on <version>. Uses .nvmrc if available'
       nvm_echo '  nvm run [--silent] <version> [<args>]     Run `node` on <version> with <args> as arguments. Uses .nvmrc if available'
       nvm_echo '  nvm current                               Display currently activated version'
@@ -2202,6 +2204,7 @@ nvm() {
       NVM_USE_SILENT=0
       local NVM_DELETE_PREFIX
       NVM_DELETE_PREFIX=0
+      local NVM_LTS
 
       shift # remove "use"
       while [ $# -ne 0 ]
@@ -2209,8 +2212,11 @@ nvm() {
         case "$1" in
           --silent) NVM_USE_SILENT=1 ;;
           --delete-prefix) NVM_DELETE_PREFIX=1 ;;
+          --lts) NVM_LTS='*' ;;
+          --lts=*) NVM_LTS="${1##--lts=}" ;;
+          --*) ;;
           *)
-            if [ -n "$1" ]; then
+            if [ -n "${1-}" ]; then
               PROVIDED_VERSION="$1"
             fi
           ;;
@@ -2218,7 +2224,9 @@ nvm() {
         shift
       done
 
-      if [ -z "$PROVIDED_VERSION" ]; then
+      if [ -n "${NVM_LTS-}" ]; then
+        VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
+      elif [ -z "$PROVIDED_VERSION" ]; then
         nvm_rc_version
         if [ -n "$NVM_RC_VERSION" ]; then
           PROVIDED_VERSION="$NVM_RC_VERSION"
@@ -2259,7 +2267,7 @@ nvm() {
 
       # This nvm_ensure_version_installed call can be a performance bottleneck
       # on shell startup. Perhaps we can optimize it away or make it faster.
-      nvm_ensure_version_installed "$PROVIDED_VERSION"
+      nvm_ensure_version_installed "${VERSION}"
       EXIT_CODE=$?
       if [ "$EXIT_CODE" != "0" ]; then
         return $EXIT_CODE
