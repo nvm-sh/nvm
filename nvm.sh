@@ -2196,18 +2196,31 @@ nvm() {
       shift
 
       local NVM_SILENT
-      NVM_SILENT=0
-      if [ "_$1" = "_--silent" ]; then
-        NVM_SILENT=1
-        shift
-      fi
+      while [ $# -gt 0 ]
+      do
+        case "$1" in
+          --silent) NVM_SILENT='--silent' ; shift ;;
+          --) break ;;
+          --*)
+            >&2 echo "Unsupported option "$1"."
+            return 55
+          ;;
+          *)
+            if [ -n "$1" ]; then
+              break
+            else
+              shift
+            fi
+          ;; # stop processing arguments
+        esac
+      done
 
       local provided_version
       provided_version="$1"
       if [ -n "$provided_version" ]; then
         VERSION="$(nvm_version "$provided_version" || return 0)"
         if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
-          if [ "$NVM_SILENT" -eq 1 ]; then
+          if [ -n "${NVM_SILENT-}" ]; then
             nvm_rc_version >/dev/null 2>&1
           else
             nvm_rc_version
@@ -2225,7 +2238,7 @@ nvm() {
         return $EXIT_CODE
       fi
 
-      if [ "${NVM_SILENT:-0}" != '1' ]; then
+      if [ -z "${NVM_SILENT-}" ]; then
         if nvm_is_iojs_version "$VERSION"; then
           echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
         else
