@@ -2178,9 +2178,9 @@ nvm() {
         EXIT_CODE=$?
       elif [ -z "$ARGS" ]; then
         if [ "$NVM_IOJS" = true ]; then
-          nvm exec "$VERSION" iojs
+          nvm exec "${NVM_SILENT-}" "$VERSION" iojs
         else
-          nvm exec "$VERSION" node
+          nvm exec "${NVM_SILENT-}" "$VERSION" node
         fi
         EXIT_CODE="$?"
       elif [ "$NVM_IOJS" = true ]; then
