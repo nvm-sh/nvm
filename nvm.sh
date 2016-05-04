@@ -2225,7 +2225,13 @@ nvm() {
         return $EXIT_CODE
       fi
 
-      [ $NVM_SILENT -eq 1 ] || echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
+      if [ "${NVM_SILENT:-0}" != '1' ]; then
+        if nvm_is_iojs_version "$VERSION"; then
+          echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
+        else
+          echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
+        fi
+      fi
       NODE_VERSION="$VERSION" "$NVM_DIR/nvm-exec" "$@"
     ;;
     "ls" | "list" )
