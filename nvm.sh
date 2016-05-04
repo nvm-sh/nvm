@@ -2164,7 +2164,6 @@ nvm() {
 
       local ARGS
       ARGS="$@"
-      local OUTPUT
       local EXIT_CODE
 
       local ZHS_HAS_SHWORDSPLIT_UNSET
@@ -2175,28 +2174,14 @@ nvm() {
       fi
       if [ "_$VERSION" = "_N/A" ]; then
         nvm_ensure_version_installed "$provided_version"
-        EXIT_CODE=$?
-      elif [ -z "$ARGS" ]; then
-        if [ "$NVM_IOJS" = true ]; then
-          nvm exec "${NVM_SILENT-}" "$VERSION" iojs
-        else
-          nvm exec "${NVM_SILENT-}" "$VERSION" node
-        fi
-        EXIT_CODE="$?"
       elif [ "$NVM_IOJS" = true ]; then
-        [ -n "${NVM_SILENT-}" ] || echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
-        OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs $ARGS)"
-        EXIT_CODE="$?"
+        nvm exec "${NVM_SILENT-}" "$VERSION" iojs $ARGS
       else
-        [ -n "${NVM_SILENT-}" ] || echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
-        OUTPUT="$(nvm use "$VERSION" >/dev/null && node $ARGS)"
-        EXIT_CODE="$?"
+        nvm exec "${NVM_SILENT-}" "$VERSION" node $ARGS
       fi
+      EXIT_CODE="$?"
       if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
-      fi
-      if [ -n "$OUTPUT" ]; then
-        echo "$OUTPUT"
       fi
       return $EXIT_CODE
     ;;
