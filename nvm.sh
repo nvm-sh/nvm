@@ -1844,6 +1844,8 @@ nvm() {
       nvm_echo '    --lts                                   Uses automatic LTS (long-term support) alias `lts/*`, if available.'
       nvm_echo '    --lts=<LTS name>                        Uses automatic alias for provided LTS line, if available.'
       nvm_echo '  nvm exec [--silent] <version> [<command>] Run <command> on <version>. Uses .nvmrc if available'
+      nvm_echo '    --lts                                   Uses automatic LTS (long-term support) alias `lts/*`, if available.'
+      nvm_echo '    --lts=<LTS name>                        Uses automatic alias for provided LTS line, if available.'
       nvm_echo '  nvm run [--silent] <version> [<args>]     Run `node` on <version> with <args> as arguments. Uses .nvmrc if available'
       nvm_echo '  nvm current                               Display currently activated version'
       nvm_echo '  nvm ls                                    List installed versions'
@@ -2409,10 +2411,13 @@ nvm() {
       shift
 
       local NVM_SILENT
+      local NVM_LTS
       while [ $# -gt 0 ]
       do
         case "$1" in
           --silent) NVM_SILENT='--silent' ; shift ;;
+          --lts) NVM_LTS='*' ; shift ;;
+          --lts=*) NVM_LTS="${1##--lts=}" ; shift ;;
           --) break ;;
           --*)
             nvm_err "Unsupported option \"$1\"."
@@ -2430,9 +2435,12 @@ nvm() {
 
       local provided_version
       provided_version="$1"
-      if [ -n "$provided_version" ]; then
+      if [ "${NVM_LTS-}" != '' ]; then
+        provided_version="lts/${NVM_LTS:-*}"
+        VERSION="$provided_version"
+      elif [ -n "$provided_version" ]; then
         VERSION="$(nvm_version "$provided_version" || return 0)"
-        if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
+        if [ "_$VERSION" = '_N/A' ] && ! nvm_is_valid_version "$provided_version"; then
           if [ -n "${NVM_SILENT-}" ]; then
             nvm_rc_version >/dev/null 2>&1
           else
@@ -2452,7 +2460,11 @@ nvm() {
       fi
 
       if [ -z "${NVM_SILENT-}" ]; then
-        if nvm_is_iojs_version "$VERSION"; then
+        if [ "${NVM_LTS-}" = '*' ]; then
+          nvm_echo "Running node latest LTS -> $(nvm_version "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
+        elif [ -n "${NVM_LTS-}" ]; then
+          nvm_echo "Running node LTS \"${NVM_LTS-}\" -> $(nvm_version "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
+        elif nvm_is_iojs_version "$VERSION"; then
           nvm_echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
         else
           nvm_echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
