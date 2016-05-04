@@ -2108,14 +2108,22 @@ nvm() {
       shift
 
       local NVM_SILENT
-      NVM_SILENT=0
-      if [ "_$1" = "_--silent" ]; then
-        NVM_SILENT=1
-        shift
-      fi
+      while [ $# -gt 0 ]
+      do
+        case "$1" in
+          --silent) NVM_SILENT='--silent' ; shift ;;
+          *)
+            if [ -n "$1" ]; then
+              break
+            else
+              shift
+            fi
+          ;; # stop processing arguments
+        esac
+      done
 
       if [ $# -lt 1 ]; then
-        if [ "$NVM_SILENT" -eq 1 ]; then
+        if [ -n "${NVM_SILENT-}" ]; then
           nvm_rc_version >/dev/null 2>&1 && has_checked_nvmrc=1
         else
           nvm_rc_version && has_checked_nvmrc=1
@@ -2137,7 +2145,7 @@ nvm() {
         if [ "_$VERSION" = "_N/A" ] && ! nvm_is_valid_version "$provided_version"; then
           provided_version=''
           if [ $has_checked_nvmrc -ne 1 ]; then
-            if [ "$NVM_SILENT" -eq 1 ]; then
+            if [ -n "${NVM_SILENT-}" ]; then
               nvm_rc_version >/dev/null 2>&1 && has_checked_nvmrc=1
             else
               nvm_rc_version && has_checked_nvmrc=1
@@ -2176,11 +2184,11 @@ nvm() {
         fi
         EXIT_CODE="$?"
       elif [ "$NVM_IOJS" = true ]; then
-        [ $NVM_SILENT -eq 1 ] || echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
+        [ -n "${NVM_SILENT-}" ] || echo "Running io.js $(nvm_strip_iojs_prefix "$VERSION")$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
         OUTPUT="$(nvm use "$VERSION" >/dev/null && iojs $ARGS)"
         EXIT_CODE="$?"
       else
-        [ $NVM_SILENT -eq 1 ] || echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
+        [ -n "${NVM_SILENT-}" ] || echo "Running node $VERSION$(nvm use --silent "$VERSION" && nvm_print_npm_version)"
         OUTPUT="$(nvm use "$VERSION" >/dev/null && node $ARGS)"
         EXIT_CODE="$?"
       fi
