@@ -166,19 +166,32 @@ nvm_rc_version() {
 }
 
 nvm_version_greater() {
-  local LHS
-  LHS="$(nvm_normalize_version "$1")"
-  local RHS
-  RHS="$(nvm_normalize_version "$2")"
-  [ "$LHS" -gt "$RHS" ];
+  command awk 'BEGIN {
+    if (ARGV[1] == "" || ARGV[2] == "") exit(1)
+    split(ARGV[1], a, /\./);
+    split(ARGV[2], b, /\./);
+    for (i=1; i<=3; i++) {
+      if (a[i] && a[i] !~ /^[0-9]+$/) exit(2);
+      if (b[i] && b[i] !~ /^[0-9]+$/) { exit(0); }
+      if (a[i] < b[i]) exit(3);
+      else if (a[i] > b[i]) exit(0);
+    }
+    exit(4)
+  }' "${1#v}" "${2#v}";
 }
 
 nvm_version_greater_than_or_equal_to() {
-  local LHS
-  LHS="$(nvm_normalize_version "$1")"
-  local RHS
-  RHS="$(nvm_normalize_version "$2")"
-  [ "$LHS" -ge "$RHS" ];
+  command awk 'BEGIN {
+    if (ARGV[1] == "" || ARGV[2] == "") exit(1)
+    split(ARGV[1], a, /\./);
+    split(ARGV[2], b, /\./);
+    for (i=1; i<=3; i++) {
+      if (a[i] && a[i] !~ /^[0-9]+$/) exit(2);
+      if (a[i] < b[i]) exit(3);
+      else if (a[i] > b[i]) exit(0);
+    }
+    exit(0)
+  }' "${1#v}" "${2#v}";
 }
 
 nvm_version_dir() {
@@ -331,7 +344,7 @@ nvm_is_valid_version() {
     *)
       local VERSION
       VERSION="$(nvm_strip_iojs_prefix "$1")"
-      nvm_version_greater "$VERSION"
+      nvm_version_greater_than_or_equal_to "$VERSION" 0
     ;;
   esac
 }
@@ -398,9 +411,7 @@ nvm_prepend_path() {
 
 nvm_binary_available() {
   # binaries started with node 0.8.6
-  local FIRST_VERSION_WITH_BINARY
-  FIRST_VERSION_WITH_BINARY="0.8.6"
-  nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix "$1")" "$FIRST_VERSION_WITH_BINARY"
+  nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix "${1-}")" v0.8.6
 }
 
 nvm_print_formatted_alias() {
