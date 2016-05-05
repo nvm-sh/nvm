@@ -1642,7 +1642,7 @@ nvm_check_file_permissions() {
 
 nvm() {
   if [ $# -lt 1 ]; then
-    nvm help
+    nvm --help
     return
   fi
 
@@ -1654,7 +1654,7 @@ nvm() {
   local ADDITIONAL_PARAMETERS
 
   case $1 in
-    "help" )
+    'help' | '--help' )
       local NVM_IOJS_PREFIX
       NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
       local NVM_NODE_PREFIX
@@ -1742,7 +1742,7 @@ nvm() {
         version_not_provided=1
         nvm_rc_version
         if [ -z "$NVM_RC_VERSION" ]; then
-          >&2 nvm help
+          >&2 nvm --help
           return 127
         fi
       fi
@@ -1887,7 +1887,7 @@ nvm() {
     ;;
     "uninstall" )
       if [ $# -ne 2 ]; then
-        >&2 nvm help
+        >&2 nvm --help
         return 127
       fi
 
@@ -2015,7 +2015,7 @@ nvm() {
       fi
 
       if [ -z "$VERSION" ]; then
-        >&2 nvm help
+        >&2 nvm --help
         return 127
       fi
 
@@ -2134,7 +2134,7 @@ nvm() {
           VERSION='N/A'
         fi
         if [ $VERSION = "N/A" ]; then
-          >&2 nvm help
+          >&2 nvm --help
           return 127
         fi
       fi
@@ -2320,7 +2320,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         VERSION="$2"
       fi
       if [ -z "$VERSION" ]; then
-        >&2 nvm help
+        >&2 nvm --help
         return 127
       fi
 
@@ -2396,7 +2396,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "$NVM_ALIAS_DIR"
       if [ $# -ne 2 ]; then
-        >&2 nvm help
+        >&2 nvm --help
         return 127
       fi
       if [ "${2#*\/}" != "${2-}" ]; then
@@ -2411,7 +2411,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
     ;;
     "reinstall-packages" | "copy-packages" )
       if [ $# -ne 2 ]; then
-        >&2 nvm help
+        >&2 nvm --help
         return 127
       fi
 
@@ -2496,7 +2496,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
-      >&2 nvm help
+      >&2 nvm --help
       return 127
     ;;
   esac
