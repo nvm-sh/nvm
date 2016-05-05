@@ -1534,22 +1534,26 @@ nvm_die_on_prefix() {
     return
   fi
 
-  local NVM_NPM_PREFIX
-  NVM_NPM_PREFIX="$(NPM_CONFIG_LOGLEVEL=warn npm config get prefix)"
-  if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
-    if [ "_$NVM_DELETE_PREFIX" = "_1" ]; then
-      NPM_CONFIG_LOGLEVEL=warn npm config delete prefix
-    else
-      nvm deactivate >/dev/null 2>&1
-      echo >&2 "nvm is not compatible with the npm config \"prefix\" option: currently set to \"$NVM_NPM_PREFIX\""
-      if nvm_has 'npm'; then
-        echo >&2 "Run \`npm config delete prefix\` or \`$NVM_COMMAND\` to unset it."
+  check_prefix() {
+    local NVM_NPM_PREFIX
+    NVM_NPM_PREFIX="$(NPM_CONFIG_LOGLEVEL=warn npm config get prefix 2>&1)"
+    if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
+      if [ "_$NVM_DELETE_PREFIX" = "_1" ]; then
+        NPM_CONFIG_LOGLEVEL=warn npm config delete prefix
       else
-        echo >&2 "Run \`$NVM_COMMAND\` to unset it."
+        nvm deactivate >/dev/null 2>&1
+        echo >&2 ""
+        echo >&2 "nvm is not compatible with the npm config \"prefix\" option: currently set to \"$NVM_NPM_PREFIX\""
+        if nvm_has 'npm'; then
+          echo >&2 "Run \`npm config delete prefix\` or \`$NVM_COMMAND\` to unset it."
+        else
+          echo >&2 "Run \`$NVM_COMMAND\` to unset it."
+        fi
+        return 10
       fi
-      return 10
     fi
-  fi
+  }
+  (check_prefix &)
 }
 
 # Succeeds if $IOJS_VERSION represents an io.js version that has a
