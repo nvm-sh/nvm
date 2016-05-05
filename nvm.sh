@@ -42,12 +42,11 @@ nvm_get_latest() {
     nvm_err 'nvm needs curl or wget to proceed.'
     return 1
   fi
-  if [ "_$NVM_LATEST_URL" = "_" ]; then
+  if [ -z "$NVM_LATEST_URL" ]; then
     nvm_err "http://latest.nvm.sh did not redirect to the latest release on Github"
     return 2
-  else
-    nvm_echo "$NVM_LATEST_URL" | command awk -F '/' '{print $NF}'
   fi
+  nvm_echo "${NVM_LATEST_URL##*/}"
 }
 
 nvm_download() {
@@ -350,7 +349,11 @@ nvm_is_valid_version() {
 }
 
 nvm_normalize_version() {
-  nvm_echo "${1#v}" | command awk -F. '{ printf("%d%06d%06d\n", $1,$2,$3); }'
+  command awk 'BEGIN {
+    split(ARGV[1], a, /\./);
+    printf "%d%06d%06d\n", a[1], a[2], a[3];
+    exit;
+  }' "${1#v}"
 }
 
 nvm_ensure_version_prefix() {
@@ -889,19 +892,19 @@ nvm_checksum() {
     fi
   else
     if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
-      NVM_CHECKSUM="$(sha256sum "$1" | awk '{print $1}')"
+      NVM_CHECKSUM="$(sha256sum "$1" | command awk '{print $1}')"
     elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
-      NVM_CHECKSUM="$(shasum -a 256 "$1" | awk '{print $1}')"
+      NVM_CHECKSUM="$(shasum -a 256 "$1" | command awk '{print $1}')"
     elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
-      NVM_CHECKSUM="$(sha256 -q "$1" | awk '{print $1}')"
+      NVM_CHECKSUM="$(sha256 -q "$1" | command awk '{print $1}')"
     elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
-      NVM_CHECKSUM="$(gsha256sum "$1" | awk '{print $1}')"
+      NVM_CHECKSUM="$(gsha256sum "$1" | command awk '{print $1}')"
     elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
-      NVM_CHECKSUM="$(openssl dgst -sha256 "$1" | rev | awk '{print $1}' | rev)"
+      NVM_CHECKSUM="$(openssl dgst -sha256 "$1" | rev | command awk '{print $1}' | rev)"
     elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
-      NVM_CHECKSUM="$(libressl dgst -sha256 "$1" | rev | awk '{print $1}' | rev)"
+      NVM_CHECKSUM="$(libressl dgst -sha256 "$1" | rev | command awk '{print $1}' | rev)"
     elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
-      NVM_CHECKSUM="$(bssl sha256sum "$1" | awk '{print $1}')"
+      NVM_CHECKSUM="$(bssl sha256sum "$1" | command awk '{print $1}')"
     else
       nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, libressl, or bssl not found.'
       nvm_err 'WARNING: Continuing *without checksum verification*'
