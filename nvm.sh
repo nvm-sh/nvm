@@ -1963,9 +1963,10 @@ nvm() {
       VERSION_PATH="$(nvm_version_path "$VERSION")"
       if ! nvm_check_file_permissions "$VERSION_PATH"; then
         nvm_err 'Cannot uninstall, incorrect permissions on installation folder.'
-        nvm_err 'This is usually caused by running `npm install -g` as root. Run the following command as root to fix the permissions and then try again.'
+        nvm_err 'This is usually caused by running `npm install -g` as root. Run the following commands as root to fix the permissions and then try again.'
         nvm_err
         nvm_err "  chown -R $(whoami) \"$(nvm_sanitize_path "$VERSION_PATH")\""
+        nvm_err "  chmod -R u+w \"$(nvm_sanitize_path "$VERSION_PATH")\""
         return 1
       fi
 
