@@ -879,7 +879,7 @@ nvm_ls_remote_index_tab() {
 
 nvm_checksum() {
   local NVM_CHECKSUM
-  if [ -z "$3" ] || [ "$3" == "sha1" ]; then
+  if [ -z "$3" ] || [ "$3" = "sha1" ]; then
     if nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
       NVM_CHECKSUM="$(command sha1sum "$1" | command awk '{print $1}')"
     elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
