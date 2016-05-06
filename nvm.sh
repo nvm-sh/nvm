@@ -1633,11 +1633,14 @@ nvm_has_solaris_binary() {
 
 nvm_sanitize_path() {
   local SANITIZED_PATH
-  SANITIZED_PATH="$1"
-  if [ "_$1" != "_$NVM_DIR" ]; then
-    SANITIZED_PATH="$(nvm_echo "$SANITIZED_PATH" | command sed "s#$NVM_DIR#\$NVM_DIR#g")"
+  SANITIZED_PATH="${1-}"
+  if [ "_$SANITIZED_PATH" != "_$NVM_DIR" ]; then
+    SANITIZED_PATH="${SANITIZED_PATH/#$NVM_DIR/\$NVM_DIR}"
   fi
-  nvm_echo "$SANITIZED_PATH" | command sed "s#$HOME#\$HOME#g"
+  if [ "_$SANITIZED_PATH" != "_$HOME" ]; then
+    SANITIZED_PATH="${SANITIZED_PATH/#$HOME/\$HOME}"
+  fi
+  nvm_echo "$SANITIZED_PATH"
 }
 
 nvm_is_natural_num() {
