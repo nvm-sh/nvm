@@ -1664,6 +1664,7 @@ nvm_check_file_permissions() {
           return 2
         fi
       elif [ -e "$FILE" ] && [ ! -w "$FILE" ]; then
+        nvm_err "file is not writable: $(nvm_sanitize_path "$FILE")"
         return 1
       fi
   done
