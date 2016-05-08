@@ -423,10 +423,13 @@ nvm_print_formatted_alias() {
   local DEST
   DEST="${2-}"
   local VERSION
+  VERSION="${3-}"
+  if [ -z "$VERSION" ]; then
+    VERSION="$(nvm_version "$DEST" || return 0)"
+  fi
   local VERSION_FORMAT
   local ALIAS_FORMAT
   local DEST_FORMAT
-  VERSION="$(nvm_version "$DEST" || return 0)"
   ALIAS_FORMAT='%s'
   DEST_FORMAT='%s'
   VERSION_FORMAT='%s'
@@ -2388,9 +2391,9 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       local NVM_ALIAS_DIR
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "$NVM_ALIAS_DIR"
+      local NVM_CURRENT
+      NVM_CURRENT="$(nvm_ls_current)"
       if [ $# -le 2 ]; then
-        local NVM_CURRENT
-        NVM_CURRENT="$(nvm_ls_current)"
         local ALIAS_PATH
         for ALIAS_PATH in "$NVM_ALIAS_DIR/${2-}"*; do
           NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH"
@@ -2417,11 +2420,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_err "! WARNING: Version '${3-}' does not exist."
       fi
       nvm_make_alias "${2-}" "${3-}"
-      if [ "_$3" = "_$VERSION" ]; then
-        nvm_echo "${2-} -> ${3-}"
-      else
-        nvm_echo "${2-} -> ${3-} (-> $VERSION)"
-      fi
+      NVM_CURRENT="${NVM_CURRENT-}" DEFAULT=false nvm_print_formatted_alias "${2-}" "${3-}" "$VERSION"
     ;;
     "unalias" )
       local NVM_ALIAS_DIR
