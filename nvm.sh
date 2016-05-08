@@ -32,6 +32,14 @@ nvm_is_alias() {
   \alias "$1" > /dev/null 2>&1
 }
 
+nvm_has_colors() {
+  local NVM_COLORS
+  if test -t 1; then
+    NVM_COLORS="$(tput -T "${TERM:-vt100}" colors)"
+  fi
+  [ "${NVM_COLORS:--1}" -ge 8 ]
+}
+
 nvm_get_latest() {
   local NVM_LATEST_URL
   if nvm_has "curl"; then
@@ -433,28 +441,36 @@ nvm_print_formatted_alias() {
   ALIAS_FORMAT='%s'
   DEST_FORMAT='%s'
   VERSION_FORMAT='%s'
-  if [ "_$VERSION" = "_${NVM_CURRENT-}" ]; then
-    ALIAS_FORMAT='\033[0;32m%s\033[0m'
-    DEST_FORMAT='\033[0;32m%s\033[0m'
-    VERSION_FORMAT='\033[0;32m%s\033[0m'
-  elif nvm_is_version_installed "$VERSION"; then
-    ALIAS_FORMAT='\033[0;34m%s\033[0m'
-    DEST_FORMAT='\033[0;34m%s\033[0m'
-    VERSION_FORMAT='\033[0;34m%s\033[0m'
-  elif [ "_$VERSION" = '_∞' ] || [ "_$VERSION" = '_N/A' ]; then
-    ALIAS_FORMAT='\033[1;31m%s\033[0m'
-    DEST_FORMAT='\033[1;31m%s\033[0m'
-    VERSION_FORMAT='\033[1;31m%s\033[0m'
-  fi
   local NEWLINE
   NEWLINE="\n"
   if [ "_$DEFAULT" = '_true' ]; then
-    NEWLINE=" \033[0;37m(default)\033[0m\n"
+    NEWLINE=" (default)\n"
+  fi
+  local ARROW
+  ARROW='->'
+  if nvm_has_colors; then
+    ARROW='\033[0;90m->\033[0m'
+    if [ "_$DEFAULT" = '_true' ]; then
+      NEWLINE=" \033[0;37m(default)\033[0m\n"
+    fi
+    if [ "_$VERSION" = "_${NVM_CURRENT-}" ]; then
+      ALIAS_FORMAT='\033[0;32m%s\033[0m'
+      DEST_FORMAT='\033[0;32m%s\033[0m'
+      VERSION_FORMAT='\033[0;32m%s\033[0m'
+    elif nvm_is_version_installed "$VERSION"; then
+      ALIAS_FORMAT='\033[0;34m%s\033[0m'
+      DEST_FORMAT='\033[0;34m%s\033[0m'
+      VERSION_FORMAT='\033[0;34m%s\033[0m'
+    elif [ "_$VERSION" = '_∞' ] || [ "_$VERSION" = '_N/A' ]; then
+      ALIAS_FORMAT='\033[1;31m%s\033[0m'
+      DEST_FORMAT='\033[1;31m%s\033[0m'
+      VERSION_FORMAT='\033[1;31m%s\033[0m'
+    fi
   fi
   if [ "_$DEST" = "_$VERSION" ]; then
-    command printf "${ALIAS_FORMAT} \033[0;90m->\033[0m ${VERSION_FORMAT}${NEWLINE}" "$ALIAS" "$DEST"
+    command printf "${ALIAS_FORMAT} ${ARROW} ${VERSION_FORMAT}${NEWLINE}" "$ALIAS" "$DEST"
   else
-    command printf "${ALIAS_FORMAT} \033[0;90m->\033[0m ${DEST_FORMAT} (\033[0;90m->\033[0m ${VERSION_FORMAT})${NEWLINE}" "$ALIAS" "$DEST" "$VERSION"
+    command printf "${ALIAS_FORMAT} ${ARROW} ${DEST_FORMAT} (${ARROW} ${VERSION_FORMAT})${NEWLINE}" "$ALIAS" "$DEST" "$VERSION"
   fi
 }
 
@@ -931,17 +947,30 @@ nvm_print_versions() {
   local FORMAT
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
+  local NVM_HAS_COLORS
+  if nvm_has_colors; then
+    NVM_HAS_COLORS=1
+  fi
   nvm_echo "$1" | while read -r VERSION; do
+    FORMAT='%15s'
     if [ "_$VERSION" = "_$NVM_CURRENT" ]; then
-      FORMAT='\033[0;32m-> %12s\033[0m'
+      if [ "${NVM_HAS_COLORS-}" = '1' ]; then
+        FORMAT='\033[0;32m-> %12s\033[0m'
+      else
+        FORMAT='-> %12s *'
+      fi
     elif [ "$VERSION" = "system" ]; then
-      FORMAT='\033[0;33m%15s\033[0m'
+      if [ "${NVM_HAS_COLORS-}" = '1' ]; then
+        FORMAT='\033[0;33m%15s\033[0m'
+      fi
     elif nvm_is_version_installed "$VERSION"; then
-      FORMAT='\033[0;34m%15s\033[0m'
-    else
-      FORMAT='%15s'
+      if [ "${NVM_HAS_COLORS-}" = '1' ]; then
+        FORMAT='\033[0;34m%15s\033[0m'
+      else
+        FORMAT='%15s *'
+      fi
     fi
-    command printf "$FORMAT\n" "$VERSION"
+    command printf -- "$FORMAT\n" "$VERSION"
   done
 }
 
@@ -2523,7 +2552,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has nvm_get_latest \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
-        nvm_process_parameters > /dev/null 2>&1
+        nvm_has_colors nvm_process_parameters > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
