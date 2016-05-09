@@ -403,6 +403,10 @@ nvm_num_version_groups() {
 }
 
 nvm_strip_path() {
+  if [ -z "${NVM_DIR-}" ]; then
+    nvm_err '$NVM_DIR not set!'
+    return 1
+  fi
   nvm_echo "$1" | command sed \
     -e "s#$NVM_DIR/[^/]*$2[^:]*:##g" \
     -e "s#:$NVM_DIR/[^/]*$2[^:]*##g" \
