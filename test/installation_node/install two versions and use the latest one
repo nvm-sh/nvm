@@ -2,19 +2,19 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+. ../../nvm.sh
 
 # Remove the stuff we're clobbering.
-[ -e ../../../v0.9.7 ] && rm -R ../../../v0.9.7
-[ -e ../../../v0.9.12 ] && rm -R ../../../v0.9.12
+[ -e ../../v0.9.7 ] && rm -R ../../v0.9.7
+[ -e ../../v0.9.12 ] && rm -R ../../v0.9.12
 
 # Install from binary
 nvm install 0.9.7 || die "'nvm install 0.9.7' failed"
 nvm i 0.9.12 || die "'nvm i 0.9.12' failed"
 
 # Check
-[ -d ../../../v0.9.7 ] || die "v0.9.7 didn't exist"
-[ -d ../../../v0.9.12 ] || die "v0.9.12 didn't exist"
+[ -d ../../v0.9.7 ] || die "v0.9.7 didn't exist"
+[ -d ../../v0.9.12 ] || die "v0.9.12 didn't exist"
 
 # Use the first one
 nvm use 0.9.7 || die "'nvm use 0.9.7' failed"

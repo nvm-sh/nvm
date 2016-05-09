@@ -10,7 +10,9 @@
     "test/fast": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=fast test-$shell",
     "test/slow": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=slow test-$shell",
     "test/install_script": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=install_script test-$shell",
-    "test/installation": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation test-$shell",
+    "test/installation": "npm run --silent test/installation/node && npm run --silent test/installation/iojs",
+    "test/installation/node": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_node test-$shell",
+    "test/installation/iojs": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_iojs test-$shell",
     "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell"
   },
   "repository": {
