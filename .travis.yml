@@ -20,16 +20,16 @@ env:
   - SHELL=bash TEST_SUITE=fast
   - SHELL=zsh TEST_SUITE=fast
 #  - SHELL=ksh TEST_SUITE=fast
-  - SHELL=sh TEST_SUITE=slow
-  - SHELL=dash TEST_SUITE=slow
-  - SHELL=bash TEST_SUITE=slow
-  - SHELL=zsh TEST_SUITE=slow
-#  - SHELL=ksh TEST_SUITE=slow
   - SHELL=sh TEST_SUITE=sourcing
   - SHELL=dash TEST_SUITE=sourcing
   - SHELL=bash TEST_SUITE=sourcing
   - SHELL=zsh TEST_SUITE=sourcing
 #  - SHELL=ksh TEST_SUITE=sourcing
+  - SHELL=sh TEST_SUITE=slow
+  - SHELL=dash TEST_SUITE=slow
+  - SHELL=bash TEST_SUITE=slow
+  - SHELL=zsh TEST_SUITE=slow
+#  - SHELL=ksh TEST_SUITE=slow
   - SHELL=sh TEST_SUITE=installation_node
 #  - SHELL=sh TEST_SUITE=installation_node WITHOUT_CURL=1
   - SHELL=dash TEST_SUITE=installation_node
