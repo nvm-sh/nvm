@@ -6,6 +6,8 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
+# "local" warning, quote expansion warning
+# shellcheck disable=SC2039,SC2016
 { # this ensures the entire script is downloaded #
 
 NVM_SCRIPT_SOURCE="$_"
@@ -100,6 +102,7 @@ fi
 
 # Auto detect the NVM_DIR when not set
 if [ -z "${NVM_DIR-}" ]; then
+  # shellcheck disable=SC2128
   if [ -n "$BASH_SOURCE" ]; then
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
@@ -2565,6 +2568,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
 }
 
 nvm_supports_source_options() {
+  # shellcheck disable=SC1091
   [ "_$(echo '[ $# -gt 0 ] && echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
 }
 
