@@ -1672,10 +1672,10 @@ nvm_sanitize_path() {
   local SANITIZED_PATH
   SANITIZED_PATH="${1-}"
   if [ "_$SANITIZED_PATH" != "_$NVM_DIR" ]; then
-    SANITIZED_PATH="${SANITIZED_PATH/#$NVM_DIR/\$NVM_DIR}"
+    SANITIZED_PATH="$(nvm_echo "$SANITIZED_PATH" | command sed -e "s#$NVM_DIR#\$NVM_DIR#g")"
   fi
   if [ "_$SANITIZED_PATH" != "_$HOME" ]; then
-    SANITIZED_PATH="${SANITIZED_PATH/#$HOME/\$HOME}"
+    SANITIZED_PATH="$(nvm_echo "$SANITIZED_PATH" | command sed -e "s#$HOME#\$HOME#g")"
   fi
   nvm_echo "$SANITIZED_PATH"
 }
