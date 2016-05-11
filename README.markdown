@@ -48,7 +48,7 @@ Note: On OSX, if you get `nvm: command not found` after running the install scri
 
 To verify that nvm has been installed, do
 
-`source ~/.bash_profile` (or whichever profile you added nvm to)
+`. ~/.bash_profile` (or whichever profile you added nvm to)
 
 `command -v nvm`
 
