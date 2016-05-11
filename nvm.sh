@@ -17,12 +17,12 @@ nvm_echo() {
     nvm_echo() {
       \printf %s\\n "$*" # on zsh, `command printf` sometimes fails
     }
-    nvm_echo "$*"
+    nvm_echo "$@"
   }
 }
 
 nvm_err() {
-  >&2 nvm_echo "$*"
+  >&2 nvm_echo "$@"
 }
 
 nvm_has() {
@@ -59,10 +59,10 @@ nvm_get_latest() {
 
 nvm_download() {
   if nvm_has "curl"; then
-    curl -q $*
+    curl -q "$@"
   elif nvm_has "wget"; then
     # Emulate curl with wget
-    ARGS=$(nvm_echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
+    ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
                            -e 's/-L //' \
                            -e 's/-I /--server-response /' \
                            -e 's/-s /-q /' \
@@ -1435,7 +1435,7 @@ nvm_get_make_jobs() {
   else
     nvm_echo "Detected that you have $NVM_CPU_THREADS CPU thread(s)"
     if [ "$NVM_CPU_THREADS" -gt 2 ]; then
-      NVM_MAKE_JOBS=$(($NVM_CPU_THREADS - 1))
+      NVM_MAKE_JOBS=$((NVM_CPU_THREADS - 1))
       nvm_echo "Set the number of jobs to $NVM_CPU_THREADS - 1 = $NVM_MAKE_JOBS jobs to speed up the build"
     else
       NVM_MAKE_JOBS=1
@@ -2231,8 +2231,6 @@ nvm() {
         NVM_IOJS=true
       fi
 
-      local ARGS
-      ARGS="$@"
       local EXIT_CODE
 
       local ZHS_HAS_SHWORDSPLIT_UNSET
@@ -2244,9 +2242,9 @@ nvm() {
       if [ "_$VERSION" = "_N/A" ]; then
         nvm_ensure_version_installed "$provided_version"
       elif [ "$NVM_IOJS" = true ]; then
-        nvm exec "${NVM_SILENT-}" "$VERSION" iojs $ARGS
+        nvm exec "${NVM_SILENT-}" "$VERSION" iojs "$@"
       else
-        nvm exec "${NVM_SILENT-}" "$VERSION" node $ARGS
+        nvm exec "${NVM_SILENT-}" "$VERSION" node "$@"
       fi
       EXIT_CODE="$?"
       if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
