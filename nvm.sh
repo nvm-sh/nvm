@@ -1748,6 +1748,7 @@ nvm() {
       nvm_echo '  nvm ls                                    List installed versions'
       nvm_echo '  nvm ls <version>                          List versions matching a given description'
       nvm_echo '  nvm ls-remote                             List remote versions available for install'
+      nvm_echo '  nvm ls-remote <version>                   List remote versions available for install, matching a given <version>'
       nvm_echo '  nvm version <version>                     Resolve the given description to a single local version'
       nvm_echo '  nvm version-remote <version>              Resolve the given description to a single remote version'
       nvm_echo '  nvm deactivate                            Undo effects of `nvm` on current shell'
