@@ -1955,24 +1955,33 @@ nvm() {
       return $?
     ;;
     "upgrade" )
-      local current_version
-      current_version="$(nvm_ls_current)"
+      local base_version
+      base_version="$(nvm_ls_current)"
 
-      if [ $current_version = "none" ]; then
+      if [ $# -ge 2 ]; then
+        base_version="$(nvm_match_version $2)"
+
+        if [ $base_version = "N/A" ]; then
+          nvm_err 'Cannot find the specified version'
+          return 1
+        fi
+      fi
+
+      if [ $base_version = "none" ]; then
         nvm_err 'No version currently active, cannot upgrade'
         return 1
       fi
 
-      if [ $current_version = "system" ]; then
+      if [ $base_version = "system" ]; then
         nvm_err 'Cannot upgrade the system version of node'
         return 1
       fi
 
       local semver_major
-      semver_major="$(echo $current_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\1/')"
+      semver_major="$(echo $base_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\1/')"
 
       local semver_minor
-      semver_minor="$(echo $current_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\2/')"
+      semver_minor="$(echo $base_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\2/')"
 
       local install_version
       if [ $semver_major = '0' ]; then
@@ -1986,8 +1995,8 @@ nvm() {
         return 1
       fi
 
-      nvm_echo "Upgrading $current_version to the latest $install_version"
-      nvm install $install_version --reinstall-packages-from=$current_version
+      nvm_echo "Upgrading $base_version to the latest $install_version"
+      nvm install $install_version --reinstall-packages-from=$base_version
       return $?
     ;;
     "uninstall" )
