@@ -1740,6 +1740,7 @@ nvm() {
       nvm_echo '  nvm --version                             Print out the latest released version of nvm'
       nvm_echo '  nvm install [-s] <version>                Download and install a <version>, [-s] from source. Uses .nvmrc if available'
       nvm_echo '    --reinstall-packages-from=<version>     When installing, reinstall packages installed in <node|iojs|node version number>'
+      nvm_echo '  nvm upgrade [<version>]                   Upgrade to the latest minor/patch version'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
       nvm_echo '  nvm use [--silent] <version>              Modify PATH to use <version>. Uses .nvmrc if available'
       nvm_echo '  nvm exec [--silent] <version> [<command>] Run <command> on <version>. Uses .nvmrc if available'
