@@ -1,0 +1,5 @@
+#!/bin/sh
+
+. ../../../nvm.sh
+nvm install 0.12.0
+nvm use 0.12.0

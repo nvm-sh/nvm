@@ -1,0 +1,21 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+# Source nvm
+. ../../../nvm.sh
+
+# Install some global packages
+npm install -g npm || die "npm install -g npm failed"
+npm install -g object-is@0.0.0 || die "npm install -g object-is failed"
+npm list --global | grep object-is > /dev/null || die "object-is isn't installed"
+
+# Upgrade it
+nvm upgrade || die "Failed to run nvm upgrade"
+
+# Uninstall old version
+nvm uninstall 0.12.0
+
+# Make sure a newer version of 0.12 is still installed
+nvm ls | grep v0.12
+[ "$?" = "0" ] || die "Failed to upgrade node"
