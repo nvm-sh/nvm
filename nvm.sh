@@ -1954,6 +1954,42 @@ nvm() {
       fi
       return $?
     ;;
+    "upgrade" )
+      local current_version
+      current_version="$(nvm_ls_current)"
+
+      if [ $current_version = "none" ]; then
+        nvm_err 'No version currently active, cannot upgrade'
+        return 1
+      fi
+
+      if [ $current_version = "system" ]; then
+        nvm_err 'Cannot upgrade the system version of node'
+        return 1
+      fi
+
+      local semver_major
+      semver_major="$(echo $current_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\1/')"
+
+      local semver_minor
+      semver_minor="$(echo $current_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\2/')"
+
+      local install_version
+      if [ $semver_major = '0' ]; then
+        install_version="v0.$semver_minor"
+      else
+        install_version="v$semver_major"
+      fi
+
+      if ! nvm_is_valid_version $install_version; then
+        nvm_err 'Failed to determine current version'
+        return 1
+      fi
+
+      nvm_echo "Upgrading $current_version to the latest $install_version"
+      nvm install $install_version --reinstall-packages-from=$current_version
+      return $?
+    ;;
     "uninstall" )
       if [ $# -ne 2 ]; then
         >&2 nvm --help
