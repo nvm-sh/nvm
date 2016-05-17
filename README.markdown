@@ -2,7 +2,7 @@
 
 ## Installation
 
-First you'll need to make sure your system has a c++ compiler. For OSX, XCode will work, for Ubuntu, the build-essential and libssl-dev packages work.
+First you'll need to make sure your system has a c++ compiler. For OS X, Xcode will work, for Ubuntu, the build-essential and libssl-dev packages work.
 
 Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
  - [nvm-windows](https://github.com/coreybutler/nvm-windows)
@@ -20,7 +20,7 @@ Note: We still have some problems with FreeBSD, because there is no pre-built bi
  - [[#900] [Bug] nodejs on FreeBSD need to be patched ](https://github.com/creationix/nvm/issues/900)
  - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
 
-Note: On OSX, if you do not have XCode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
+Note: On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
 
 Homebrew installation is not supported.
@@ -42,7 +42,7 @@ Eg: `curl ... | NVM_DIR="path/to/nvm" bash`
 
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
-Note: On OSX, if you get `nvm: command not found` after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simple create one with `touch ~/.bash_profile` and run the install script again.
+Note: On OS X, if you get `nvm: command not found` after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simple create one with `touch ~/.bash_profile` and run the install script again.
 
 ### Verify installation
 
