@@ -403,6 +403,31 @@ nvm_num_version_groups() {
   nvm_echo "${#NVM_NUM_GROUPS}"
 }
 
+nvm_get_upgrade_version() {
+  if [ $# -lt 1 ]; then
+    nvm_echo 'N/A'
+    return 1
+  fi
+
+  local VERSION
+  VERSION="$1"
+
+  local semver_major
+  semver_major="$(nvm_echo \"$base_version\" | command sed -e 's/v\([0-9]\+\)\.\([0-9]\+\).*/\1/')"
+
+  local semver_minor
+  semver_minor="$(nvm_echo \"$base_version\" | command sed -e 's/v\([0-9]\+\)\.\([0-9]\+\).*/\2/')"
+
+  local install_version
+  if [ $semver_major = '0' ]; then
+    install_version="v0.$semver_minor"
+  else
+    install_version="v$semver_major"
+  fi
+
+  nvm_echo "$(nvm_remote_version \"$install_version\")"
+}
+
 nvm_strip_path() {
   if [ -z "${NVM_DIR-}" ]; then
     nvm_err '$NVM_DIR not set!'
@@ -1960,44 +1985,30 @@ nvm() {
       base_version="$(nvm_ls_current)"
 
       if [ $# -ge 2 ]; then
-        base_version="$(nvm_match_version $2)"
-
-        if [ $base_version = "N/A" ]; then
-          nvm_err 'Cannot find the specified version'
-          return 1
-        fi
+        base_version="$(nvm_match_version \"$1\")"
       fi
 
-      if [ $base_version = "none" ]; then
+      if [ $base_version = 'none' ]; then
         nvm_err 'No version currently active, cannot upgrade'
         return 1
       fi
 
-      if [ $base_version = "system" ]; then
+      if [ $base_version = 'system' ]; then
         nvm_err 'Cannot upgrade the system version of node'
         return 1
       fi
 
-      local semver_major
-      semver_major="$(echo $base_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\1/')"
-
-      local semver_minor
-      semver_minor="$(echo $base_version | sed 's/v\([0-9]\+\)\.\([0-9]\+\).*/\2/')"
-
       local install_version
-      if [ $semver_major = '0' ]; then
-        install_version="v0.$semver_minor"
-      else
-        install_version="v$semver_major"
+      install_version="$(nvm_get_upgrade_version \"$base_version\")"
+
+      if [ $install_version = 'N/A' ]; then
+        nvm_err 'Unable to determine the version to upgrade to'
+        return 2
       fi
 
-      if ! nvm_is_valid_version $install_version; then
-        nvm_err 'Failed to determine current version'
-        return 1
-      fi
-
-      nvm_echo "Upgrading $base_version to the latest $install_version"
-      nvm install $install_version --reinstall-packages-from=$base_version
+      nvm_echo "Upgrading $base_version to $install_version"
+      nvm_echo "($base_version will remain installed. Please adjust your aliases as necessary.)"
+      nvm install "$install_version" --reinstall-packages-from="$base_version"
       return $?
     ;;
     "uninstall" )
