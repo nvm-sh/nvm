@@ -2166,7 +2166,7 @@ nvm() {
           return 11
         fi
       fi
-      if [ -n "$NVM_USE_OUTPUT" ]; then
+      if [ -n "${NVM_USE_OUTPUT-}" ]; then
         nvm_echo "$NVM_USE_OUTPUT"
       fi
     ;;
