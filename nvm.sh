@@ -1145,6 +1145,7 @@ nvm_get_arch() {
   case "$HOST_ARCH" in
     x86_64 | amd64) NVM_ARCH="x64" ;;
     i*86) NVM_ARCH="x86" ;;
+    aarch64) NVM_ARCH="arm64" ;;
     *) NVM_ARCH="$HOST_ARCH" ;;
   esac
   nvm_echo "${NVM_ARCH}"
