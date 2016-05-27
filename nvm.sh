@@ -1143,7 +1143,7 @@ nvm_get_arch() {
 
   local NVM_ARCH
   case "$HOST_ARCH" in
-    x86_64 | amd64) NVM_ARCH="x64" ;;
+    *x86_64* | amd64) NVM_ARCH="x64" ;;
     i*86) NVM_ARCH="x86" ;;
     *) NVM_ARCH="$HOST_ARCH" ;;
   esac
