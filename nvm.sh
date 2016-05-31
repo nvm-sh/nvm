@@ -1110,7 +1110,7 @@ nvm_print_implicit_alias() {
 
 nvm_get_os() {
   local NVM_UNAME
-  NVM_UNAME="$(uname -a)"
+  NVM_UNAME="$(command uname -a)"
   local NVM_OS
   case "$NVM_UNAME" in
     Linux\ *) NVM_OS=linux ;;
@@ -1138,7 +1138,7 @@ nvm_get_arch() {
       HOST_ARCH=$(isainfo -n)
     fi
   else
-     HOST_ARCH="$(uname -m)"
+     HOST_ARCH="$(command uname -m)"
   fi
 
   local NVM_ARCH
