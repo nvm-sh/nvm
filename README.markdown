@@ -255,7 +255,7 @@ To activate, you need to source `bash_completion`:
 
   	[[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
 
-Put the above sourcing line just below the sourcing line for NVM in your profile (`.bashrc`, `.bash_profile`).
+Put the above sourcing line just below the sourcing line for nvm in your profile (`.bashrc`, `.bash_profile`).
 
 ### Usage
 
@@ -301,6 +301,25 @@ Shell settings:
 ```
 set -e
 ```
+
+## Installing nvm on Alpine Linux
+In order to provide the best performance (and other optimisations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides pre-these compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
+
+Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [busybox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. Busybox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
+
+There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally but currently (May 2016), this is not available for Node versions newer than v0.10 so unless you need an older Node version, this won't help you. Work is in progress on source-builds for newer Node versions but is not yet complete.
+
+If installing nvm on Alpine Linux *is* still what you want or need to do, you should be able to achieve this by running the following from you Alpine Linux shell:
+
+```
+apk add bash
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.1/install.sh | /bin/bash
+```
+
+The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
+
+As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
+
 
 ## Problems
 
