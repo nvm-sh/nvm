@@ -1089,7 +1089,7 @@ nvm_print_implicit_alias() {
     if [ "_0${NORMALIZED_VERSION#?}" != "_$NORMALIZED_VERSION" ]; then
       STABLE="$MINOR"
     else
-      MOD=$(expr "$NORMALIZED_VERSION" \/ 1000000 \% 2)
+      MOD="$(awk 'BEGIN { print int(ARGV[1] / 1000000) % 2 ; exit(0) }' "$NORMALIZED_VERSION")"
       if [ "$MOD" -eq 0 ]; then
         STABLE="$MINOR"
       elif [ "$MOD" -eq 1 ]; then
