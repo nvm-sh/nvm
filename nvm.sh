@@ -1423,7 +1423,7 @@ nvm_get_make_jobs() {
   NVM_OS="$(nvm_get_os)"
   local NVM_CPU_THREADS
   if [ "_$NVM_OS" = "_linux" ]; then
-    NVM_CPU_THREADS="$(grep -c 'core id' /proc/cpuinfo)"
+    NVM_CPU_THREADS="$(command grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
   elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
     NVM_CPU_THREADS="$(sysctl -n hw.ncpu)"
   elif [ "_$NVM_OS" = "_sunos" ]; then
