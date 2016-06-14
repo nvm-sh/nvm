@@ -166,7 +166,12 @@ nvm_rc_version() {
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ -e "$NVMRC_PATH" ]; then
     read -r NVM_RC_VERSION < "$NVMRC_PATH" || printf ''
-    nvm_echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
+    if [ -n "$NVM_RC_VERSION" ]; then
+      nvm_echo "Found '$NVMRC_PATH' with version <$NVM_RC_VERSION>"
+    else
+      nvm_err "Warning: empty .nvmrc file found at \"$NVMRC_PATH\""
+      return 2
+    fi
   else
     nvm_err "No .nvmrc file found"
     return 1
