@@ -70,6 +70,7 @@ To activate nvm, you need to source it from your shell:
     . ~/.nvm/nvm.sh
 
 Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
+(you may have to add to more than one of the above files)
 
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
