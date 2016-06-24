@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. ../../common.sh
+
 die () { echo $@ ; exit 1; }
 
 . ../../../nvm.sh
@@ -14,5 +16,5 @@ OUTPUT="$(nvm_ensure_default_set 0.2)"
 EXPECTED_OUTPUT="Creating default alias: default -> 0.2 (-> iojs-v0.2.10)"
 EXIT_CODE="$?"
 
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_ensure_default_set 0.2' did not output '$EXPECTED_OUTPUT', got '$OUTPUT'"
+[ "_$(echo "$OUTPUT" | strip_colors)" = "_$EXPECTED_OUTPUT" ] || die "'nvm_ensure_default_set 0.2' did not output '$EXPECTED_OUTPUT', got '$OUTPUT'"
 [ "_$EXIT_CODE" = "_0" ] || die "'nvm_ensure_default_set 0.2' did not exit with 0, got $EXIT_CODE"

@@ -3,7 +3,7 @@
 . ../../../nvm.sh
 nvm deactivate
 nvm uninstall v0.10.7
-nvm uninstall v0.11.7
+nvm uninstall v1.0.0
 
 rm .nvmrc
 

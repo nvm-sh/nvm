@@ -1,6 +1,4 @@
 #!/bin/sh
 
 . ../../../nvm.sh
-
-nvm ls io
-[ "$?" = "3" ]
+nvm install 0.12.7

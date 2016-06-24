@@ -8,4 +8,3 @@ mkdir -p ../../../versions/node
 
 [ -z "$(nvm ls | \grep 'versions')" ]
 # The result should contain only the appropriate version numbers.
-

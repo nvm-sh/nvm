@@ -9,9 +9,12 @@ Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/n
  - [nodist](https://github.com/marcelklehr/nodist)
 
 Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
- - [nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
  - [bass](https://github.com/edc/bass) allows to use utilities written for Bash in fish shell
  - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
+ - [fin](https://github.com/fisherman/fin) is a pure fish node version manager for fish shell
+ - [plugin-nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
+
+
 
 Note: We still have some problems with FreeBSD, because there is no pre-built binary from official for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc), see the issue ticket:
  - [[#900] [Bug] nodejs on FreeBSD need to be patched ](https://github.com/creationix/nvm/issues/900)
@@ -26,11 +29,11 @@ Homebrew installation is not supported.
 
 To install or update nvm, you can use the [install script][2] using cURL:
 
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.1/install.sh | bash
 
 or Wget:
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.0/install.sh | bash
+    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.1/install.sh | bash
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
 
@@ -40,6 +43,14 @@ Eg: `curl ... | NVM_DIR="path/to/nvm" bash`
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
 Note: On OSX, if you get `nvm: command not found` after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simple create one with `touch ~/.bash_profile` and run the install script again.
+
+### Verify installation
+
+To verify that nvm has been installed, do
+
+    command -v nvm
+
+which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
 
 ### Manual install
 
@@ -62,7 +73,7 @@ Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it
 
 For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
 
-    cd "$NVM_DIR" && git pull origin master && git checkout `git describe --abbrev=0 --tags`
+    cd "$NVM_DIR" && git fetch origin && git checkout `git describe --abbrev=0 --tags`
 
 After upgrading, don't forget to activate the new version:
 
@@ -184,13 +195,18 @@ Put this into your `$HOME/.zshrc` to call `nvm use` automatically whenever you e
 `.nvmrc` file with a string telling nvm which node to `use`:
 
 ```zsh
+# place this after nvm initialization!
 autoload -U add-zsh-hook
 load-nvmrc() {
   if [[ -f .nvmrc && -r .nvmrc ]]; then
     nvm use
+  elif [[ $(nvm version) != $(nvm version default)  ]]; then
+    echo "Reverting to nvm default version"
+    nvm use default
   fi
 }
 add-zsh-hook chpwd load-nvmrc
+load-nvmrc
 ```
 
 #### Bash
@@ -321,7 +337,7 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
 If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node PATH is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
 
 [1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.31.0/install.sh
+[2]: https://github.com/creationix/nvm/blob/v0.31.1/install.sh
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com

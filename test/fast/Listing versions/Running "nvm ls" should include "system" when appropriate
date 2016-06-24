@@ -18,4 +18,3 @@ nvm ls | grep system 2>&1 > /dev/null
 nvm_has_system_node() { return 1; }
 nvm ls | grep system 2>&1 > /dev/null
 [ $? -ne 0 ] || die '"nvm ls" contained "system" when system node is not present'
-
