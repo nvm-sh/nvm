@@ -775,34 +775,40 @@ nvm_ls() {
       fi
     fi
 
-    if ! [ -d "$NVM_DIRS_TO_SEARCH1" ]; then
+    if ! [ -d "$NVM_DIRS_TO_SEARCH1" ] || ! (command ls -1qA "$NVM_DIRS_TO_SEARCH1" | command grep -q .); then
       NVM_DIRS_TO_SEARCH1=''
     fi
-    if ! [ -d "$NVM_DIRS_TO_SEARCH2" ]; then
+    if ! [ -d "$NVM_DIRS_TO_SEARCH2" ] || ! (command ls -1qA "$NVM_DIRS_TO_SEARCH2" | command grep -q .); then
       NVM_DIRS_TO_SEARCH2="$NVM_DIRS_TO_SEARCH1"
     fi
-    if ! [ -d "$NVM_DIRS_TO_SEARCH3" ]; then
+    if ! [ -d "$NVM_DIRS_TO_SEARCH3" ] || ! (command ls -1qA "$NVM_DIRS_TO_SEARCH3" | command grep -q .); then
       NVM_DIRS_TO_SEARCH3="$NVM_DIRS_TO_SEARCH2"
     fi
 
+    local SEARCH_PATTERN
     if [ -z "$PATTERN" ]; then
       PATTERN='v'
+      SEARCH_PATTERN='.*'
+    else
+      SEARCH_PATTERN="$(echo "${PATTERN}" | sed "s#\.#\\\.#g;")"
     fi
     if [ -n "$NVM_DIRS_TO_SEARCH1$NVM_DIRS_TO_SEARCH2$NVM_DIRS_TO_SEARCH3" ]; then
-      VERSIONS="$(command find "$NVM_DIRS_TO_SEARCH1" "$NVM_DIRS_TO_SEARCH2" "$NVM_DIRS_TO_SEARCH3" -maxdepth 1 -type d -name "$PATTERN*" \
+      VERSIONS="$(command find "$NVM_DIRS_TO_SEARCH1"/* "$NVM_DIRS_TO_SEARCH2"/* "$NVM_DIRS_TO_SEARCH3"/* -name . -o -type d -prune -o -name "$PATTERN*" \
         | command sed "
-            s#$NVM_VERSION_DIR_IOJS/#$NVM_IOJS_PREFIX-#;
-            \#$NVM_VERSION_DIR_IOJS# d;
-            s#^$NVM_DIR/##;
+            s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
+            s#^${NVM_DIR}/##;
+            \#^[^v]# d;
             \#^versions\$# d;
             s#^versions/##;
-            s#^v#$NVM_NODE_PREFIX-v#;
-            s#^\($NVM_IOJS_PREFIX\)[-/]v#\1.v#;
-            s#^\($NVM_NODE_PREFIX\)[-/]v#\1.v#" \
-        | command sort -t. -u -k 2.2,2n -k 3,3n -k 4,4n \
-        | command sed "
-            s/^\($NVM_IOJS_PREFIX\)\./\1-/;
-            s/^$NVM_NODE_PREFIX\.//" \
+            s#^v#${NVM_NODE_PREFIX}/v#;
+            \#${SEARCH_PATTERN}# !d;
+          " \
+        | command sed -E "s#^([^/]+)/(.*)\$#\2.\1#;" \
+        | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
+        | command sed -E "
+            s#(.*)\.([^\.]+)\$#\2-\1#;
+            s#^${NVM_NODE_PREFIX}-##;
+          " \
       )"
     fi
 
