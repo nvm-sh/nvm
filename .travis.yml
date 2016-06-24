@@ -1,4 +1,4 @@
-language: c # defaults to ruby
+language: generic
 addons:
   apt_packages:
   - zsh

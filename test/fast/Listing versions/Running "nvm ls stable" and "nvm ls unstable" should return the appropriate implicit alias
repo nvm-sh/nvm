@@ -1,4 +1,4 @@
- #!/bin/sh
+#!/bin/sh
 
 . ../../../nvm.sh
 
@@ -26,4 +26,3 @@ nvm ls stable | \grep -v "$STABLE_VERSION" >/dev/null \
   || die "'nvm ls stable' contained $STABLE_VERSION instead of v0.1.2"
 nvm ls stable | \grep v0.1.2 >/dev/null \
   || die "'nvm ls stable' did not contain v0.1.2"
-
