@@ -2542,7 +2542,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
       nvm_remote_version "$2"
     ;;
     "--version" )
-      nvm_echo '0.31.1'
+      nvm_echo '0.31.2'
     ;;
     "unload" )
       unset -f nvm nvm_print_versions nvm_checksum \
