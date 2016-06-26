@@ -7,9 +7,9 @@ echo 'Updating test mocks...'
 MOCKS_DIR="$PWD/test/fast/Unit tests/mocks"
 
 echo "creating $MOCKS_DIR"
-mkdir -p MOCKS_DIR
+mkdir -p "$MOCKS_DIR"
 
-. "$NVM_DIR/nvm.sh"
+. "$NVM_DIR/nvm.sh" --no-use
 
 nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote.txt"
 nvm_ls_remote_iojs > "$MOCKS_DIR/nvm_ls_remote_iojs.txt"
