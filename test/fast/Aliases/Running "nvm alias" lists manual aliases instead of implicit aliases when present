@@ -5,18 +5,18 @@
 
 die () { echo $@ ; cleanup ; exit 1; }
 cleanup () {
-  rm -rf ../../../alias/stable
-  rm -rf ../../../alias/unstable
-  rm -rf ../../../alias/node
-  rm -rf ../../../alias/iojs
-  rm -rf ../../../v0.8.1
-  rm -rf ../../../v0.9.1
-  rm -rf ../../../versions/io.js/v0.2.1
+  rm -rf "$(nvm_alias_path)/stable"
+  rm -rf "$(nvm_alias_path)/unstable"
+  rm -rf "$(nvm_alias_path)/node"
+  rm -rf "$(nvm_alias_path)/iojs"
+  rm -rf "${NVM_DIR}/v0.8.1"
+  rm -rf "${NVM_DIR}/v0.9.1"
+  rm -rf "${NVM_DIR}/versions/io.js/v0.2.1"
 }
 
-mkdir ../../../v0.8.1
-mkdir ../../../v0.9.1
-mkdir -p ../../../versions/io.js/v0.2.1
+mkdir "${NVM_DIR}/v0.8.1"
+mkdir "${NVM_DIR}/v0.9.1"
+mkdir -p "${NVM_DIR}/versions/io.js/v0.2.1"
 
 EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
 STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"

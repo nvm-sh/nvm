@@ -4,8 +4,8 @@
 
 die () { echo $@ ; exit 1; }
 
-mkdir ../../../v0.2.3
-mkdir ../../../v0.3.3
+mkdir "${NVM_DIR}/v0.2.3"
+mkdir "${NVM_DIR}/v0.3.3"
 
 EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
 STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"
@@ -19,7 +19,7 @@ nvm ls stable | \grep "$STABLE_VERSION" >/dev/null \
 nvm ls unstable | \grep "$UNSTABLE_VERSION" >/dev/null \
   || die "expected 'nvm ls unstable' to give $UNSTABLE_VERSION, got $(nvm ls unstable)"
 
-mkdir ../../../v0.1.2
+mkdir "${NVM_DIR}/v0.1.2"
 nvm alias stable 0.1
 
 nvm ls stable | \grep -v "$STABLE_VERSION" >/dev/null \

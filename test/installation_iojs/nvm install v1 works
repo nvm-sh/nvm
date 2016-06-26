@@ -15,6 +15,5 @@ NVM_TEST_VERSION="$(nvm_strip_iojs_prefix "$NVM_PREFIXED_TEST_VERSION")"
 nvm install "$NVM_VERSION" || die "nvm install $NVM_VERSION failed"
 
 # Check
-[ -d ../../versions/io.js/$NVM_TEST_VERSION ]
+[ -d "${NVM_DIR}/versions/io.js/$NVM_TEST_VERSION" ]
 nvm run $NVM_PREFIXED_TEST_VERSION --version | grep $NVM_TEST_VERSION || die "'nvm run $NVM_PREFIXED_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"
-

@@ -8,12 +8,11 @@ NVM_TEST_VERSION="v1.0.0"
 NVM_PREFIXED_TEST_VERSION="iojs-$NVM_TEST_VERSION"
 
 # Remove the stuff we're clobbering.
-[ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
+[ -e "${NVM_DIR}/versions/io.js/${NVM_TEST_VERSION}" ] && rm -R "${NVM_DIR}/versions/io.js/${NVM_TEST_VERSION}"
 
 # Install from binary
 nvm install $NVM_PREFIXED_TEST_VERSION || die "install $NVM_PREFIXED_TEST_VERSION failed"
 
 # Check
-[ -d ../../../versions/io.js/$NVM_TEST_VERSION ]
-nvm run $NVM_PREFIXED_TEST_VERSION --version | grep $NVM_TEST_VERSION || die "'nvm run $NVM_PREFIXED_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"
-
+[ -d "${NVM_DIR}/versions/io.js/${NVM_TEST_VERSION}" ]
+nvm run "${NVM_PREFIXED_TEST_VERSION}" --version | grep "${NVM_TEST_VERSION}" || die "'nvm run ${NVM_PREFIXED_TEST_VERSION} --version | grep ${NVM_TEST_VERSION}' failed"

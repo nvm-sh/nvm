@@ -1,8 +1,8 @@
 #!/bin/sh
 
-mkdir ../../../v0.1.2
-
 . ../../../nvm.sh
+
+mkdir "${NVM_DIR}/v0.1.2"
 
 nvm ls v0.1 | grep v0.1.2 &&
 nvm ls v0.1.2 | grep v0.1.2 &&

@@ -1,9 +1,9 @@
 #!/bin/sh
 
-mkdir ../../../v0.0.2
-mkdir ../../../v0.0.20
-
 . ../../../nvm.sh
+
+mkdir "${NVM_DIR}/v0.0.2"
+mkdir "${NVM_DIR}/v0.0.20"
 
 die () { echo $@ ; exit 1; }
 

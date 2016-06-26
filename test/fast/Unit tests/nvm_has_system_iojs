@@ -1,17 +1,17 @@
 #!/bin/sh
 
 cleanup () {
-  rm ../../../versions/io.js/v0.1.2/node
-  rm ../../../versions/io.js/v0.1.2/iojs
-  rmdir ../../../versions/io.js/v0.1.2
+  rm "${NVM_DIR}/versions/io.js/v0.1.2/node"
+  rm "${NVM_DIR}/versions/io.js/v0.1.2/iojs"
+  rmdir "${NVM_DIR}/versions/io.js/v0.1.2"
 }
 die () { echo $@ ; exit 1; }
 
 . ../../../nvm.sh
 
-mkdir ../../../versions/io.js/v0.1.2
-touch ../../../versions/io.js/v0.1.2/node
-touch ../../../versions/io.js/v0.1.2/iojs
+mkdir "${NVM_DIR}/versions/io.js/v0.1.2"
+touch "${NVM_DIR}/versions/io.js/v0.1.2/node"
+touch "${NVM_DIR}/versions/io.js/v0.1.2/iojs"
 
 nvm use iojs-v0.1.2
 
@@ -28,4 +28,3 @@ if command -v iojs; then
 else
   ! nvm_has_system_iojs
 fi
-

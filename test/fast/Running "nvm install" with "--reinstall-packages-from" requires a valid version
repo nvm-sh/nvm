@@ -2,12 +2,12 @@
 
 die () { echo $@ ; cleanup ; exit 1; }
 cleanup () {
-  rm -rf ../../v0.10.4
+  rm -rf "${NVM_DIR}/v0.10.4"
 }
 
-mkdir ../../v0.10.4
-
 . ../../nvm.sh
+
+mkdir "${NVM_DIR}/v0.10.4"
 
 nvm deactivate >/dev/null 2>&1
 
@@ -29,3 +29,4 @@ INSTALL_EXIT_CODE="$(nvm install v0.10.5 --reinstall-packages-from=0.10.5 >/dev/
 [ "~$INSTALL_EXIT_CODE" = "~4" ] \
   || die ""nvm install --reinstall-packages-from" should exit with code 4 when given the same version, got $INSTALL_EXIT_CODE"
 
+cleanup

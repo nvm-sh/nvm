@@ -2,9 +2,9 @@
 
 . ../../../nvm.sh
 
-mkdir -p ../../../.nvm_use_bak
-if [ -d "../../../v*" ]; then
-  mv "../../../v*" ../../../.nvm_use_bak/
+mkdir -p "${NVM_DIR}/.nvm_use_bak"
+if [ -d "${NVM_DIR}/v*" ]; then
+  mv "${NVM_DIR}/v*" "${NVM_DIR}/.nvm_use_bak/"
 fi
 
 for VERSION in "0.8.7" "0.9.1" "0.10.1" "0.11.1"; do
