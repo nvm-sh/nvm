@@ -30,7 +30,7 @@ nvm_grep() {
 }
 
 nvm_has() {
-  type "$1" > /dev/null 2>&1
+  which "$1" > /dev/null 2>&1
 }
 
 nvm_is_alias() {
