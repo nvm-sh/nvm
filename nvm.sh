@@ -807,10 +807,10 @@ nvm_ls() {
             s#^v#${NVM_NODE_PREFIX}/v#;
             \#${SEARCH_PATTERN}# !d;
           " \
-        | command sed -E "s#^([^/]+)/(.*)\$#\2.\1#;" \
+        | command sed "s#^\([^/]\{1,\}\)/\(.*\)\$#\2.\1#;" \
         | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
-        | command sed -E "
-            s#(.*)\.([^\.]+)\$#\2-\1#;
+        | command sed "
+            s#\(.*\)\.\([^\.]\{1,\}\)\$#\2-\1#;
             s#^${NVM_NODE_PREFIX}-##;
           " \
       )"
