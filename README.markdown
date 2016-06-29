@@ -51,7 +51,7 @@ Note: On OS X, if you get `nvm: command not found` after running the install scr
 
 ### Verify installation
 
-To verify that nvm has been installed, do:
+After restarting your terminal, to verify that nvm has been installed, do:
 
     command -v nvm
 
