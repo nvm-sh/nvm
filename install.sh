@@ -82,12 +82,12 @@ install_nvm_from_git() {
     cd "$INSTALL_DIR"
   fi
   command git checkout --quiet "$(nvm_latest_version)"
-  if [ ! -z "$(cd "$INSTALL_DIR" && git show-ref refs/heads/master)" ]; then
+  if [ ! -z "$(command git show-ref refs/heads/master)" ]; then
     if git branch --quiet 2>/dev/null; then
-      cd "$INSTALL_DIR" && command git branch --quiet -D master >/dev/null 2>&1
+      command git branch --quiet -D master >/dev/null 2>&1
     else
       echo >&2 "Your version of git is out of date. Please update it!"
-      cd "$INSTALL_DIR" && command git branch -D master >/dev/null 2>&1
+      command git branch -D master >/dev/null 2>&1
     fi
   fi
   return
