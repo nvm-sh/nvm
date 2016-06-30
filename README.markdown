@@ -347,3 +347,15 @@ If setting the `default` alias does not establish the node version in new shells
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
+
+## Uninstall
+
+```
+rm -rf $NVM_DIR ~/.npm ~/.bower && \
+unset NVM_DIR 
+```
+You may have to remove the following from your ~/.*rc 
+```
+export NVM_DIR="~/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+```
