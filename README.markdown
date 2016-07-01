@@ -34,11 +34,15 @@ Homebrew installation is not supported.
 
 To install or update nvm, you can use the [install script][2] using cURL:
 
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.2/install.sh | bash
+```sh
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.2/install.sh | bash
+```
 
 or Wget:
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.2/install.sh | bash
+```sh
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.2/install.sh | bash
+```
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
 
@@ -53,7 +57,9 @@ Note: On OS X, if you get `nvm: command not found` after running the install scr
 
 To verify that nvm has been installed, do:
 
-    command -v nvm
+```sh
+command -v nvm
+```
 
 which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
 
@@ -63,49 +69,68 @@ For manual install create a folder somewhere in your filesystem with the `nvm.sh
 
 Or if you have `git` installed, then just clone it, and check out the latest version:
 
-    git clone https://github.com/creationix/nvm.git ~/.nvm && cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`
+```sh
+git clone https://github.com/creationix/nvm.git ~/.nvm && cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`
+```
 
 To activate nvm, you need to source it from your shell:
 
-    . ~/.nvm/nvm.sh
+```sh
+. ~/.nvm/nvm.sh
+```
 
 Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
 (you may have to add to more than one of the above files)
 
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+```sh
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+```
 
 ### Manual upgrade
 
 For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
 
-    cd "$NVM_DIR" && git fetch origin && git checkout `git describe --abbrev=0 --tags`
+```sh
+cd "$NVM_DIR" && git fetch origin && git checkout `git describe --abbrev=0 --tags`
+```
 
 After upgrading, don't forget to activate the new version:
 
-    . "$NVM_DIR/nvm.sh"
+```sh
+. "$NVM_DIR/nvm.sh"
+```
 
 ## Usage
 
 To download, compile, and install the latest v5.0.x release of node, do this:
 
-    nvm install 5.0
+```sh
+nvm install 5.0
+```
 
 And then in any new shell just use the installed version:
 
-    nvm use 5.0
+```sh
+nvm use 5.0
+```
 
 Or you can just run it:
 
-    nvm run 5.0 --version
-
+```sh
+nvm run 5.0 --version
+```
 Or, you can run any arbitrary command in a subshell with the desired version of node:
 
-    nvm exec 4.2 node --version
+```sh
+nvm exec 4.2 node --version
+```
 
 You can also get the path to the executable to where it was installed:
 
-    nvm which 5.0
+```sh
+nvm which 5.0
+```
 
 In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
 
@@ -116,59 +141,81 @@ In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the f
 
 If you want to install a new version of Node.js and migrate npm packages from a previous version:
 
-    nvm install node --reinstall-packages-from=node
+```sh
+nvm install node --reinstall-packages-from=node
+```
 
 This will first use "nvm version node" to identify the current version you're migrating packages from. Then it resolves the new version to install from the remote server and installs it. Lastly, it runs "nvm reinstall-packages" to reinstall the npm packages from your prior version of Node to the new one.
 
 You can also install and migrate npm packages from specific versions of Node like this:
 
-    nvm install v5.0 --reinstall-packages-from=4.2
-    nvm install v4.2 --reinstall-packages-from=iojs
+```sh
+nvm install v5.0 --reinstall-packages-from=4.2
+nvm install v4.2 --reinstall-packages-from=iojs
+```
 
 If you want to install [io.js](https://github.com/iojs/io.js/):
 
-    nvm install iojs
+```sh
+nvm install iojs
+```
 
 If you want to install a new version of io.js and migrate npm packages from a previous version:
 
-    nvm install iojs --reinstall-packages-from=iojs
+```sh
+nvm install iojs --reinstall-packages-from=iojs
+```
 
 The same guidelines mentioned for migrating npm packages in Node.js are applicable to io.js.
 
 If you want to use the system-installed version of node, you can use the special default alias "system":
 
-    nvm use system
-    nvm run system --version
+```sh
+nvm use system
+nvm run system --version
+```
 
 If you want to see what versions are installed:
 
-    nvm ls
+```sh
+nvm ls
+```
 
 If you want to see what versions are available to install:
 
-    nvm ls-remote
+```sh
+nvm ls-remote
+```
 
 To restore your PATH, you can deactivate it:
 
-    nvm deactivate
+```sh
+nvm deactivate
+```
 
 To set a default Node version to be used in any new shell, use the alias 'default':
 
-    nvm alias default node
+```sh
+nvm alias default node
+```
 
 To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
-    export NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist
-    nvm install node
+```sh
+export NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist
+nvm install node
 
-    NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 4.2
+NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 4.2
+```
 
 To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
 
-    export NVM_IOJS_ORG_MIRROR=https://iojs.org/dist
-    nvm install iojs-v1.0.3
+```sh
+export NVM_IOJS_ORG_MIRROR=https://iojs.org/dist
+nvm install iojs-v1.0.3
 
-    NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
+NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
+```
 
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
 
@@ -179,13 +226,17 @@ You can create a `.nvmrc` file containing version number in the project root dir
 
 For example, to make nvm default to the latest 5.9 release for the current directory:
 
-    $ echo "5.9" > .nvmrc
+```sh
+$ echo "5.9" > .nvmrc
+```
 
 Then when you run nvm:
 
-    $ nvm use
-    Found '/path/to/project/.nvmrc' with version <5.9>
-    Now using node v5.9.1 (npm v3.7.3)
+```sh
+$ nvm use
+Found '/path/to/project/.nvmrc' with version <5.9>
+Now using node v5.9.1 (npm v3.7.3)
+```
 
 ### Deeper Shell Integration
 
@@ -254,7 +305,9 @@ Nota bene: Avoid running nvm while the tests are running.
 
 To activate, you need to source `bash_completion`:
 
+```sh
   	[[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
+```
 
 Put the above sourcing line just below the sourcing line for nvm in your profile (`.bashrc`, `.bash_profile`).
 
@@ -290,16 +343,16 @@ nvm uninstall:
 The following are known to cause issues:
 
 Inside `~/.npmrc`:
-```
+```sh
 prefix='some/path'
 ```
 Environment Variables:
-```
+```sh
 $NPM_CONFIG_PREFIX
 $PREFIX
 ```
 Shell settings:
-```
+```sh
 set -e
 ```
 
@@ -312,7 +365,7 @@ There is a `-s` flag for `nvm install` which requests nvm download Node source a
 
 If installing nvm on Alpine Linux *is* still what you want or need to do, you should be able to achieve this by running the following from you Alpine Linux shell:
 
-```
+```sh
 apk add bash
 wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.2/install.sh | /bin/bash
 ```
@@ -334,7 +387,9 @@ https://github.com/creationix/nvm/issues/43
 
 On Arch Linux and other systems using python3 by default, before running *install* you need to:
 
-      export PYTHON=python2
+```sh
+export PYTHON=python2
+```
 
 After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
 
