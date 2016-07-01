@@ -351,7 +351,7 @@ If setting the `default` alias does not establish the node version in new shells
 ## Uninstall
 
 ```
-rm -rf $NVM_DIR ~/.npm ~/.bower && \
+rm -rf $NVM_DIR 
 unset NVM_DIR 
 ```
 You may have to remove the following from your ~/.*rc 
