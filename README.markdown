@@ -152,9 +152,9 @@ To restore your PATH, you can deactivate it:
 
     nvm deactivate
 
-To set a default Node version to be used in any new shell, use the alias 'default':
+To set a default Node version to be used in any new shell, use the alias 'default' and the version number you want to use, e.g. 5.0:
 
-    nvm alias default node
+    nvm alias default 5.0
 
 To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
