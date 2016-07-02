@@ -1943,19 +1943,24 @@ nvm() {
         if [ -z "${NVM_MAKE_JOBS-}" ]; then
           nvm_get_make_jobs
         fi
-        if [ "$NVM_IOJS" != true ] &&  [ "$NVM_NODE_MERGED" != true ]; then
-          if nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
-            NVM_INSTALL_SUCCESS=true
-          fi
-        elif [ "$NVM_IOJS" = true ]; then
-          # nvm_install_iojs_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
-          nvm_err 'Installing iojs from source is not currently supported'
-          return 105
-        elif [ "$NVM_NODE_MERGED" = true ]; then
-         # nvm_install_merged_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
-         nvm_err 'Installing node v1.0 and greater from source is not currently supported'
-         return 106
-        fi
+
+        case "true" in
+          "$NVM_IOJS")
+            # nvm_install_iojs_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
+            nvm_err 'Installing iojs from source is not currently supported'
+            return 105
+            ;;
+          "$NVM_NODE_MERGED")
+            # nvm_install_merged_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
+            nvm_err 'Installing node v1.0 and greater from source is not currently supported'
+            return 106
+            ;;
+          *)
+            if nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
+              NVM_INSTALL_SUCCESS=true
+            fi
+            ;;
+          esac
       fi
 
       if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
