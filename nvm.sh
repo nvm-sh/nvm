@@ -610,7 +610,7 @@ nvm_resolve_alias() {
   local SEEN_ALIASES
   SEEN_ALIASES="$ALIAS"
   while true; do
-    ALIAS_TEMP="$(nvm_alias "$ALIAS" 2> /dev/null)"
+    ALIAS_TEMP="$(nvm_alias "$ALIAS" 2> /dev/null || echo)"
 
     if [ -z "$ALIAS_TEMP" ]; then
       break
