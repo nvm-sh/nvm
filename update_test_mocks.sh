@@ -15,6 +15,11 @@ nvm_is_version_installed() {
   return 1
 }
 
+nvm_make_alias() {
+  # prevent local alias creation
+  return 0
+}
+
 nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote.txt"
 nvm_ls_remote_iojs > "$MOCKS_DIR/nvm_ls_remote_iojs.txt"
 NVM_LTS=* nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote LTS.txt"
@@ -25,5 +30,13 @@ nvm ls-remote > "$MOCKS_DIR/nvm ls-remote.txt"
 nvm ls-remote --lts > "$MOCKS_DIR/nvm ls-remote lts.txt"
 nvm ls-remote node > "$MOCKS_DIR/nvm ls-remote node.txt"
 nvm ls-remote iojs > "$MOCKS_DIR/nvm ls-remote iojs.txt"
+
+ALIAS_PATH="$MOCKS_DIR/nvm_make_alias LTS alias calls.txt"
+: > "$ALIAS_PATH"
+nvm_make_alias() {
+  # prevent local alias creation, and store arguments
+  echo "${1}|${2}" >> "$ALIAS_PATH"
+}
+nvm ls-remote --lts
 
 echo "done! Don't forget to git commit them."
