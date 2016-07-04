@@ -53,6 +53,13 @@ Eg: `curl ... | NVM_DIR=/usr/local/nvm bash` for a global install.
 
 Note: On OS X, if you get `nvm: command not found` after running the install script, your system may not have a [.bash_profile file] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again.
 
+If the above doesn't fix the problem, open your `.bash_profile` and add the following line of code:
+
+`source ~/.bashrc`
+
+- For more information about this issue and possible workarounds, please [refer here](https://github.com/creationix/nvm/issues/576)
+
+
 ### Verify installation
 
 To verify that nvm has been installed, do:
