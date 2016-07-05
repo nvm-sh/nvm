@@ -69,7 +69,7 @@ install_nvm_from_git() {
   if [ -d "$INSTALL_DIR/.git" ]; then
     echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
     printf "\r=> "
-    cd "$INSTALL_DIR" && (command git fetch 2> /dev/null || {
+    (command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git fetch' in $INSTALL_DIR yourself." && exit 1
     })
   else
@@ -79,15 +79,14 @@ install_nvm_from_git() {
     mkdir -p "$INSTALL_DIR"
     command git clone "$(nvm_source)" "$INSTALL_DIR" \
       || echo >&2 "Failed to clone nvm repo. Please report this!" && exit 1
-    cd "$INSTALL_DIR"
   fi
-  command git checkout --quiet "$(nvm_latest_version)"
-  if [ ! -z "$(command git show-ref refs/heads/master)" ]; then
-    if git branch --quiet 2>/dev/null; then
-      command git branch --quiet -D master >/dev/null 2>&1
+  command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout --quiet "$(nvm_latest_version)"
+  if [ ! -z "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
+    if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
+      command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
     else
       echo >&2 "Your version of git is out of date. Please update it!"
-      command git branch -D master >/dev/null 2>&1
+      command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
     fi
   fi
   return
