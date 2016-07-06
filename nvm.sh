@@ -256,11 +256,15 @@ nvm_ensure_version_installed() {
   if [ "_$EXIT_CODE" != "_0" ] || ! nvm_is_version_installed "$LOCAL_VERSION"; then
     VERSION="$(nvm_resolve_alias "$PROVIDED_VERSION")"
     if [ $? -eq 0 ]; then
-      nvm_err "N/A: version \"$PROVIDED_VERSION -> $VERSION\" is not yet installed"
+      nvm_err "N/A: version \"$PROVIDED_VERSION -> $VERSION\" is not yet installed."
+      nvm_err ""
+      nvm_err "You need to run \"nvm install $PROVIDED_VERSION\" to install it before using it."
     else
       local PREFIXED_VERSION
       PREFIXED_VERSION="$(nvm_ensure_version_prefix "$PROVIDED_VERSION")"
-      nvm_err "N/A: version \"${PREFIXED_VERSION:-$PROVIDED_VERSION}\" is not yet installed"
+      nvm_err "N/A: version \"${PREFIXED_VERSION:-$PROVIDED_VERSION}\" is not yet installed."
+      nvm_err ""
+      nvm_err "You need to run \"nvm install $PROVIDED_VERSION\" to install it before using it."
     fi
     return 1
   fi
