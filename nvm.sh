@@ -292,7 +292,7 @@ nvm_version() {
       PATTERN="stable"
     ;;
   esac
-  VERSION="$(nvm_ls "$PATTERN" | command tail -n1)"
+  VERSION="$(nvm_ls "$PATTERN" | command tail -1)"
   if [ -z "$VERSION" ] || [ "_$VERSION" = "_N/A" ]; then
     nvm_echo "N/A"
     return 3;
@@ -308,14 +308,14 @@ nvm_remote_version() {
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
     case "_$PATTERN" in
       "_$(nvm_iojs_prefix)")
-        VERSION="$(nvm_ls_remote_iojs | command tail -n1)"
+        VERSION="$(nvm_ls_remote_iojs | command tail -1)"
       ;;
       *)
         VERSION="$(nvm_ls_remote "$PATTERN")"
       ;;
     esac
   else
-    VERSION="$(nvm_remote_versions "$PATTERN" | command tail -n1)"
+    VERSION="$(nvm_remote_versions "$PATTERN" | command tail -1)"
   fi
   nvm_echo "$VERSION"
   if [ "_$VERSION" = '_N/A' ]; then
@@ -845,7 +845,7 @@ nvm_ls_remote() {
   local PATTERN
   PATTERN="$1"
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
-    PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command tail -n1)"
+    PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command tail -1)"
   elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
   else
@@ -1569,9 +1569,9 @@ nvm_npm_global_modules() {
   local VERSION
   VERSION="$1"
   if [ "_$VERSION" = "_system" ]; then
-    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null | command tail -n +2)
+    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null | command sed 1,1d)
   else
-    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | command tail -n +2)
+    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | command sed 1,1d)
   fi
 
   local INSTALLS
