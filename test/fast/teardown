@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 # Remove temporary files
 (
   cd ../..

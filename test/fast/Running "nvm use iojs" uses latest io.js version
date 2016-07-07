@@ -13,9 +13,7 @@ cleanup() {
   rm -rf "$(nvm_version_path "iojs-${VERSION}")"
 }
 
-set +ex # TODO
 . ../../nvm.sh
-set -ex
 
 nvm deactivate || die "unable to deactivate; current: >$(nvm current)<"
 

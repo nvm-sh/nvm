@@ -2576,7 +2576,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_version_greater nvm_version_greater_than_or_equal_to \
         nvm_print_npm_version nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
-        nvm_download nvm_get_latest nvm_has nvm_get_latest \
+        nvm_download nvm_get_latest nvm_has \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
         nvm_echo nvm_err nvm_grep \
         nvm_has_colors nvm_process_parameters > /dev/null 2>&1

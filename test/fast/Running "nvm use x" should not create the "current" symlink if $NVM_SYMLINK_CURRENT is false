@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+set -ex
 
 . ../../nvm.sh
 
@@ -8,17 +10,17 @@ TEST_COUNT=0
 TEST_PASSED=0
 TEST_FAILED=0
 
-function registerExpectedSymlink() {
+registerExpectedSymlink() {
   registerResult ${1}
 }
 
-function registerExpectedNoSymlink() {
-  [ ${1} -ne 0 ]
+registerExpectedNoSymlink() {
+  [ $1 -ne 0 ]
   registerResult $?
 }
 
-function registerResult() {
-  result=${1}
+registerResult() {
+  result="${1}"
 
   TEST_COUNT=$(($TEST_COUNT + 1))
 
@@ -27,19 +29,19 @@ function registerResult() {
     || TEST_FAILED=$(($TEST_FAILED + 1))
 }
 
-function cleanup() {
-  rm -rf ../../${TEST_NODE_VERSION}
-  rm -f ../../current
+cleanup() {
+  rm -rf "${NVM_DIR}/${TEST_NODE_VERSION}"
+  rm -f "${NVM_DIR}/current"
 }
 
-function runNvmUse() {
-  mkdir ../../${TEST_NODE_VERSION}
-  nvm use ${TEST_NODE_VERSION} > /dev/null 2>&1
-  rmdir ../../${TEST_NODE_VERSION}
+runNvmUse() {
+  mkdir "${NVM_DIR}/${TEST_NODE_VERSION}"
+  nvm use --delete-prefix "${TEST_NODE_VERSION}" > /dev/null 2>&1
+  rmdir "${NVM_DIR}/${TEST_NODE_VERSION}"
 }
 
-function isCurrentSymlinkPresent() {
-  [ -L ../../current ]
+isCurrentSymlinkPresent() {
+  [ -L "${NVM_DIR}/current" ]
 }
 
 NVM_SYMLINK_CURRENT=false
@@ -80,5 +82,4 @@ registerExpectedNoSymlink $?
 
 cleanup
 
-[ ${TEST_FAILED} -ne 0 ] && echo "${TEST_COUNT} tested, ${TEST_PASSED} passed, ${TEST_FAILED} failed" && exit 1 || true
-
+[ $TEST_FAILED -ne 0 ] && echo "${TEST_COUNT} tested, ${TEST_PASSED} passed, ${TEST_FAILED} failed" && exit 1 || true

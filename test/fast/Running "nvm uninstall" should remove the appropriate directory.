@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 cd ../..
 mkdir v0.0.1
 mkdir src/node-v0.0.1

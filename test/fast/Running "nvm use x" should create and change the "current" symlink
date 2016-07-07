@@ -1,11 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+set -ex
 
 export NVM_SYMLINK_CURRENT=true
 . ../../nvm.sh
 
 rm -rf "${NVM_DIR}/v0.10.29"
 mkdir "${NVM_DIR}/v0.10.29"
-nvm use 0.10.29
+nvm use --delete-prefix 0.10.29
 rmdir "${NVM_DIR}/v0.10.29"
 
 if [ ! -L "${NVM_DIR}/current" ];then
@@ -22,7 +24,7 @@ fi
 
 rm -rf "${NVM_DIR}/v0.11.13"
 mkdir "${NVM_DIR}/v0.11.13"
-nvm use 0.11.13
+nvm use --delete-prefix 0.11.13
 rmdir "${NVM_DIR}/v0.11.13"
 
 newLink="$(readlink "${NVM_DIR}/current")"
