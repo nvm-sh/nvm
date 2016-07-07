@@ -1,38 +1,37 @@
 #!/bin/sh
 
+set -ex
+
+. ../common.sh
+
 die () { echo $@ ; cleanup ; exit 1; }
 
+VERSION="v3.99.0"
+
 cleanup() {
-  rm -rf ../../alias/foo
+  unset -f make_echo cleanup
+  rm -rf "$(nvm_version_path "iojs-${VERSION}")"
 }
 
+set +ex # TODO
 . ../../nvm.sh
+set -ex
 
-echo 'foo' > ../../alias/foo
+nvm deactivate || die "unable to deactivate; current: >$(nvm current)<"
 
-OUTPUT="$(nvm use foo 2>&1)"
-EXPECTED_OUTPUT='The alias "foo" leads to an infinite loop. Aborting.'
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
-  || die "'nvm use foo' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+make_fake_iojs "${VERSION}" || die "unable to make_fake_iojs ${VERSION}"
 
-EXIT_CODE="$(nvm use foo 2>/dev/null ; echo $?)"
-[ "_$EXIT_CODE" = "_8" ] || die "Expected exit code 8; got $EXIT_CODE"
+IOJS_VERSION="$(nvm_version iojs)"
+[ -n "${IOJS_VERSION}" ] || die 'expected an io.js version; got none'
 
-OUTPUT="$(nvm use --silent foo 2>&1)"
-EXPECTED_OUTPUT=''
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
-  || die "'nvm use --silent foo' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+EXPECTED_OUTPUT="$(nvm_add_iojs_prefix ${VERSION})"
+[ "${IOJS_VERSION}" = "${EXPECTED_OUTPUT}" ] || die "iojs version was not >${EXPECTED_OUTPUT}; got >${IOJS_VERSION}<"
 
-OUTPUT="$(nvm use foo --silent 2>&1)"
-EXPECTED_OUTPUT=''
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
-  || die "'nvm use foo --silent' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+nvm use --delete-prefix iojs || die '`nvm use iojs` failed'
 
-EXIT_CODE="$(nvm use --silent foo 2>/dev/null ; echo $?)"
-[ "_$EXIT_CODE" = "_8" ] || die "Expected exit code 8 from 'nvm use --silent foo'; got $EXIT_CODE"
+CURRENT="$(nvm current)"
+echo "current: ${CURRENT}"
 
-EXIT_CODE="$(nvm use foo --silent 2>/dev/null ; echo $?)"
-[ "_$EXIT_CODE" = "_8" ] || die "Expected exit code 8 from 'nvm use foo --silent'; got $EXIT_CODE"
+[ "${CURRENT}" = "${IOJS_VERSION}" ] || die "expected >${IOJS_VERSION}<; got >${CURRENT}<"
 
-cleanup;
-
+cleanup
