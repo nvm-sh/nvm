@@ -746,10 +746,10 @@ nvm_ls() {
       ;;
     esac
 
-    local ZHS_HAS_SHWORDSPLIT_UNSET
-    ZHS_HAS_SHWORDSPLIT_UNSET=1
+    local ZSH_HAS_SHWORDSPLIT_UNSET
+    ZSH_HAS_SHWORDSPLIT_UNSET=1
     if nvm_has "setopt"; then
-      ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)
+      ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
       setopt shwordsplit
     fi
 
@@ -820,7 +820,7 @@ nvm_ls() {
       )"
     fi
 
-    if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+    if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
       unsetopt shwordsplit
     fi
   fi
@@ -898,9 +898,9 @@ nvm_ls_remote_index_tab() {
   else
     PATTERN=".*"
   fi
-  ZHS_HAS_SHWORDSPLIT_UNSET=1
+  ZSH_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
-    ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)
+    ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
     setopt shwordsplit
   fi
   VERSIONS="$(nvm_download -L -s "$MIRROR/index.tab" -o - \
@@ -910,7 +910,7 @@ nvm_ls_remote_index_tab() {
         s/[[:blank:]].*//" \
     | nvm_grep -w "$PATTERN" \
     | $SORT_COMMAND)"
-  if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+  if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
     unsetopt shwordsplit
   fi
   if [ -z "$VERSIONS" ]; then
@@ -1027,7 +1027,7 @@ nvm_print_implicit_alias() {
     return 2
   fi
 
-  local ZHS_HAS_SHWORDSPLIT_UNSET
+  local ZSH_HAS_SHWORDSPLIT_UNSET
 
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
@@ -1044,9 +1044,9 @@ nvm_print_implicit_alias() {
         NVM_COMMAND="nvm_ls $NVM_IMPLICIT"
       fi
 
-      ZHS_HAS_SHWORDSPLIT_UNSET=1
+      ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
         setopt shwordsplit
       fi
 
@@ -1058,7 +1058,7 @@ nvm_print_implicit_alias() {
         NVM_IOJS_VERSION="$(nvm_echo "$NVM_IOJS_VERSION" | command sed "s/^$NVM_IMPLICIT-//" | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
       fi
 
-      if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
       fi
 
@@ -1079,15 +1079,15 @@ nvm_print_implicit_alias() {
         NVM_COMMAND="nvm_ls node"
       fi
 
-      ZHS_HAS_SHWORDSPLIT_UNSET=1
+      ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
         setopt shwordsplit
       fi
 
       LAST_TWO=$($NVM_COMMAND | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq)
 
-      if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
       fi
     ;;
@@ -1098,9 +1098,9 @@ nvm_print_implicit_alias() {
   local MOD
   local NORMALIZED_VERSION
 
-  ZHS_HAS_SHWORDSPLIT_UNSET=1
+  ZSH_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
-    ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)
+    ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
     setopt shwordsplit
   fi
   for MINOR in $LAST_TWO; do
@@ -1116,7 +1116,7 @@ nvm_print_implicit_alias() {
       fi
     fi
   done
-  if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+  if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
     unsetopt shwordsplit
   fi
 
@@ -1789,10 +1789,10 @@ nvm() {
     ;;
 
     "debug" )
-      local ZHS_HAS_SHWORDSPLIT_UNSET
-      ZHS_HAS_SHWORDSPLIT_UNSET=1
+      local ZSH_HAS_SHWORDSPLIT_UNSET
+      ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
         setopt shwordsplit
       fi
       nvm_err "nvm --version: v$(nvm --version)"
@@ -1807,7 +1807,7 @@ nvm() {
         NVM_DEBUG_OUTPUT="$($NVM_DEBUG_COMMAND 2>&1)"
         nvm_err "$NVM_DEBUG_COMMAND: $(nvm_sanitize_path "$NVM_DEBUG_OUTPUT")"
       done
-      if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
       fi
       return 42
@@ -2256,10 +2256,10 @@ nvm() {
 
       local EXIT_CODE
 
-      local ZHS_HAS_SHWORDSPLIT_UNSET
-      ZHS_HAS_SHWORDSPLIT_UNSET=1
+      local ZSH_HAS_SHWORDSPLIT_UNSET
+      ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(setopt | nvm_grep shwordsplit > /dev/null && nvm_echo $? || nvm_echo $?)"
         setopt shwordsplit
       fi
       if [ "_$VERSION" = "_N/A" ]; then
@@ -2270,7 +2270,7 @@ nvm() {
         nvm exec "${NVM_SILENT-}" "$VERSION" node "$@"
       fi
       EXIT_CODE="$?"
-      if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
         unsetopt shwordsplit
       fi
       return $EXIT_CODE
