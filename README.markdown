@@ -30,6 +30,8 @@ Note: On OS X, if you have/had a "system" node installed and want to install mod
 
 Homebrew installation is not supported.
 
+Note: If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm_update` to update.
+
 ### Install script
 
 To install or update nvm, you can use the [install script][2] using cURL:
