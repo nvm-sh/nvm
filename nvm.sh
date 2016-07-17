@@ -2516,6 +2516,7 @@ nvm() {
           ;;
           --lts=*)
             LTS="${2##--lts=}"
+            NVM_FLAVOR="${NVM_NODE_PREFIX}"
           ;;
           --*)
             nvm_err "Unsupported option \"$2\"."
