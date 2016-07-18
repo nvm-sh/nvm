@@ -1840,6 +1840,8 @@ nvm() {
       nvm_echo '    --lts                                   When installing, only select from LTS (long-term support) versions'
       nvm_echo '    --lts=<LTS name>                        When installing, only select from versions for a specific LTS line'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
+      nvm_echo '  nvm uninstall --lts                       Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
+      nvm_echo '  nvm uninstall --lts=<LTS name>            Uninstall using automatic alias for provided LTS line, if available.'
       nvm_echo '  nvm use [--silent] <version>              Modify PATH to use <version>. Uses .nvmrc if available'
       nvm_echo '    --lts                                   Uses automatic LTS (long-term support) alias `lts/*`, if available.'
       nvm_echo '    --lts=<LTS name>                        Uses automatic alias for provided LTS line, if available.'
@@ -2105,22 +2107,27 @@ nvm() {
       return $?
     ;;
     "uninstall" )
-      if [ $# -ne 2 ]; then
+      shift # remove "uninstall"
+
+      if [ $# -ne 1 ]; then
         >&2 nvm --help
         return 127
       fi
 
       local PATTERN
-      PATTERN="$2"
-      case "_$PATTERN" in
-        "_$(nvm_iojs_prefix)" | "_$(nvm_iojs_prefix)-" \
-        | "_$(nvm_node_prefix)" | "_$(nvm_node_prefix)-")
-          VERSION="$(nvm_version "$PATTERN")"
+      PATTERN="${1-}"
+      case "${PATTERN-}" in
+        --lts)
+          VERSION="$(nvm_match_version lts/*)"
+        ;;
+        --lts=*)
+          VERSION="$(nvm_match_version lts/${PATTERN##--lts=})"
         ;;
         *)
-          VERSION="$(nvm_version "$PATTERN")"
+          VERSION="$(nvm_version "${PATTERN}")"
         ;;
       esac
+
       if [ "_$VERSION" = "_$(nvm_ls_current)" ]; then
         if nvm_is_iojs_version "$VERSION"; then
           nvm_err "nvm: Cannot uninstall currently-active io.js version, $VERSION (inferred from $PATTERN)."
