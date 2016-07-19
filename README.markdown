@@ -28,7 +28,7 @@ Note: On OS X, if you have/had a "system" node installed and want to install mod
  - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with nvm)
  - You can (but should not?) keep your previous "system" node install, but nvm will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
 
-Homebrew installation is not supported.
+Homebrew installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
 
 Note: If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm_update` to update.
 
@@ -112,22 +112,22 @@ After upgrading, don't forget to activate the new version:
 
 ## Usage
 
-To download, compile, and install the latest v5.0.x release of node, do this:
+To download, compile, and install the latest release of node, do this:
 
 ```sh
-nvm install 5.0
+nvm install node
 ```
 
 And then in any new shell just use the installed version:
 
 ```sh
-nvm use 5.0
+nvm use node
 ```
 
 Or you can just run it:
 
 ```sh
-nvm run 5.0 --version
+nvm run node --version
 ```
 Or, you can run any arbitrary command in a subshell with the desired version of node:
 
@@ -148,6 +148,19 @@ In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the f
  - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in semver, versions communicate breakage, not stability).
 
+### Long-term support
+Node has a [schedule](https://github.com/nodejs/LTS#lts_schedule) for long-term support (LTS) You can reference LTS versions in aliases and `.nvmrc` files with the notation `lts/*` for the latest LTS, and `lts/argon` for LTS releases from the "argon" line, for example. In addition, the following commands support LTS arguments:
+ - `nvm install --lts` / `nvm install --lts=argon`
+ - `nvm uninstall --lts` / `nvm uninstall --lts=argon`
+ - `nvm use --lts` / `nvm use --lts=argon`
+ - `nvm exec --lts` / `nvm exec --lts=argon`
+ - `nvm run --lts` / `nvm run --lts=argon`
+ - `nvm ls-remote --lts` / `nvm ls-remote --lts=argon`
+ - `nvm version-remote --lts` / `nvm version-remote --lts=argon`
+
+Any time your local copy of `nvm` connects to https://nodejs.org, it will re-create the appropriate local aliases for all available LTS lines. These aliases (stored under `$NVM_DIR/alias/lts`), are managed by `nvm`, and you should not modify, remove, or create these files - expect your changes to be undone, and expect meddling with these files to cause bugs that will likely not be supported.
+
+### Migrating global packages while installing
 If you want to install a new version of Node.js and migrate npm packages from a previous version:
 
 ```sh
@@ -159,10 +172,11 @@ This will first use "nvm version node" to identify the current version you're mi
 You can also install and migrate npm packages from specific versions of Node like this:
 
 ```sh
-nvm install v5.0 --reinstall-packages-from=4.2
+nvm install 6 --reinstall-packages-from=5
 nvm install v4.2 --reinstall-packages-from=iojs
 ```
 
+### io.js
 If you want to install [io.js](https://github.com/iojs/io.js/):
 
 ```sh
@@ -177,6 +191,7 @@ nvm install iojs --reinstall-packages-from=iojs
 
 The same guidelines mentioned for migrating npm packages in Node.js are applicable to io.js.
 
+### System version of node
 If you want to use the system-installed version of node, you can use the special default alias "system":
 
 ```sh
@@ -184,6 +199,7 @@ nvm use system
 nvm run system --version
 ```
 
+### Listing versions
 If you want to see what versions are installed:
 
 ```sh
@@ -217,7 +233,7 @@ nvm install node
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 4.2
 ```
 
-To use a mirror of the iojs binaries, set `$NVM_IOJS_ORG_MIRROR`:
+To use a mirror of the io.js binaries, set `$NVM_IOJS_ORG_MIRROR`:
 
 ```sh
 export NVM_IOJS_ORG_MIRROR=https://iojs.org/dist
@@ -226,7 +242,7 @@ nvm install iojs-v1.0.3
 NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 ```
 
-`nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs.
+`nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs. Note that using `nvm` in multiple shell tabs with this environment variable enabled can cause race conditions.
 
 ### .nvmrc
 
@@ -237,6 +253,8 @@ For example, to make nvm default to the latest 5.9 release for the current direc
 
 ```sh
 $ echo "5.9" > .nvmrc
+
+$ echo "lts/*" > .nvmrc # to default to the latest LTS version
 ```
 
 Then when you run nvm:
@@ -280,7 +298,7 @@ load-nvmrc
 nvm is released under the MIT license.
 
 
-Copyright (C) 2010-2016 Tim Caswell
+Copyright (C) 2010-2016 Tim Caswell and Jordan Harband
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
