@@ -814,7 +814,7 @@ nvm_ls() {
       SEARCH_PATTERN="$(echo "${PATTERN}" | sed "s#\.#\\\.#g;")"
     fi
     if [ -n "$NVM_DIRS_TO_SEARCH1$NVM_DIRS_TO_SEARCH2$NVM_DIRS_TO_SEARCH3" ]; then
-      VERSIONS="$(command find "$NVM_DIRS_TO_SEARCH1"/* "$NVM_DIRS_TO_SEARCH2"/* "$NVM_DIRS_TO_SEARCH3"/* -name . -o -type d -prune -o -name "$PATTERN*" \
+      VERSIONS="$(command find "$NVM_DIRS_TO_SEARCH1"/* "$NVM_DIRS_TO_SEARCH2"/* "$NVM_DIRS_TO_SEARCH3"/* -name . -o -type d -prune -o -path "$PATTERN*" \
         | command sed "
             s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
             s#^${NVM_DIR}/##;
