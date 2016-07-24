@@ -26,6 +26,7 @@
 - [Compatibility Issues](#compatibility-issues)
 - [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
 - [Problems](#problems)
+- [Mac OS "troubleshooting"](#mac-os-troubleshooting)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -472,6 +473,18 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
     nvm install -s 0.8.6
 
 If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node PATH is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
+
+## Mac OS "troubleshooting"
+
+**nvm node version not found in vim shell**
+
+If you set node version to a version other than your system node version `nvm use 6.2.1` and open vim and run `:!node -v` you should see `v6.2.1` if you see your system version `v0.12.7`. You need to run:
+
+```shell
+sudo chmod ugo-x /usr/libexec/path_helper
+```
+
+More on this issue in [dotphiles/dotzsh](https://github.com/dotphiles/dotzsh#mac-os-x).
 
 [1]: https://github.com/creationix/nvm.git
 [2]: https://github.com/creationix/nvm/blob/v0.33.1/install.sh
