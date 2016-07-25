@@ -49,7 +49,7 @@ wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.3/install.sh | 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the following source lines to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
 
 ```
-export NVM_DIR="/home/user/.nvm"
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 ```
 
