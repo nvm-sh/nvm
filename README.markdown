@@ -293,6 +293,12 @@ add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
 
+In addition, run the following command to set the default node version in your shell to use the system-installed version of node, in case no .nvmrc file exist in the path we're accessing:
+
+```zsh
+nvm alias default system
+```
+
 ## License
 
 nvm is released under the MIT license.
