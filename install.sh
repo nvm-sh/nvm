@@ -297,6 +297,9 @@ nvm_do_install() {
   nvm_install_node
 
   nvm_reset
+
+  echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
+  printf "$SOURCE_STR"
 }
 
 #
