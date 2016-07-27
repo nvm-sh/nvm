@@ -289,8 +289,8 @@ nvm_do_install() {
     fi
   fi
 
-  # Sourcing $PROFILE to take into account the new environment
-  . "$NVM_PROFILE"
+  # Source nvm
+  . "$NVM_DIR/nvm.sh"
 
   nvm_check_global_modules
 
