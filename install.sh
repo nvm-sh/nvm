@@ -40,7 +40,7 @@ nvm_source() {
   echo "$NVM_SOURCE_URL"
 }
 
-# 
+#
 # Node.js version to install
 #
 nvm_node_version() {
@@ -103,7 +103,6 @@ nvm_install_node() {
   NODE_VERSION="$(nvm_node_version)"
 
   if [ -z "$NODE_VERSION" ]; then
-    echo "=> You can now install Node.js by running \`nvm install\`"
     return 0
   fi
 
