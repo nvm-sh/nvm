@@ -81,7 +81,7 @@ which should output 'nvm' if the installation was successful. Please note that `
 
 For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm`.
 
-Or if you have `git` installed:
+Or if you have `git` installed (requires git v1.5.5+):
 
 1. clone this repo
 1. check out the latest version
@@ -105,7 +105,7 @@ export NVM_DIR="$HOME/.nvm"
 
 ### Manual upgrade
 
-For manual upgrade with `git`:
+For manual upgrade with `git` (requires git v1.5.5+):
 
 1. change to the `$NVM_DIR`
 1. pull down the latest changes
