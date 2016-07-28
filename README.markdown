@@ -88,11 +88,11 @@ Or if you have `git` installed:
 1. activate nvm by sourcing it from your shell
 
 ```sh
-(
-  git clone https://github.com/creationix/nvm.git ~/.nvm
-  cd ~/.nvm
+export NVM_DIR="$HOME/.nvm" && (
+  git clone https://github.com/creationix/nvm.git "$NVM_DIR"
+  cd "$NVM_DIR"
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
-) && . ~/.nvm/nvm.sh
+) && . "$NVM_DIR/nvm.sh"
 ```
 
 Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
