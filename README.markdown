@@ -9,7 +9,7 @@ Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/n
  - [nodist](https://github.com/marcelklehr/nodist)
 
 Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
- - [bass](https://github.com/edc/bass) allows to use utilities written for Bash in fish shell
+ - [bass](https://github.com/edc/bass) allows you to use utilities written for Bash in fish shell
  - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
  - [fin](https://github.com/fisherman/fin) is a pure fish node version manager for fish shell
  - [plugin-nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
