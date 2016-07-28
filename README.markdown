@@ -81,16 +81,18 @@ which should output 'nvm' if the installation was successful. Please note that `
 
 For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm`.
 
-Or if you have `git` installed, then just clone it, and check out the latest version:
+Or if you have `git` installed:
+
+1. clone this repo
+1. check out the latest version
+1. activate nvm by sourcing it from your shell
 
 ```sh
-git clone https://github.com/creationix/nvm.git ~/.nvm && cd ~/.nvm && git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
-```
-
-To activate nvm, you need to source it from your shell:
-
-```sh
-. ~/.nvm/nvm.sh
+(
+  git clone https://github.com/creationix/nvm.git ~/.nvm
+  cd ~/.nvm
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
+) && . ~/.nvm/nvm.sh
 ```
 
 Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
@@ -103,16 +105,19 @@ export NVM_DIR="$HOME/.nvm"
 
 ### Manual upgrade
 
-For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
+For manual upgrade with `git`:
+
+1. change to the `$NVM_DIR`
+1. pull down the latest changes
+1. check out the latest version
+1. activate the new version
 
 ```sh
-cd "$NVM_DIR" && git fetch origin && git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
-```
-
-After upgrading, don't forget to activate the new version:
-
-```sh
-. "$NVM_DIR/nvm.sh"
+(
+  cd "$NVM_DIR"
+  git fetch origin
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
+) && . "$NVM_DIR/nvm.sh"
 ```
 
 ## Usage
