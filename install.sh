@@ -40,7 +40,7 @@ nvm_source() {
   echo "$NVM_SOURCE_URL"
 }
 
-# 
+#
 # Node.js version to install
 #
 nvm_node_version() {
@@ -103,7 +103,6 @@ nvm_install_node() {
   NODE_VERSION="$(nvm_node_version)"
 
   if [ -z "$NODE_VERSION" ]; then
-    echo "=> You can now install Node.js by running \`nvm install\`"
     return 0
   fi
 
@@ -290,14 +289,17 @@ nvm_do_install() {
     fi
   fi
 
-  # Sourcing $PROFILE to take into account the new environment
-  . "$NVM_PROFILE"
+  # Source nvm
+  . "$NVM_DIR/nvm.sh"
 
   nvm_check_global_modules
 
   nvm_install_node
 
   nvm_reset
+
+  echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
+  printf "$SOURCE_STR"
 }
 
 #
