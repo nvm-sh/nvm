@@ -84,7 +84,7 @@ For manual install create a folder somewhere in your filesystem with the `nvm.sh
 Or if you have `git` installed, then just clone it, and check out the latest version:
 
 ```sh
-git clone https://github.com/creationix/nvm.git ~/.nvm && cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`
+git clone https://github.com/creationix/nvm.git ~/.nvm && cd ~/.nvm && git checkout `git describe --abbrev=0 --tags origin`
 ```
 
 To activate nvm, you need to source it from your shell:
@@ -106,7 +106,7 @@ export NVM_DIR="$HOME/.nvm"
 For manual upgrade with `git`, change to the `$NVM_DIR`, pull down the latest changes, and check out the latest version:
 
 ```sh
-cd "$NVM_DIR" && git fetch origin && git checkout `git describe --abbrev=0 --tags`
+cd "$NVM_DIR" && git fetch origin && git checkout `git describe --abbrev=0 --tags origin`
 ```
 
 After upgrading, don't forget to activate the new version:
