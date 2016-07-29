@@ -32,6 +32,8 @@ setup_mock_arch() {
     ln -sf "${MOCKS_DIR}/isainfo_${ARCH}" ./isainfo
     if [ "_$OPT" != "_no_pkg_info" ]; then
       ln -sf "${MOCKS_DIR}/pkg_info_${ARCH}" ./pkg_info
+    else
+      ln -sf "${MOCKS_DIR}/pkg_info_fail" ./pkg_info
     fi
   fi
 

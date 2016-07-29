@@ -1235,6 +1235,8 @@ nvm_get_arch() {
     EXIT_CODE=$?
     if [ $EXIT_CODE -ne 0 ]; then
       HOST_ARCH=$(isainfo -n)
+    else
+      HOST_ARCH=$(echo "$HOST_ARCH" | tail -1)
     fi
   else
      HOST_ARCH="$(command uname -m)"
