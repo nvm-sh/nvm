@@ -4,6 +4,7 @@ addons:
   - zsh
   - ksh
 before_install:
+  - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
 install:
