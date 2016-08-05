@@ -74,7 +74,7 @@ install_nvm_from_git() {
       exit 1
     }
   else
-    # Cloning to $NVM_DIR
+    # Cloning to $INSTALL_DIR
     echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     printf "\r=> "
     mkdir -p "$INSTALL_DIR"
@@ -137,12 +137,12 @@ install_nvm_as_script() {
     echo >&2 "Failed to download '$NVM_SOURCE_LOCAL'"
     return 1
   }
-  nvm_download -s "$NVM_EXEC_SOURCE" -o "$NVM_DIR/nvm-exec" || {
+  nvm_download -s "$NVM_EXEC_SOURCE" -o "$INSTALL_DIR/nvm-exec" || {
     echo >&2 "Failed to download '$NVM_EXEC_SOURCE'"
     return 2
   }
-  chmod a+x "$NVM_DIR/nvm-exec" || {
-    echo >&2 "Failed to mark '$NVM_DIR/nvm-exec' as executable"
+  chmod a+x "$INSTALL_DIR/nvm-exec" || {
+    echo >&2 "Failed to mark '$INSTALL_DIR/nvm-exec' as executable"
     return 3
   }
 }
@@ -290,7 +290,7 @@ nvm_do_install() {
   fi
 
   # Source nvm
-  . "$NVM_DIR/nvm.sh"
+  . "$INSTALL_DIR/nvm.sh"
 
   nvm_check_global_modules
 
