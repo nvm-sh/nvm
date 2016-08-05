@@ -270,7 +270,7 @@ nvm_do_install() {
   local INSTALL_DIR
   INSTALL_DIR="$(nvm_install_dir)"
 
-  SOURCE_STR="\nexport NVM_DIR=\"$INSTALL_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm"
+  SOURCE_STR="\nexport NVM_DIR=\"$INSTALL_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm\n"
 
   if [ -z "$NVM_PROFILE" ] ; then
     echo "=> Profile not found. Tried $NVM_PROFILE (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
@@ -279,11 +279,10 @@ nvm_do_install() {
     echo "   OR"
     echo "=> Append the following lines to the correct file yourself:"
     printf "$SOURCE_STR"
-    echo
   else
     if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
       echo "=> Appending source string to $NVM_PROFILE"
-      printf "$SOURCE_STR\n" >> "$NVM_PROFILE"
+      printf "$SOURCE_STR" >> "$NVM_PROFILE"
     else
       echo "=> Source string already in $NVM_PROFILE"
     fi
