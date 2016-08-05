@@ -2086,11 +2086,6 @@ nvm() {
             nvm_err 'Installing iojs from source is not currently supported'
             return 105
             ;;
-          "$NVM_NODE_MERGED")
-            # nvm_install_merged_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
-            nvm_err 'Installing node v1.0 and greater from source is not currently supported'
-            return 106
-            ;;
           *)
             if nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
               NVM_INSTALL_SUCCESS=true
