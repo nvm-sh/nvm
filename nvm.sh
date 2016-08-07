@@ -473,7 +473,7 @@ nvm_print_formatted_alias() {
   fi
   local ARROW
   ARROW='->'
-  if nvm_has_colors; then
+  if [ -z "${NVM_NO_COLORS}" ] && nvm_has_colors; then
     ARROW='\033[0;90m->\033[0m'
     if [ "_${DEFAULT}" = '_true' ]; then
       NEWLINE=" \033[0;37m(default)\033[0m\n"
@@ -497,6 +497,8 @@ nvm_print_formatted_alias() {
     if [ "_${DEST%/*}" = "_lts" ]; then
       DEST_FORMAT='\033[1;33m%s\033[0m'
     fi
+  elif [ "_$VERSION" != '_∞' ] && [ "_$VERSION" != '_N/A' ]; then
+    VERSION_FORMAT='%s *'
   fi
   if [ "${DEST}" = "${VERSION}" ]; then
     command printf -- "${ALIAS_FORMAT} ${ARROW} ${VERSION_FORMAT}${NEWLINE}" "${ALIAS}" "${DEST}"
@@ -523,7 +525,7 @@ nvm_print_alias_path() {
   local DEST
   DEST="$(nvm_alias "${ALIAS}" 2> /dev/null || return 0)"
   if [ -n "${DEST}" ]; then
-    NVM_LTS="${NVM_LTS-}" DEFAULT=false nvm_print_formatted_alias "${ALIAS}" "${DEST}"
+    NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_LTS="${NVM_LTS-}" DEFAULT=false nvm_print_formatted_alias "${ALIAS}" "${DEST}"
   fi
 }
 
@@ -537,7 +539,7 @@ nvm_print_default_alias() {
   local DEST
   DEST="$(nvm_print_implicit_alias local "${ALIAS}")"
   if [ -n "${DEST}" ]; then
-    DEFAULT=true nvm_print_formatted_alias "${ALIAS}" "${DEST}"
+    NVM_NO_COLORS="${NVM_NO_COLORS-}" DEFAULT=true nvm_print_formatted_alias "${ALIAS}" "${DEST}"
   fi
 }
 
@@ -569,19 +571,19 @@ nvm_list_aliases() {
 
   local ALIAS_PATH
   for ALIAS_PATH in "${NVM_ALIAS_DIR}/${ALIAS}"*; do
-    NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}"
+    NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}"
   done
 
   local ALIAS_NAME
   for ALIAS_NAME in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
     if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && ([ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]); then
-      NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
+      NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
     fi
   done
 
   local LTS_ALIAS
   for ALIAS_PATH in "${NVM_ALIAS_DIR}/lts/${ALIAS}"*; do
-    LTS_ALIAS="$(NVM_LTS=true nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}")"
+    LTS_ALIAS="$(NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_LTS=true nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}")"
     if [ -n "${LTS_ALIAS}" ]; then
       nvm_echo "${LTS_ALIAS}"
     fi
@@ -1053,7 +1055,7 @@ nvm_print_versions() {
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
   local NVM_HAS_COLORS
-  if nvm_has_colors; then
+  if [ -z "${NVM_NO_COLORS-}" ] && nvm_has_colors; then
     NVM_HAS_COLORS=1
   fi
   local LTS_LENGTH
@@ -1870,6 +1872,8 @@ nvm() {
       nvm_echo "  - default (built-in) aliases: $NVM_NODE_PREFIX, stable, unstable, $NVM_IOJS_PREFIX, system"
       nvm_echo '  - custom aliases you define with `nvm alias foo`'
       nvm_echo
+      nvm_echo ' Any options that produce colorized output should respect the `--no-colors` option.'
+      nvm_echo
       nvm_echo 'Usage:'
       nvm_echo '  nvm --help                                Show this message'
       nvm_echo '  nvm --version                             Print out the latest released version of nvm'
@@ -2151,6 +2155,7 @@ nvm() {
       local PATTERN
       PATTERN="${1-}"
       case "${PATTERN-}" in
+        --) ;;
         --lts)
           VERSION="$(nvm_match_version lts/*)"
         ;;
@@ -2256,6 +2261,7 @@ nvm() {
         case "$1" in
           --silent) NVM_USE_SILENT=1 ;;
           --delete-prefix) NVM_DELETE_PREFIX=1 ;;
+          --) ;;
           --lts) NVM_LTS='*' ;;
           --lts=*) NVM_LTS="${1##--lts=}" ;;
           --*) ;;
@@ -2520,13 +2526,34 @@ nvm() {
       NODE_VERSION="$VERSION" "$NVM_DIR/nvm-exec" "$@"
     ;;
     "ls" | "list" )
+      local PATTERN
+      local NVM_NO_COLORS
+      while [ $# -gt 0 ]
+      do
+        case "${1}" in
+          --) ;;
+          --no-colors) NVM_NO_COLORS="${1}" ;;
+          --*)
+            nvm_err "Unsupported option \"${1}\"."
+            return 55;
+          ;;
+          *)
+            PATTERN="${PATTERN:-$1}"
+          ;;
+        esac
+        shift
+      done
       local NVM_LS_OUTPUT
       local NVM_LS_EXIT_CODE
-      NVM_LS_OUTPUT=$(nvm_ls "${1-}")
+      NVM_LS_OUTPUT=$(nvm_ls "${PATTERN-}")
       NVM_LS_EXIT_CODE=$?
-      nvm_print_versions "${NVM_LS_OUTPUT}"
-      if [ $# -eq 0 ]; then
-        nvm alias
+      NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "$NVM_LS_OUTPUT"
+      if [ -z "${PATTERN-}" ]; then
+        if [ -n "${NVM_NO_COLORS-}" ]; then
+          nvm alias --no-colors
+        else
+          nvm alias
+        fi
       fi
       return $NVM_LS_EXIT_CODE
     ;;
@@ -2538,27 +2565,28 @@ nvm() {
       NVM_NODE_PREFIX="$(nvm_node_prefix)"
       local PATTERN
       local NVM_FLAVOR
+      local NVM_NO_COLORS
       while [ $# -gt 0 ]
       do
         case "${1-}" in
-          --lts)
-            LTS='*'
-          ;;
+          --) ;;
+          --lts) LTS='*' ;;
           --lts=*)
             LTS="${1##--lts=}"
             NVM_FLAVOR="${NVM_NODE_PREFIX}"
           ;;
+          --no-colors) NVM_NO_COLORS="${1}" ;;
           --*)
             nvm_err "Unsupported option \"${1}\"."
             return 55;
           ;;
           *)
-            if [ -z "${PATTERN}" ]; then
+            if [ -z "$PATTERN" ]; then
               PATTERN="${1-}"
-              if [ -z "${NVM_FLAVOR}" ]; then
-                case "_${PATTERN}" in
-                  "_${NVM_IOJS_PREFIX}" | "_${NVM_NODE_PREFIX}")
-                    NVM_FLAVOR="${PATTERN}"
+              if [ -z "$NVM_FLAVOR" ]; then
+                case "_$PATTERN" in
+                  "_$NVM_IOJS_PREFIX" | "_$NVM_NODE_PREFIX")
+                    NVM_FLAVOR="$PATTERN"
                     PATTERN=""
                   ;;
                 esac
@@ -2598,10 +2626,10 @@ nvm() {
 $NVM_LS_REMOTE_IOJS_OUTPUT
 $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       if [ -n "$NVM_OUTPUT" ]; then
-        nvm_print_versions "$NVM_OUTPUT"
+        NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "$NVM_OUTPUT"
         return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
       else
-        nvm_print_versions "N/A"
+        NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "N/A"
         return 3
       fi
     ;;
@@ -2664,13 +2692,15 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       command mkdir -p "${NVM_ALIAS_DIR}/lts"
 
       local ALIAS
-      ALIAS='--'
       local TARGET
+      local NVM_NO_COLORS
+      ALIAS='--'
       TARGET='--'
       while [ $# -gt 0 ]
       do
         case "${1-}" in
           --) ;;
+          --no-colors) NVM_NO_COLORS="${1}" ;;
           --*)
             nvm_err "Unsupported option \"${1}\"."
             return 55
@@ -2702,7 +2732,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
           nvm_err "! WARNING: Version '${TARGET}' does not exist."
         fi
         nvm_make_alias "${ALIAS}" "${TARGET}"
-        NVM_CURRENT="${NVM_CURRENT-}" DEFAULT=false nvm_print_formatted_alias "${ALIAS}" "${TARGET}" "$VERSION"
+        NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT-}" DEFAULT=false nvm_print_formatted_alias "${ALIAS}" "${TARGET}" "$VERSION"
       else
         if [ "${ALIAS-}" = '--' ]; then
           unset ALIAS
@@ -2788,6 +2818,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       while [ $# -gt 0 ]
       do
         case "${1-}" in
+          --) ;;
           --lts)
             NVM_LTS='*'
           ;;
