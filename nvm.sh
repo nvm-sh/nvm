@@ -557,6 +557,38 @@ nvm_make_alias() {
   nvm_echo "${VERSION}" | tee "$(nvm_alias_path)/${ALIAS}" >/dev/null
 }
 
+nvm_list_aliases() {
+  local ALIAS
+  ALIAS="${1-}"
+
+  local NVM_CURRENT
+  NVM_CURRENT="$(nvm_ls_current)"
+  local NVM_ALIAS_DIR
+  NVM_ALIAS_DIR="$(nvm_alias_path)"
+  command mkdir -p "${NVM_ALIAS_DIR}/lts"
+
+  local ALIAS_PATH
+  for ALIAS_PATH in "${NVM_ALIAS_DIR}/${ALIAS}"*; do
+    NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}"
+  done
+
+  local ALIAS_NAME
+  for ALIAS_NAME in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
+    if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && ([ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]); then
+      NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
+    fi
+  done
+
+  local LTS_ALIAS
+  for ALIAS_PATH in "${NVM_ALIAS_DIR}/lts/${ALIAS}"*; do
+    LTS_ALIAS="$(NVM_LTS=true nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}")"
+    if [ -n "${LTS_ALIAS}" ]; then
+      nvm_echo "${LTS_ALIAS}"
+    fi
+  done
+  return
+}
+
 nvm_alias() {
   local ALIAS
   ALIAS="${1-}"
@@ -2682,26 +2714,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
           unset ALIAS
         fi
 
-        local ALIAS_PATH
-        for ALIAS_PATH in "${NVM_ALIAS_DIR}/${ALIAS-}"*; do
-          NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}"
-        done
-
-        local ALIAS_NAME
-        for ALIAS_NAME in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
-          if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && ([ -z "${ALIAS-}" ] || [ "${ALIAS_NAME}" = "${ALIAS-}" ]); then
-            NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
-          fi
-        done
-
-        local LTS_ALIAS
-        for ALIAS_PATH in "${NVM_ALIAS_DIR}/lts/${ALIAS}"*; do
-          LTS_ALIAS="$(NVM_LTS=true nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}")"
-          if [ -n "${LTS_ALIAS}" ]; then
-            nvm_echo "${LTS_ALIAS}"
-          fi
-        done
-        return
+        nvm_list_aliases "${ALIAS}"
       fi
     ;;
     "unalias" )
