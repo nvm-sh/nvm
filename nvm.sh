@@ -1848,11 +1848,15 @@ nvm() {
     return
   fi
 
+  local COMMAND
+  COMMAND="${1-}"
+  shift
+
   # initialize local variables
   local VERSION
   local ADDITIONAL_PARAMETERS
 
-  case $1 in
+  case $COMMAND in
     'help' | '--help' )
       local NVM_IOJS_PREFIX
       NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
@@ -1953,11 +1957,9 @@ nvm() {
         return 1
       fi
 
-      if [ $# -lt 2 ]; then
+      if [ $# -lt 1 ]; then
         version_not_provided=1
       fi
-
-      shift
 
       local nobinary
       nobinary=0
@@ -2141,8 +2143,6 @@ nvm() {
       return $?
     ;;
     "uninstall" )
-      shift # remove "uninstall"
-
       if [ $# -ne 1 ]; then
         >&2 nvm --help
         return 127
@@ -2251,7 +2251,6 @@ nvm() {
       NVM_DELETE_PREFIX=0
       local NVM_LTS
 
-      shift # remove "use"
       while [ $# -ne 0 ]
       do
         case "$1" in
@@ -2372,7 +2371,6 @@ nvm() {
       local has_checked_nvmrc
       has_checked_nvmrc=0
       # run given version of node
-      shift
 
       local NVM_SILENT
       local NVM_LTS
@@ -2459,8 +2457,6 @@ nvm() {
       return $EXIT_CODE
     ;;
     "exec" )
-      shift
-
       local NVM_SILENT
       local NVM_LTS
       while [ $# -gt 0 ]
@@ -2526,10 +2522,10 @@ nvm() {
     "ls" | "list" )
       local NVM_LS_OUTPUT
       local NVM_LS_EXIT_CODE
-      NVM_LS_OUTPUT=$(nvm_ls "${2-}")
+      NVM_LS_OUTPUT=$(nvm_ls "${1-}")
       NVM_LS_EXIT_CODE=$?
-      nvm_print_versions "$NVM_LS_OUTPUT"
-      if [ $# -eq 1 ]; then
+      nvm_print_versions "${NVM_LS_OUTPUT}"
+      if [ $# -eq 0 ]; then
         nvm alias
       fi
       return $NVM_LS_EXIT_CODE
@@ -2542,27 +2538,27 @@ nvm() {
       NVM_NODE_PREFIX="$(nvm_node_prefix)"
       local PATTERN
       local NVM_FLAVOR
-      while [ $# -gt 1 ]
+      while [ $# -gt 0 ]
       do
-        case "$2" in
+        case "${1-}" in
           --lts)
             LTS='*'
           ;;
           --lts=*)
-            LTS="${2##--lts=}"
+            LTS="${1##--lts=}"
             NVM_FLAVOR="${NVM_NODE_PREFIX}"
           ;;
           --*)
-            nvm_err "Unsupported option \"$2\"."
+            nvm_err "Unsupported option \"${1}\"."
             return 55;
           ;;
           *)
-            if [ -z "$PATTERN" ]; then
-              PATTERN="${2-}"
-              if [ -z "$NVM_FLAVOR" ]; then
-                case "_$PATTERN" in
-                  "_$NVM_IOJS_PREFIX" | "_$NVM_NODE_PREFIX")
-                    NVM_FLAVOR="$PATTERN"
+            if [ -z "${PATTERN}" ]; then
+              PATTERN="${1-}"
+              if [ -z "${NVM_FLAVOR}" ]; then
+                case "_${PATTERN}" in
+                  "_${NVM_IOJS_PREFIX}" | "_${NVM_NODE_PREFIX}")
+                    NVM_FLAVOR="${PATTERN}"
                     PATTERN=""
                   ;;
                 esac
@@ -2614,19 +2610,19 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
     ;;
     "which" )
       local provided_version
-      provided_version="$2"
-      if [ $# -eq 1 ]; then
+      provided_version="${1-}"
+      if [ $# -eq 0 ]; then
         nvm_rc_version
-        if [ -n "$NVM_RC_VERSION" ]; then
-          provided_version="$NVM_RC_VERSION"
-          VERSION=$(nvm_version "$NVM_RC_VERSION" || return 0)
+        if [ -n "${NVM_RC_VERSION}" ]; then
+          provided_version="${NVM_RC_VERSION}"
+          VERSION=$(nvm_version "${NVM_RC_VERSION}" || return 0)
         fi
-      elif [ "_$2" != '_system' ]; then
-        VERSION="$(nvm_version "$provided_version" || return 0)"
+      elif [ "_${1}" != '_system' ]; then
+        VERSION="$(nvm_version "${provided_version}" || return 0)"
       else
-        VERSION="$2"
+        VERSION="${1-}"
       fi
-      if [ -z "$VERSION" ]; then
+      if [ -z "${VERSION}" ]; then
         >&2 nvm --help
         return 127
       fi
@@ -2660,8 +2656,6 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       nvm_echo "$NVM_VERSION_DIR/bin/node"
     ;;
     "alias" )
-      shift
-
       local NVM_ALIAS_DIR
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       local NVM_CURRENT
@@ -2721,28 +2715,28 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       local NVM_ALIAS_DIR
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "$NVM_ALIAS_DIR"
-      if [ $# -ne 2 ]; then
+      if [ $# -ne 1 ]; then
         >&2 nvm --help
         return 127
       fi
-      if [ "${2#*\/}" != "${2-}" ]; then
+      if [ "${1#*\/}" != "${1-}" ]; then
         nvm_err 'Aliases in subdirectories are not supported.'
         return 1
       fi
-      [ ! -f "$NVM_ALIAS_DIR/$2" ] && nvm_err "Alias $2 doesn't exist!" && return
+      [ ! -f "$NVM_ALIAS_DIR/${1-}" ] && nvm_err "Alias ${1-} doesn't exist!" && return
       local NVM_ALIAS_ORIGINAL
-      NVM_ALIAS_ORIGINAL="$(nvm_alias "$2")"
-      command rm -f "$NVM_ALIAS_DIR/$2"
-      nvm_echo "Deleted alias $2 - restore it with \`nvm alias \"$2\" \"$NVM_ALIAS_ORIGINAL\"\`"
+      NVM_ALIAS_ORIGINAL="$(nvm_alias "${1}")"
+      command rm -f "$NVM_ALIAS_DIR/${1}"
+      nvm_echo "Deleted alias ${1} - restore it with \`nvm alias \"${1}\" \"$NVM_ALIAS_ORIGINAL\"\`"
     ;;
     "reinstall-packages" | "copy-packages" )
-      if [ $# -ne 2 ]; then
+      if [ $# -ne 1 ]; then
         >&2 nvm --help
         return 127
       fi
 
       local PROVIDED_VERSION
-      PROVIDED_VERSION="$2"
+      PROVIDED_VERSION="${1-}"
 
       if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ] || [ "$(nvm_version "$PROVIDED_VERSION" || return 0)" = "$(nvm_ls_current)" ]; then
         nvm_err 'Can not reinstall packages from the current version of node.'
@@ -2786,26 +2780,26 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       nvm_echo 'Cache cleared.'
     ;;
     "version" )
-      nvm_version "$2"
+      nvm_version "${1}"
     ;;
     "version-remote" )
       local NVM_LTS
       local PATTERN
-      while [ $# -gt 1 ]
+      while [ $# -gt 0 ]
       do
-        case "$2" in
+        case "${1-}" in
           --lts)
             NVM_LTS='*'
           ;;
           --lts=*)
-            NVM_LTS="${2##--lts=}"
+            NVM_LTS="${1##--lts=}"
           ;;
           --*)
-            nvm_err "Unsupported option \"$2\"."
+            nvm_err "Unsupported option \"${1}\"."
             return 55;
           ;;
           *)
-            PATTERN="${PATTERN:-$2}"
+            PATTERN="${PATTERN:-${1}}"
           ;;
         esac
         shift
