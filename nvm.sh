@@ -2630,6 +2630,11 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
     "alias" )
       shift
 
+      local ALIAS
+      ALIAS="${1-}"
+      local TARGET
+      TARGET="${2-}"
+
       local NVM_ALIAS_DIR
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "$NVM_ALIAS_DIR/lts"
@@ -2637,19 +2642,19 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       NVM_CURRENT="$(nvm_ls_current)"
       if [ $# -le 1 ]; then
         local ALIAS_PATH
-        for ALIAS_PATH in "$NVM_ALIAS_DIR/${1-}"*; do
+        for ALIAS_PATH in "$NVM_ALIAS_DIR/${ALIAS}"*; do
           NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH"
         done
 
-        local ALIAS
-        for ALIAS in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
-          if [ ! -f "$NVM_ALIAS_DIR/$ALIAS" ] && ([ $# -lt 1 ] || [ "~$ALIAS" = "~${1-}" ]); then
-            NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "$ALIAS"
+        local ALIAS_NAME
+        for ALIAS_NAME in "$(nvm_node_prefix)" "stable" "unstable" "$(nvm_iojs_prefix)"; do
+          if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS}" ] && ([ $# -lt 1 ] || [ "~${ALIAS_NAME}" = "~${ALIAS}" ]); then
+            NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "$ALIAS_NAME"
           fi
         done
 
         local LTS_ALIAS
-        for ALIAS_PATH in "$NVM_ALIAS_DIR/lts/${1-}"*; do
+        for ALIAS_PATH in "$NVM_ALIAS_DIR/lts/${ALIAS}"*; do
           LTS_ALIAS="$(NVM_LTS=true nvm_print_alias_path "$NVM_ALIAS_DIR" "$ALIAS_PATH")"
           if [ -n "$LTS_ALIAS" ]; then
             nvm_echo "${LTS_ALIAS-}"
@@ -2657,20 +2662,20 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         done
         return
       fi
-      if [ -z "${2-}" ]; then
-        nvm unalias "${1-}"
+      if [ -z "${TARGET}" ]; then
+        nvm unalias "${ALIAS}"
         return $?
       fi
-      if [ "${1#*\/}" != "${1-}" ]; then
+      if [ "${ALIAS#*\/}" != "${ALIAS}" ]; then
         nvm_err 'Aliases in subdirectories are not supported.'
         return 1
       fi
-      VERSION="$(nvm_version "${2-}" || return 0)"
+      VERSION="$(nvm_version "${TARGET}" || return 0)"
       if [ "$VERSION" = 'N/A' ]; then
-        nvm_err "! WARNING: Version '${2-}' does not exist."
+        nvm_err "! WARNING: Version '${TARGET}' does not exist."
       fi
-      nvm_make_alias "${1-}" "${2-}"
-      NVM_CURRENT="${NVM_CURRENT-}" DEFAULT=false nvm_print_formatted_alias "${1-}" "${2-}" "$VERSION"
+      nvm_make_alias "${ALIAS}" "${TARGET}"
+      NVM_CURRENT="${NVM_CURRENT-}" DEFAULT=false nvm_print_formatted_alias "${ALIAS}" "${TARGET}" "$VERSION"
     ;;
     "unalias" )
       local NVM_ALIAS_DIR
