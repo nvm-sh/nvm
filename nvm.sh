@@ -1002,6 +1002,34 @@ nvm_ls_remote_index_tab() {
   nvm_echo "${VERSIONS}"
 }
 
+nvm_get_checksum_alg() {
+  if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
+    nvm_echo 'sha-256'
+  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    nvm_echo 'sha-256'
+  elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
+    nvm_echo 'sha-256'
+  elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
+    nvm_echo 'sha-256'
+  elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+    nvm_echo 'sha-256'
+  elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
+    nvm_echo 'sha-256'
+  elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+    nvm_echo 'sha-256'
+  elif nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
+    nvm_echo 'sha-1'
+  elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
+    nvm_echo 'sha-1'
+  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    nvm_echo 'sha-1'
+  else
+    nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, libressl, or bssl not found.'
+    nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
+    return 1
+  fi
+}
+
 nvm_checksum() {
   local NVM_CHECKSUM
   if [ -z "${3-}" ] || [ "${3-}" = 'sha1' ]; then
@@ -2849,6 +2877,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_install_iojs_binary nvm_install_node_binary \
         nvm_install_merged_node_binary \
         nvm_install_node_source nvm_check_file_permissions \
+        nvm_get_checksum_alg \
         nvm_version nvm_rc_version nvm_match_version \
         nvm_ensure_default_set nvm_get_arch nvm_get_os \
         nvm_print_implicit_alias nvm_validate_implicit_alias \
