@@ -1339,26 +1339,26 @@ nvm_is_merged_node_version() {
 
 nvm_install_merged_node_binary() {
   local NVM_NODE_TYPE
-  NVM_NODE_TYPE="$1"
+  NVM_NODE_TYPE="${1}"
   local MIRROR
-  if [ "_$NVM_NODE_TYPE" = "_std" ]; then
-    MIRROR="$NVM_NODEJS_ORG_MIRROR"
+  if [ "${NVM_NODE_TYPE}" = 'std' ]; then
+    MIRROR="${NVM_NODEJS_ORG_MIRROR}"
   else
     nvm_err 'unknown type of node.js release'
     return 4
   fi
   local VERSION
-  VERSION="$2"
+  VERSION="${2}"
   local REINSTALL_PACKAGES_FROM
-  REINSTALL_PACKAGES_FROM="$3"
+  REINSTALL_PACKAGES_FROM="${3}"
 
-  if ! nvm_is_merged_node_version "$VERSION" || nvm_is_iojs_version "$VERSION"; then
+  if ! nvm_is_merged_node_version "${VERSION}" || nvm_is_iojs_version "${VERSION}"; then
     nvm_err 'nvm_install_merged_node_binary requires a node version v4.0 or greater.'
     return 10
   fi
 
   local VERSION_PATH
-  VERSION_PATH="$(nvm_version_path "$VERSION")"
+  VERSION_PATH="$(nvm_version_path "${VERSION}")"
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
   local t
@@ -1369,45 +1369,50 @@ nvm_install_merged_node_binary() {
   compression="gz"
   local tar_compression_flag
   tar_compression_flag="x"
-  if nvm_supports_xz "$VERSION"; then
+  if nvm_supports_xz "${VERSION}"; then
     compression="xz"
     tar_compression_flag="J"
   fi
   NODE_PREFIX="$(nvm_node_prefix)"
 
-  if [ -n "$NVM_OS" ]; then
-    t="$VERSION-$NVM_OS-$(nvm_get_arch)"
-    url="$MIRROR/$VERSION/$NODE_PREFIX-${t}.tar.${compression}"
-    sum="$(nvm_download -L -s "$MIRROR/$VERSION/SHASUMS256.txt" -o - | nvm_grep "${NODE_PREFIX}-${t}.tar.${compression}" | command awk '{print $1}')"
-    local tmpdir
-    tmpdir="$NVM_DIR/bin/node-${t}"
-    local tmptarball
-    tmptarball="$tmpdir/node-${t}.tar.${compression}"
-    local NVM_INSTALL_ERRORED
-    command mkdir -p "$tmpdir" && \
-      nvm_echo "Downloading $url..." && \
-      nvm_download -L -C - --progress-bar "$url" -o "$tmptarball" || \
-      NVM_INSTALL_ERRORED=true
-    if nvm_grep '404 Not Found' "$tmptarball" >/dev/null; then
-      NVM_INSTALL_ERRORED=true
-      nvm_err "HTTP 404 at URL $url";
-    fi
-    if (
-      [ "$NVM_INSTALL_ERRORED" != true ] && \
-      nvm_checksum "$tmptarball" "$sum" "sha256" && \
-      command tar -x${tar_compression_flag}f "$tmptarball" -C "$tmpdir" --strip-components 1 && \
-      command rm -f "$tmptarball" && \
-      command mkdir -p "$VERSION_PATH" && \
-      command mv "$tmpdir"/* "$VERSION_PATH"
-    ); then
-      return 0
-    else
-      nvm_err 'Binary download failed, trying source.'
-      command rm -rf "$tmptarball" "$tmpdir"
-      return 1
-    fi
+  if [ -z "${NVM_OS}" ]; then
+    return 2
   fi
-  return 2
+
+  t="${VERSION}-${NVM_OS}-$(nvm_get_arch)"
+  url="${MIRROR}/$VERSION/$NODE_PREFIX-${t}.tar.${compression}"
+  sum="$(
+    nvm_download -L -s "${MIRROR}/${VERSION}/SHASUMS256.txt" -o - \
+      | nvm_grep "${NODE_PREFIX}-${t}.tar.${compression}" \
+      | command awk '{print $1}'
+  )"
+  local tmpdir
+  tmpdir="${NVM_DIR}/bin/node-${t}"
+  local tmptarball
+  tmptarball="${tmpdir}/node-${t}.tar.${compression}"
+  local NVM_INSTALL_ERRORED
+  command mkdir -p "${tmpdir}" && \
+    nvm_echo "Downloading ${url}..." && \
+    nvm_download -L -C - --progress-bar "${url}" -o "${tmptarball}" || \
+    NVM_INSTALL_ERRORED=true
+  if nvm_grep '404 Not Found' "${tmptarball}" >/dev/null; then
+    NVM_INSTALL_ERRORED=true
+    nvm_err "HTTP 404 at URL $url";
+  fi
+  if (
+    [ "$NVM_INSTALL_ERRORED" != true ] && \
+    nvm_checksum "${tmptarball}" "${sum}" "{sha256}" && \
+    command tar -x${tar_compression_flag}f "${tmptarball}" -C "${tmpdir}" --strip-components 1 && \
+    command rm -f "${tmptarball}" && \
+    command mkdir -p "${VERSION_PATH}" && \
+    command mv "${tmpdir}"/* "${VERSION_PATH}"
+  ); then
+    return 0
+  fi
+
+  nvm_err 'Binary download failed, trying source.'
+  command rm -rf "${tmptarball}" "${tmpdir}"
+  return 1
 }
 
 nvm_install_iojs_binary() {
