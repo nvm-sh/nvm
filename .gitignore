@@ -1,4 +1,5 @@
 HEAD
+bin
 src
 v*
 alias
