@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -ex
+
+cleanup () {
+  unset -f nvm_download nvm_get_checksum_alg
+}
+die () { echo $@ ; cleanup ; exit 1; }
+
+. ../../../nvm.sh
+
+nvm_download() {
+  echo "ERROR_FAILED_MATCH no_match more fields"
+  echo "${3} bar.tar.baz more fields"
+}
+
+nvm_get_checksum_alg() {
+  echo 'sha-256'
+}
+OUTPUT="$(nvm_get_checksum foo bar baz)"
+EXPECTED_OUTPUT="${NVM_NODEJS_ORG_MIRROR}/foo/SHASUMS256.txt"
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+nvm_get_checksum_alg() {
+  echo 'sha-1'
+}
+OUTPUT="$(nvm_get_checksum foo bar baz)"
+EXPECTED_OUTPUT="${NVM_NODEJS_ORG_MIRROR}/foo/SHASUMS.txt"
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+cleanup

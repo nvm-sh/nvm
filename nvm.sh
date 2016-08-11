@@ -1036,6 +1036,94 @@ nvm_get_checksum_alg() {
   fi
 }
 
+nvm_compute_checksum() {
+  local FILE
+  FILE="${1-}"
+  if [ -z "${FILE}" ]; then
+    nvm_err 'Provided file to checksum is empty.'
+    return 2
+  elif ! [ -f "${FILE}" ]; then
+    nvm_err 'Provided file to checksum does not exist.'
+    return 1
+  fi
+
+  if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
+    nvm_err 'Computing checksum with sha256sum'
+    command sha256sum "${FILE}" | command awk '{print $1}'
+  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    nvm_err 'Computing checksum with shasum -a 256'
+    command shasum -a 256 "${FILE}" | command awk '{print $1}'
+  elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
+    nvm_err 'Computing checksum with sha256 -q'
+    command sha256 -q "${FILE}" | command awk '{print $1}'
+  elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
+    nvm_err 'Computing checksum with gsha256sum'
+    command gsha256sum "${FILE}" | command awk '{print $1}'
+  elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+    nvm_err 'Computing checksum with openssl dgst -sha256'
+    command openssl dgst -sha256 "${FILE}" | rev | command awk '{print $1}' | rev
+  elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
+    nvm_err 'Computing checksum with libressl dgst -sha256'
+    command libressl dgst -sha256 "${FILE}" | rev | command awk '{print $1}' | rev
+  elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+    nvm_err 'Computing checksum with bssl sha256sum'
+    command bssl sha256sum "${FILE}" | command awk '{print $1}'
+  elif nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
+    nvm_err 'Computing checksum with sha1sum'
+    command sha1sum "${FILE}" | command awk '{print $1}'
+  elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
+    nvm_err 'Computing checksum with sha1 -q'
+    command sha1 -q "${FILE}"
+  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    nvm_err 'Computing checksum with shasum'
+    command shasum "${FILE}" | command awk '{print $1}'
+  fi
+}
+
+nvm_compare_checksum() {
+  local FILE
+  FILE="${1-}"
+  if [ -z "${FILE}" ]; then
+    nvm_err 'Provided file to checksum is empty.'
+    return 4
+  elif ! [ -f "${FILE}" ]; then
+    nvm_err 'Provided file to checksum does not exist.'
+    return 3
+  fi
+
+  local COMPUTED_SUM
+  COMPUTED_SUM="$(nvm_compute_checksum "${FILE}")"
+
+  local CHECKSUM
+  CHECKSUM="${2-}"
+  if [ -z "${CHECKSUM}" ]; then
+    nvm_err 'Provided checksum to compare to is empty.'
+    return 2
+  fi
+
+  if [ -z "${COMPUTED_SUM}" ]; then
+    nvm_err "Computed checksum of '${FILE}' is empty." # missing in raspberry pi binary
+    nvm_err 'WARNING: Continuing *without checksum verification*'
+    return
+  elif [ "${COMPUTED_SUM}" != "${CHECKSUM}" ]; then
+    nvm_err "Checksums do not match: '${COMPUTED_SUM}' found, '${CHECKSUM}' expected."
+    return 1
+  fi
+  nvm_err 'Checksums matched!'
+}
+
+nvm_get_checksum() {
+  local SHASUMS_URL
+  if [ "$(nvm_get_checksum_alg)" = 'sha-256' ]; then
+    SHASUMS_URL="${NVM_NODEJS_ORG_MIRROR}/${1}/SHASUMS256.txt"
+  else
+    SHASUMS_URL="${NVM_NODEJS_ORG_MIRROR}/${1}/SHASUMS.txt"
+  fi
+  nvm_download -L -s "${SHASUMS_URL}" -o - | \
+    nvm_grep "${2}.tar.${3}" | \
+    command awk '{print $1}'
+}
+
 nvm_checksum() {
   local NVM_CHECKSUM
   if [ -z "${3-}" ] || [ "${3-}" = 'sha1' ]; then
@@ -2923,7 +3011,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       nvm_echo '0.31.7'
     ;;
     "unload" )
-      unset -f nvm nvm_print_versions nvm_checksum \
+      unset -f nvm \
         nvm_iojs_prefix nvm_node_prefix \
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
         nvm_is_iojs_version nvm_is_alias \
@@ -2932,7 +3020,8 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_install_iojs_binary nvm_install_node_binary \
         nvm_install_merged_node_binary nvm_get_mirror \
         nvm_install_node_source nvm_check_file_permissions \
-        nvm_get_checksum_alg \
+        nvm_print_versions nvm_compute_checksum nvm_checksum \
+        nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \
         nvm_version nvm_rc_version nvm_match_version \
         nvm_ensure_default_set nvm_get_arch nvm_get_os \
         nvm_print_implicit_alias nvm_validate_implicit_alias \
@@ -2956,7 +3045,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         > /dev/null 2>&1
-      unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
+      unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
       >&2 nvm --help
