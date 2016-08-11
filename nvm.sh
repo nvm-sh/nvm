@@ -1349,8 +1349,6 @@ nvm_install_merged_node_binary() {
   fi
   local VERSION
   VERSION="${2}"
-  local REINSTALL_PACKAGES_FROM
-  REINSTALL_PACKAGES_FROM="${3}"
 
   if ! nvm_is_merged_node_version "${VERSION}" || nvm_is_iojs_version "${VERSION}"; then
     nvm_err 'nvm_install_merged_node_binary requires a node version v4.0 or greater.'
@@ -1427,8 +1425,6 @@ nvm_install_iojs_binary() {
   fi
   local PREFIXED_VERSION
   PREFIXED_VERSION="$2"
-  local REINSTALL_PACKAGES_FROM
-  REINSTALL_PACKAGES_FROM="$3"
 
   if ! nvm_is_iojs_version "$PREFIXED_VERSION"; then
     nvm_err 'nvm_install_iojs_binary requires an iojs-prefixed version.'
@@ -1493,8 +1489,6 @@ nvm_install_iojs_binary() {
 nvm_install_node_binary() {
   local VERSION
   VERSION="$1"
-  local REINSTALL_PACKAGES_FROM
-  REINSTALL_PACKAGES_FROM="$2"
 
   if nvm_is_iojs_version "$VERSION"; then
     nvm_err 'nvm_install_node_binary does not allow an iojs-prefixed version.'
@@ -2110,11 +2104,11 @@ nvm() {
       local NVM_INSTALL_SUCCESS
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-        if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary std "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+        if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary std "$VERSION"; then
           NVM_INSTALL_SUCCESS=true
-        elif [ "$NVM_NODE_MERGED" = true ] && nvm_install_merged_node_binary std "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+        elif [ "$NVM_NODE_MERGED" = true ] && nvm_install_merged_node_binary std "$VERSION"; then
           NVM_INSTALL_SUCCESS=true
-        elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+        elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary "$VERSION"; then
           NVM_INSTALL_SUCCESS=true
         fi
       fi
