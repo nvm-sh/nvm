@@ -1112,15 +1112,32 @@ nvm_compare_checksum() {
   nvm_err 'Checksums matched!'
 }
 
+# args: flavor, type, version, slug, compression
 nvm_get_checksum() {
+  local FLAVOR
+  case "${1-}" in
+    node | iojs) FLAVOR="${1}" ;;
+    *)
+      nvm_err 'supported flavors: node, iojs'
+      return 2
+    ;;
+  esac
+
+  local MIRROR
+  MIRROR="$(nvm_get_mirror "${FLAVOR}" "${2-}")"
+  if [ -z "${MIRROR}" ]; then
+    return 1
+  fi
+
   local SHASUMS_URL
   if [ "$(nvm_get_checksum_alg)" = 'sha-256' ]; then
-    SHASUMS_URL="${NVM_NODEJS_ORG_MIRROR}/${1}/SHASUMS256.txt"
+    SHASUMS_URL="${MIRROR}/${3}/SHASUMS256.txt"
   else
-    SHASUMS_URL="${NVM_NODEJS_ORG_MIRROR}/${1}/SHASUMS.txt"
+    SHASUMS_URL="${MIRROR}/${3}/SHASUMS.txt"
   fi
+
   nvm_download -L -s "${SHASUMS_URL}" -o - | \
-    nvm_grep "${2}.tar.${3}" | \
+    nvm_grep "${4}.tar.${5}" | \
     command awk '{print $1}'
 }
 
@@ -1470,23 +1487,29 @@ nvm_get_mirror() {
   esac
 }
 
-nvm_install_node_binary() {
+# args: flavor, kind, version, reinstall
+nvm_install_binary() {
+  local FLAVOR
+  case "${1-}" in
+    node | iojs) FLAVOR="${1}" ;;
+    *)
+      nvm_err 'supported flavors: node, iojs'
+      return 4
+    ;;
+  esac
+
   local MIRROR
-  MIRROR="$(nvm_get_mirror node "${1}")"
+  MIRROR="$(nvm_get_mirror node "${2-}")"
   if [ -z "${MIRROR}" ]; then
-    return 4
+    return 3
   fi
 
+  local PREFIXED_VERSION
+  PREFIXED_VERSION="${3-}"
   local VERSION
-  VERSION="${2}"
-
-  if nvm_is_iojs_version "${VERSION}"; then
-    nvm_err 'nvm_install_node_binary does not allow an iojs-prefixed version.'
-    return 10
-  fi
+  VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
 
   local VERSION_PATH
-  VERSION_PATH="$(nvm_version_path "${VERSION}")"
 
   if [ -z "$(nvm_get_os)" ]; then
     return 2
@@ -1502,13 +1525,15 @@ nvm_install_node_binary() {
   local TMPDIR
   local VERSION_PATH
 
+  TARBALL="$(nvm_download_artifact "${FLAVOR}" binary std "${VERSION}" | command tail -1)"
+  if [ -f "${TARBALL}" ]; then
+    TMPDIR="$(dirname "${TARBALL}")/files"
+  fi
   if (
-    TARBALL="$(nvm_download_artifact node binary std "${VERSION}" | command tail -1)" && \
-    [ -f "${TARBALL}" ] && \
-    TMPDIR="$(dirname "${TARBALL}")/files" && \
+    [ -n "${TMPDIR-}" ] && \
     command mkdir -p "${TMPDIR}" && \
     command tar -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
-    VERSION_PATH="$(nvm_version_path "${VERSION}")" && \
+    VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
     command mkdir -p "${VERSION_PATH}" && \
     command mv "${TMPDIR}/"* "${VERSION_PATH}" && \
     command rm -rf "${TMPDIR}"
@@ -1517,81 +1542,10 @@ nvm_install_node_binary() {
   fi
 
   nvm_err 'Binary download failed, trying source.'
-  command rm -rf "${TMPDIR}"
+  if [ -n "${TMPDIR-}" ]; then
+    command rm -rf "${TMPDIR}"
+  fi
   return 1
-}
-
-nvm_install_iojs_binary() {
-  local NVM_IOJS_TYPE
-  NVM_IOJS_TYPE="$1"
-  local MIRROR
-  if [ "_$NVM_IOJS_TYPE" = "_std" ]; then
-    MIRROR="$NVM_IOJS_ORG_MIRROR"
-  else
-    nvm_err 'unknown type of io.js release'
-    return 4
-  fi
-  local PREFIXED_VERSION
-  PREFIXED_VERSION="$2"
-
-  if ! nvm_is_iojs_version "$PREFIXED_VERSION"; then
-    nvm_err 'nvm_install_iojs_binary requires an iojs-prefixed version.'
-    return 10
-  fi
-
-  local VERSION
-  VERSION="$(nvm_strip_iojs_prefix "$PREFIXED_VERSION")"
-  local VERSION_PATH
-  VERSION_PATH="$(nvm_version_path "$PREFIXED_VERSION")"
-  local NVM_OS
-  NVM_OS="$(nvm_get_os)"
-  local t
-  local url
-  local sum
-  local compression
-  compression="gz"
-  local tar_compression_flag
-  tar_compression_flag="x"
-  if nvm_supports_xz "$VERSION"; then
-    compression="xz"
-    tar_compression_flag="J"
-  fi
-
-  if [ -n "$NVM_OS" ]; then
-    if nvm_binary_available "$VERSION"; then
-      t="$VERSION-$NVM_OS-$(nvm_get_arch)"
-      url="$MIRROR/$VERSION/$(nvm_iojs_prefix)-${t}.tar.${compression}"
-      sum="$(nvm_download -L -s "$MIRROR/$VERSION/SHASUMS256.txt" -o - | nvm_grep "$(nvm_iojs_prefix)-${t}.tar.${compression}" | command awk '{print $1}')"
-      local tmpdir
-      tmpdir="$NVM_DIR/bin/iojs-${t}"
-      local tmptarball
-      tmptarball="$tmpdir/iojs-${t}.tar.${compression}"
-      local NVM_INSTALL_ERRORED
-      command mkdir -p "$tmpdir" && \
-        nvm_echo "Downloading $url..." && \
-        nvm_download -L -C - --progress-bar "$url" -o "$tmptarball" || \
-        NVM_INSTALL_ERRORED=true
-      if nvm_grep '404 Not Found' "$tmptarball" >/dev/null; then
-        NVM_INSTALL_ERRORED=true
-        nvm_err "HTTP 404 at URL $url";
-      fi
-      if (
-        [ "$NVM_INSTALL_ERRORED" != true ] && \
-        nvm_checksum "$tmptarball" "$sum" "sha256" && \
-        command tar -x${tar_compression_flag}f "$tmptarball" -C "$tmpdir" --strip-components 1 && \
-        command rm -f "$tmptarball" && \
-        command mkdir -p "$VERSION_PATH" && \
-        command mv "$tmpdir"/* "$VERSION_PATH"
-      ); then
-        return 0
-      else
-        nvm_err 'Binary download failed, trying source.'
-        command rm -rf "$tmptarball" "$tmpdir"
-        return 1
-      fi
-    fi
-  fi
-  return 2
 }
 
 # args: flavor, kind, version
@@ -1655,8 +1609,11 @@ nvm_download_artifact() {
     ;;
   esac
 
+  local TYPE
+  TYPE="${3-}"
+
   local MIRROR
-  MIRROR="$(nvm_get_mirror "${FLAVOR}" "${3-}")"
+  MIRROR="$(nvm_get_mirror "${FLAVOR}" "${TYPE}")"
   if [ -z "${MIRROR}" ]; then
     return 2
   fi
@@ -1679,7 +1636,7 @@ nvm_download_artifact() {
   fi
 
   local CHECKSUM
-  CHECKSUM="$(nvm_get_checksum "${VERSION}" "${SLUG}" "${COMPRESSION}")"
+  CHECKSUM="$(nvm_get_checksum "${FLAVOR}" "${TYPE}" "${VERSION}" "${SLUG}" "${COMPRESSION}")"
 
   local tmpdir
   if [ "${KIND}" = 'binary' ]; then
@@ -1703,7 +1660,7 @@ nvm_download_artifact() {
   fi
 
   if nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" >/dev/null 2>&1; then
-    nvm_err "Checksums match! Using existing downloaded archive ${TARBALL}"
+    nvm_err "Checksums match! Using existing downloaded archive $(nvm_sanitize_path "${TARBALL}")"
   else
     nvm_echo "Downloading ${TARBALL_URL}..."
     nvm_download -L -C - --progress-bar "${TARBALL_URL}" -o "${TARBALL}" || (
@@ -1800,6 +1757,7 @@ nvm_install_node_source() {
   local TMPDIR
   local VERSION_PATH
 
+  # shellcheck disable=SC2086
   if (
     TARBALL="$(nvm_download_artifact node source std "${VERSION}" | command tail -1)" && \
     [ -f "${TARBALL}" ] && \
@@ -2289,9 +2247,9 @@ nvm() {
       local NVM_INSTALL_SUCCESS
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-        if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary std "$VERSION"; then
+        if [ "${NVM_IOJS}" = true ] && nvm_install_binary iojs std "${VERSION}"; then
           NVM_INSTALL_SUCCESS=true
-        elif [ "$NVM_IOJS" != true ] && nvm_install_node_binary std "$VERSION"; then
+        elif [ "${NVM_IOJS}" != true ] && nvm_install_binary node std "${VERSION}"; then
           NVM_INSTALL_SUCCESS=true
         fi
       fi
@@ -3059,7 +3017,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_is_iojs_version nvm_is_alias \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
-        nvm_install_iojs_binary nvm_install_node_binary \
+        nvm_install_binary \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
         nvm_install_node_source nvm_check_file_permissions \
         nvm_print_versions nvm_compute_checksum nvm_checksum \
