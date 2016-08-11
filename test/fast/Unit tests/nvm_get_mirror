@@ -1,0 +1,16 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+! nvm_get_mirror || die 'unknown release type did not error'
+! nvm_get_mirror node || die 'unknown release type did not error'
+! nvm_get_mirror iojs || die 'unknown release type did not error'
+! nvm_get_mirror node foo || die 'unknown release type did not error'
+! nvm_get_mirror iojs foo || die 'unknown release type did not error'
+
+[ "$(nvm_get_mirror node std)" = "${NVM_NODEJS_ORG_MIRROR}" ] || die 'node std did not yield NVM_NODEJS_ORG_MIRROR'
+[ "$(nvm_get_mirror iojs std)" = "${NVM_IOJS_ORG_MIRROR}" ] || die 'node std did not yield NVM_NODEJS_ORG_MIRROR'

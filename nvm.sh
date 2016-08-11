@@ -1365,6 +1365,17 @@ nvm_is_merged_node_version() {
    nvm_version_greater_than_or_equal_to "$1" v4.0.0
 }
 
+nvm_get_mirror() {
+  case "${1}-${2}" in
+    node-std) nvm_echo "${NVM_NODEJS_ORG_MIRROR}" ;;
+    iojs-std) nvm_echo "${NVM_IOJS_ORG_MIRROR}" ;;
+    *)
+      nvm_err 'unknown type of node.js or io.js release'
+      return 1
+    ;;
+  esac
+}
+
 nvm_install_merged_node_binary() {
   local NVM_NODE_TYPE
   NVM_NODE_TYPE="${1}"
@@ -2875,7 +2886,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_iojs_binary nvm_install_node_binary \
-        nvm_install_merged_node_binary \
+        nvm_install_merged_node_binary nvm_get_mirror \
         nvm_install_node_source nvm_check_file_permissions \
         nvm_get_checksum_alg \
         nvm_version nvm_rc_version nvm_match_version \
