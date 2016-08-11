@@ -1366,12 +1366,12 @@ nvm_install_merged_node_binary() {
   local sum
   local NODE_PREFIX
   local compression
-  compression="gz"
+  compression='gz'
   local tar_compression_flag
-  tar_compression_flag="x"
+  tar_compression_flag='z'
   if nvm_supports_xz "${VERSION}"; then
-    compression="xz"
-    tar_compression_flag="J"
+    compression='xz'
+    tar_compression_flag='J'
   fi
   NODE_PREFIX="$(nvm_node_prefix)"
 
