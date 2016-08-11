@@ -2847,6 +2847,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_iojs_binary nvm_install_node_binary \
+        nvm_install_merged_node_binary \
         nvm_install_node_source nvm_check_file_permissions \
         nvm_version nvm_rc_version nvm_match_version \
         nvm_ensure_default_set nvm_get_arch nvm_get_os \
@@ -2864,7 +2865,13 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_download nvm_get_latest nvm_has \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
         nvm_echo nvm_err nvm_grep \
-        nvm_has_colors nvm_process_parameters > /dev/null 2>&1
+        nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
+        nvm_has_solaris_binary nvm_is_merged_node_version \
+        nvm_is_natural_num nvm_is_version_installed \
+        nvm_list_aliases nvm_make_alias nvm_print_alias_path \
+        nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
+        nvm_sanitize_path nvm_has_colors nvm_process_parameters \
+        > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_DIR NVM_CD_FLAGS > /dev/null 2>&1
     ;;
     * )
