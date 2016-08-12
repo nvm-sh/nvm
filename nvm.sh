@@ -1719,82 +1719,30 @@ nvm_get_make_jobs() {
   fi
 }
 
-nvm_install_iojs_source() {
-  local VERSION
-  VERSION="$(nvm_strip_iojs_prefix "$1")"
+# args: flavor, type, version, make jobs, additional
+nvm_install_source() {
+  local FLAVOR
+  case "${1-}" in
+    node | iojs) FLAVOR="${1}" ;;
+    *)
+      nvm_err 'supported flavors: node, iojs'
+      return 4
+    ;;
+  esac
+
+  local TYPE
+  TYPE="${2-}"
+
   local PREFIXED_VERSION
-  PREFIXED_VERSION="$(nvm_add_iojs_prefix "$VERSION")"
-  local NVM_MAKE_JOBS
-  NVM_MAKE_JOBS="$2"
-  local ADDITIONAL_PARAMETERS
-  ADDITIONAL_PARAMETERS="$3"
-
-  local NVM_ARCH
-  NVM_ARCH="$(nvm_get_arch)"
-  if [ $NVM_ARCH = "armv6l" ] || [ $NVM_ARCH = "armv7l" ]; then
-    ADDITIONAL_PARAMETERS="--without-snapshot $ADDITIONAL_PARAMETERS"
-  fi
-
-  if [ -n "$ADDITIONAL_PARAMETERS" ]; then
-    echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
-  fi
-
-  local VERSION_PATH
-  VERSION_PATH="$(nvm_version_path "$PREFIXED_VERSION")"
-  local NVM_OS
-  NVM_OS="$(nvm_get_os)"
-
-  local tarball
-  tarball=''
-  local sum
-  sum=''
-  local make
-  make='make'
-  if [ "_$NVM_OS" = "_freebsd" ]; then
-    make='gmake'
-    MAKE_CXX="CXX=c++"
-  fi
-  local tmpdir
-  tmpdir="$NVM_DIR/src"
-  local tmptarball
-  tmptarball="$tmpdir/iojs-$VERSION.tar.gz"
-
-  if [ "`nvm_download -L -s -I "$NVM_IOJS_ORG_MIRROR/$VERSION/iojs-$VERSION.tar.gz" -o - 2>&1 | command grep '200 OK'`" != '' ]; then
-    tarball="$NVM_IOJS_ORG_MIRROR/$VERSION/iojs-$VERSION.tar.gz"
-    sum="$(nvm_download -L -s $NVM_IOJS_ORG_MIRROR/$VERSION/SHASUMS256.txt -o - | command grep "iojs-$VERSION.tar.gz" | command awk '{print $1}')"
-  elif [ "`nvm_download -L -s -I "$NVM_IOJS_ORG_MIRROR/iojs-$VERSION.tar.gz" -o - | command grep '200 OK'`" != '' ]; then
-    tarball="$NVM_IOJS_ORG_MIRROR/iojs-$VERSION.tar.gz"
-  fi
-
-  if (
-    [ -n "$tarball" ] && \
-    command mkdir -p "$tmpdir" && \
-    nvm_download -L --progress-bar "$tarball" -o "$tmptarball" && \
-    echo "WARNING: checksums are currently disabled for io.js" >&2 && \
-    # nvm_checksum "$tmptarball" "$sum" && \
-    command tar -xzf "$tmptarball" -C "$tmpdir" && \
-    cd "$tmpdir/$PREFIXED_VERSION" && \
-    ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
-    $make -j $NVM_MAKE_JOBS ${MAKE_CXX-} && \
-    command rm -f "$VERSION_PATH" 2>/dev/null && \
-    $make -j $NVM_MAKE_JOBS ${MAKE_CXX-} install
-  ); then
-    return 0
-  else
-    echo "nvm: install $PREFIXED_VERSION from source failed!" >&2
-    return 105
-  fi
-
-  return $?
-}
-
-nvm_install_node_source() {
+  PREFIXED_VERSION="${3-}"
   local VERSION
-  VERSION="${1}"
+  VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
+
   local NVM_MAKE_JOBS
-  NVM_MAKE_JOBS="${2}"
+  NVM_MAKE_JOBS="${4-}"
+
   local ADDITIONAL_PARAMETERS
-  ADDITIONAL_PARAMETERS="${3}"
+  ADDITIONAL_PARAMETERS="${5-}"
 
   local NVM_ARCH
   NVM_ARCH="$(nvm_get_arch)"
@@ -1828,12 +1776,12 @@ nvm_install_node_source() {
 
   # shellcheck disable=SC2086
   if (
-    TARBALL="$(nvm_download_artifact node source std "${VERSION}" | command tail -1)" && \
+    TARBALL="$(nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
     [ -f "${TARBALL}" ] && \
     TMPDIR="$(dirname "${TARBALL}")/files" && \
     command mkdir -p "${TMPDIR}" && \
     command tar -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
-    VERSION_PATH="$(nvm_version_path "${VERSION}")" && \
+    VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
     cd "${TMPDIR}" && \
     ./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} && \
@@ -2307,12 +2255,11 @@ nvm() {
         return 5
       fi
 
-      local NVM_NODE_MERGED
-      local NVM_IOJS
+      local FLAVOR
       if nvm_is_iojs_version "$VERSION"; then
-        NVM_IOJS=true
-      elif nvm_is_merged_node_version "$VERSION"; then
-        NVM_NODE_MERGED=true
+        FLAVOR="$(nvm_iojs_prefix)"
+      else
+        FLAVOR="$(nvm_node_prefix)"
       fi
 
       if nvm_is_version_installed "$VERSION"; then
@@ -2339,12 +2286,11 @@ nvm() {
             nvm_err "Currently, there is no binary of version $VERSION for $NVM_OS"
         fi
       fi
+
       local NVM_INSTALL_SUCCESS
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-        if [ "${NVM_IOJS}" = true ] && nvm_install_binary iojs std "${VERSION}"; then
-          NVM_INSTALL_SUCCESS=true
-        elif [ "${NVM_IOJS}" != true ] && nvm_install_binary node std "${VERSION}"; then
+        if nvm_install_binary "${FLAVOR}" std "${VERSION}"; then
           NVM_INSTALL_SUCCESS=true
         fi
       fi
@@ -2353,23 +2299,9 @@ nvm() {
           nvm_get_make_jobs
         fi
 
-        case "true" in
-          "$NVM_IOJS")
-            if nvm_install_iojs_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
-              NVM_INSTALL_SUCCESS=true
-            fi
-            ;;
-          "$NVM_NODE_MERGED")
-            # nvm_install_merged_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
-            nvm_err 'Installing node v1.0 and greater from source is not currently supported'
-            return 106
-            ;;
-          *)
-            if nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
-              NVM_INSTALL_SUCCESS=true
-            fi
-            ;;
-          esac
+        if nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"; then
+          NVM_INSTALL_SUCCESS=true
+        fi
       fi
 
       if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
@@ -3116,7 +3048,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_binary \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
-        nvm_install_node_source nvm_check_file_permissions \
+        nvm_install_source nvm_check_file_permissions \
         nvm_print_versions nvm_compute_checksum nvm_checksum \
         nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \
         nvm_version nvm_rc_version nvm_match_version \
