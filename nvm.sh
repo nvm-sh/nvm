@@ -1392,7 +1392,7 @@ nvm_get_arch() {
     if [ $EXIT_CODE -ne 0 ]; then
       HOST_ARCH=$(isainfo -n)
     else
-      HOST_ARCH=$(echo "$HOST_ARCH" | tail -1)
+      HOST_ARCH=$(echo "$HOST_ARCH" | command tail -1)
     fi
   else
      HOST_ARCH="$(command uname -m)"
@@ -1664,7 +1664,8 @@ nvm_download_artifact() {
   local VERSION
   VERSION="${4}"
 
-  if ! nvm_binary_available "${VERSION}"; then
+  if [ "${KIND}" = 'binary' ] && ! nvm_binary_available "${VERSION}"; then
+    nvm_err "No precompiled binary available for ${VERSION}."
     return
   fi
 
@@ -1681,7 +1682,11 @@ nvm_download_artifact() {
   CHECKSUM="$(nvm_get_checksum "${VERSION}" "${SLUG}" "${COMPRESSION}")"
 
   local tmpdir
-  tmpdir="${NVM_DIR}/bin/${SLUG}"
+  if [ "${KIND}" = 'binary' ]; then
+    tmpdir="${NVM_DIR}/bin/${SLUG}"
+  else
+    tmpdir="${NVM_DIR}/src/${SLUG}"
+  fi
   command mkdir -p "${tmpdir}/files" || (
     nvm_err "creating directory ${tmpdir}/files failed"
     return 3
@@ -1690,7 +1695,12 @@ nvm_download_artifact() {
   local TARBALL
   TARBALL="${tmpdir}/${SLUG}.tar.${COMPRESSION}"
   local TARBALL_URL
-  TARBALL_URL="${MIRROR}/${VERSION}/${SLUG}.tar.${COMPRESSION}"
+  if nvm_version_greater_than_or_equal_to "${VERSION}" 0.1.14; then
+    TARBALL_URL="${MIRROR}/${VERSION}/${SLUG}.tar.${COMPRESSION}"
+  else
+    # node <= 0.1.13 does not have a directory
+    TARBALL_URL="${MIRROR}/${SLUG}.tar.${COMPRESSION}"
+  fi
 
   if nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" >/dev/null 2>&1; then
     nvm_err "Checksums match! Using existing downloaded archive ${TARBALL}"
@@ -1754,65 +1764,56 @@ nvm_get_make_jobs() {
 
 nvm_install_node_source() {
   local VERSION
-  VERSION="$1"
+  VERSION="${1}"
   local NVM_MAKE_JOBS
-  NVM_MAKE_JOBS="$2"
+  NVM_MAKE_JOBS="${2}"
   local ADDITIONAL_PARAMETERS
-  ADDITIONAL_PARAMETERS="$3"
+  ADDITIONAL_PARAMETERS="${3}"
 
   local NVM_ARCH
   NVM_ARCH="$(nvm_get_arch)"
-  if [ "_$NVM_ARCH" = '_armv6l' ] || [ "_$NVM_ARCH" = '_armv7l' ]; then
-    ADDITIONAL_PARAMETERS="--without-snapshot $ADDITIONAL_PARAMETERS"
+  if [ "${NVM_ARCH}" = 'armv6l' ] || [ "${NVM_ARCH}" = 'armv7l' ]; then
+    ADDITIONAL_PARAMETERS="--without-snapshot ${ADDITIONAL_PARAMETERS}"
   fi
 
-  if [ -n "$ADDITIONAL_PARAMETERS" ]; then
-    nvm_echo "Additional options while compiling: $ADDITIONAL_PARAMETERS"
+  if [ -n "${ADDITIONAL_PARAMETERS}" ]; then
+    nvm_echo "Additional options while compiling: ${ADDITIONAL_PARAMETERS}"
   fi
 
-  local VERSION_PATH
-  VERSION_PATH="$(nvm_version_path "$VERSION")"
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
 
-  local tarball
-  tarball=''
-  local sum
-  sum=''
   local make
   make='make'
-  if [ "_$NVM_OS" = "_freebsd" ]; then
+  if [ "${NVM_OS}" = 'freebsd' ]; then
     make='gmake'
-    MAKE_CXX="CXX=c++"
+    MAKE_CXX='CXX=c++'
   fi
 
-  local tmpdir
-  tmpdir="$NVM_DIR/src"
-  local tmptarball
-  tmptarball="$tmpdir/node-$VERSION.tar.gz"
-
-  if [ "$(nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz" -o - 2>&1 | nvm_grep '200 OK')" != '' ]; then
-    tarball="$NVM_NODEJS_ORG_MIRROR/$VERSION/node-$VERSION.tar.gz"
-    sum=$(nvm_download -L -s "$NVM_NODEJS_ORG_MIRROR/$VERSION/SHASUMS.txt" -o - | nvm_grep "node-${VERSION}.tar.gz" | command awk '{print $1}')
-  elif [ "$(nvm_download -L -s -I "$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz" -o - | nvm_grep '200 OK')" != '' ]; then
-    tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
+  local tar_compression_flag
+  tar_compression_flag='z'
+  if nvm_supports_xz "${VERSION}"; then
+    tar_compression_flag='J'
   fi
 
-  # shellcheck disable=SC2086
+  local TARBALL
+  local TMPDIR
+  local VERSION_PATH
+
   if (
-    [ -n "$tarball" ] && \
-    command mkdir -p "$tmpdir" && \
-    nvm_echo "Downloading $tarball..." && \
-    nvm_download -L --progress-bar "$tarball" -o "$tmptarball" && \
-    nvm_checksum "$tmptarball" "$sum" && \
-    command tar -xzf "$tmptarball" -C "$tmpdir" && \
-    cd "$tmpdir/node-$VERSION" && \
-    ./configure --prefix="$VERSION_PATH" $ADDITIONAL_PARAMETERS && \
-    $make -j "$NVM_MAKE_JOBS" ${MAKE_CXX-} && \
-    command rm -f "$VERSION_PATH" 2>/dev/null && \
-    $make -j "$NVM_MAKE_JOBS" ${MAKE_CXX-} install
-    )
-  then
+    TARBALL="$(nvm_download_artifact node source std "${VERSION}" | command tail -1)" && \
+    [ -f "${TARBALL}" ] && \
+    TMPDIR="$(dirname "${TARBALL}")/files" && \
+    command mkdir -p "${TMPDIR}" && \
+    command tar -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
+    VERSION_PATH="$(nvm_version_path "${VERSION}")" && \
+    cd "${TMPDIR}" && \
+    ./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS && \
+    $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} && \
+    command rm -f "${VERSION_PATH}" 2>/dev/null && \
+    $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install && \
+    command rm -rf "${TMPDIR}"
+  ); then
     if ! nvm_has "npm" ; then
       nvm_echo 'Installing npm...'
       if nvm_version_greater 0.2.0 "$VERSION"; then
@@ -1827,12 +1828,11 @@ nvm_install_node_source() {
         nvm_download -L https://npmjs.org/install.sh -o - | clean=yes sh
       fi
     fi
-  else
-    nvm_err "nvm: install $VERSION failed!"
-    return 1
+    return $?
   fi
 
-  return $?
+  nvm_err "nvm: install ${VERSION} failed!"
+  return 1
 }
 
 nvm_match_version() {
@@ -2352,49 +2352,54 @@ nvm() {
         ;;
       esac
 
-      if [ "_$VERSION" = "_$(nvm_ls_current)" ]; then
-        if nvm_is_iojs_version "$VERSION"; then
-          nvm_err "nvm: Cannot uninstall currently-active io.js version, $VERSION (inferred from $PATTERN)."
+      if [ "_${VERSION}" = "_$(nvm_ls_current)" ]; then
+        if nvm_is_iojs_version "${VERSION}"; then
+          nvm_err "nvm: Cannot uninstall currently-active io.js version, ${VERSION} (inferred from ${PATTERN})."
         else
-          nvm_err "nvm: Cannot uninstall currently-active node version, $VERSION (inferred from $PATTERN)."
+          nvm_err "nvm: Cannot uninstall currently-active node version, ${VERSION} (inferred from ${PATTERN})."
         fi
         return 1
       fi
 
-      if ! nvm_is_version_installed "$VERSION"; then
-        nvm_err "$VERSION version is not installed..."
+      if ! nvm_is_version_installed "${VERSION}"; then
+        nvm_err "${VERSION} version is not installed..."
         return;
       fi
 
-      t="$VERSION-$(nvm_get_os)-$(nvm_get_arch)"
-
-      local NVM_PREFIX
-      local NVM_SUCCESS_MSG
-      if nvm_is_iojs_version "$VERSION"; then
-        NVM_PREFIX="$(nvm_iojs_prefix)"
-        NVM_SUCCESS_MSG="Uninstalled io.js $(nvm_strip_iojs_prefix "$VERSION")"
+      local SLUG_BINARY
+      local SLUG_SOURCE
+      if nvm_is_iojs_version "${VERSION}"; then
+        SLUG_BINARY="$(nvm_get_download_slug iojs binary std "${VERSION}")"
+        SLUG_SOURCE="$(nvm_get_download_slug iojs source std "${VERSION}")"
       else
-        NVM_PREFIX="$(nvm_node_prefix)"
-        NVM_SUCCESS_MSG="Uninstalled node $VERSION"
+        SLUG_BINARY="$(nvm_get_download_slug node binary std "${VERSION}")"
+        SLUG_SOURCE="$(nvm_get_download_slug node source std "${VERSION}")"
+      fi
+
+      local NVM_SUCCESS_MSG
+      if nvm_is_iojs_version "${VERSION}"; then
+        NVM_SUCCESS_MSG="Uninstalled io.js $(nvm_strip_iojs_prefix "${VERSION}")"
+      else
+        NVM_SUCCESS_MSG="Uninstalled node ${VERSION}"
       fi
 
       local VERSION_PATH
-      VERSION_PATH="$(nvm_version_path "$VERSION")"
-      if ! nvm_check_file_permissions "$VERSION_PATH"; then
+      VERSION_PATH="$(nvm_version_path "${VERSION}")"
+      if ! nvm_check_file_permissions "${VERSION_PATH}"; then
         nvm_err 'Cannot uninstall, incorrect permissions on installation folder.'
         nvm_err 'This is usually caused by running `npm install -g` as root. Run the following commands as root to fix the permissions and then try again.'
         nvm_err
-        nvm_err "  chown -R $(whoami) \"$(nvm_sanitize_path "$VERSION_PATH")\""
-        nvm_err "  chmod -R u+w \"$(nvm_sanitize_path "$VERSION_PATH")\""
+        nvm_err "  chown -R $(whoami) \"$(nvm_sanitize_path "${VERSION_PATH}")\""
+        nvm_err "  chmod -R u+w \"$(nvm_sanitize_path "${VERSION_PATH}")\""
         return 1
       fi
 
       # Delete all files related to target version.
-      command rm -rf "$NVM_DIR/src/$NVM_PREFIX-$VERSION" \
-             "$NVM_DIR/src/$NVM_PREFIX-$VERSION.tar.*" \
-             "$NVM_DIR/bin/$NVM_PREFIX-${t}/files" \
-             "$VERSION_PATH" 2>/dev/null
-     nvm_echo "$NVM_SUCCESS_MSG"
+      command rm -rf \
+        "${NVM_DIR}/bin/${SLUG_BINARY}/files" \
+        "${NVM_DIR}/src/${SLUG_SOURCE}/files" \
+        "${VERSION_PATH}" 2>/dev/null
+      nvm_echo "${NVM_SUCCESS_MSG}"
 
       # rm any aliases that point to uninstalled version.
       for ALIAS in $(nvm_grep -l "$VERSION" "$(nvm_alias_path)/*" 2>/dev/null)
