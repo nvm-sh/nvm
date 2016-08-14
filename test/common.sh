@@ -68,7 +68,7 @@ watch() {
   $@ &
   local JOB
   JOB=$!
-  while true; do sleep 15; echo '* ping *'; done &
+  while true; do sleep 15; >&2 echo '* ping *'; done &
   wait $JOB;
   local EXIT_CODE
   EXIT_CODE=$?
