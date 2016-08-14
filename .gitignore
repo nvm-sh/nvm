@@ -1,6 +1,5 @@
 HEAD
-bin
-src
+.cache
 v*
 alias
 

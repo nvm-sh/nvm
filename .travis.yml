@@ -6,6 +6,7 @@ addons:
 cache:
   directories:
     - $HOME/.stack
+    - $TRAVIS_BUILD_DIR/.cache
 before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version

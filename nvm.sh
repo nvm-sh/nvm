@@ -1640,9 +1640,9 @@ nvm_download_artifact() {
 
   local tmpdir
   if [ "${KIND}" = 'binary' ]; then
-    tmpdir="${NVM_DIR}/bin/${SLUG}"
+    tmpdir="$(nvm_cache_dir)/bin/${SLUG}"
   else
-    tmpdir="${NVM_DIR}/src/${SLUG}"
+    tmpdir="$(nvm_cache_dir)/src/${SLUG}"
   fi
   command mkdir -p "${tmpdir}/files" || (
     nvm_err "creating directory ${tmpdir}/files failed"
@@ -1975,6 +1975,10 @@ nvm_check_file_permissions() {
   return 0
 }
 
+nvm_cache_dir() {
+  nvm_echo "${NVM_DIR}/.cache"
+}
+
 nvm() {
   if [ $# -lt 1 ]; then
     nvm --help
@@ -2043,6 +2047,8 @@ nvm() {
       nvm_echo '  nvm reinstall-packages <version>          Reinstall global `npm` packages contained in <version> to current version'
       nvm_echo '  nvm unload                                Unload `nvm` from shell'
       nvm_echo '  nvm which [<version>]                     Display path to installed node version. Uses .nvmrc if available'
+      nvm_echo '  nvm cache dir                             Display path to the cache directory for nvm'
+      nvm_echo '  nvm cache clear                           Empty cache directory for nvm'
       nvm_echo
       nvm_echo 'Example:'
       nvm_echo '  nvm install v0.10.32                  Install a specific version number'
@@ -2054,6 +2060,26 @@ nvm() {
       nvm_echo 'Note:'
       nvm_echo '  to remove, delete, or uninstall nvm - just remove the `$NVM_DIR` folder (usually `~/.nvm`)'
       nvm_echo
+    ;;
+
+    "cache" )
+      case "${1-}" in
+        dir) nvm_cache_dir ;;
+        clear)
+          local DIR
+          DIR="$(nvm_cache_dir)"
+          if command rm -rf "${DIR}" && command mkdir -p "${DIR}"; then
+            nvm_echo 'Cache cleared.'
+          else
+            nvm_err "Unable to clear cache: ${DIR}"
+            return 1
+          fi
+        ;;
+        *)
+          >&2 nvm --help
+          return 127
+        ;;
+      esac
     ;;
 
     "debug" )
@@ -2353,9 +2379,11 @@ nvm() {
       fi
 
       # Delete all files related to target version.
+      local CACHE_DIR
+      CACHE_DIR="$(nvm_cache_dir)"
       command rm -rf \
-        "${NVM_DIR}/bin/${SLUG_BINARY}/files" \
-        "${NVM_DIR}/src/${SLUG_SOURCE}/files" \
+        "${CACHE_DIR}/bin/${SLUG_BINARY}/files" \
+        "${CACHE_DIR}/src/${SLUG_SOURCE}/files" \
         "${VERSION_PATH}" 2>/dev/null
       nvm_echo "${NVM_SUCCESS_MSG}"
 
