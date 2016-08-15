@@ -24,6 +24,8 @@ install:
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
+  - export CXX=g++-4.8
+  - export CC=gcc-4.8
   - export PATH=$(echo $PATH | sed 's/::/:/')
   - export NVM_DIR="${TRAVIS_BUILD_DIR}"
   - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh && shellcheck -s bash install.sh ; fi
