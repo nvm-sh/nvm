@@ -7,7 +7,7 @@
 # with much bash help from Matthew Ranney
 
 # "local" warning, quote expansion warning
-# shellcheck disable=SC2039,SC2016
+# shellcheck disable=SC2039,SC2016,SC2001
 { # this ensures the entire script is downloaded #
 
 NVM_SCRIPT_SOURCE="$_"
@@ -15,6 +15,7 @@ NVM_SCRIPT_SOURCE="$_"
 nvm_echo() {
   command printf %s\\n "$*" 2>/dev/null || {
     nvm_echo() {
+      # shellcheck disable=SC1001
       \printf %s\\n "$*" # on zsh, `command printf` sometimes fails
     }
     nvm_echo "$@"
@@ -35,6 +36,7 @@ nvm_has() {
 
 nvm_is_alias() {
   # this is intentionally not "command alias" so it works in zsh.
+  # shellcheck disable=SC1001
   \alias "${1-}" > /dev/null 2>&1
 }
 
@@ -72,6 +74,7 @@ nvm_download() {
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
+    # shellcheck disable=SC2086
     eval wget $ARGS
   fi
 }
@@ -108,8 +111,10 @@ fi
 if [ -z "${NVM_DIR-}" ]; then
   # shellcheck disable=SC2128
   if [ -n "${BASH_SOURCE-}" ]; then
+    # shellcheck disable=SC2169
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
+  # shellcheck disable=SC1001
   NVM_DIR="$(cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" > /dev/null && \pwd)"
   export NVM_DIR
 fi
@@ -1664,6 +1669,7 @@ nvm_install_node_source() {
     tarball="$NVM_NODEJS_ORG_MIRROR/node-$VERSION.tar.gz"
   fi
 
+  # shellcheck disable=SC2086
   if (
     [ -n "$tarball" ] && \
     command mkdir -p "$tmpdir" && \
