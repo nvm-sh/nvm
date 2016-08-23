@@ -7,7 +7,7 @@ nvm_has() {
 }
 
 nvm_install_dir() {
-  echo ${NVM_DIR:-"$HOME/.nvm"}
+  echo "${NVM_DIR:-"$HOME/.nvm"}"
 }
 
 nvm_latest_version() {
@@ -49,7 +49,7 @@ nvm_node_version() {
 
 nvm_download() {
   if nvm_has "curl"; then
-    curl -q $*
+    curl -q "$@"
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(echo "$*" | command sed -e 's/--progress-bar /--progress=bar /' \
@@ -58,7 +58,8 @@ nvm_download() {
                            -e 's/-s /-q /' \
                            -e 's/-o /-O /' \
                            -e 's/-C - /-c /')
-    wget $ARGS
+    # shellcheck disable=SC2086
+    eval wget $ARGS
   fi
 }
 
@@ -68,7 +69,7 @@ install_nvm_from_git() {
 
   if [ -d "$INSTALL_DIR/.git" ]; then
     echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
-    printf "\r=> "
+    command printf "\r=> "
     command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git fetch' in $INSTALL_DIR yourself."
       exit 1
@@ -76,7 +77,7 @@ install_nvm_from_git() {
   else
     # Cloning to $INSTALL_DIR
     echo "=> Downloading nvm from git to '$INSTALL_DIR'"
-    printf "\r=> "
+    command printf "\r=> "
     mkdir -p "$INSTALL_DIR"
     command git clone "$(nvm_source)" "$INSTALL_DIR" || {
       echo >&2 "Failed to clone nvm repo. Please report this!"
@@ -154,8 +155,8 @@ install_nvm_as_script() {
 # Otherwise, an empty string is returned
 #
 nvm_detect_profile() {
-  if [ -n "$PROFILE" -a -f "$PROFILE" ]; then
-    echo "$PROFILE"
+  if [ -n "${PROFILE}" ] && [ -f "${PROFILE}" ]; then
+    echo "${PROFILE}"
     return
   fi
 
@@ -206,18 +207,18 @@ nvm_check_global_modules() {
   local NPM_GLOBAL_MODULES
   NPM_GLOBAL_MODULES="$(
     npm list -g --depth=0 |
-    sed '/ npm@/d' |
-    sed '/ (empty)$/d'
+    command sed '/ npm@/d' |
+    command sed '/ (empty)$/d'
   )"
 
   local MODULE_COUNT
   MODULE_COUNT="$(
-    printf %s\\n "$NPM_GLOBAL_MODULES" |
-    sed -ne '1!p' |                             # Remove the first line
+    command printf %s\\n "$NPM_GLOBAL_MODULES" |
+    command sed -ne '1!p' |                     # Remove the first line
     wc -l | tr -d ' '                           # Count entries
   )"
 
-  if [ $MODULE_COUNT -ne 0 ]; then
+  if [ "${MODULE_COUNT}" != '0' ]; then
     cat <<-'END_MESSAGE'
 	=> You currently have modules installed globally with `npm`. These will no
 	=> longer be linked to the active version of Node when you install a new node
@@ -225,7 +226,7 @@ nvm_check_global_modules() {
 	=> override the binaries of modules installed with `nvm`:
 
 	END_MESSAGE
-    printf %s\\n "$NPM_GLOBAL_MODULES"
+    command printf %s\\n "$NPM_GLOBAL_MODULES"
     cat <<-'END_MESSAGE'
 
 	=> If you wish to uninstall them at a later point (or re-install them under your
@@ -266,30 +267,31 @@ nvm_do_install() {
   echo
 
   local NVM_PROFILE
-  NVM_PROFILE=$(nvm_detect_profile)
+  NVM_PROFILE="$(nvm_detect_profile)"
   local INSTALL_DIR
   INSTALL_DIR="$(nvm_install_dir)"
 
   SOURCE_STR="\nexport NVM_DIR=\"$INSTALL_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm\n"
 
-  if [ -z "$NVM_PROFILE" ] ; then
-    echo "=> Profile not found. Tried $NVM_PROFILE (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
+  if [ -z "${NVM_PROFILE-}" ] ; then
+    echo "=> Profile not found. Tried ${NVM_PROFILE} (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
     echo "=> Create one of them and run this script again"
-    echo "=> Create it (touch $NVM_PROFILE) and run this script again"
+    echo "=> Create it (touch ${NVM_PROFILE}) and run this script again"
     echo "   OR"
     echo "=> Append the following lines to the correct file yourself:"
-    printf "$SOURCE_STR"
+    command printf "${SOURCE_STR}"
   else
-    if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
-      echo "=> Appending source string to $NVM_PROFILE"
-      printf "$SOURCE_STR" >> "$NVM_PROFILE"
+    if ! command grep -qc '/nvm.sh' "${NVM_PROFILE}"; then
+      echo "=> Appending source string to ${NVM_PROFILE}"
+      command printf "%s" "${SOURCE_STR}" >> "${NVM_PROFILE}"
     else
-      echo "=> Source string already in $NVM_PROFILE"
+      echo "=> Source string already in ${NVM_PROFILE}"
     fi
   fi
 
   # Source nvm
-  . "$INSTALL_DIR/nvm.sh"
+  # shellcheck source=/dev/null
+  . "${INSTALL_DIR}/nvm.sh"
 
   nvm_check_global_modules
 
@@ -298,7 +300,7 @@ nvm_do_install() {
   nvm_reset
 
   echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
-  printf "$SOURCE_STR"
+  command printf "%s" "${SOURCE_STR}"
 }
 
 #
