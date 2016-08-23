@@ -2066,7 +2066,18 @@ nvm() {
         shift
       fi
 
-      VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "$provided_version")"
+      case "${provided_version}" in
+        'lts/*')
+          LTS='*'
+          provided_version=''
+        ;;
+        lts/*)
+          LTS="${provided_version##lts/}"
+          provided_version=''
+        ;;
+      esac
+
+      VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "${provided_version}")"
 
       if [ "_$VERSION" = "_N/A" ]; then
         local LTS_MSG
@@ -2200,8 +2211,11 @@ nvm() {
       PATTERN="${1-}"
       case "${PATTERN-}" in
         --) ;;
-        --lts)
+        --lts | 'lts/*')
           VERSION="$(nvm_match_version "lts/*")"
+        ;;
+        lts/*)
+          VERSION="$(nvm_match_version "lts/${PATTERN##lts/}")"
         ;;
         --lts=*)
           VERSION="$(nvm_match_version "lts/${PATTERN##--lts=}")"
@@ -2614,7 +2628,10 @@ nvm() {
       do
         case "${1-}" in
           --) ;;
-          --lts) LTS='*' ;;
+          --lts)
+            LTS='*'
+            NVM_FLAVOR="${NVM_NODE_PREFIX}"
+          ;;
           --lts=*)
             LTS="${1##--lts=}"
             NVM_FLAVOR="${NVM_NODE_PREFIX}"
@@ -2625,13 +2642,23 @@ nvm() {
             return 55;
           ;;
           *)
-            if [ -z "$PATTERN" ]; then
+            if [ -z "${PATTERN-}" ]; then
               PATTERN="${1-}"
-              if [ -z "$NVM_FLAVOR" ]; then
-                case "_$PATTERN" in
-                  "_$NVM_IOJS_PREFIX" | "_$NVM_NODE_PREFIX")
-                    NVM_FLAVOR="$PATTERN"
+              if [ -z "${NVM_FLAVOR-}" ]; then
+                case "${PATTERN}" in
+                  "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}")
+                    NVM_FLAVOR="${PATTERN}"
                     PATTERN=""
+                  ;;
+                  'lts/*')
+                    LTS='*'
+                    PATTERN=''
+                    NVM_FLAVOR="${NVM_NODE_PREFIX}"
+                  ;;
+                  lts/*)
+                    LTS="${PATTERN##lts/}"
+                    PATTERN=''
+                    NVM_FLAVOR="${NVM_NODE_PREFIX}"
                   ;;
                 esac
               fi
@@ -2879,6 +2906,16 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         esac
         shift
       done
+      case "${PATTERN}" in
+        'lts/*')
+          NVM_LTS='*'
+          unset PATTERN
+        ;;
+        lts/*)
+          NVM_LTS="${PATTERN##lts/}"
+          unset PATTERN
+        ;;
+      esac
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" )

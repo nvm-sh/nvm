@@ -32,6 +32,14 @@ OUTPUT="$(nvm version-remote --lts=argon foo)"
 EXPECTED_OUTPUT='NVM_VERSION_ONLY:true,NVM_LTS:argon,PATTERN:foo'
 [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "\`nvm version-remote --lts=argon foo\` called nvm_remote_version with >${OUTPUT}<, expected >${EXPECTED_OUTPUT}<"
 
+OUTPUT="$(nvm version-remote lts/foo)"
+EXPECTED_OUTPUT='NVM_VERSION_ONLY:true,NVM_LTS:foo,PATTERN:'
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "\`nvm version-remote lts/foo\` called nvm_remote_version with >${OUTPUT}<, expected >${EXPECTED_OUTPUT}<"
+
+OUTPUT="$(nvm version-remote 'lts/*')"
+EXPECTED_OUTPUT='NVM_VERSION_ONLY:true,NVM_LTS:*,PATTERN:'
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "\`nvm version-remote lts/*\` called nvm_remote_version with >${OUTPUT}<, expected >${EXPECTED_OUTPUT}<"
+
 set +ex # needed for stderr
 OUTPUT="$(nvm version-remote --foo bar 2>&1)"
 set -ex

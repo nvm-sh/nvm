@@ -160,13 +160,13 @@ In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the f
 
 ### Long-term support
 Node has a [schedule](https://github.com/nodejs/LTS#lts_schedule) for long-term support (LTS) You can reference LTS versions in aliases and `.nvmrc` files with the notation `lts/*` for the latest LTS, and `lts/argon` for LTS releases from the "argon" line, for example. In addition, the following commands support LTS arguments:
- - `nvm install --lts` / `nvm install --lts=argon`
- - `nvm uninstall --lts` / `nvm uninstall --lts=argon`
- - `nvm use --lts` / `nvm use --lts=argon`
- - `nvm exec --lts` / `nvm exec --lts=argon`
- - `nvm run --lts` / `nvm run --lts=argon`
- - `nvm ls-remote --lts` / `nvm ls-remote --lts=argon`
- - `nvm version-remote --lts` / `nvm version-remote --lts=argon`
+ - `nvm install --lts` / `nvm install --lts=argon` / `nvm install 'lts/*'` / `nvm install lts/argon`
+ - `nvm uninstall --lts` / `nvm uninstall --lts=argon` / `nvm uninstall 'lts/*'` / `nvm uninstall lts/argon`
+ - `nvm use --lts` / `nvm use --lts=argon` / `nvm use 'lts/*'` / `nvm use lts/argon`
+ - `nvm exec --lts` / `nvm exec --lts=argon` / `nvm exec 'lts/*'` / `nvm exec lts/argon`
+ - `nvm run --lts` / `nvm run --lts=argon` / `nvm run 'lts/*'` / `nvm run lts/argon`
+ - `nvm ls-remote --lts` / `nvm ls-remote --lts=argon` `nvm ls-remote 'lts/*'` / `nvm ls-remote lts/argon`
+ - `nvm version-remote --lts` / `nvm version-remote --lts=argon` / `nvm version-remote 'lts/*'` / `nvm version-remote lts/argon`
 
 Any time your local copy of `nvm` connects to https://nodejs.org, it will re-create the appropriate local aliases for all available LTS lines. These aliases (stored under `$NVM_DIR/alias/lts`), are managed by `nvm`, and you should not modify, remove, or create these files - expect your changes to be undone, and expect meddling with these files to cause bugs that will likely not be supported.
 
