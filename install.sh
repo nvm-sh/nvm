@@ -281,9 +281,9 @@ nvm_do_install() {
     echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
   else
-    if ! command grep -qc '/nvm.sh' "${NVM_PROFILE}"; then
-      echo "=> Appending source string to ${NVM_PROFILE}"
-      command printf "%s" "${SOURCE_STR}" >> "${NVM_PROFILE}"
+    if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
+      echo "=> Appending source string to $NVM_PROFILE"
+      command printf "$SOURCE_STR" >> "$NVM_PROFILE"
     else
       echo "=> Source string already in ${NVM_PROFILE}"
     fi
@@ -300,7 +300,7 @@ nvm_do_install() {
   nvm_reset
 
   echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
-  command printf "%s" "${SOURCE_STR}"
+  command printf "$SOURCE_STR"
 }
 
 #
