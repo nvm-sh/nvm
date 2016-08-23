@@ -2195,10 +2195,10 @@ nvm() {
       case "${PATTERN-}" in
         --) ;;
         --lts)
-          VERSION="$(nvm_match_version lts/*)"
+          VERSION="$(nvm_match_version "lts/*")"
         ;;
         --lts=*)
-          VERSION="$(nvm_match_version lts/${PATTERN##--lts=})"
+          VERSION="$(nvm_match_version "lts/${PATTERN##--lts=}")"
         ;;
         *)
           VERSION="$(nvm_version "${PATTERN}")"
