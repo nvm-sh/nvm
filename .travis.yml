@@ -7,14 +7,18 @@ before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
+  - if [ -n "${SHELLCHECK-}" ]; then echo "deb http://archive.ubuntu.com/ubuntu/ wily universe" | sudo tee -a /etc/apt/sources.list && sudo apt-get update -q && sudo apt-get install shellcheck -y && shellcheck --version ; fi
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
   - export PATH=$(echo $PATH | sed 's/::/:/')
-  - NVM_DIR=$TRAVIS_BUILD_DIR make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL
+  - export NVM_DIR="${TRAVIS_BUILD_DIR}"
+  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh && shellcheck -s bash install.sh ; fi
+  - if [ -z "${SHELLCHECK-}" ]; then make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL ; fi
 env:
+  - SHELLCHECK=true
   - SHELL=bash TEST_SUITE=install_script
   - SHELL=sh TEST_SUITE=fast
   - SHELL=dash TEST_SUITE=fast
