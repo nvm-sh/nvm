@@ -75,14 +75,20 @@ install_nvm_from_git() {
       exit 1
     }
   else
+    echo "=> Cleanup old nvm dir '$INSTALL_DIR'"
+    command rm -rf "$INSTALL_DIR/nvm-exec" "$INSTALL_DIR/nvm.sh"
     # Cloning to $INSTALL_DIR
     echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf "\r=> "
     mkdir -p "$INSTALL_DIR"
-    command git clone "$(nvm_source)" "$INSTALL_DIR" || {
+    command git init "$INSTALL_DIR"
+    command git --git-dir="$INSTALL_DIR"/.git remote add origin "$(nvm_source)"
+    command git --git-dir="$INSTALL_DIR"/.git fetch origin --tags
+    command git --git-dir="$INSTALL_DIR"/.git pull origin master || {
       echo >&2 "Failed to clone nvm repo. Please report this!"
       exit 1
     }
+    command git --git-dir="$INSTALL_DIR"/.git branch --set-upstream-to=origin/master master
   fi
   command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout --quiet "$(nvm_latest_version)"
   if [ ! -z "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
