@@ -3,11 +3,14 @@ addons:
   apt_packages:
   - zsh
   - ksh
+cache:
+  directories:
+    - $HOME/.stack
 before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
-  - if [ -n "${SHELLCHECK-}" ]; then echo "deb http://archive.ubuntu.com/ubuntu/ wily universe" | sudo tee -a /etc/apt/sources.list && sudo apt-get update -q && sudo apt-get install shellcheck -y && shellcheck --version ; fi
+  - if [ -n "${SHELLCHECK-}" ]; then sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442 && echo 'deb http://download.fpcomplete.com/ubuntu precise main' | sudo tee /etc/apt/sources.list.d/fpco.list && sudo apt-get update && sudo apt-get install stack bc -y && stack setup && stack install ShellCheck && shellcheck --version ; fi
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
