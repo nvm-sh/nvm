@@ -28,7 +28,7 @@ __nvm_commands ()
     current list ls list-remote ls-remote
     install-latest-npm
     cache deactivate unload
-    version version-remote which'
+    version version-remote which self-upgrade'
 
     if [ ${#COMP_WORDS[@]} == 4 ]; then
 

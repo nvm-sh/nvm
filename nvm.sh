@@ -2347,6 +2347,7 @@ nvm() {
       nvm_echo '  nvm which [current | <version>]           Display path to installed node version. Uses .nvmrc if available'
       nvm_echo '  nvm cache dir                             Display path to the cache directory for nvm'
       nvm_echo '  nvm cache clear                           Empty cache directory for nvm'
+      nvm_echo '  nvm self-upgrade                          Upgrade nvm to the latest stable release version'
       nvm_echo
       nvm_echo 'Example:'
       nvm_echo '  nvm install 8.0.0                     Install a specific version number'
@@ -2448,6 +2449,52 @@ nvm() {
       return 42
     ;;
 
+    "self-upgrade")
+      local current_nvm_version
+      local latest_nvm_version
+      local origin_nvm_version
+
+      current_nvm_version="$(nvm --version)"
+
+      if nvm_has "git" && [ -d "$NVM_DIR/.git" ]; then
+        command cd "$NVM_DIR"
+        command git fetch --tags
+        latest_nvm_version="$(command git describe --abbrev=0 --tags --match 'v[0-9]*' origin)"
+        if [ "v$current_nvm_version" = "$latest_nvm_version" ]; then
+          nvm_echo "You already have the latest nvm ($latest_nvm_version) "
+        else
+          command git reset --hard
+          command git checkout "$latest_nvm_version"
+          # shellcheck source=/dev/null
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          origin_nvm_version="$current_nvm_version"
+          current_nvm_version="$(nvm --version)"
+          if [ "v$current_nvm_version" = "$latest_nvm_version" ]; then
+            nvm_echo "nvm successfully upgrade from v$origin_nvm_version to v$current_nvm_version!"
+          else
+            nvm_err  "nvm upgrade failed!!!"
+          fi
+        fi
+      elif nvm_has "nvm_download" && nvm_has "nvm_get_latest"; then
+        latest_nvm_version="$(nvm_get_latest)"
+        if [ "v$current_nvm_version" = "$latest_nvm_version" ]; then
+          nvm_echo "You already have the latest nvm ($latest_nvm_version) "
+        else
+          nvm_download "https://raw.githubusercontent.com/creationix/nvm/$latest_nvm_version/install.sh" | command bash
+          # shellcheck source=/dev/null
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          origin_nvm_version="$current_nvm_version"
+          current_nvm_version="$(nvm --version)"
+          if [ "v$current_nvm_version" = "$latest_nvm_version" ]; then
+            nvm_echo "nvm successfully upgrade from v$origin_nvm_version to v$current_nvm_version!"
+          else
+            nvm_err  "nvm upgrade failed!!!"
+          fi
+        fi
+      else
+        nvm_err "You need git, curl, or wget to upgrade nvm"
+      fi
+    ;;
     "install" | "i" )
       local version_not_provided
       version_not_provided=0
