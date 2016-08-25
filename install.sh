@@ -78,13 +78,29 @@ install_nvm_from_git() {
     # Cloning to $INSTALL_DIR
     echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf "\r=> "
-    mkdir -p "$INSTALL_DIR"
-    command git clone "$(nvm_source)" "$INSTALL_DIR" || {
-      echo >&2 "Failed to clone nvm repo. Please report this!"
-      exit 1
-    }
+    mkdir -p "${INSTALL_DIR}"
+    if [ "$(ls -A "${INSTALL_DIR}")" ]; then
+      command git init "${INSTALL_DIR}" || {
+        echo >&2 'Failed to initialize nvm repo. Please report this!'
+        exit 2
+      }
+      command git --git-dir="${INSTALL_DIR}/.git" remote add origin "$(nvm_source)" 2> /dev/null \
+        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url origin "$(nvm_source)" || {
+        echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
+        exit 2
+      }
+      command git --git-dir="${INSTALL_DIR}/.git" fetch origin --tags || {
+        echo >&2 'Failed to fetch origin with tags. Please report this!'
+        exit 2
+      }
+    else
+      command git clone "$(nvm_source)" "${INSTALL_DIR}" || {
+        echo >&2 'Failed to clone nvm repo. Please report this!'
+        exit 2
+      }
+    fi
   fi
-  command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout --quiet "$(nvm_latest_version)"
+  command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout -f --quiet "$(nvm_latest_version)"
   if [ ! -z "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
     if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
       command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
