@@ -240,24 +240,24 @@ nvm_check_global_modules() {
 }
 
 nvm_do_install() {
-  if [ -z "$METHOD" ]; then
+  if [ -z "${METHOD}" ]; then
     # Autodetect install method
-    if nvm_has "git"; then
+    if nvm_has git; then
       install_nvm_from_git
-    elif nvm_has "nvm_download"; then
+    elif nvm_has nvm_download; then
       install_nvm_as_script
     else
-      echo >&2 "You need git, curl, or wget to install nvm"
+      echo >&2 'You need git, curl, or wget to install nvm'
       exit 1
     fi
-  elif [ "~$METHOD" = "~git" ]; then
-    if ! nvm_has "git"; then
+  elif [ "${METHOD}" = 'git' ]; then
+    if ! nvm_has git; then
       echo >&2 "You need git to install nvm"
       exit 1
     fi
     install_nvm_from_git
-  elif [ "~$METHOD" = "~script" ]; then
-    if ! nvm_has "nvm_download"; then
+  elif [ "${METHOD}" = 'script' ]; then
+    if ! nvm_has nvm_download; then
       echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
