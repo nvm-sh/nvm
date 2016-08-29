@@ -966,6 +966,7 @@ nvm_ls_remote_index_tab() {
   )"
   local LTS_ALIAS
   local LTS_VERSION
+  command mkdir -p "$(nvm_alias_path)/lts"
   nvm_echo "${VERSION_LIST}" \
     | awk '{
         if ($10 ~ /^\-?$/) { next }
