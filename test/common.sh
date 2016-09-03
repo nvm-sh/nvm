@@ -63,3 +63,15 @@ make_fake_iojs() {
     return 3
   }
 }
+
+watch() {
+  $@ &
+  local JOB
+  JOB=$!
+  while true; do sleep 15; >&2 echo '* ping *'; done &
+  wait $JOB;
+  local EXIT_CODE
+  EXIT_CODE=$?
+  kill %2;
+  return $EXIT_CODE
+}
