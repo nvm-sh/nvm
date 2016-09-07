@@ -97,6 +97,9 @@ nvm_print_npm_version() {
   fi
 }
 
+# Ensure this only runs in the users $HOME directory
+cd "$HOME"
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if [ -z "${NVM_CD_FLAGS-}" ]; then
