@@ -1343,7 +1343,7 @@ nvm() {
         return 8
       fi
 
-      nvm_ensure_version_installed "$2"
+      nvm_ensure_version_installed "$VERSION"
       EXIT_CODE=$?
       if [ "$EXIT_CODE" != "0" ]; then
         return $EXIT_CODE
