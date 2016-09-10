@@ -289,11 +289,8 @@ nvm_do_install() {
 
   SOURCE_STR="\nexport NVM_DIR=\"$INSTALL_DIR\""
   SOURCE_STR="$SOURCE_STR\nnvm() {\n  echo Loading nvm for first use in this shell >/dev/stderr"
-  SOURCE_STR="$SOURCE_STR\n  [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\" # This loads nvm"
+  SOURCE_STR="$SOURCE_STR\n  [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\" # This loads nvm"
   SOURCE_STR="$SOURCE_STR\n  nvm \"\$@\"\n}"
-  echo $SOURCE_STR
-}
-
 
   if [ -z "${NVM_PROFILE-}" ] ; then
     echo "=> Profile not found. Tried ${NVM_PROFILE} (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
