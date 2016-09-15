@@ -3037,7 +3037,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" )
-      nvm_echo '0.31.7'
+      nvm_echo '0.32.0'
     ;;
     "unload" )
       unset -f nvm \

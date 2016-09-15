@@ -37,13 +37,13 @@ Note: If you're using `zsh` you can easily install `nvm` as a zsh plugin. Instal
 To install or update nvm, you can use the [install script][2] using cURL:
 
 ```sh
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
 ```
 
 or Wget:
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash
 ```
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
@@ -404,7 +404,7 @@ If installing nvm on Alpine Linux *is* still what you want or need to do, you sh
 
 ```sh
 apk add bash
-wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | /bin/bash
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | /bin/bash
 ```
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
@@ -435,7 +435,7 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
 If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node PATH is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
 
 [1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.31.7/install.sh
+[2]: https://github.com/creationix/nvm/blob/v0.32.0/install.sh
 [3]: https://travis-ci.org/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
