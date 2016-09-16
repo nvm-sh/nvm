@@ -1487,7 +1487,7 @@ nvm_get_mirror() {
   esac
 }
 
-# args: flavor, kind, version, reinstall
+# args: flavor, type, version, reinstall
 nvm_install_binary() {
   local FLAVOR
   case "${1-}" in
@@ -1498,11 +1498,8 @@ nvm_install_binary() {
     ;;
   esac
 
-  local MIRROR
-  MIRROR="$(nvm_get_mirror node "${2-}")"
-  if [ -z "${MIRROR}" ]; then
-    return 3
-  fi
+  local TYPE
+  TYPE="${2-}"
 
   local PREFIXED_VERSION
   PREFIXED_VERSION="${3-}"
@@ -1525,7 +1522,7 @@ nvm_install_binary() {
   local TMPDIR
   local VERSION_PATH
 
-  TARBALL="$(nvm_download_artifact "${FLAVOR}" binary std "${VERSION}" | command tail -1)"
+  TARBALL="$(nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
   if [ -f "${TARBALL}" ]; then
     TMPDIR="$(dirname "${TARBALL}")/files"
   fi
@@ -1569,7 +1566,7 @@ nvm_get_download_slug() {
   esac
 
   local VERSION
-  VERSION="${3}"
+  VERSION="${3-}"
 
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
