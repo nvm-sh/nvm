@@ -903,48 +903,60 @@ nvm_ls_remote() {
   else
     PATTERN=".*"
   fi
-  NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab node std "${NVM_NODEJS_ORG_MIRROR}" "${PATTERN}"
+  NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab node std "${PATTERN}"
 }
 
 nvm_ls_remote_iojs() {
-  NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "${NVM_IOJS_ORG_MIRROR}" "${1-}"
+  NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "${1-}"
 }
 
+# args flavor, type, version
 nvm_ls_remote_index_tab() {
   local LTS
   LTS="${NVM_LTS-}"
-  if [ "$#" -lt 4 ]; then
+  if [ "$#" -lt 3 ]; then
     nvm_err 'not enough arguments'
     return 5
   fi
+
+  local FLAVOR
+  FLAVOR="${1-}"
+
   local TYPE
-  TYPE="${1-}"
+  TYPE="${2-}"
+
+  local MIRROR
+  MIRROR="$(nvm_get_mirror "${FLAVOR}" "${TYPE}")"
+  if [ -z "${MIRROR}" ]; then
+    return 3
+  fi
+
   local PREFIX
   PREFIX=''
-  case "${TYPE}-${2-}" in
+  case "${FLAVOR}-${TYPE}" in
     iojs-std) PREFIX="$(nvm_iojs_prefix)-" ;;
     node-std) PREFIX='' ;;
     iojs-*)
       nvm_err 'unknown type of io.js release'
       return 4
     ;;
-    node-*)
+    *)
       nvm_err 'unknown type of node.js release'
       return 4
     ;;
   esac
   local SORT_COMMAND
   SORT_COMMAND='sort'
-  case "${TYPE}" in
+  case "${FLAVOR}" in
     node) SORT_COMMAND='sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n' ;;
   esac
-  local MIRROR
-  MIRROR="${3-}"
+
   local PATTERN
-  PATTERN="${4-}"
+  PATTERN="${3-}"
+
   local VERSIONS
   if [ -n "${PATTERN}" ]; then
-    if [ "${TYPE}" = 'iojs' ]; then
+    if [ "${FLAVOR}" = 'iojs' ]; then
       PATTERN="$(nvm_ensure_version_prefix "$(nvm_strip_iojs_prefix "${PATTERN}")")"
     else
       PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
@@ -952,6 +964,7 @@ nvm_ls_remote_index_tab() {
   else
     unset PATTERN
   fi
+
   ZSH_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
     ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
