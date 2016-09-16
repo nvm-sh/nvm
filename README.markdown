@@ -2,7 +2,7 @@
 
 ## Installation
 
-First you'll need to make sure your system has a c++ compiler. For OS X, Xcode will work, for Ubuntu, the build-essential and libssl-dev packages work.
+First you'll need to make sure your system has a c++ compiler. For OS X, Xcode will work, for Ubuntu, the `build-essential` and `libssl-dev` packages work.
 
 Note: `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
  - [nvm-windows](https://github.com/coreybutler/nvm-windows)
@@ -16,7 +16,7 @@ Note: `nvm` does not support [Fish] either (see [#303](https://github.com/creati
 
 
 
-Note: We still have some problems with FreeBSD, because there is no pre-built binary from official for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc), see the issue ticket:
+Note: We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
  - [[#900] [Bug] nodejs on FreeBSD need to be patched ](https://github.com/creationix/nvm/issues/900)
  - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
 
