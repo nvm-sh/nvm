@@ -338,31 +338,68 @@ nvm_remote_version() {
 nvm_remote_versions() {
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local NVM_NODE_PREFIX
+  NVM_NODE_PREFIX="$(nvm_node_prefix)"
+
   local PATTERN
   PATTERN="${1-}"
+
+  local NVM_FLAVOR
+  if [ -n "${NVM_LTS-}" ]; then
+    NVM_FLAVOR="${NVM_NODE_PREFIX}"
+  fi
+
   case "${PATTERN}" in
     "${NVM_IOJS_PREFIX}" | "io.js")
-      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs)" &&:
+       NVM_FLAVOR="${NVM_IOJS_PREFIX}"
+       unset PATTERN
     ;;
-    "$(nvm_node_prefix)")
-      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote)" &&:
-    ;;
-    *)
-      if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
-        nvm_err 'Implicit aliases are not supported in nvm_remote_versions.'
-        return 1
-      fi
-      VERSIONS="$(nvm_echo "$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN}")
-$(NVM_LTS=${NVM_LTS-} nvm_ls_remote_iojs "${PATTERN}")" | nvm_grep -v "N/A" | command sed '/^$/d')" &&:
+    "${NVM_NODE_PREFIX}")
+       NVM_FLAVOR="${NVM_NODE_PREFIX}"
+       unset PATTERN
     ;;
   esac
+
+  if nvm_validate_implicit_alias "${PATTERN-}" 2> /dev/null ; then
+    nvm_err 'Implicit aliases are not supported in nvm_remote_versions.'
+    return 1
+  fi
+
+  local NVM_LS_REMOTE_EXIT_CODE
+  NVM_LS_REMOTE_EXIT_CODE=0
+  local NVM_LS_REMOTE_PRE_MERGED_OUTPUT
+  NVM_LS_REMOTE_PRE_MERGED_OUTPUT=''
+  local NVM_LS_REMOTE_POST_MERGED_OUTPUT
+  NVM_LS_REMOTE_POST_MERGED_OUTPUT=''
+  if [ -z "${NVM_FLAVOR}" ] || [ "${NVM_FLAVOR}" = "${NVM_NODE_PREFIX}" ]; then
+    local NVM_LS_REMOTE_OUTPUT
+    NVM_LS_REMOTE_OUTPUT=$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN-}") &&:
+    NVM_LS_REMOTE_EXIT_CODE=$?
+    # split output into two
+    NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%v4\.0\.0*}"
+    NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#$NVM_LS_REMOTE_PRE_MERGED_OUTPUT}"
+  fi
+
+  local NVM_LS_REMOTE_IOJS_EXIT_CODE
+  NVM_LS_REMOTE_IOJS_EXIT_CODE=0
+  local NVM_LS_REMOTE_IOJS_OUTPUT
+  if [ -z "${NVM_LTS}" ] && ( \
+    [ -z "${NVM_FLAVOR}" ] || [ "${NVM_FLAVOR}" = "${NVM_IOJS_PREFIX}" ] \
+  ); then
+    NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "${PATTERN-}") &&:
+    NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
+  fi
+
+  VERSIONS="$(nvm_echo "${NVM_LS_REMOTE_PRE_MERGED_OUTPUT}
+${NVM_LS_REMOTE_IOJS_OUTPUT}
+${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^$/d')"
 
   if [ -z "${VERSIONS}" ]; then
     nvm_echo 'N/A'
     return 3
-  else
-    nvm_echo "${VERSIONS}"
   fi
+  nvm_echo "${VERSIONS}"
+  return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
 }
 
 nvm_is_valid_version() {
@@ -2234,7 +2271,7 @@ nvm() {
 
       VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "${provided_version}")"
 
-      if [ "_$VERSION" = "_N/A" ]; then
+      if [ "${VERSION}" = 'N/A' ]; then
         local LTS_MSG
         local REMOTE_CMD
         if [ "${LTS-}" = '*' ]; then
@@ -2272,10 +2309,10 @@ nvm() {
         shift
       done
 
-      if [ "_$(nvm_ensure_version_prefix "$PROVIDED_REINSTALL_PACKAGES_FROM")" = "_$VERSION" ]; then
+      if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ] && [ "$(nvm_ensure_version_prefix "${PROVIDED_REINSTALL_PACKAGES_FROM}")" = "${VERSION}" ]; then
         nvm_err "You can't reinstall global packages from the same version of node you're installing."
         return 4
-      elif [ ! -z "$PROVIDED_REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" = "_N/A" ]; then
+      elif [ "${REINSTALL_PACKAGES_FROM-}" = 'N/A' ]; then
         nvm_err "If --reinstall-packages-from is provided, it must point to an installed version of node."
         return 5
       fi
@@ -2759,25 +2796,18 @@ nvm() {
       return $NVM_LS_EXIT_CODE
     ;;
     "ls-remote" | "list-remote" )
-      local LTS
-      local NVM_IOJS_PREFIX
-      NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
-      local NVM_NODE_PREFIX
-      NVM_NODE_PREFIX="$(nvm_node_prefix)"
+      local NVM_LTS
       local PATTERN
-      local NVM_FLAVOR
       local NVM_NO_COLORS
       while [ $# -gt 0 ]
       do
         case "${1-}" in
           --) ;;
           --lts)
-            LTS='*'
-            NVM_FLAVOR="${NVM_NODE_PREFIX}"
+            NVM_LTS='*'
           ;;
           --lts=*)
-            LTS="${1##--lts=}"
-            NVM_FLAVOR="${NVM_NODE_PREFIX}"
+            NVM_LTS="${1##--lts=}"
           ;;
           --no-colors) NVM_NO_COLORS="${1}" ;;
           --*)
@@ -2787,22 +2817,10 @@ nvm() {
           *)
             if [ -z "${PATTERN-}" ]; then
               PATTERN="${1-}"
-              if [ -z "${NVM_FLAVOR-}" ]; then
+              if [ -z "${NVM_LTS-}" ]; then
                 case "${PATTERN}" in
-                  "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}")
-                    NVM_FLAVOR="${PATTERN}"
-                    PATTERN=""
-                  ;;
-                  'lts/*')
-                    LTS='*'
-                    PATTERN=''
-                    NVM_FLAVOR="${NVM_NODE_PREFIX}"
-                  ;;
-                  lts/*)
-                    LTS="${PATTERN##lts/}"
-                    PATTERN=''
-                    NVM_FLAVOR="${NVM_NODE_PREFIX}"
-                  ;;
+                  'lts/*') NVM_LTS='*' ;;
+                  lts/*) NVM_LTS="${PATTERN##lts/}" ;;
                 esac
               fi
             fi
@@ -2811,34 +2829,8 @@ nvm() {
         shift
       done
 
-      local NVM_LS_REMOTE_EXIT_CODE
-      NVM_LS_REMOTE_EXIT_CODE=0
-      local NVM_LS_REMOTE_PRE_MERGED_OUTPUT
-      NVM_LS_REMOTE_PRE_MERGED_OUTPUT=''
-      local NVM_LS_REMOTE_POST_MERGED_OUTPUT
-      NVM_LS_REMOTE_POST_MERGED_OUTPUT=''
-      if [ "_$NVM_FLAVOR" != "_$NVM_IOJS_PREFIX" ]; then
-        local NVM_LS_REMOTE_OUTPUT
-        NVM_LS_REMOTE_OUTPUT=$(NVM_LTS="${LTS-}" nvm_ls_remote "$PATTERN")
-        # split output into two
-        NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%v4\.0\.0*}"
-        NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#$NVM_LS_REMOTE_PRE_MERGED_OUTPUT}"
-        NVM_LS_REMOTE_EXIT_CODE=$?
-      fi
-
-      local NVM_LS_REMOTE_IOJS_EXIT_CODE
-      NVM_LS_REMOTE_IOJS_EXIT_CODE=0
-      local NVM_LS_REMOTE_IOJS_OUTPUT
-      NVM_LS_REMOTE_IOJS_OUTPUT=''
-      if [ "_$NVM_FLAVOR" != "_$NVM_NODE_PREFIX" ] && [ -z "${LTS-}" ]; then
-        NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "$PATTERN")
-        NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
-      fi
-
       local NVM_OUTPUT
-      NVM_OUTPUT="$(nvm_echo "$NVM_LS_REMOTE_PRE_MERGED_OUTPUT
-$NVM_LS_REMOTE_IOJS_OUTPUT
-$NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
+      NVM_OUTPUT="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN}" &&:)"
       if [ -n "$NVM_OUTPUT" ]; then
         NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "$NVM_OUTPUT"
         return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
