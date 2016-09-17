@@ -32,6 +32,8 @@ Homebrew installation is not supported. If you have issues with homebrew-install
 
 Note: If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm upgrade` to upgrade.
 
+Note: Git versions before v1.7 may face a problem of cloning nvm source from GitHub via https protocol, and there is also different behavior of git before v1.6, so the minimum required git version is v1.7.0 and we recommend v1.7.9.5 as it's the default version of the wildly used Ubuntu 12.04 LTS. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
+
 ### Install script
 
 To install or update nvm, you can use the [install script][2] using cURL:
@@ -81,7 +83,7 @@ which should output 'nvm' if the installation was successful. Please note that `
 
 For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm`.
 
-Or if you have `git` installed (requires git v1.5.5+):
+Or if you have `git` installed (requires git v1.7+):
 
 1. clone this repo
 1. check out the latest version
@@ -105,7 +107,7 @@ export NVM_DIR="$HOME/.nvm"
 
 ### Manual upgrade
 
-For manual upgrade with `git` (requires git v1.5.5+):
+For manual upgrade with `git` (requires git v1.7+):
 
 1. change to the `$NVM_DIR`
 1. pull down the latest changes
