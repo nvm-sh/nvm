@@ -1,5 +1,28 @@
 # Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3]
 
+## Table of Contents
+
+ - [Installation](#installation)
+   - [Install script](#install-script)
+   - [Verify installation](#verify-installation)
+   - [Manual install](#manual-install)
+   - [Manual upgrade](#manual-install)
+ - [Usage](#usage)
+   - [Long-term support](#long-term-support)
+   - [Migrating global packages while installing](#migrating-global-packages-while-installing)
+   - [io.js](#iojs)
+   - [System version of node](#system-version-of-node)
+   - [Listing versions](#listing-versions)
+   - [.nvmrc](#nvmrc)
+   - [Deeper Shell Integration](#deeper-shell-integration)
+ - [License](#license)
+ - [Running tests](#running-tests)
+ - [Bash completion](#bash-completion)
+   - [Usage](#usage-1)
+ - [Compatibility Issues](#compatibility-issues)
+ - [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
+ - [Problems](#problems)
+
 ## Installation
 
 First you'll need to make sure your system has a c++ compiler. For OS X, Xcode will work, for Ubuntu, the `build-essential` and `libssl-dev` packages work.
