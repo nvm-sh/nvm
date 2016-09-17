@@ -109,6 +109,11 @@ install_nvm_from_git() {
       command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
     fi
   fi
+
+  echo "=> Compressing and cleaning up git repository"
+  if ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" gc --aggressive --prune=now ; then
+      echo >&2 "Your version of git is out of date. Please update it!"
+  fi
   return
 }
 
