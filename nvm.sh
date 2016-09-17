@@ -1516,6 +1516,11 @@ nvm_install_binary() {
 
   local PREFIXED_VERSION
   PREFIXED_VERSION="${3-}"
+  if [ -z "${PREFIXED_VERSION}" ]; then
+    nvm_err 'A version number is required.'
+    return 3
+  fi
+
   local VERSION
   VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
 
@@ -1631,6 +1636,11 @@ nvm_download_artifact() {
   local VERSION
   VERSION="${4}"
 
+  if [ -z "${VERSION}" ]; then
+    nvm_err 'A version number is required.'
+    return 3
+  fi
+
   if [ "${KIND}" = 'binary' ] && ! nvm_binary_available "${VERSION}"; then
     nvm_err "No precompiled binary available for ${VERSION}."
     return
@@ -1745,6 +1755,11 @@ nvm_install_source() {
 
   local PREFIXED_VERSION
   PREFIXED_VERSION="${3-}"
+  if [ -z "${PREFIXED_VERSION}" ]; then
+    nvm_err 'A version number is required.'
+    return 3
+  fi
+
   local VERSION
   VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
 
