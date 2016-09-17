@@ -313,10 +313,10 @@ nvm_remote_version() {
   if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
     case "${PATTERN}" in
       "$(nvm_iojs_prefix)")
-        VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs | command tail -1)"
+        VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs | command tail -1)" &&:
       ;;
       *)
-        VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN}")"
+        VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN}")" &&:
       ;;
     esac
   else
@@ -342,10 +342,10 @@ nvm_remote_versions() {
   PATTERN="${1-}"
   case "${PATTERN}" in
     "${NVM_IOJS_PREFIX}" | "io.js")
-      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs)"
+      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs)" &&:
     ;;
     "$(nvm_node_prefix)")
-      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote)"
+      VERSIONS="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote)" &&:
     ;;
     *)
       if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
@@ -353,7 +353,7 @@ nvm_remote_versions() {
         return 1
       fi
       VERSIONS="$(nvm_echo "$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN}")
-$(NVM_LTS=${NVM_LTS-} nvm_ls_remote_iojs "${PATTERN}")" | nvm_grep -v "N/A" | command sed '/^$/d')"
+$(NVM_LTS=${NVM_LTS-} nvm_ls_remote_iojs "${PATTERN}")" | nvm_grep -v "N/A" | command sed '/^$/d')" &&:
     ;;
   esac
 
@@ -463,7 +463,7 @@ nvm_print_formatted_alias() {
   local VERSION
   VERSION="${3-}"
   if [ -z "${VERSION}" ]; then
-    VERSION="$(nvm_version "${DEST}" || return 0)"
+    VERSION="$(nvm_version "${DEST}")" ||:
   fi
   local VERSION_FORMAT
   local ALIAS_FORMAT
@@ -528,7 +528,7 @@ nvm_print_alias_path() {
   local ALIAS
   ALIAS="${ALIAS_PATH##${NVM_ALIAS_DIR}\/}"
   local DEST
-  DEST="$(nvm_alias "${ALIAS}" 2> /dev/null || return 0)"
+  DEST="$(nvm_alias "${ALIAS}" 2> /dev/null)" ||:
   if [ -n "${DEST}" ]; then
     NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_LTS="${NVM_LTS-}" DEFAULT=false nvm_print_formatted_alias "${ALIAS}" "${DEST}"
   fi
@@ -1318,7 +1318,7 @@ nvm_print_implicit_alias() {
 
       local NVM_IOJS_VERSION
       local EXIT_CODE
-      NVM_IOJS_VERSION="$($NVM_COMMAND)"
+      NVM_IOJS_VERSION="$($NVM_COMMAND)" &&:
       EXIT_CODE="$?"
       if [ "_$EXIT_CODE" = "_0" ]; then
         NVM_IOJS_VERSION="$(nvm_echo "$NVM_IOJS_VERSION" | command sed "s/^$NVM_IMPLICIT-//" | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
@@ -2244,11 +2244,11 @@ nvm() {
         case "$1" in
           --reinstall-packages-from=*)
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 27-)"
-            REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM" || return 0)"
+            REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")" ||:
           ;;
           --copy-packages-from=*)
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 22-)"
-            REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM" || return 0)"
+            REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")" ||:
           ;;
           *)
             ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
@@ -2589,7 +2589,7 @@ nvm() {
           nvm_rc_version && has_checked_nvmrc=1
         fi
         if [ -n "$NVM_RC_VERSION" ]; then
-          VERSION="$(nvm_version "$NVM_RC_VERSION" || return 0)"
+          VERSION="$(nvm_version "$NVM_RC_VERSION")" ||:
         fi
         if [ "${VERSION:-N/A}" = 'N/A' ]; then
           >&2 nvm --help
@@ -2600,7 +2600,7 @@ nvm() {
       if [ -z "${NVM_LTS-}" ]; then
         provided_version="$1"
         if [ -n "$provided_version" ]; then
-          VERSION="$(nvm_version "$provided_version" || return 0)"
+          VERSION="$(nvm_version "$provided_version")" ||:
           if [ "_${VERSION:-N/A}" = '_N/A' ] && ! nvm_is_valid_version "$provided_version"; then
             provided_version=''
             if [ $has_checked_nvmrc -ne 1 ]; then
@@ -2610,7 +2610,7 @@ nvm() {
                 nvm_rc_version && has_checked_nvmrc=1
               fi
             fi
-            VERSION="$(nvm_version "$NVM_RC_VERSION" || return 0)"
+            VERSION="$(nvm_version "$NVM_RC_VERSION")" ||:
           else
             shift
           fi
@@ -2678,7 +2678,7 @@ nvm() {
         provided_version="lts/${NVM_LTS:-*}"
         VERSION="$provided_version"
       elif [ -n "$provided_version" ]; then
-        VERSION="$(nvm_version "$provided_version" || return 0)"
+        VERSION="$(nvm_version "$provided_version")" ||:
         if [ "_$VERSION" = '_N/A' ] && ! nvm_is_valid_version "$provided_version"; then
           if [ -n "${NVM_SILENT-}" ]; then
             nvm_rc_version >/dev/null 2>&1
@@ -2686,7 +2686,7 @@ nvm() {
             nvm_rc_version
           fi
           provided_version="$NVM_RC_VERSION"
-          VERSION="$(nvm_version "$provided_version" || return 0)"
+          VERSION="$(nvm_version "$provided_version")" ||:
         else
           shift
         fi
@@ -2842,10 +2842,10 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         nvm_rc_version
         if [ -n "${NVM_RC_VERSION}" ]; then
           provided_version="${NVM_RC_VERSION}"
-          VERSION=$(nvm_version "${NVM_RC_VERSION}" || return 0)
+          VERSION=$(nvm_version "${NVM_RC_VERSION}") ||:
         fi
       elif [ "_${1}" != '_system' ]; then
-        VERSION="$(nvm_version "${provided_version}" || return 0)"
+        VERSION="$(nvm_version "${provided_version}")" ||:
       else
         VERSION="${1-}"
       fi
@@ -2926,7 +2926,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
           nvm_err 'Aliases in subdirectories are not supported.'
           return 1
         fi
-        VERSION="$(nvm_version "${TARGET}" || return 0)"
+        VERSION="$(nvm_version "${TARGET}")" ||:
         if [ "${VERSION}" = 'N/A' ]; then
           nvm_err "! WARNING: Version '${TARGET}' does not exist."
         fi
@@ -2967,7 +2967,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
       local PROVIDED_VERSION
       PROVIDED_VERSION="${1-}"
 
-      if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ] || [ "$(nvm_version "$PROVIDED_VERSION" || return 0)" = "$(nvm_ls_current)" ]; then
+      if [ "$PROVIDED_VERSION" = "$(nvm_ls_current)" ] || [ "$(nvm_version "$PROVIDED_VERSION" ||:)" = "$(nvm_ls_current)" ]; then
         nvm_err 'Can not reinstall packages from the current version of node.'
         return 2
       fi
@@ -2980,7 +2980,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | nvm_grep -v "N/A" | command sed '/^$/d')"
         fi
         VERSION="system"
       else
-        VERSION="$(nvm_version "$PROVIDED_VERSION" || return 0)"
+        VERSION="$(nvm_version "$PROVIDED_VERSION")" ||:
       fi
 
       local NPMLIST
