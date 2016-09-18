@@ -36,7 +36,7 @@ nvm_has() { return 0; }
 npm() {
   local args
   args="$@"
-  if [ "_$args" = "_config get prefix" ]; then
+  if [ "_$args" = "_config --loglevel=warn get prefix" ]; then
     echo "$(nvm_version_dir new)/good prefix"
   fi
 }
@@ -60,7 +60,7 @@ EXIT_CODE="$(NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo
 npm() {
   local args
   args="$@"
-  if [ "_$args" = "_config get prefix" ]; then
+  if [ "_$args" = "_config --loglevel=warn get prefix" ]; then
     echo "./bad prefix"
   fi
 }
