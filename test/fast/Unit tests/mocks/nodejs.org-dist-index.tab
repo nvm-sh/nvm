@@ -1,4 +1,9 @@
 version	date	files	npm	v8	uv	zlib	openssl	modules	lts
+v6.6.0	2016-09-14	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.10.3	5.1.281.83	1.9.1	1.2.8	1.0.2h	48	-
+v6.5.0	2016-08-26	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.10.3	5.1.281.81	1.9.1	1.2.8	1.0.2h	48	-
+v6.4.0	2016-08-12	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.10.3	5.0.71.60	1.9.1	1.2.8	1.0.2h	48	-
+v6.3.1	2016-07-21	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.10.3	5.0.71.57	1.9.1	1.2.8	1.0.2h	48	-
+v6.3.0	2016-07-06	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.10.3	5.0.71.52	1.9.1	1.2.8	1.0.2h	48	-
 v6.2.2	2016-06-16	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.9.5	5.0.71.52	1.9.1	1.2.8	1.0.2h	48	-
 v6.2.1	2016-06-02	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.9.3	5.0.71.52	1.9.1	1.2.8	1.0.2h	48	-
 v6.2.0	2016-05-17	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.8.9	5.0.71.47	1.9.1	1.2.8	1.0.2h	48	-
@@ -23,6 +28,7 @@ v5.2.0	2015-12-09	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-x64,linux-
 v5.1.1	2015-12-03	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.3.12	4.6.85.31	1.7.5	1.2.8	1.0.2e	47	-
 v5.1.0	2015-11-17	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.3.12	4.6.85.31	1.7.5	1.2.8	1.0.2d	47	-
 v5.0.0	2015-10-29	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	3.3.6	4.6.85.28	1.7.5	1.2.8	1.0.2d	47	-
+v4.5.0	2016-08-16	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	2.15.9	4.5.103.37	1.9.1	1.2.8	1.0.2h	46	Argon
 v4.4.7	2016-06-28	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	2.15.8	4.5.103.36	1.8.0	1.2.8	1.0.2h	46	Argon
 v4.4.6	2016-06-23	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	2.15.5	4.5.103.36	1.8.0	1.2.8	1.0.2h	46	Argon
 v4.4.5	2016-05-24	headers,linux-arm64,linux-armv6l,linux-armv7l,linux-ppc64le,linux-x64,linux-x86,osx-x64-pkg,osx-x64-tar,src,sunos-x64,sunos-x86,win-x64-msi,win-x86-msi	2.15.5	4.5.103.35	1.8.0	1.2.8	1.0.2h	46	Argon

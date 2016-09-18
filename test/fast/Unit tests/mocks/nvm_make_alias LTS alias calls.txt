@@ -1,2 +1,2 @@
-lts/argon|v4.4.7
+lts/argon|v4.5.0
 lts/*|lts/argon
