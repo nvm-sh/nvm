@@ -2555,10 +2555,8 @@ nvm() {
 
       # This nvm_ensure_version_installed call can be a performance bottleneck
       # on shell startup. Perhaps we can optimize it away or make it faster.
-      nvm_ensure_version_installed "${VERSION}"
-      EXIT_CODE=$?
-      if [ "$EXIT_CODE" != "0" ]; then
-        return $EXIT_CODE
+      if ! nvm_ensure_version_installed "${VERSION}"; then
+        return $?
       fi
 
       local NVM_VERSION_DIR
