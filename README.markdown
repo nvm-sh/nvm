@@ -6,7 +6,7 @@
    - [Install script](#install-script)
    - [Verify installation](#verify-installation)
    - [Manual install](#manual-install)
-   - [Manual upgrade](#manual-install)
+   - [Manual upgrade](#manual-upgrade)
  - [Usage](#usage)
    - [Long-term support](#long-term-support)
    - [Migrating global packages while installing](#migrating-global-packages-while-installing)
