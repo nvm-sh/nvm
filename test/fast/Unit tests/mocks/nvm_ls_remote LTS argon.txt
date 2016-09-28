@@ -17,3 +17,4 @@ v4.4.5 Argon
 v4.4.6 Argon
 v4.4.7 Argon
 v4.5.0 Argon
+v4.6.0 Argon

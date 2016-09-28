@@ -16,4 +16,5 @@
          v4.4.5  [0;37m (LTS: Argon)[0m
          v4.4.6  [0;37m (LTS: Argon)[0m
          v4.4.7  [0;37m (LTS: Argon)[0m
-         v4.5.0  [1;32m (Latest LTS: Argon)[0m
+         v4.5.0  [0;37m (LTS: Argon)[0m
+         v4.6.0  [1;32m (Latest LTS: Argon)[0m
