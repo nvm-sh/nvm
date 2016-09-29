@@ -42,7 +42,8 @@ v0.3.8"
 
 # Sanity checks
 OUTPUT="$(nvm_print_implicit_alias remote stable)"
-EXPECTED_OUTPUT="6.7"
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm_print_implicit_alias remote stable.txt"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}")"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
 
 OUTPUT="$(nvm_print_implicit_alias remote unstable)"
@@ -50,7 +51,8 @@ EXPECTED_OUTPUT="0.11"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote unstable did not output $EXPECTED_OUTPUT; got $OUTPUT"
 
 OUTPUT="$(nvm_ls_remote stable)"
-EXPECTED_OUTPUT="v6.7.0"
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm_ls_remote stable.txt"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}")"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
 
 OUTPUT="$(nvm_ls_remote unstable)"
