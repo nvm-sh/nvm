@@ -20,6 +20,11 @@ nvm ls | grep "$NVM_TEST_VERSION" || die "Failed to install node"
 # Switch to another version so we can uninstall
 nvm use 0.12.7
 
+# if zsh, set "nomatch" opt to reproduce failure from https://github.com/creationix/nvm/issues/1228
+if nvm_has "setopt"; then
+  setopt nomatch
+fi
+
 # Uninstall it
 nvm uninstall $NVM_TEST_VERSION
 
