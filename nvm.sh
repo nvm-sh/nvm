@@ -2669,7 +2669,7 @@ nvm() {
           if [ "_${VERSION:-N/A}" = '_N/A' ] && ! nvm_is_valid_version "$provided_version"; then
             provided_version=''
             if [ $has_checked_nvmrc -ne 1 ]; then
-            if [ -n "${NVM_SILENT-}" ]; then
+              if [ -n "${NVM_SILENT-}" ]; then
                 nvm_rc_version >/dev/null 2>&1 && has_checked_nvmrc=1
               else
                 nvm_rc_version && has_checked_nvmrc=1
