@@ -7,9 +7,8 @@ addons:
     packages:
       - gcc-4.8
       - g++-4.8
-  apt_packages:
-    - zsh
-    - ksh
+      - zsh
+      - ksh
 cache:
   directories:
     - $HOME/.stack
