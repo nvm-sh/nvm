@@ -1,4 +1,7 @@
 language: generic
+os:
+  # - linux
+  - osx
 sudo: required
 addons:
   apt:
