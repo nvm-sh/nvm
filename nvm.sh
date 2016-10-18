@@ -1022,14 +1022,15 @@ nvm_ls_remote_index_tab() {
         if ($10 ~ /^\-?$/) { next }
         if ($10 && !a[tolower($10)]++) {
           if (alias) { print alias, version }
-          alias = "lts/" tolower($10)
+          alias_name = "lts/" tolower($10)
+          if (!alias) { print "lts/*", alias_name }
+          alias = alias_name
           version = $1
         }
       }
       END {
         if (alias) {
           print alias, version
-          print "lts/*", alias
         }
       }' \
     | while read -r LTS_ALIAS_LINE; do

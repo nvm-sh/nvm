@@ -1,2 +1,3 @@
-lts/argon|v4.6.0
-lts/*|lts/argon
+lts/*|lts/boron
+lts/boron|v6.9.0
+lts/argon|v4.6.1
