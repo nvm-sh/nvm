@@ -3070,7 +3070,7 @@ nvm() {
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" )
-      nvm_echo '0.32.0'
+      nvm_echo '0.32.1'
     ;;
     "unload" )
       unset -f nvm \
