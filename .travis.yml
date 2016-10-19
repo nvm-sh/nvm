@@ -1,4 +1,4 @@
-language: generic
+language: cpp
 os:
   # - linux
   - osx
@@ -30,8 +30,8 @@ script:
   - if [ -z "${SHELLCHECK-}" ]; then make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL ; fi
 env:
   global:
-    - CXX=g++-4.8
-    - CC=gcc-4.8
+    # - CXX=g++-4.8
+    # - CC=gcc-4.8
     - PATH=$(echo $PATH | sed 's/::/:/')
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
   matrix:
