@@ -244,23 +244,24 @@ nvm_check_global_modules() {
   )"
 
   if [ "${MODULE_COUNT}" != '0' ]; then
-    cat <<-'END_MESSAGE'
-	=> You currently have modules installed globally with `npm`. These will no
-	=> longer be linked to the active version of Node when you install a new node
-	=> with `nvm`; and they may (depending on how you construct your `$PATH`)
-	=> override the binaries of modules installed with `nvm`:
+    # shellcheck disable=SC2016
+    echo '=> You currently have modules installed globally with `npm`. These will no'
+    # shellcheck disable=SC2016
+    echo '=> longer be linked to the active version of Node when you install a new node'
+    # shellcheck disable=SC2016
+    echo '=> with `nvm`; and they may (depending on how you construct your `$PATH`)'
+    # shellcheck disable=SC2016
+    echo '=> override the binaries of modules installed with `nvm`:'
+    echo
 
-	END_MESSAGE
     command printf %s\\n "$NPM_GLOBAL_MODULES"
-    cat <<-'END_MESSAGE'
-
-	=> If you wish to uninstall them at a later point (or re-install them under your
-	=> `nvm` Nodes), you can remove them from the system Node as follows:
-
-	     $ nvm use system
-	     $ npm uninstall -g a_module
-
-	END_MESSAGE
+    echo '=> If you wish to uninstall them at a later point (or re-install them under your'
+    # shellcheck disable=SC2016
+    echo '=> `nvm` Nodes), you can remove them from the system Node as follows:'
+    echo
+    echo '     $ nvm use system'
+    echo '     $ npm uninstall -g a_module'
+    echo
   fi
 }
 
