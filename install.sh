@@ -74,6 +74,10 @@ install_nvm_from_git() {
       echo >&2 "Failed to update nvm, run 'git fetch' in $INSTALL_DIR yourself."
       exit 1
     }
+    echo "=> Compressing and cleaning up git repository"
+    if ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" gc --aggressive --prune=now ; then
+      echo >&2 "Your version of git is out of date. Please update it!"
+    fi
   else
     # Cloning to $INSTALL_DIR
     echo "=> Downloading nvm from git to '$INSTALL_DIR'"
