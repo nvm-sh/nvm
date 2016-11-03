@@ -22,6 +22,11 @@ nvm_echo() {
   }
 }
 
+nvm_cd() {
+  # shellcheck disable=SC1001,SC2164
+  \cd "$@"
+}
+
 nvm_err() {
   >&2 nvm_echo "$@"
 }
@@ -115,7 +120,7 @@ if [ -z "${NVM_DIR-}" ]; then
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
   # shellcheck disable=SC1001
-  NVM_DIR="$(cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" > /dev/null && \pwd)"
+  NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" > /dev/null && \pwd)"
   export NVM_DIR
 fi
 unset NVM_SCRIPT_SOURCE 2> /dev/null
@@ -1845,7 +1850,7 @@ nvm_install_source() {
     command mkdir -p "${TMPDIR}" && \
     command tar -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
     VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
-    cd "${TMPDIR}" && \
+    nvm_cd "${TMPDIR}" && \
     ./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} && \
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
@@ -3022,7 +3027,7 @@ nvm() {
       for LINK in $LINKS; do
         set +f; unset IFS # restore variable expansion
         if [ -n "$LINK" ]; then
-          (cd "$LINK" && npm link)
+          (nvm_cd "$LINK" && npm link)
         fi
       done
       set +f; unset IFS # restore variable expansion in case $LINKS was empty
