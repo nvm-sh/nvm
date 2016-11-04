@@ -1,0 +1,40 @@
+#!/bin/sh
+
+die () { echo $@ ; exit 1; }
+
+. ../../nvm.sh
+
+VERSION='v0.11.0'
+VERSION_PATH="$(nvm_version_path "${VERSION}")"
+
+succeed() {
+  nvm_echo "$@"
+  NVM_INSTALL_THIRD_PARTY_HOOK= nvm install "${VERSION}"
+}
+
+fail() {
+  succeed "$@"
+  return 11
+}
+
+! nvm_is_version_installed "${VERSION}" || nvm uninstall "${VERSION}" || die 'uninstall failed'
+
+OUTPUT="$(NVM_INSTALL_THIRD_PARTY_HOOK=succeed nvm install "${VERSION}")"
+USE_OUTPUT="$(nvm use "${VERSION}")"
+EXPECTED_OUTPUT="${VERSION} node std binary ${VERSION_PATH}
+${USE_OUTPUT}
+${USE_OUTPUT}" # double use output is from the normal install in succeed()
+
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
+
+! nvm_is_version_installed "${VERSION}" || nvm uninstall "${VERSION}" || die 'uninstall 2 failed'
+
+OUTPUT="$(NVM_INSTALL_THIRD_PARTY_HOOK=fail nvm install "${VERSION}" || echo 'failed')"
+USE_OUTPUT="$(nvm use "${VERSION}")"
+EXPECTED_OUTPUT="${VERSION} node std binary ${VERSION_PATH}
+${USE_OUTPUT}
+failed"
+
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
+
+

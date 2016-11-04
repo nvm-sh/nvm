@@ -1567,8 +1567,6 @@ nvm_install_binary() {
   local VERSION
   VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
 
-  local VERSION_PATH
-
   if [ -z "$(nvm_get_os)" ]; then
     return 2
   fi
@@ -2358,33 +2356,57 @@ nvm() {
         return $?
       fi
 
-      if [ "_$NVM_OS" = "_freebsd" ]; then
-        # node.js and io.js do not have a FreeBSD binary
-        nobinary=1
-        nvm_err "Currently, there is no binary for $NVM_OS"
-      elif [ "_$NVM_OS" = "_sunos" ]; then
-        # Not all node/io.js versions have a Solaris binary
-          if ! nvm_has_solaris_binary "$VERSION"; then
-            nobinary=1
-            nvm_err "Currently, there is no binary of version $VERSION for $NVM_OS"
-        fi
-      fi
-
       local NVM_INSTALL_SUCCESS
-      # skip binary install if "nobinary" option specified.
-      if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-        if nvm_install_binary "${FLAVOR}" std "${VERSION}"; then
-          NVM_INSTALL_SUCCESS=true
+      if [ -n "${NVM_INSTALL_THIRD_PARTY_HOOK-}" ]; then
+        nvm_err '** $NVM_INSTALL_THIRD_PARTY_HOOK env var set; dispatching to third-party installation method **'
+        local NVM_METHOD_PREFERENCE
+        NVM_METHOD_PREFERENCE='binary'
+        if [ $nobinary -eq 1 ]; then
+          NVM_METHOD_PREFERENCE='source'
         fi
-      fi
-      if [ "$NVM_INSTALL_SUCCESS" != true ]; then
-        if [ -z "${NVM_MAKE_JOBS-}" ]; then
-          nvm_get_make_jobs
+        local VERSION_PATH
+        VERSION_PATH="$(nvm_version_path "${VERSION}")"
+        local EXIT_CODE
+        "${NVM_INSTALL_THIRD_PARTY_HOOK}" "${VERSION}" "${FLAVOR}" std "${NVM_METHOD_PREFERENCE}" "${VERSION_PATH}" || {
+          EXIT_CODE=$?
+          nvm_err '*** Third-party $NVM_INSTALL_THIRD_PARTY_HOOK env var failed to install! ***'
+          return $EXIT_CODE
+        }
+        if ! nvm_is_version_installed "${VERSION}"; then
+          nvm_err '*** Third-party $NVM_INSTALL_THIRD_PARTY_HOOK env var claimed to succeed, but failed to install! ***'
+          return 33
+        fi
+        NVM_INSTALL_SUCCESS=true
+      else
+
+        if [ "_$NVM_OS" = "_freebsd" ]; then
+          # node.js and io.js do not have a FreeBSD binary
+          nobinary=1
+          nvm_err "Currently, there is no binary for $NVM_OS"
+        elif [ "_$NVM_OS" = "_sunos" ]; then
+          # Not all node/io.js versions have a Solaris binary
+            if ! nvm_has_solaris_binary "$VERSION"; then
+              nobinary=1
+              nvm_err "Currently, there is no binary of version $VERSION for $NVM_OS"
+          fi
         fi
 
-        if nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"; then
-          NVM_INSTALL_SUCCESS=true
+        # skip binary install if "nobinary" option specified.
+        if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
+          if nvm_install_binary "${FLAVOR}" std "${VERSION}"; then
+            NVM_INSTALL_SUCCESS=true
+          fi
         fi
+        if [ "$NVM_INSTALL_SUCCESS" != true ]; then
+          if [ -z "${NVM_MAKE_JOBS-}" ]; then
+            nvm_get_make_jobs
+          fi
+
+          if nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"; then
+            NVM_INSTALL_SUCCESS=true
+          fi
+        fi
+
       fi
 
       if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
