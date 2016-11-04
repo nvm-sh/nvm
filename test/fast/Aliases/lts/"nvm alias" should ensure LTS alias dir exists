@@ -2,8 +2,8 @@
 
 set -ex
 
-. ../../../../nvm.sh
-. ../../../common.sh
+\. ../../../../nvm.sh
+\. ../../../common.sh
 
 LTS_ALIAS_PATH="$(nvm_alias_path)/lts"
 

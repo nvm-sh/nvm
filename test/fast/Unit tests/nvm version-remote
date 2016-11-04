@@ -8,9 +8,9 @@ cleanup() {
   unset -f nvm_remote_version
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
-. ../../common.sh
+\. ../../common.sh
 
 nvm_remote_version() {
   echo "NVM_VERSION_ONLY:${NVM_VERSION_ONLY-},NVM_LTS:${NVM_LTS-},PATTERN:${PATTERN-}"

@@ -12,7 +12,7 @@ fi
 
 echo '0.10.2' > ../../.nvmrc || die 'creation of .nvmrc failed'
 
-. ../../nvm.sh --install
+\. ../../nvm.sh --install
 EXIT_CODE="$(echo $?)"
 
 echo 'sourcing complete.'

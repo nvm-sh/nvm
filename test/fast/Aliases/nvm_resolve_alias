@@ -2,7 +2,7 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 EXIT_CODE=$(nvm_resolve_alias ; echo $?)
 [ $EXIT_CODE = "1" ] || die "nvm_resolve_alias without an argument did not return 1; got $EXIT_CODE"

@@ -2,7 +2,7 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm_is_merged_node_version '4.0' || die '"nvm_is_merged_node_version 4.0 was not true'
 nvm_is_merged_node_version '5.1' || die '"nvm_is_merged_node_version 5.1 was not true'

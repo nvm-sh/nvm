@@ -2,7 +2,7 @@
 
 set -ex
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 nvm alias test v0.1.2
 

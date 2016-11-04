@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 mkdir -p "${NVM_DIR}/v0.0.2"
 mkdir -p "${NVM_DIR}/v0.0.20"

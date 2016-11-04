@@ -1,7 +1,7 @@
 #!/bin/sh
 
-. ../../../nvm.sh
-. ../../common.sh
+\. ../../../nvm.sh
+\. ../../common.sh
 
 die () { echo $@ ; cleanup ; exit 1; }
 cleanup () {

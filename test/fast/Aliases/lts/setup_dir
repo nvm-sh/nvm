@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../../nvm.sh
+\. ../../../../nvm.sh
 
 LTS_ALIAS_PATH="$(nvm_alias_path)/lts"
 

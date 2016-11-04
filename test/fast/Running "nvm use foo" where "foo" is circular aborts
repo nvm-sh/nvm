@@ -8,7 +8,7 @@ cleanup() {
   rm -rf "$(nvm_alias_path)/foo"
 }
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 nvm_make_alias foo foo
 

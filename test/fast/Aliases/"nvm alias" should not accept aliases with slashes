@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 die () { echo $@ ; exit 1; }
 

@@ -2,7 +2,7 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 [ "$(nvm_version_dir)" = "$NVM_DIR/versions/node" ] || die '"nvm_version_dir" did not return new dir path'
 [ "$(nvm_version_dir iojs)" = "$NVM_DIR/versions/io.js" ] || die '"nvm_version_dir iojs" did not return iojs dir path'

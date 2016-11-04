@@ -1,10 +1,10 @@
 #!/bin/sh
 
-. ../../common.sh
+\. ../../common.sh
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 EXPECTED_OUTPUT="nvm_ensure_default_set: a version is required"
 OUTPUT="$(nvm_ensure_default_set 2>&1 >/dev/null)"

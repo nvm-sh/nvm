@@ -6,7 +6,7 @@ cleanup() {
   unset -f nvm_ls_remote nvm_ls_remote_iojs
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 OUTPUT="$(nvm_remote_versions stable 2>&1)"
 EXPECTED_OUTPUT="Implicit aliases are not supported in nvm_remote_versions."

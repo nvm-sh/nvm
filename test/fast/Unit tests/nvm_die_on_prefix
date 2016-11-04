@@ -7,7 +7,7 @@ cleanup () {
 }
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 OUTPUT="$(nvm_die_on_prefix 2>&1)"
 EXPECTED_OUTPUT="First argument \"delete the prefix\" must be zero or one"

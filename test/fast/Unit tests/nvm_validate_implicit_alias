@@ -2,7 +2,7 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 EXPECTED_MSG="Only implicit aliases 'stable', 'unstable', 'iojs', and 'node' are supported."
 [ "_$(nvm_validate_implicit_alias 2>&1)" = "_$EXPECTED_MSG" ] \

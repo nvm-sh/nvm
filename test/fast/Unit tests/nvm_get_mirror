@@ -4,7 +4,7 @@ set -ex
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 ! nvm_get_mirror || die 'unknown release type did not error'
 ! nvm_get_mirror node || die 'unknown release type did not error'

@@ -6,7 +6,7 @@ cleanup() {
   unset -f nvm_ls_remote nvm_ls_remote_iojs
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm_ls_remote() {
   echo "N/A"

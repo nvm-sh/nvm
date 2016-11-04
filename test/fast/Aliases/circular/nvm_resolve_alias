@@ -1,9 +1,9 @@
 #!/bin/sh
-. ../../../common.sh
+\. ../../../common.sh
 
 die () { echo $@ ; exit 1; }
 
-. ../../../../nvm.sh
+\. ../../../../nvm.sh
 
 ALIAS="$(nvm_resolve_alias loopback | strip_colors)"
 [ "_$ALIAS" = "_∞" ] || die "nvm_resolve_alias loopback was not ∞; got $ALIAS"

@@ -6,7 +6,7 @@ cleanup() {
   unset -f nvm_download
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 MOCKS_DIR="$PWD/mocks"
 

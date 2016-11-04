@@ -6,7 +6,7 @@ cleanup () {
   rm -rf ../../../alias/test
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 OUTPUT="$(nvm_alias 2>&1)"
 EXPECTED_OUTPUT='An alias is required.'

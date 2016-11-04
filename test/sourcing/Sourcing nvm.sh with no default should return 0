@@ -8,4 +8,4 @@ nvm_alias default && die '"nvm_alias default" did not fail'
 
 set -e # necessary to fail internally with a nonzero code
 
-. ../../nvm.sh || die 'sourcing returned nonzero exit code'
+\. ../../nvm.sh || die 'sourcing returned nonzero exit code'

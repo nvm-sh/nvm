@@ -11,7 +11,7 @@ cleanup() {
 
 die () { cleanup; echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 # Directory where mocked binaries used by nvm_get_arch for each OS/arch are
 # located

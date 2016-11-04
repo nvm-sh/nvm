@@ -13,7 +13,7 @@ cleanup() {
   unset -f nvm_ls_remote nvm_ls_remote_iojs
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 mkdir "${NVM_DIR}/v0.2.3"
 mkdir "${NVM_DIR}/v0.3.4"

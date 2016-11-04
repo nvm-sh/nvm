@@ -8,7 +8,7 @@ die () { echo $@ ; exit 1; }
 
 [ `expr $PATH : ".*v0.2.3/.*/bin"` = 0 ] || echo "WARNING: Unexpectedly found v0.2.3 already active" >&2
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 nvm use --delete-prefix v0.2.3 || die "Failed to activate v0.2.3"
 [ `expr "$PATH" : ".*v0.2.3/.*/bin"` != 0 ] || die "PATH not set up properly"

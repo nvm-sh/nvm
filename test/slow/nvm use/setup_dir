@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 mkdir -p "${NVM_DIR}/.nvm_use_bak"
 if [ -d "${NVM_DIR}/v*" ]; then

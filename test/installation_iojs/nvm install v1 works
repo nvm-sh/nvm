@@ -2,7 +2,7 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 NVM_VERSION="v1"
 NVM_PREFIXED_TEST_VERSION="$(nvm ls-remote "$NVM_VERSION" | tail -1 | sed 's/^[    ]*//;s/[        ]*$//')"

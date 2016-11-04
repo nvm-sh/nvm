@@ -1,5 +1,5 @@
 #!/bin/sh
-. ../common.sh
+\. ../common.sh
 
 die () { echo $@ ; exit 1; }
 supports_source_options () {
@@ -15,7 +15,7 @@ echo '0.10.2' > ../../alias/default || die 'creation of default alias failed'
 
 echo 'sourcing nvm with --install...'
 
-. ../../nvm.sh --install
+\. ../../nvm.sh --install
 EXIT_CODE="$(echo $?)"
 
 echo 'sourcing complete.'

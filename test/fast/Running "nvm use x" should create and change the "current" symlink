@@ -3,7 +3,7 @@
 set -ex
 
 export NVM_SYMLINK_CURRENT=true
-. ../../nvm.sh
+\. ../../nvm.sh
 
 rm -rf "${NVM_DIR}/v0.10.29"
 mkdir "${NVM_DIR}/v0.10.29"

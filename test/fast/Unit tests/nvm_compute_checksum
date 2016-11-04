@@ -4,7 +4,7 @@ set -ex
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 set +x
 OUTPUT="$(nvm_compute_checksum 2>&1 >/dev/null || echo)"

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 cleanup () {
   rm -rf "${NVM_DIR}/v0.1.2/node"

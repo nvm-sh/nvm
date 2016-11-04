@@ -18,7 +18,7 @@ safe_type() {
 ! safe_type nvm_reset || die 'nvm_reset is still available'
 ! safe_type nvm_detect_profile || die 'nvm_detect_profile is still available'
 
-NVM_ENV=testing . ../../install.sh
+NVM_ENV=testing \. ../../install.sh
 
 # Check nvm_reset exists
 safe_type nvm_reset || die 'nvm_reset is not available'

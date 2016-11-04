@@ -4,7 +4,7 @@ set -ex
 
 die () { echo $@ ; exit 1; }
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 type nvm > /dev/null 2>&1 || die "nvm not loaded"
 

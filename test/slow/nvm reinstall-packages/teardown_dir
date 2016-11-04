@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 nvm uninstall v0.10.28
 nvm uninstall v0.10.29
 

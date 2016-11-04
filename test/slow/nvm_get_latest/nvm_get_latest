@@ -6,7 +6,7 @@ cleanup() {
   unset -f curl wget nvm_has
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 EXPECTED_VERSION="v12.3.456"
 URL="https://github.com/creationix/nvm/releases/tag/$EXPECTED_VERSION"

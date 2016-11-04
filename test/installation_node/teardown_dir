@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../nvm.sh
+\. ../../nvm.sh
 nvm deactivate
 nvm uninstall v0.10.7
 nvm uninstall v4.2.2

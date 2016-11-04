@@ -6,7 +6,7 @@ cleanup() {
   unset -f curl wget
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 curl() {
   return 1

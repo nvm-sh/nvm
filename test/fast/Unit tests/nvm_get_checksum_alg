@@ -4,7 +4,7 @@ set -ex
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 ALG="$(nvm_get_checksum_alg)"
 

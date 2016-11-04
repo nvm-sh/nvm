@@ -6,7 +6,7 @@ cleanup() {
   unset -f nvm_has
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm_has() { return 1 ; }
 

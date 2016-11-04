@@ -2,8 +2,8 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
-. ../../common.sh
+\. ../../../nvm.sh
+\. ../../common.sh
 
 # Invalid version numbers fail
 assert_not_ok node_version_has_solaris_binary ""

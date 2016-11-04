@@ -2,7 +2,7 @@
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm_version_greater 0.10.0 0.2.12 || die '"nvm_version_greater 0.10.0 0.2.12" did not return true'
 

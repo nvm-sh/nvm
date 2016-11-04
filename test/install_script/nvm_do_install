@@ -2,7 +2,7 @@
 
 die () { echo $@ ; exit 1; }
 
-NVM_ENV=testing . ../../install.sh
+NVM_ENV=testing \. ../../install.sh
 
 #nvm_do_install is available
 type nvm_do_install > /dev/null 2>&1 || die 'nvm_do_install is not available'

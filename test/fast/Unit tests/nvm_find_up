@@ -11,7 +11,7 @@ cleanup () {
   rm -rf tmp_nvm_find_up
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 setup
 

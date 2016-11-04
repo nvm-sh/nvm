@@ -5,7 +5,7 @@ cleanup () {
   rm -rf "$(nvm_version_path v0.1.2)"
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 mkdir -p "$(nvm_version_path v0.1.2)"
 

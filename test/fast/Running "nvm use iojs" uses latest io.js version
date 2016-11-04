@@ -2,7 +2,7 @@
 
 set -ex
 
-. ../common.sh
+\. ../common.sh
 
 die () { echo $@ ; cleanup ; exit 1; }
 
@@ -13,7 +13,7 @@ cleanup() {
   rm -rf "$(nvm_version_path "iojs-${VERSION}")"
 }
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 nvm deactivate || die "unable to deactivate; current: >$(nvm current)<"
 

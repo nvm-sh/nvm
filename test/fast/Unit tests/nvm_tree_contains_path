@@ -8,7 +8,7 @@ cleanup () {
 }
 die () { echo $@ ; cleanup; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 mkdir -p tmp
 touch tmp/node

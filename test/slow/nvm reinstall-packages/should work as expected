@@ -2,7 +2,7 @@
 
 die () { echo "$@" ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm exec 0.10.28 npm install -g npm@~1.4.11 # this is required because before 1.4.10, npm ls doesn't indicated linked packages
 nvm exec 0.10.29 npm install -g npm@~1.4.11 # this is required because before 1.4.10, npm ls doesn't indicated linked packages

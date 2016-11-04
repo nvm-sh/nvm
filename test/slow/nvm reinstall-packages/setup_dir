@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 nvm install 0.10.28
 nvm install 0.10.29
 

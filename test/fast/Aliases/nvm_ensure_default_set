@@ -1,10 +1,10 @@
 #!/bin/sh
 
-. ../../common.sh
+\. ../../common.sh
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm alias default 0.1 >/dev/null || die "'nvm alias default 0.1' failed"
 

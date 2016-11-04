@@ -4,7 +4,7 @@ set -ex
 
 die () { echo $@ ; exit 1; }
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 nvm unalias default >/dev/null 2>&1 || die 'unable to unalias default'
 

@@ -2,7 +2,7 @@
 
 set -ex
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 TEST_NODE_VERSION="v0.10.29"
 

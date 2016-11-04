@@ -6,7 +6,7 @@ cleanup () {
 }
 die () { echo $@ ; cleanup ; exit 1; }
 
-NVM_ENV=testing . ../../install.sh
+NVM_ENV=testing \. ../../install.sh
 HOME="__home__"
 
 

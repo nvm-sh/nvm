@@ -5,7 +5,7 @@ set -ex
 die () { echo $@ ; exit 1; }
 
 set +e # TODO: fix
-. ../../nvm.sh
+\. ../../nvm.sh
 set -e
 
 nvm deactivate || die 'deactivate failed'

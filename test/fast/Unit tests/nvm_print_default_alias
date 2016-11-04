@@ -1,5 +1,5 @@
 #!/bin/sh
-. ../../common.sh
+\. ../../common.sh
 
 die () { echo $@ ; cleanup ; exit 1; }
 
@@ -7,7 +7,7 @@ cleanup () {
   unset -f nvm_print_implicit_alias nvm_version
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm_print_implicit_alias() {
   echo ''

@@ -2,7 +2,7 @@
 
 setup () {
   HOME="."
-  NVM_ENV=testing . ../../install.sh
+  NVM_ENV=testing \. ../../install.sh
   touch ".bashrc"
   touch ".bash_profile"
   touch ".zshrc"

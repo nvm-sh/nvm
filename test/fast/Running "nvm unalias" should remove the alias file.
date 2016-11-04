@@ -6,7 +6,7 @@ ALIAS_PATH="../../alias"
 
 echo v0.1.2 > "${ALIAS_PATH}/test"
 
-. ../../nvm.sh
+\. ../../nvm.sh
 
 nvm unalias test
 

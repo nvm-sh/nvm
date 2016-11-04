@@ -4,7 +4,7 @@ set -ex
 
 die () { echo $@ ; exit 1; }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 OUTPUT="$(nvm run --silent --lts --version)"
 EXPECTED_OUTPUT="$(nvm_match_version 'lts/*')"

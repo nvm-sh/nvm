@@ -5,7 +5,7 @@ cleanup () {
   unset -f nvm_ls_current nvm_ls
 }
 
-. ../../../nvm.sh
+\. ../../../nvm.sh
 
 nvm_ls_current() {
   echo "CURRENT!"
