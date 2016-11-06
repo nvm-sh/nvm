@@ -1581,6 +1581,11 @@ nvm_install_binary() {
   local TMPDIR
   local VERSION_PATH
 
+  local NODE_OR_IOJS
+  if [ "${FLAVOR}" = 'node' ]; then
+    NODE_OR_IOJS="${FLAVOR}"
+  fi
+  nvm_echo "Downloading and installing ${NODE_OR_IOJS-} ${VERSION}..."
   TARBALL="$(nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
   if [ -f "${TARBALL}" ]; then
     TMPDIR="$(dirname "${TARBALL}")/files"
