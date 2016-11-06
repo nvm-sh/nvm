@@ -2,7 +2,7 @@
 
 \. ../../../nvm.sh
 
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 OUTPUT="$(nvm unalias foo/bar 2>&1)"
 EXPECTED_OUTPUT="Aliases in subdirectories are not supported."

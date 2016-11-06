@@ -3,7 +3,7 @@
 \. ../../../nvm.sh
 \. ../../common.sh
 
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 cleanup () {
   rm -rf "$(nvm_alias_path)/stable"
   rm -rf "$(nvm_alias_path)/unstable"

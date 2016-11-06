@@ -5,7 +5,7 @@ cleanup () {
   rm "${NVM_DIR}/versions/io.js/v0.1.2/iojs"
   rmdir "${NVM_DIR}/versions/io.js/v0.1.2"
 }
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 \. ../../../nvm.sh
 

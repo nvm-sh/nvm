@@ -9,7 +9,7 @@ cleanup() {
   export PATH=ORIG_PATH
 }
 
-die () { cleanup; echo $@ ; exit 1; }
+die () { cleanup; echo "$@" ; exit 1; }
 
 \. ../../../nvm.sh
 

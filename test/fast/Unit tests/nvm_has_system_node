@@ -5,7 +5,7 @@
 cleanup () {
   rm -rf "${NVM_DIR}/v0.1.2/node"
 }
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 mkdir "${NVM_DIR}/v0.1.2"
 touch "${NVM_DIR}/v0.1.2/node"

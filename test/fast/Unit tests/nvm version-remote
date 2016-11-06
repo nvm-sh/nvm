@@ -2,7 +2,7 @@
 
 set -ex
 
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
   unset -f nvm_remote_version

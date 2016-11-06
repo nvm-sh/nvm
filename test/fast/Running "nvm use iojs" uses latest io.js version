@@ -4,7 +4,7 @@ set -ex
 
 \. ../common.sh
 
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 VERSION="v3.99.0"
 

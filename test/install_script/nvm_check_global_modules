@@ -10,7 +10,7 @@ cleanup () {
   unset -f setup cleanup die
   unset message ORIGINAL_PATH
 }
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 NVM_ENV=testing \. ../../install.sh
 

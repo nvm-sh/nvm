@@ -3,7 +3,7 @@
 \. ../../../nvm.sh
 \. ../../common.sh
 
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 NVM_ALIAS_OUTPUT=$(nvm alias | strip_colors)
 

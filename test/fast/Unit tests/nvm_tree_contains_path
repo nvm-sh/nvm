@@ -6,7 +6,7 @@ cleanup () {
   rm tmp2/node
   rmdir tmp2
 }
-die () { echo $@ ; cleanup; exit 1; }
+die () { echo "$@" ; cleanup; exit 1; }
 
 \. ../../../nvm.sh
 

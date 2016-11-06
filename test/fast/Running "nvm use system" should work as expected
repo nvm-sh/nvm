@@ -5,7 +5,7 @@ set -ex
 cleanup() {
   unset -f nvm_has_system_node nvm_print_npm_version
 }
-die() { echo $@ ; cleanup ; exit 1; }
+die() { echo "$@" ; cleanup ; exit 1; }
 
 \. ../../nvm.sh
 

@@ -5,7 +5,7 @@ cleanup () {
   alias npm='\npm'
   unset -f nvm_has npm
 }
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 \. ../../../nvm.sh
 

@@ -2,7 +2,7 @@
 
 \. ../../../nvm.sh
 
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 mkdir "${NVM_DIR}/v0.2.3"
 mkdir "${NVM_DIR}/v0.3.3"

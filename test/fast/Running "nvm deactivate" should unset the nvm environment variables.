@@ -4,7 +4,7 @@ set -ex
 
 mkdir -p ../../v0.2.3
 
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 [ `expr $PATH : ".*v0.2.3/.*/bin"` = 0 ] || echo "WARNING: Unexpectedly found v0.2.3 already active" >&2
 

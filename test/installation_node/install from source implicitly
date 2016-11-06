@@ -2,7 +2,7 @@
 
 set -ex
 
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 set +e # TODO: fix
 \. ../../nvm.sh

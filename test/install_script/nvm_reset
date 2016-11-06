@@ -3,7 +3,7 @@
 cleanup () {
   unset -f safe_type die cleanup
 }
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 safe_type() {
   type "$1"

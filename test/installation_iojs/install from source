@@ -2,7 +2,7 @@
 
 \. ../common.sh
 
-die () { echo $@ ; exit 1; }
+die () { echo "$@" ; exit 1; }
 
 \. ../../nvm.sh
 

@@ -4,7 +4,7 @@ cleanup () {
   unset -f die cleanup
   unset NVM_SOURCE out
 }
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 NVM_ENV=testing \. ../../install.sh
 

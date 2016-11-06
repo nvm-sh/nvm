@@ -7,7 +7,7 @@ cleanup() {
   rm -rf $TEST_PATH/{xz,which,awk,rm,command}
   export PATH=$OLDPATH
 }
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 \. ../../../nvm.sh
 

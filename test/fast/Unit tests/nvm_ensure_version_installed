@@ -1,6 +1,6 @@
 #!/bin/sh
 
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 cleanup () {
   rm -rf "$(nvm_version_path v0.1.2)"
 }

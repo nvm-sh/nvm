@@ -4,7 +4,7 @@ TEST_PWD=$(pwd)
 TEST_DIR="$TEST_PWD/nvm_ls_current_tmp"
 
 cleanup() { rm -rf "$TEST_DIR"; unset -f return_zero; alias node='node' ; unalias node; }
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 \. ../../../nvm.sh
 

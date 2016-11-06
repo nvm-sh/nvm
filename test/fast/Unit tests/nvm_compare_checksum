@@ -3,7 +3,7 @@
 cleanup () {
   unset -f nvm_compute_checksum
 }
-die () { echo $@ ; cleanup ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 \. ../../../nvm.sh
 
