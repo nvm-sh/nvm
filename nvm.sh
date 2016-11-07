@@ -1733,27 +1733,35 @@ nvm_download_artifact() {
     TARBALL_URL="${MIRROR}/${SLUG}.tar.${COMPRESSION}"
   fi
 
-  if nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" >/dev/null 2>&1; then
-    nvm_err "Checksums match! Using existing downloaded archive $(nvm_sanitize_path "${TARBALL}")"
-  else
-    nvm_echo "Downloading ${TARBALL_URL}..."
-    nvm_download -L -C - --progress-bar "${TARBALL_URL}" -o "${TARBALL}" || (
-      command rm -rf "${TARBALL}" "${tmpdir}"
-      nvm_err "Binary download from ${TARBALL_URL} failed, trying source."
-      return 4
-    )
-
-    if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
-      command rm -rf "${TARBALL}" "$tmpdir"
-      nvm_err "HTTP 404 at URL ${TARBALL_URL}";
-      return 5
+  if [ -r "${TARBALL}" ]; then
+    nvm_err "Local cache found: $(nvm_sanitize_path "${TARBALL}")"
+    if nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" >/dev/null 2>&1; then
+      nvm_err "Checksums match! Using existing downloaded archive $(nvm_sanitize_path "${TARBALL}")"
+      nvm_echo "${TARBALL}"
+      return 0
     fi
-
-    nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" || (
-      command rm -rf "${tmpdir}/files"
-      return 6
-    )
+    nvm_compare_checksum "${TARBALL}" "${CHECKSUM}"
+    nvm_err "Checksum check failed!"
+    nvm_err "Removing the broken local cache..."
+    command rm -rf "${TARBALL}"
   fi
+  nvm_err "Downloading ${TARBALL_URL}..."
+  nvm_download -L -C - --progress-bar "${TARBALL_URL}" -o "${TARBALL}" || (
+    command rm -rf "${TARBALL}" "${tmpdir}"
+    nvm_err "Binary download from ${TARBALL_URL} failed, trying source."
+    return 4
+  )
+
+  if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
+    command rm -rf "${TARBALL}" "$tmpdir"
+    nvm_err "HTTP 404 at URL ${TARBALL_URL}";
+    return 5
+  fi
+
+  nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" || (
+    command rm -rf "${tmpdir}/files"
+    return 6
+  )
 
   nvm_echo "${TARBALL}"
 }
