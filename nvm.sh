@@ -1445,6 +1445,7 @@ nvm_get_os() {
     Darwin\ *) NVM_OS=darwin ;;
     SunOS\ *) NVM_OS=sunos ;;
     FreeBSD\ *) NVM_OS=freebsd ;;
+    AIX\ *) NVM_OS=aix ;;
   esac
   nvm_echo "${NVM_OS-}"
 }
@@ -1467,6 +1468,8 @@ nvm_get_arch() {
     else
       HOST_ARCH=$(echo "$HOST_ARCH" | command tail -1)
     fi
+  elif [ "_$NVM_OS" = "_aix" ]; then
+     HOST_ARCH=ppc64
   else
      HOST_ARCH="$(command uname -m)"
   fi
@@ -1590,10 +1593,15 @@ nvm_install_binary() {
   if [ -f "${TARBALL}" ]; then
     TMPDIR="$(dirname "${TARBALL}")/files"
   fi
+  local tar
+  tar='tar'
+  if [ "${NVM_OS}" = 'aix' ]; then
+    tar='gtar'
+  fi
   if (
     [ -n "${TMPDIR-}" ] && \
     command mkdir -p "${TMPDIR}" && \
-    command tar -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
+    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
     VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
     command mkdir -p "${VERSION_PATH}" && \
     command mv "${TMPDIR}/"* "${VERSION_PATH}" && \
@@ -1768,6 +1776,8 @@ nvm_get_make_jobs() {
     NVM_CPU_THREADS="$(sysctl -n hw.ncpu)"
   elif [ "_$NVM_OS" = "_sunos" ]; then
     NVM_CPU_THREADS="$(psrinfo | wc -l)"
+  elif [ "_$NVM_OS" = "_aix" ]; then
+    NVM_CPU_THREADS="$(lsconf|grep 'Number Of Processors:'| awk '{print $4}')"
   fi
   if ! nvm_is_natural_num "$NVM_CPU_THREADS" ; then
     nvm_err 'Can not determine how many thread(s) we can use, set to only 1 now.'
@@ -1832,13 +1842,21 @@ nvm_install_source() {
   make='make'
   if [ "${NVM_OS}" = 'freebsd' ]; then
     make='gmake'
-    MAKE_CXX='CXX=c++'
+    MAKE_CXX='CXX=c++'  
+  elif [ "${NVM_OS}" = 'aix' ]; then
+    make='gmake'
   fi
 
   local tar_compression_flag
   tar_compression_flag='z'
   if nvm_supports_xz "${VERSION}"; then
     tar_compression_flag='J'
+  fi
+
+  local tar
+  tar='tar'
+  if [ "${NVM_OS}" = 'aix' ]; then
+    tar='gtar'
   fi
 
   local TARBALL
@@ -1851,7 +1869,7 @@ nvm_install_source() {
     [ -f "${TARBALL}" ] && \
     TMPDIR="$(dirname "${TARBALL}")/files" && \
     command mkdir -p "${TMPDIR}" && \
-    command tar -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
+    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
     VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
     nvm_cd "${TMPDIR}" && \
     ./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS && \
