@@ -57,7 +57,7 @@ __nvm_aliases ()
   declare aliases
   aliases=""
   if [ -d $NVM_DIR/alias ]; then
-    aliases="$(cd $NVM_DIR/alias && find $PWD -type f | sed "s:$PWD/::")"
+    aliases="$(cd $NVM_DIR/alias && command find $PWD -type f | command sed "s:$PWD/::")"
   fi
   echo "${aliases} node stable unstable iojs"
 }

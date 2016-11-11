@@ -450,7 +450,7 @@ nvm_format_version() {
   if [ "${NUM_GROUPS}" -lt 3 ]; then
     nvm_format_version "${VERSION%.}.0"
   else
-    nvm_echo "${VERSION}" | cut -f1-3 -d.
+    nvm_echo "${VERSION}" | command cut -f1-3 -d.
   fi
 }
 
@@ -892,7 +892,7 @@ nvm_ls() {
       PATTERN='v'
       SEARCH_PATTERN='.*'
     else
-      SEARCH_PATTERN="$(echo "${PATTERN}" | sed "s#\.#\\\.#g;")"
+      SEARCH_PATTERN="$(echo "${PATTERN}" | command sed "s#\.#\\\.#g;")"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
@@ -988,9 +988,9 @@ nvm_ls_remote_index_tab() {
     ;;
   esac
   local SORT_COMMAND
-  SORT_COMMAND='sort'
+  SORT_COMMAND='command sort'
   case "${FLAVOR}" in
-    node) SORT_COMMAND='sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n' ;;
+    node) SORT_COMMAND='command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n' ;;
   esac
 
   local PATTERN
@@ -1023,7 +1023,7 @@ nvm_ls_remote_index_tab() {
   local LTS_VERSION
   command mkdir -p "$(nvm_alias_path)/lts"
   nvm_echo "${VERSION_LIST}" \
-    | awk '{
+    | command awk '{
         if ($10 ~ /^\-?$/) { next }
         if ($10 && !a[tolower($10)]++) {
           if (alias) { print alias, version }
@@ -1205,26 +1205,26 @@ nvm_checksum() {
     elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
       NVM_CHECKSUM="$(command sha1 -q "${1-}")"
     elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
-      NVM_CHECKSUM="$(shasum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command shasum "${1-}" | command awk '{print $1}')"
     else
       nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
       return 2
     fi
   else
     if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
-      NVM_CHECKSUM="$(sha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha256sum "${1-}" | command awk '{print $1}')"
     elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
-      NVM_CHECKSUM="$(shasum -a 256 "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command shasum -a 256 "${1-}" | command awk '{print $1}')"
     elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
-      NVM_CHECKSUM="$(sha256 -q "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha256 -q "${1-}" | command awk '{print $1}')"
     elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
-      NVM_CHECKSUM="$(gsha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command gsha256sum "${1-}" | command awk '{print $1}')"
     elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
-      NVM_CHECKSUM="$(openssl dgst -sha256 "${1-}" | rev | command awk '{print $1}' | rev)"
+      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | rev | command awk '{print $1}' | rev)"
     elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
-      NVM_CHECKSUM="$(libressl dgst -sha256 "${1-}" | rev | command awk '{print $1}' | rev)"
+      NVM_CHECKSUM="$(command libressl dgst -sha256 "${1-}" | rev | command awk '{print $1}' | rev)"
     elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
-      NVM_CHECKSUM="$(bssl sha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | command awk '{print $1}')"
     else
       nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, libressl, or bssl not found.'
       nvm_err 'WARNING: Continuing *without checksum verification*'
@@ -1785,7 +1785,7 @@ nvm_get_make_jobs() {
   elif [ "_$NVM_OS" = "_sunos" ]; then
     NVM_CPU_THREADS="$(psrinfo | wc -l)"
   elif [ "_$NVM_OS" = "_aix" ]; then
-    NVM_CPU_THREADS="$(lsconf|grep 'Number Of Processors:'| awk '{print $4}')"
+    NVM_CPU_THREADS="$(lsconf | command grep 'Number Of Processors:'| command awk '{print $4}')"
   fi
   if ! nvm_is_natural_num "$NVM_CPU_THREADS" ; then
     nvm_err 'Can not determine how many thread(s) we can use, set to only 1 now.'
