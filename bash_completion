@@ -85,7 +85,7 @@ __nvm ()
 # called bashcompinit that will create a complete in ZSH. If the user is in
 # ZSH, load and run bashcompinit before calling the complete function.
 if [[ -n ${ZSH_VERSION-} ]]; then
-	autoload -U +X bashcompinit && bashcompinit
+  autoload -U +X bashcompinit && bashcompinit
 fi
 
 complete -o default -o nospace -F __nvm nvm
