@@ -1871,11 +1871,11 @@ nvm_install_source() {
   local TMPDIR
   local VERSION_PATH
 
-  # shellcheck disable=SC2086
+  TARBALL="$(nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
+  [ -f "${TARBALL}" ] && \
+  TMPDIR="$(dirname "${TARBALL}")/files" && \
   if (
-    TARBALL="$(nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
-    [ -f "${TARBALL}" ] && \
-    TMPDIR="$(dirname "${TARBALL}")/files" && \
+    # shellcheck disable=SC2086
     command mkdir -p "${TMPDIR}" && \
     command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
     VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
@@ -1883,8 +1883,7 @@ nvm_install_source() {
     ./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} && \
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
-    $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install && \
-    command rm -rf "${TMPDIR}"
+    $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install
   ); then
     if ! nvm_has "npm" ; then
       nvm_echo 'Installing npm...'
@@ -1904,6 +1903,7 @@ nvm_install_source() {
   fi
 
   nvm_err "nvm: install ${VERSION} failed!"
+  command rm -rf "${TMPDIR-}"
   return 1
 }
 
