@@ -1854,6 +1854,10 @@ nvm_install_source() {
   elif [ "${NVM_OS}" = 'aix' ]; then
     make='gmake'
   fi
+  if nvm_has "clang++" && nvm_has "clang" ; then
+    nvm_echo "Clang detected! Use Clang as c/c++ compiler!"
+    MAKE_CXX='CC=clang CXX=clang++'
+  fi
 
   local tar_compression_flag
   tar_compression_flag='z'
