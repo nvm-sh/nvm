@@ -2090,8 +2090,8 @@ nvm_check_file_permissions() {
           fi
           return 2
         fi
-      elif [ -e "$FILE" ] && [ ! -w "$FILE" ]; then
-        nvm_err "file is not writable: $(nvm_sanitize_path "$FILE")"
+      elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
+        nvm_err "file is not writable or self-owned: $(nvm_sanitize_path "$FILE")"
         if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
           setopt nomatch
         fi
