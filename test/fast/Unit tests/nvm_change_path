@@ -1,0 +1,43 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+TEST_PATH=/usr/bin:/usr/local/bin
+
+# New version dir
+NEW_PATH=`nvm_change_path "$TEST_PATH" "/bin" "$NVM_DIR/versions/node/v7.1.0"`
+
+[ "$NEW_PATH" = "$NVM_DIR/versions/node/v7.1.0/bin:/usr/bin:/usr/local/bin" ] || die "Not correctly changed: $NEW_PATH "
+
+# Old version dir
+NEW_PATH=`nvm_change_path "$TEST_PATH" "/bin" "$NVM_DIR/v0.1.2"`
+
+[ "$NEW_PATH" = "$NVM_DIR/v0.1.2/bin:/usr/bin:/usr/local/bin" ] || die "Not correctly changed: $NEW_PATH "
+
+
+TEST_PATH=/home/user/code/test/node_modules/.bin:$NVM_DIR/versions/node/v4.5.0/bin:/usr/bin:/usr/local/bin
+
+# New version dir
+NEW_PATH=`nvm_change_path "$TEST_PATH" "/bin" "$NVM_DIR/versions/node/v7.1.0"`
+
+[ "$NEW_PATH" = "/home/user/code/test/node_modules/.bin:$NVM_DIR/versions/node/v7.1.0/bin:/usr/bin:/usr/local/bin" ] || die "Not correctly changed: $NEW_PATH "
+
+# Old version dir
+NEW_PATH=`nvm_change_path "$TEST_PATH" "/bin" "$NVM_DIR/v0.1.2"`
+
+[ "$NEW_PATH" = "/home/user/code/test/node_modules/.bin:$NVM_DIR/v0.1.2/bin:/usr/bin:/usr/local/bin" ] || die "Not correctly changed: $NEW_PATH "
+
+
+EMPTY_PATH=
+
+# New version dir
+NEW_PATH=`nvm_change_path "$EMPTY_PATH" "/bin" "$NVM_DIR/versions/node/v7.1.0"`
+
+[ "$NEW_PATH" = "$NVM_DIR/versions/node/v7.1.0/bin" ] || die "Not correctly prepended: $NEW_PATH "
+
+# Old version dir
+NEW_PATH=`nvm_change_path "$EMPTY_PATH" "/bin" "$NVM_DIR/v0.1.2"`
+
+[ "$NEW_PATH" = "$NVM_DIR/v0.1.2/bin" ] || die "Not correctly prepended: $NEW_PATH "

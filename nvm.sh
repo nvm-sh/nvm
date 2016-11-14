@@ -601,11 +601,21 @@ nvm_strip_path() {
     -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*##g"
 }
 
-nvm_prepend_path() {
+nvm_change_path() {
+  # if there’s no initial path, just return the supplementary path
   if [ -z "${1-}" ]; then
-    nvm_echo "${2-}"
+    nvm_echo "${3-}${2-}"
+  # if the initial path doesn’t contain an nvm path, prepend the supplementary
+  # path
+  elif ! echo "${1-}" | grep -q "${NVM_DIR}/[^/]*${2-}" && \
+       ! echo "${1-}" | grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
+    nvm_echo "${3-}${2-}:${1-}"
+  # use sed to replace the existing nvm path with the supplementary path. This
+  # preserves the order of the path.
   else
-    nvm_echo "${2-}:${1-}"
+    nvm_echo "${1-}" | command sed \
+      -e "s#${NVM_DIR}/[^/]*${2-}[^:]*#${3-}${2-}#g" \
+      -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*#${3-}${2-}#g"
   fi
 }
 
@@ -2866,19 +2876,15 @@ nvm() {
       local NVM_VERSION_DIR
       NVM_VERSION_DIR="$(nvm_version_path "$VERSION")"
 
-      # Strip other version from PATH
-      PATH="$(nvm_strip_path "$PATH" "/bin")"
-      # Prepend current version
-      PATH="$(nvm_prepend_path "$PATH" "$NVM_VERSION_DIR/bin")"
+      # Change current version
+      PATH="$(nvm_change_path "$PATH" "/bin" "$NVM_VERSION_DIR")"
       if nvm_has manpath; then
         if [ -z "${MANPATH-}" ]; then
           local MANPATH
           MANPATH=$(manpath)
         fi
-        # Strip other version from MANPATH
-        MANPATH="$(nvm_strip_path "$MANPATH" "/share/man")"
-        # Prepend current version
-        MANPATH="$(nvm_prepend_path "$MANPATH" "$NVM_VERSION_DIR/share/man")"
+        # Change current version
+        MANPATH="$(nvm_change_path "$MANPATH" "/share/man" "$NVM_VERSION_DIR")"
         export MANPATH
       fi
       export PATH
@@ -3387,7 +3393,7 @@ nvm() {
         nvm_ensure_default_set nvm_get_arch nvm_get_os \
         nvm_print_implicit_alias nvm_validate_implicit_alias \
         nvm_resolve_alias nvm_ls_current nvm_alias \
-        nvm_binary_available nvm_prepend_path nvm_strip_path \
+        nvm_binary_available nvm_change_path nvm_strip_path \
         nvm_num_version_groups nvm_format_version nvm_ensure_version_prefix \
         nvm_normalize_version nvm_is_valid_version \
         nvm_ensure_version_installed nvm_cache_dir \
