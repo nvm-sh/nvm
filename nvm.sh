@@ -3606,6 +3606,8 @@ nvm_supports_xz() {
 }
 
 nvm_auto() {
+  local NVM_CURRENT
+  NVM_CURRENT="$(nvm_ls_current)"
   local NVM_MODE
   NVM_MODE="${1-}"
   local VERSION
@@ -3617,11 +3619,15 @@ nvm_auto() {
       nvm install >/dev/null
     fi
   elif [ "_$NVM_MODE" = '_use' ]; then
-    VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
-    if [ -n "$VERSION" ]; then
-      nvm use --silent "$VERSION" >/dev/null
-    elif nvm_rc_version >/dev/null 2>&1; then
-      nvm use --silent >/dev/null
+    if [ "_${NVM_CURRENT}" = '_none' ] || [ "_${NVM_CURRENT}" = '_system' ]; then
+      VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+      if [ -n "${VERSION}" ]; then
+        nvm use --silent "${VERSION}" >/dev/null
+      elif nvm_rc_version >/dev/null 2>&1; then
+        nvm use --silent >/dev/null
+      fi
+    else
+      nvm use --silent "${NVM_CURRENT}" >/dev/null
     fi
   elif [ "_$NVM_MODE" != '_none' ]; then
     nvm_err 'Invalid auto mode supplied.'
