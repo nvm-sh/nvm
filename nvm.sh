@@ -2626,10 +2626,14 @@ nvm() {
         fi
         return 8
       fi
-
+      if [ "${VERSION}" = 'N/A' ]; then
+        nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
+        nvm_err ""
+        nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
+        return 3
       # This nvm_ensure_version_installed call can be a performance bottleneck
       # on shell startup. Perhaps we can optimize it away or make it faster.
-      if ! nvm_ensure_version_installed "${VERSION}"; then
+      elif ! nvm_ensure_version_installed "${VERSION}"; then
         return $?
       fi
 
