@@ -3238,15 +3238,13 @@ nvm_auto() {
       nvm install >/dev/null
     fi
   elif [ "_$NVM_MODE" = '_use' ]; then
-    if [ "_$NVM_CURRENT" != '_system' ]; then
-      VERSION="$NVM_CURRENT"
-    else
+    if [ "_$NVM_CURRENT" = '_system' ]; then
       VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
-    fi
-    if [ -n "$VERSION" ]; then
-      nvm use --silent "$VERSION" >/dev/null
-    elif nvm_rc_version >/dev/null 2>&1; then
-      nvm use --silent >/dev/null
+      if [ -n "$VERSION" ]; then
+        nvm use --silent "$VERSION" >/dev/null
+      elif nvm_rc_version >/dev/null 2>&1; then
+        nvm use --silent >/dev/null
+      fi
     fi
   elif [ "_$NVM_MODE" != '_none' ]; then
     nvm_err 'Invalid auto mode supplied.'
