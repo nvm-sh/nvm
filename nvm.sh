@@ -490,7 +490,8 @@ nvm_change_path() {
     nvm_echo "${3-}${2-}"
   # if the initial path doesn’t contain an nvm path, prepend the supplementary
   # path
-  elif [ "${1#*$NVM_DIR}" == "$1" ]; then
+  elif [ `expr "${1-}" : ".*${NVM_DIR}/[^:]*${2-}.*"` = 0 ] || \
+       [ `expr "${1-}" : ".*${NVM_DIR}/versions/[^/]*/[^/]*${2-}.*"` = 0 ]; then
     nvm_echo "${3-}${2-}:${1-}"
   # use sed to replace the existing nvm path with the supplementary path. This
   # preserves the order of the path.
