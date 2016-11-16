@@ -1,4 +1,4 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3]
+# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] ![nvm version](https://img.shields.io/badge/version-v0.32.1-yellow.svg)
 
 ## Table of Contents
 
