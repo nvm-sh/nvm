@@ -8,8 +8,6 @@ addons:
       - llvm-toolchain-precise
       - llvm-toolchain-precise-3.8
     packages:
-      - gcc-4.8
-      - g++-4.8
       - clang-3.8
       - stack
       - bc
@@ -24,7 +22,7 @@ before_install:
   - curl --version
   - wget --version
   - if [ -n "${SHELLCHECK-}" ]; then stack setup && stack install ShellCheck && shellcheck --version ; fi
-  - mkdir -p $HOME/bin && ln -s /usr/bin/clang-3.8 $HOME/bin/clang && ln -s /usr/bin/clang++-3.8 $HOME/bin/clang++
+  - mkdir -p "$HOME"/bin && ln -s /usr/bin/clang-3.8 "$HOME"/bin/clang && ln -s /usr/bin/clang++-3.8 "$HOME"/bin/clang++
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
@@ -34,8 +32,6 @@ script:
   - if [ -z "${SHELLCHECK-}" ]; then make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL ; fi
 env:
   global:
-    - CXX=g++-4.8
-    - CC=gcc-4.8
     - PATH=$(echo $PATH | sed 's/::/:/')
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
   matrix:
