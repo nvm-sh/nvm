@@ -192,6 +192,10 @@ nvm_rc_version() {
   fi
 }
 
+nvm_clang_version() {
+  clang --version | command awk '{ if ($2 == "version") print $3; else if ($3 == "version") print $4 }' | command sed 's/-.*$//g'
+}
+
 nvm_version_greater() {
   command awk 'BEGIN {
     if (ARGV[1] == "" || ARGV[2] == "") exit(1)
@@ -1854,6 +1858,10 @@ nvm_install_source() {
   elif [ "${NVM_OS}" = 'aix' ]; then
     make='gmake'
   fi
+  if nvm_has "clang++" && nvm_has "clang" && nvm_version_greater_than_or_equal_to nvm_clang_version 3.5 ; then
+    nvm_echo "Clang v3.5+ detected! Use Clang as c/c++ compiler!"
+    MAKE_CXX='CC=clang CXX=clang++'
+  fi
 
   local tar_compression_flag
   tar_compression_flag='z'
@@ -3141,7 +3149,7 @@ nvm() {
         nvm_is_iojs_version nvm_is_alias \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
-        nvm_install_binary \
+        nvm_install_binary nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
         nvm_install_source nvm_check_file_permissions \
         nvm_print_versions nvm_compute_checksum nvm_checksum \

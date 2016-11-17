@@ -17,7 +17,10 @@ before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
+  - clang --version
+  - clang++ --version
   - if [ -n "${SHELLCHECK-}" ]; then sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442 && echo 'deb http://download.fpcomplete.com/ubuntu precise main' | sudo tee /etc/apt/sources.list.d/fpco.list && sudo apt-get update && sudo apt-get install stack bc -y && stack setup && stack install ShellCheck && shellcheck --version ; fi
+  - if [ -z "${SHELLCHECK-}" ]; then wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - && echo -e "deb http://apt.llvm.org/precise/ llvm-toolchain-precise main\ndeb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main" | sudo tee /etc/apt/sources.list.d/clang.list && sudo apt-get update && sudo apt-get install clang-3.8 lldb-3.8 -y --force-yes && sudo ln -sf /usr/bin/clang-3.8 /usr/bin/clang && sudo ln -sf /usr/bin/clang++-3.8 /usr/bin/clang++ && clang --version ; fi
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
