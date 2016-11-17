@@ -11,7 +11,6 @@ addons:
       - gcc-4.8
       - g++-4.8
       - clang-3.8
-      - lldb-3.8
       - stack
       - bc
       - zsh
@@ -24,10 +23,8 @@ before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
-  - clang --version
-  - clang++ --version
   - if [ -n "${SHELLCHECK-}" ]; then stack setup && stack install ShellCheck && shellcheck --version ; fi
-  - if [ -z "${SHELLCHECK-}" ]; then sudo ln -sf /usr/bin/clang-3.8 /usr/bin/clang && sudo ln -sf /usr/bin/clang++-3.8 /usr/bin/clang++ && clang --version ; fi
+  - mkdir -p $HOME/bin && ln -s /usr/bin/clang-3.8 $HOME/bin/clang && ln -s /usr/bin/clang++-3.8 $HOME/bin/clang++
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
