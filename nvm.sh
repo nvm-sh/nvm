@@ -1785,7 +1785,7 @@ nvm_get_make_jobs() {
   elif [ "_$NVM_OS" = "_sunos" ]; then
     NVM_CPU_CORES="$(psrinfo | wc -l)"
   elif [ "_$NVM_OS" = "_aix" ]; then
-    NVM_CPU_CORES="$(lsconf | command grep 'Number Of Processors:'| command awk '{print $4}')"
+    NVM_CPU_CORES="$(pmcycles -m | wc -l)"
   fi
   if ! nvm_is_natural_num "$NVM_CPU_CORES" ; then
     nvm_err 'Can not determine how many core(s) are available, running in single-threaded mode.'
