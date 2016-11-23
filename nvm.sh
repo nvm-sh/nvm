@@ -269,6 +269,7 @@ nvm_ensure_version_installed() {
   local NVM_VERSION_DIR
   if [ "${EXIT_CODE}" != "0" ] || ! nvm_is_version_installed "${LOCAL_VERSION}"; then
     VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"
+    # shellcheck disable=SC2181
     if [ $? -eq 0 ]; then
       nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
       nvm_err ""
@@ -663,6 +664,7 @@ nvm_alias() {
 nvm_ls_current() {
   local NVM_LS_CURRENT_NODE_PATH
   NVM_LS_CURRENT_NODE_PATH="$(command which node 2> /dev/null)"
+  # shellcheck disable=SC2181
   if [ $? -ne 0 ]; then
     nvm_echo 'none'
   elif nvm_tree_contains_path "$(nvm_version_dir iojs)" "${NVM_LS_CURRENT_NODE_PATH}"; then
