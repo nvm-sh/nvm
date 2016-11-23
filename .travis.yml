@@ -4,7 +4,6 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - fpcomplete-precise
       - llvm-toolchain-precise
       - llvm-toolchain-precise-3.8
     packages:
@@ -12,13 +11,13 @@ addons:
       - g++-4.8
       - clang-3.8
       - lldb-3.8
-      - stack
-      - bc
+      - cabal-install
+      - ghc
       - zsh
       - ksh
 cache:
   directories:
-    - $HOME/.stack
+    - $HOME/.cabal
     - $TRAVIS_BUILD_DIR/.cache
 before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
@@ -26,7 +25,7 @@ before_install:
   - wget --version
   - clang --version
   - clang++ --version
-  - if [ -n "${SHELLCHECK-}" ]; then stack setup && stack install ShellCheck && shellcheck --version ; fi
+  - if [ -n "${SHELLCHECK-}" ]; then cabal update && cabal install transformers-0.4.3.0 ShellCheck && shellcheck --version ; fi
   - if [ -z "${SHELLCHECK-}" ]; then sudo ln -sf /usr/bin/clang-3.8 /usr/bin/clang && sudo ln -sf /usr/bin/clang++-3.8 /usr/bin/clang++ && clang --version ; fi
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
@@ -39,7 +38,7 @@ env:
   global:
     - CXX=g++-4.8
     - CC=gcc-4.8
-    - PATH=$(echo $PATH | sed 's/::/:/')
+    - PATH="~/.cabal/bin/:$(echo $PATH | sed 's/::/:/')"
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
   matrix:
     - SHELLCHECK=true
