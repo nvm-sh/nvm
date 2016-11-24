@@ -1777,28 +1777,28 @@ nvm_get_make_jobs() {
   fi
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
-  local NVM_CPU_THREADS
+  local NVM_CPU_CORES
   if [ "_$NVM_OS" = "_linux" ]; then
-    NVM_CPU_THREADS="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
+    NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
   elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
-    NVM_CPU_THREADS="$(sysctl -n hw.ncpu)"
+    NVM_CPU_CORES="$(sysctl -n hw.ncpu)"
   elif [ "_$NVM_OS" = "_sunos" ]; then
-    NVM_CPU_THREADS="$(psrinfo | wc -l)"
+    NVM_CPU_CORES="$(psrinfo | wc -l)"
   elif [ "_$NVM_OS" = "_aix" ]; then
-    NVM_CPU_THREADS="$(lsconf | command grep 'Number Of Processors:'| command awk '{print $4}')"
+    NVM_CPU_CORES="$(lsconf | command grep 'Number Of Processors:'| command awk '{print $4}')"
   fi
-  if ! nvm_is_natural_num "$NVM_CPU_THREADS" ; then
-    nvm_err 'Can not determine how many thread(s) we can use, set to only 1 now.'
-    nvm_err 'Please report an issue on GitHub to help us make it better and run it faster on your computer!'
+  if ! nvm_is_natural_num "$NVM_CPU_CORES" ; then
+    nvm_err 'Can not determine how many core(s) are available, running in single-threaded mode.'
+    nvm_err 'Please report an issue on GitHub to help us make nvm run faster on your computer!'
     NVM_MAKE_JOBS=1
   else
-    nvm_echo "Detected that you have $NVM_CPU_THREADS CPU thread(s)"
-    if [ "$NVM_CPU_THREADS" -gt 2 ]; then
-      NVM_MAKE_JOBS=$((NVM_CPU_THREADS - 1))
-      nvm_echo "Set the number of jobs to $NVM_CPU_THREADS - 1 = $NVM_MAKE_JOBS jobs to speed up the build"
+    nvm_echo "Detected that you have $NVM_CPU_CORES CPU core(s)"
+    if [ "$NVM_CPU_CORES" -gt 2 ]; then
+      NVM_MAKE_JOBS=$((NVM_CPU_CORES - 1))
+      nvm_echo "Running with $NVM_MAKE_JOBS threads to speed up the build"
     else
       NVM_MAKE_JOBS=1
-      nvm_echo 'Number of CPU thread(s) less or equal to 2 will have only one job a time for `make`'
+      nvm_echo 'Number of CPU core(s) less than or equal to 2, running in single-threaded mode'
     fi
   fi
 }
@@ -1850,7 +1850,7 @@ nvm_install_source() {
   make='make'
   if [ "${NVM_OS}" = 'freebsd' ]; then
     make='gmake'
-    MAKE_CXX='CXX=c++'  
+    MAKE_CXX='CXX=c++'
   elif [ "${NVM_OS}" = 'aix' ]; then
     make='gmake'
   fi
