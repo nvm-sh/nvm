@@ -25,7 +25,8 @@ install:
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
-  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh && shellcheck -s bash install.sh && shellcheck -s bash bash_completion ; fi
+  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh ; fi
+  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash install.sh bash-completion nvm-exec ; fi
   - if [ -z "${SHELLCHECK-}" ]; then make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL ; fi
 env:
   global:
