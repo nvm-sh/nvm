@@ -17,11 +17,11 @@ __nvm_commands ()
 
   current_word="${COMP_WORDS[COMP_CWORD]}"
 
-  COMMANDS='\
-    help install uninstall use run exec \
-    alias unalias reinstall-packages \
-    current list ls list-remote ls-remote \
-    clear-cache deactivate unload \
+  COMMANDS='
+    help install uninstall use run exec
+    alias unalias reinstall-packages
+    current list ls list-remote ls-remote
+    clear-cache deactivate unload
     version which'
 
     if [ ${#COMP_WORDS[@]} == 4 ]; then
@@ -56,8 +56,8 @@ __nvm_aliases ()
 {
   declare aliases
   aliases=""
-  if [ -d $NVM_DIR/alias ]; then
-    aliases="$(cd $NVM_DIR/alias && command find $PWD -type f | command sed "s:$PWD/::")"
+  if [ -d "$NVM_DIR/alias" ]; then
+    aliases="$(cd "$NVM_DIR/alias" && command find "$PWD" -type f | command sed "s:$PWD/::")"
   fi
   echo "${aliases} node stable unstable iojs"
 }
