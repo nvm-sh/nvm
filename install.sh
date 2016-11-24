@@ -331,7 +331,7 @@ nvm_do_install() {
 
   # Source nvm
   # shellcheck source=/dev/null
-  . "${INSTALL_DIR}/nvm.sh"
+  \. "${INSTALL_DIR}/nvm.sh"
 
   nvm_check_global_modules
 

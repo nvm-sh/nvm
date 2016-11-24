@@ -9,7 +9,7 @@ MOCKS_DIR="$PWD/test/fast/Unit tests/mocks"
 echo "creating $MOCKS_DIR"
 mkdir -p "$MOCKS_DIR"
 
-. "$NVM_DIR/nvm.sh" --no-use
+\. "$NVM_DIR/nvm.sh" --no-use
 nvm deactivate 2> /dev/null
 nvm_is_version_installed() {
   return 1
