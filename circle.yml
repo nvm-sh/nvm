@@ -1,0 +1,10 @@
+dependencies:
+  override:
+    - sudo ln -sf /home/ubuntu/.local/bin/shellcheck /usr/bin/shellcheck
+    - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442 && echo 'deb http://download.fpcomplete.com/ubuntu precise main' | sudo tee /etc/apt/sources.list.d/fpco.list && sudo apt-get update && sudo apt-get install stack bc -y && stack setup && stack install ShellCheck && shellcheck --version
+  cache_directories:
+    - "~/.stack"
+
+test:
+  override:
+    - shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh && shellcheck -s bash install.sh

@@ -1,4 +1,7 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] ![nvm version](https://img.shields.io/badge/version-v0.32.1-yellow.svg)
+# Node Version Manager
+[![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3]
+[![Circle CI Build Status](https://img.shields.io/circleci/project/creationix/nvm/master.svg)][4]
+![nvm version](https://img.shields.io/badge/version-v0.32.1-yellow.svg)
 
 ## Table of Contents
 
@@ -468,5 +471,6 @@ If setting the `default` alias does not establish the node version in new shells
 [1]: https://github.com/creationix/nvm.git
 [2]: https://github.com/creationix/nvm/blob/v0.32.1/install.sh
 [3]: https://travis-ci.org/creationix/nvm
+[4]: https://circleci.com/gh/creationix/nvm
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
