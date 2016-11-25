@@ -13,6 +13,7 @@ addons:
       - ksh
 cache:
   directories:
+    - $HOME/.ghc
     - $HOME/.cabal
     - $TRAVIS_BUILD_DIR/.cache
 before_install:
