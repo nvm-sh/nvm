@@ -268,9 +268,7 @@ nvm_ensure_version_installed() {
   EXIT_CODE="$?"
   local NVM_VERSION_DIR
   if [ "${EXIT_CODE}" != "0" ] || ! nvm_is_version_installed "${LOCAL_VERSION}"; then
-    VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"
-    # shellcheck disable=SC2181
-    if [ $? -eq 0 ]; then
+    if VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"; then
       nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
       nvm_err ""
       nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
@@ -663,9 +661,7 @@ nvm_alias() {
 
 nvm_ls_current() {
   local NVM_LS_CURRENT_NODE_PATH
-  NVM_LS_CURRENT_NODE_PATH="$(command which node 2> /dev/null)"
-  # shellcheck disable=SC2181
-  if [ $? -ne 0 ]; then
+  if ! NVM_LS_CURRENT_NODE_PATH="$(command which node 2> /dev/null)"; then
     nvm_echo 'none'
   elif nvm_tree_contains_path "$(nvm_version_dir iojs)" "${NVM_LS_CURRENT_NODE_PATH}"; then
     nvm_add_iojs_prefix "$(iojs --version 2>/dev/null)"
@@ -1467,12 +1463,10 @@ nvm_get_arch() {
   # isainfo to get the instruction set supported by the
   # kernel.
   if [ "_$NVM_OS" = "_sunos" ]; then
-    HOST_ARCH=$(pkg_info -Q MACHINE_ARCH pkg_install)
-    EXIT_CODE=$?
-    if [ $EXIT_CODE -ne 0 ]; then
-      HOST_ARCH=$(isainfo -n)
+    if HOST_ARCH=$(pkg_info -Q MACHINE_ARCH pkg_install); then
+      HOST_ARCH=$(echo "${HOST_ARCH}" | command tail -1)
     else
-      HOST_ARCH=$(echo "$HOST_ARCH" | command tail -1)
+      HOST_ARCH=$(isainfo -n)
     fi
   elif [ "_$NVM_OS" = "_aix" ]; then
      HOST_ARCH=ppc64
