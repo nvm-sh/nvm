@@ -429,7 +429,7 @@ In order to provide the best performance (and other optimisations), nvm will dow
 
 Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [busybox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. Busybox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
 
-There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally but currently (May 2016), this is not available for Node versions newer than v0.10 so unless you need an older Node version, this won't help you. Work is in progress on source-builds for newer Node versions but is not yet complete.
+There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally.
 
 If installing nvm on Alpine Linux *is* still what you want or need to do, you should be able to achieve this by running the following from you Alpine Linux shell:
 
