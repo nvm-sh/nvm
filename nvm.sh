@@ -3157,7 +3157,7 @@ nvm() {
         nvm_binary_available nvm_prepend_path nvm_strip_path \
         nvm_num_version_groups nvm_format_version nvm_ensure_version_prefix \
         nvm_normalize_version nvm_is_valid_version \
-        nvm_ensure_version_installed \
+        nvm_ensure_version_installed nvm_cache_dir \
         nvm_version_path nvm_alias_path nvm_version_dir \
         nvm_find_nvmrc nvm_find_up nvm_tree_contains_path \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
@@ -3165,7 +3165,7 @@ nvm() {
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
-        nvm_echo nvm_err nvm_grep \
+        nvm_echo nvm_err nvm_grep nvm_cd \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_version_installed \
