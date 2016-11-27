@@ -1443,7 +1443,13 @@ nvm_get_os() {
   NVM_UNAME="$(command uname -a)"
   local NVM_OS
   case "$NVM_UNAME" in
-    Linux\ *) NVM_OS=linux ;;
+    Linux\ *)
+      if [ -f "/etc/alpine-release" ]; then
+        NVM_OS=alpine_linux
+      else
+        NVM_OS=linux
+      fi
+    ;;
     Darwin\ *) NVM_OS=darwin ;;
     SunOS\ *) NVM_OS=sunos ;;
     FreeBSD\ *) NVM_OS=freebsd ;;
@@ -1779,7 +1785,7 @@ nvm_get_make_jobs() {
   NVM_OS="$(nvm_get_os)"
   local NVM_CPU_CORES
   case "_$NVM_OS" in
-    "_linux")
+    '_linux' | '_alpine_linux')
       NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
     ;;
     "_freebsd" | "_darwin")
