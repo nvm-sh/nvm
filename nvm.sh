@@ -1778,15 +1778,20 @@ nvm_get_make_jobs() {
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
   local NVM_CPU_CORES
-  if [ "_$NVM_OS" = "_linux" ]; then
-    NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
-  elif [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_darwin" ]; then
-    NVM_CPU_CORES="$(sysctl -n hw.ncpu)"
-  elif [ "_$NVM_OS" = "_sunos" ]; then
-    NVM_CPU_CORES="$(psrinfo | wc -l)"
-  elif [ "_$NVM_OS" = "_aix" ]; then
-    NVM_CPU_CORES="$(pmcycles -m | wc -l)"
-  fi
+  case "_$NVM_OS" in
+    "_linux")
+      NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
+    ;;
+    "_freebsd" | "_darwin")
+      NVM_CPU_CORES="$(sysctl -n hw.ncpu)"
+    ;;
+    "_sunos")
+      NVM_CPU_CORES="$(psrinfo | wc -l)"
+    ;;
+    "_aix")
+      NVM_CPU_CORES="$(pmcycles -m | wc -l)"
+    ;;
+  esac
   if ! nvm_is_natural_num "$NVM_CPU_CORES" ; then
     nvm_err 'Can not determine how many core(s) are available, running in single-threaded mode.'
     nvm_err 'Please report an issue on GitHub to help us make nvm run faster on your computer!'
