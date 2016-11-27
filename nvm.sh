@@ -1926,7 +1926,7 @@ nvm_install_source() {
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install
   ); then
-    if ! nvm_has "npm" ; then
+    if (nvm use "${VERSION}" && ! nvm_has "npm") ; then
       nvm_echo 'Installing npm...'
       if nvm_version_greater 0.2.0 "$VERSION"; then
         nvm_err 'npm requires node v0.2.3 or higher'
