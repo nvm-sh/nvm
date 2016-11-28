@@ -2,7 +2,13 @@
 
 set -ex
 
-die () { echo "$@" ; exit 1; }
+BEFORE="./before.tmp"
+AFTER="./after.tmp"
+
+cleanup () { rm -f "${BEFORE}" "${AFTER}"; }
+die () { echo "$@" ; cleanup ; exit 1; }
+
+typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' > "${BEFORE}"
 
 \. ../../nvm.sh
 
@@ -10,4 +16,11 @@ type nvm > /dev/null 2>&1 || die "nvm not loaded"
 
 nvm unload
 
+typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' > "${AFTER}"
+
 ! type nvm > /dev/null 2>&1 || die "nvm not unloaded"
+
+DIFF="$(diff "${BEFORE}" "${AFTER}" ||:)"
+[ -z "${DIFF}" ] || die "function pollution found: ${DIFF}"
+
+cleanup
