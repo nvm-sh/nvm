@@ -3172,6 +3172,7 @@ nvm() {
         nvm_list_aliases nvm_make_alias nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
+        node_version_has_solaris_binary \
         > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS NVM_PATH \
