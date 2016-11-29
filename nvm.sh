@@ -1853,15 +1853,24 @@ nvm_install_source() {
 
   local make
   make='make'
-  if [ "${NVM_OS}" = 'freebsd' ]; then
-    make='gmake'
-    MAKE_CXX='CXX=c++'
-  elif [ "${NVM_OS}" = 'aix' ]; then
-    make='gmake'
-  fi
-  if nvm_has "clang++" && nvm_has "clang" && nvm_version_greater_than_or_equal_to nvm_clang_version 3.5 ; then
-    nvm_echo "Clang v3.5+ detected! Use Clang as c/c++ compiler!"
-    MAKE_CXX='CC=clang CXX=clang++'
+  local MAKE_CXX
+  case "${NVM_OS}" in
+    'freebsd')
+      make='gmake'
+      MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
+    ;;
+    'darwin')
+      MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
+    ;;
+    'aix')
+      make='gmake'
+    ;;
+  esac
+  if nvm_has "clang++" && nvm_has "clang" && nvm_version_greater_than_or_equal_to nvm_clang_version 3.5; then
+    if [ -z "${CC-}" ] || [ -z "${CXX-}" ] ; then
+      nvm_echo "Clang v3.5+ detected! CC or CXX not specified, will use Clang as c/c++ compiler!"
+      MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
+    fi
   fi
 
   local tar_compression_flag
