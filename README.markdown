@@ -374,7 +374,7 @@ Nota bene: Avoid running nvm while the tests are running.
 To activate, you need to source `bash_completion`:
 
 ```sh
-    [[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
+[[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
 ```
 
 Put the above sourcing line just below the sourcing line for nvm in your profile (`.bashrc`, `.bash_profile`).
