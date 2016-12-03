@@ -374,7 +374,7 @@ Nota bene: Avoid running nvm while the tests are running.
 To activate, you need to source `bash_completion`:
 
 ```sh
-  	[[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
+    [[ -r $NVM_DIR/bash_completion ]] && . $NVM_DIR/bash_completion
 ```
 
 Put the above sourcing line just below the sourcing line for nvm in your profile (`.bashrc`, `.bash_profile`).
@@ -383,28 +383,28 @@ Put the above sourcing line just below the sourcing line for nvm in your profile
 
 nvm:
 
-	$ nvm [tab][tab]
+    $ nvm [tab][tab]
     alias               deactivate          install             ls                  run                 unload
     clear-cache         exec                list                ls-remote           unalias             use
     current             help                list-remote         reinstall-packages  uninstall           version
 
 nvm alias:
 
-	$ nvm alias [tab][tab]
-	default
+    $ nvm alias [tab][tab]
+    default
 
-	$ nvm alias my_alias [tab][tab]
-	v0.6.21        v0.8.26       v0.10.28
+    $ nvm alias my_alias [tab][tab]
+    v0.6.21        v0.8.26       v0.10.28
 
 nvm use:
 
-	$ nvm use [tab][tab]
-	my_alias        default        v0.6.21        v0.8.26       v0.10.28
+    $ nvm use [tab][tab]
+    my_alias        default        v0.6.21        v0.8.26       v0.10.28
 
 nvm uninstall:
 
-	$ nvm uninstall [tab][tab]
-	my_alias        default        v0.6.21        v0.8.26       v0.10.28
+    $ nvm uninstall [tab][tab]
+    my_alias        default        v0.6.21        v0.8.26       v0.10.28
 
 ## Compatibility Issues
 `nvm` will encounter some issues if you have some non-default settings set. (see [#606](/../../issues/606))
