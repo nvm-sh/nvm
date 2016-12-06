@@ -2464,6 +2464,10 @@ nvm() {
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
+        if [ ! -z "${NVM_POST_INSTALL-}" ]; then
+          nvm_echo 'Running post install hook.'
+          ($NVM_POST_INSTALL)
+        fi
       fi
       return $?
     ;;
