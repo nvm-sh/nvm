@@ -2394,8 +2394,8 @@ nvm() {
         return $?
       fi
 
-      local NVM_INSTALL_SUCCESS
-      NVM_INSTALL_SUCCESS=false
+      local EXIT_CODE
+      EXIT_CODE=-1
       if [ -n "${NVM_INSTALL_THIRD_PARTY_HOOK-}" ]; then
         nvm_err '** $NVM_INSTALL_THIRD_PARTY_HOOK env var set; dispatching to third-party installation method **'
         local NVM_METHOD_PREFERENCE
@@ -2405,7 +2405,6 @@ nvm() {
         fi
         local VERSION_PATH
         VERSION_PATH="$(nvm_version_path "${VERSION}")"
-        local EXIT_CODE
         "${NVM_INSTALL_THIRD_PARTY_HOOK}" "${VERSION}" "${FLAVOR}" std "${NVM_METHOD_PREFERENCE}" "${VERSION_PATH}" || {
           EXIT_CODE=$?
           nvm_err '*** Third-party $NVM_INSTALL_THIRD_PARTY_HOOK env var failed to install! ***'
@@ -2415,7 +2414,7 @@ nvm() {
           nvm_err '*** Third-party $NVM_INSTALL_THIRD_PARTY_HOOK env var claimed to succeed, but failed to install! ***'
           return 33
         fi
-        NVM_INSTALL_SUCCESS=true
+        EXIT_CODE=0
       else
 
         if [ "_$NVM_OS" = "_freebsd" ]; then
@@ -2432,23 +2431,21 @@ nvm() {
 
         # skip binary install if "nobinary" option specified.
         if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-          if nvm_install_binary "${FLAVOR}" std "${VERSION}"; then
-            NVM_INSTALL_SUCCESS=true
-          fi
+          nvm_install_binary "${FLAVOR}" std "${VERSION}"
+          EXIT_CODE=$?
         fi
-        if [ "$NVM_INSTALL_SUCCESS" != true ]; then
+        if [ "$EXIT_CODE" -ne 0 ]; then
           if [ -z "${NVM_MAKE_JOBS-}" ]; then
             nvm_get_make_jobs
           fi
 
-          if nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"; then
-            NVM_INSTALL_SUCCESS=true
-          fi
+          nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"
+          EXIT_CODE=$?
         fi
 
       fi
 
-      if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
+      if [ "$EXIT_CODE" -eq 0 ] && nvm use "$VERSION"; then
         if [ -n "${LTS-}" ]; then
           nvm_ensure_default_set "lts/${LTS}"
         else
@@ -2457,9 +2454,10 @@ nvm() {
         if [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
+          EXIT_CODE=$?
         fi
       fi
-      return $?
+      return $EXIT_CODE
     ;;
     "uninstall" )
       if [ $# -ne 1 ]; then
