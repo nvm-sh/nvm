@@ -13,12 +13,10 @@ die () { echo "$@" ; exit 1; }
 nvm use --delete-prefix v0.2.3 || die "Failed to activate v0.2.3"
 [ `expr "$PATH" : ".*v0.2.3/.*/bin"` != 0 ] || die "PATH not set up properly"
 [ `expr "$NODE_PATH" : ".*v0.2.3/.*/lib/node_modules"` = 0 ] || die "NODE_PATH should not contain (npm root -g)"
-[ `expr "$NVM_BIN" : ".*v0.2.3/bin"` != 0 ] || die "NODE_BIN should contain bin directory path"
-[ `expr "$NVM_PATH" : ".*v0.2.3/lib/node"` != 0 ] || die "NODE_PATH should contain lib node directory path"
 # ^ note: NODE_PATH should not contain `npm root -g` since globals should not be requireable
+[ `expr "$NVM_BIN" : ".*v0.2.3/bin"` != 0 ] || die "NODE_BIN should contain bin directory path"
 
 nvm deactivate || die "Failed to deactivate v0.2.3"
 [ `expr "$PATH" : ".*v0.2.3/.*/bin"` = 0 ] || die "PATH not cleaned properly"
 [ `expr "$NODE_PATH" : ".*v0.2.3/.*/lib/node_modules"` = 0 ] || die "NODE_PATH not cleaned properly"
 [ "_$NVM_BIN" = "_" ] || die "NVM_BIN should be unset: got '$NVM_BIN'"
-[ "_$NVM_PATH" = "_" ] || die "NVM_PATH should be unset: got '$NVM_PATH'"
