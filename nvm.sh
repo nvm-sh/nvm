@@ -2576,7 +2576,7 @@ nvm() {
           nvm_echo "$NVM_DIR/*/lib/node_modules removed from \$NODE_PATH"
         fi
       fi
-      unset NVM_BIN NVM_PATH
+      unset NVM_BIN
     ;;
     "use" )
       local PROVIDED_VERSION
@@ -2674,7 +2674,6 @@ nvm() {
       fi
       export PATH
       hash -r
-      export NVM_PATH="$NVM_VERSION_DIR/lib/node"
       export NVM_BIN="$NVM_VERSION_DIR/bin"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
         command rm -f "$NVM_DIR/current" && ln -s "$NVM_VERSION_DIR" "$NVM_DIR/current"
@@ -3189,7 +3188,7 @@ nvm() {
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
         > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
-        NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS NVM_PATH \
+        NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \
         > /dev/null 2>&1
     ;;
     * )
