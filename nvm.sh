@@ -698,13 +698,12 @@ nvm_strip_path() {
     nvm_err '${NVM_DIR} not set!'
     return 1
   fi
-  nvm_echo "${1-}" | command sed \
-    -e "s#${NVM_DIR}/[^/]*${2-}[^:]*:##g" \
-    -e "s#:${NVM_DIR}/[^/]*${2-}[^:]*##g" \
-    -e "s#${NVM_DIR}/[^/]*${2-}[^:]*##g" \
-    -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*:##g" \
-    -e "s#:${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*##g" \
-    -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*##g"
+  command printf %s "${1-}" | command awk -v NVM_DIR="${NVM_DIR}" -v RS=: '
+  index($0, NVM_DIR) == 1 {
+    path = substr($0, length(NVM_DIR) + 1)
+    if (path ~ "^(/versions/[^/]*)?/[^/]*'"${2-}"'.*$") { next }
+  }
+  { print }' | command paste -s -d: -
 }
 
 nvm_change_path() {
