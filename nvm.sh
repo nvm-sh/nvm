@@ -379,7 +379,7 @@ nvm_remote_versions() {
   NVM_LS_REMOTE_PRE_MERGED_OUTPUT=''
   local NVM_LS_REMOTE_POST_MERGED_OUTPUT
   NVM_LS_REMOTE_POST_MERGED_OUTPUT=''
-  if [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_NODE_PREFIX}" ]; then
+  if [ -z "${NVM_FLAVOR}" ] || [ "${NVM_FLAVOR}" = "${NVM_NODE_PREFIX}" ]; then
     local NVM_LS_REMOTE_OUTPUT
     NVM_LS_REMOTE_OUTPUT=$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN-}") &&:
     NVM_LS_REMOTE_EXIT_CODE=$?
@@ -391,8 +391,8 @@ nvm_remote_versions() {
   local NVM_LS_REMOTE_IOJS_EXIT_CODE
   NVM_LS_REMOTE_IOJS_EXIT_CODE=0
   local NVM_LS_REMOTE_IOJS_OUTPUT
-  if [ -z "${NVM_LTS-}" ] && ( \
-    [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_IOJS_PREFIX}" ] \
+  if [ -z "${NVM_LTS}" ] && ( \
+    [ -z "${NVM_FLAVOR}" ] || [ "${NVM_FLAVOR}" = "${NVM_IOJS_PREFIX}" ] \
   ); then
     NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "${PATTERN-}") &&:
     NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
@@ -2446,7 +2446,7 @@ nvm() {
             NVM_INSTALL_SUCCESS=true
           fi
         fi
-        if [ "${NVM_INSTALL_SUCCESS-}" != true ]; then
+        if [ "$NVM_INSTALL_SUCCESS" != true ]; then
           if [ -z "${NVM_MAKE_JOBS-}" ]; then
             nvm_get_make_jobs
           fi
@@ -2458,7 +2458,7 @@ nvm() {
 
       fi
 
-      if [ "${NVM_INSTALL_SUCCESS}-" = true ] && nvm use "$VERSION"; then
+      if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
         nvm_ensure_default_set "$provided_version"
         if [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
