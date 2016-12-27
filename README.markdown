@@ -305,6 +305,23 @@ You can use [`avn`](https://github.com/wbyoung/avn) to deeply integrate into you
 
 If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` development team. We are, however, accepting pull requests for more examples.
 
+#### Bash
+
+Put this into your `$HOME/.bash_profile` or `$HOME/.bashrc` to call `nvm use` automatically whenever you enter a directory that contains an `.nvmrc` file with a string telling nvm which node to `use`:
+
+```
+load-nvmrc() {
+  if [[ -f .nvmrc && -r .nvmrc ]]; then
+    nvm use
+  elif [[ $(nvm version) != $(nvm version default)  ]]; then
+    echo "Reverting to nvm default version"
+    nvm use default
+  fi
+}
+
+function cd () { builtin cd "$@" && load-nvmrc; }
+```
+
 #### Zsh
 
 ##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
