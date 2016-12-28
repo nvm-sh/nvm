@@ -31,6 +31,7 @@
 
 - Is there anything in any of your profile files (`.bashrc`, `.bash_profile`, `.zshrc`, etc) that modifies the `PATH`?
 
+<!-- if this does not apply, please delete this section -->
 - If you are having installation issues, or getting "N/A", what does `curl -v nodejs.org/dist/` print out?
 <details>
 <!-- do not delete the following blank line -->
