@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
-DIR="$(command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+function find_nvm_dir() {
+  if which realpath >& /dev/null; then
+    dirname "$(realpath "$0")"
+  else
+    command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd
+  fi
+}
+
+DIR="$(find_nvm_dir)"
 
 # shellcheck disable=SC1090
 \. "$DIR/nvm.sh" --no-use
