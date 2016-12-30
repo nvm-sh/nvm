@@ -1,4 +1,4 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.32.1-yellow.svg)][4]
+# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.33.0-yellow.svg)][4]
 
 ## Table of Contents
 
@@ -61,13 +61,13 @@ Homebrew installation is not supported. If you have issues with homebrew-install
 To install or update nvm, you can use the [install script][2] using cURL:
 
 ```sh
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
 ```
 
 or Wget:
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
 ```
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
@@ -435,7 +435,7 @@ If installing nvm on Alpine Linux *is* still what you want or need to do, you sh
 
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc g++ libgcc linux-headers
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
 ```
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
@@ -466,8 +466,8 @@ After the v0.8.6 release of node, nvm tries to install from binary packages. But
 If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node PATH is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
 
 [1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.32.1/install.sh
+[2]: https://github.com/creationix/nvm/blob/v0.33.0/install.sh
 [3]: https://travis-ci.org/creationix/nvm
-[4]: https://github.com/creationix/nvm/releases/tag/v0.32.1
+[4]: https://github.com/creationix/nvm/releases/tag/v0.33.0
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
