@@ -353,7 +353,7 @@ nvm_do_install() {
   echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
   command printf "${SOURCE_STR}"
   if ${BASH_OR_ZSH} ; then
-    command printf " && ${COMPLETION_STR}"
+    command printf "${COMPLETION_STR}"
   fi
 }
 
