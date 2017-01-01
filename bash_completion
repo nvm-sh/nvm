@@ -2,6 +2,10 @@
 
 # bash completion for Node Version Manager (NVM)
 
+if ! nvm &> /dev/null; then
+    return
+fi
+
 __nvm_generate_completion()
 {
   declare current_word
