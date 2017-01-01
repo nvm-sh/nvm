@@ -14,6 +14,19 @@ nvm_latest_version() {
   echo "v0.33.1"
 }
 
+nvm_profile_is_bash_or_zsh() {
+    local TEST_PROFILE
+    TEST_PROFILE="${1-}"
+    case "${TEST_PROFILE-}" in
+      *"/.bashrc" | *"/.bash_profile" | *"/.zshrc")
+          return
+      ;;
+      *)
+          return 1
+      ;;
+    esac
+}
+
 #
 # Outputs the location to NVM depending on:
 # * The availability of $NVM_SOURCE
@@ -305,11 +318,9 @@ nvm_do_install() {
     echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
   else
-    case "${NVM_PROFILE-}" in
-      ".bashrc" | ".bash_profile" | ".zshrc")
-        BASH_OR_ZSH=true
-      ;;
-    esac
+    if nvm_profile_is_bash_or_zsh "${NVM_PROFILE-}"; then
+      BASH_OR_ZSH=true
+    fi
     if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
       echo "=> Appending nvm source string to $NVM_PROFILE"
       command printf "${SOURCE_STR}" >> "$NVM_PROFILE"
