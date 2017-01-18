@@ -66,7 +66,8 @@ npm() {
 }
 OUTPUT="$(nvm_die_on_prefix 0 foo 2>&1)"
 EXPECTED_OUTPUT="nvm is not compatible with the npm config \"prefix\" option: currently set to \"./bad prefix\"
-Run \`npm config delete prefix\` or \`foo\` to unset it."
+Run \`npm config delete prefix\` or \`foo\` to unset it.
+If \"./bad prefix\" is actually inside \"$NVM_DIR\" directory, please modify your NVM_DIR to make sure there is no any symbolic links."
 EXIT_CODE="$(nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo $?)"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT' with bad prefix set; got '$OUTPUT'"
 [ "_$EXIT_CODE" = "_10" ] || die "'nvm_die_on_prefix 0 foo' did not exit with 10 with bad prefix set; got '$EXIT_CODE'"

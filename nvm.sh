@@ -2010,6 +2010,7 @@ nvm_die_on_prefix() {
       else
         nvm_err "Run \`$NVM_COMMAND\` to unset it."
       fi
+      nvm_err "If \"$NVM_NPM_PREFIX\" is actually inside \"$NVM_DIR\" directory, please modify your NVM_DIR to make sure there is no any symbolic links."
       return 10
     fi
   fi
