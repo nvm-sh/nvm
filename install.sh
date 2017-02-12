@@ -7,7 +7,7 @@ nvm_has() {
 }
 
 nvm_install_dir() {
-  printf %s "${NVM_DIR:-"$HOME/.nvm"}" | sed "s:^$HOME:\$HOME:"
+  printf %s "${NVM_DIR:-"$HOME/.nvm"}"
 }
 
 nvm_latest_version() {
@@ -290,10 +290,10 @@ nvm_do_install() {
 
   local NVM_PROFILE
   NVM_PROFILE="$(nvm_detect_profile)"
-  local INSTALL_DIR
-  INSTALL_DIR="$(nvm_install_dir)"
+  local PROFILE_INSTALL_DIR
+  PROFILE_INSTALL_DIR="$(nvm_install_dir| sed "s:^$HOME:\$HOME:")"
 
-  SOURCE_STR="\nexport NVM_DIR=\"$INSTALL_DIR\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\n"
+  SOURCE_STR="\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\n"
   COMPLETION_STR="[ -s \"\$NVM_DIR/bash_completion\" ] && \\. \"\$NVM_DIR/bash_completion\"  # This loads nvm bash_completion\n"
   BASH_OR_ZSH=false
 
@@ -331,7 +331,7 @@ nvm_do_install() {
 
   # Source nvm
   # shellcheck source=/dev/null
-  \. "${INSTALL_DIR}/nvm.sh"
+  \. "$(nvm_install_dir)/nvm.sh"
 
   nvm_check_global_modules
 
