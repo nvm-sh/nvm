@@ -24,8 +24,6 @@ EXPECTED_OUTPUT="Version '3' (with LTS filter 'argon') not found - try \`nvm ls-
 [ "${EXIT_CODE}" = 3 ] || die "\`nvm install --lts=argon 3\` did not exit with 3, got >${EXIT_CODE}<"
 [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "\`nvm install --lts=argon 3\` output >${OUTPUT}<, expected >${EXPECTED_OUTPUT}<"
 
-set +e # TODO: fix
 nvm install --lts 4.2.2 || die 'nvm install --lts 4.2.2 failed'
-set -e
 
 [ "$(nvm current)" = "v4.2.2" ] || die "v4.2.2 not current, got $(nvm_current)"

@@ -2460,7 +2460,11 @@ nvm() {
       fi
 
       if [ "$NVM_INSTALL_SUCCESS" = true ] && nvm use "$VERSION"; then
-        nvm_ensure_default_set "$provided_version"
+        if [ -n "${LTS-}" ]; then
+          nvm_ensure_default_set "lts/${LTS}"
+        else
+          nvm_ensure_default_set "$provided_version"
+        fi
         if [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
