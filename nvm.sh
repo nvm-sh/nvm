@@ -2242,6 +2242,8 @@ nvm() {
       nvm_err "\$NVM_DIR: '$(nvm_sanitize_path "$NVM_DIR")'"
       nvm_err "\$PREFIX: '$(nvm_sanitize_path "$PREFIX")'"
       nvm_err "\$NPM_CONFIG_PREFIX: '$(nvm_sanitize_path "$NPM_CONFIG_PREFIX")'"
+      nvm_err "\$NVM_NODEJS_ORG_MIRROR: '${NVM_NODEJS_ORG_MIRROR}'"
+      nvm_err "\$NVM_IOJS_ORG_MIRROR: '${NVM_IOJS_ORG_MIRROR}'"
       local NVM_DEBUG_OUTPUT
       for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
       do
