@@ -3166,6 +3166,7 @@ nvm() {
       nvm_echo '0.33.0'
     ;;
     "unload" )
+      nvm deactivate >/dev/null 2>&1
       unset -f nvm \
         nvm_iojs_prefix nvm_node_prefix \
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
