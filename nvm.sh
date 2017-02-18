@@ -2318,11 +2318,13 @@ nvm() {
           nvm_rc_version
           if [ $version_not_provided -eq 1 ]; then
             if [ -z "$NVM_RC_VERSION" ]; then
+              unset NVM_RC_VERSION
               >&2 nvm --help
               return 127
             fi
           fi
           provided_version="$NVM_RC_VERSION"
+          unset NVM_RC_VERSION
         fi
       elif [ $# -gt 0 ]; then
         shift
@@ -2619,6 +2621,7 @@ nvm() {
           PROVIDED_VERSION="$NVM_RC_VERSION"
           VERSION="$(nvm_version "$PROVIDED_VERSION")"
         fi
+        unset NVM_RC_VERSION
       else
         VERSION="$(nvm_match_version "$PROVIDED_VERSION")"
       fi
@@ -2743,6 +2746,7 @@ nvm() {
         if [ -n "$NVM_RC_VERSION" ]; then
           VERSION="$(nvm_version "$NVM_RC_VERSION")" ||:
         fi
+        unset NVM_RC_VERSION
         if [ "${VERSION:-N/A}" = 'N/A' ]; then
           >&2 nvm --help
           return 127
@@ -2763,6 +2767,7 @@ nvm() {
               fi
             fi
             VERSION="$(nvm_version "$NVM_RC_VERSION")" ||:
+            unset NVM_RC_VERSION
           else
             shift
           fi
@@ -2838,6 +2843,7 @@ nvm() {
             nvm_rc_version
           fi
           provided_version="$NVM_RC_VERSION"
+          unset NVM_RC_VERSION
           VERSION="$(nvm_version "$provided_version")" ||:
         else
           shift
@@ -2953,6 +2959,7 @@ nvm() {
           provided_version="${NVM_RC_VERSION}"
           VERSION=$(nvm_version "${NVM_RC_VERSION}") ||:
         fi
+        unset NVM_RC_VERSION
       elif [ "_${1}" != '_system' ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
       else
