@@ -47,7 +47,9 @@ nvm_is_alias() {
 
 nvm_has_colors() {
   local NVM_COLORS
-  NVM_COLORS="$(tput -T "${TERM:-vt100}" colors)"
+  if nvm_has tput; then
+    NVM_COLORS="$(tput -T "${TERM:-vt100}" colors)"
+  fi
   [ "${NVM_COLORS:--1}" -ge 8 ]
 }
 
