@@ -11,7 +11,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  echo "v0.33.0"
+  echo "v0.33.1"
 }
 
 #
