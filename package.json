@@ -13,7 +13,8 @@
     "test/installation": "npm run --silent test/installation/node && npm run --silent test/installation/iojs",
     "test/installation/node": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_node test-$shell",
     "test/installation/iojs": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_iojs test-$shell",
-    "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell"
+    "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell",
+    "doctoc": "doctoc README.markdown"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "replace": "^0.3.0",
     "semver": "^5.0.1",
-    "urchin": "^0.0.5"
+    "urchin": "^0.0.5",
+    "doctoc": "^1.2.0"
   }
 }
