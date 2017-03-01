@@ -1,27 +1,33 @@
 # Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.33.1-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
 
- - [Installation](#installation)
-   - [Install script](#install-script)
-   - [Verify installation](#verify-installation)
-   - [Manual install](#manual-install)
-   - [Manual upgrade](#manual-upgrade)
- - [Usage](#usage)
-   - [Long-term support](#long-term-support)
-   - [Migrating global packages while installing](#migrating-global-packages-while-installing)
-   - [io.js](#iojs)
-   - [System version of node](#system-version-of-node)
-   - [Listing versions](#listing-versions)
-   - [.nvmrc](#nvmrc)
-   - [Deeper Shell Integration](#deeper-shell-integration)
- - [License](#license)
- - [Running tests](#running-tests)
- - [Bash completion](#bash-completion)
-   - [Usage](#usage-1)
- - [Compatibility Issues](#compatibility-issues)
- - [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
- - [Problems](#problems)
+- [Installation](#installation)
+  - [Install script](#install-script)
+  - [Verify installation](#verify-installation)
+  - [Manual install](#manual-install)
+  - [Manual upgrade](#manual-upgrade)
+- [Usage](#usage)
+  - [Long-term support](#long-term-support)
+  - [Migrating global packages while installing](#migrating-global-packages-while-installing)
+  - [io.js](#iojs)
+  - [System version of node](#system-version-of-node)
+  - [Listing versions](#listing-versions)
+  - [.nvmrc](#nvmrc)
+  - [Deeper Shell Integration](#deeper-shell-integration)
+    - [zsh](#zsh)
+      - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
+- [License](#license)
+- [Running tests](#running-tests)
+- [Bash completion](#bash-completion)
+  - [Usage](#usage-1)
+- [Compatibility Issues](#compatibility-issues)
+- [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
+- [Problems](#problems)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Installation
 
@@ -305,7 +311,7 @@ You can use [`avn`](https://github.com/wbyoung/avn) to deeply integrate into you
 
 If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` development team. We are, however, accepting pull requests for more examples.
 
-#### Zsh
+#### zsh
 
 ##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
 

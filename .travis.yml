@@ -13,6 +13,7 @@ addons:
       - ksh
 cache:
   directories:
+    - $HOME/.npm
     - $HOME/.ghc
     - $HOME/.cabal
     - $TRAVIS_BUILD_DIR/.cache
@@ -21,14 +22,16 @@ before_install:
   - curl --version
   - wget --version
   - if [ -n "${SHELLCHECK-}" ]; then cabal update && cabal install transformers-0.4.3.0 ShellCheck && shellcheck --version ; fi
+  - if [ -n "${DOCTOCCHECK-}" ]; then nvm install node && npm install -g doctoc && type doctoc ; fi
 install:
   - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
+  - if [ -n "${DOCTOCCHECK-}" ]; then cp README.markdown README.markdown.orig && npm run doctoc && diff -q README.markdown README.markdown.orig ; fi
   - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh ; fi
   - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash install.sh bash_completion nvm-exec ; fi
-  - if [ -z "${SHELLCHECK-}" ]; then make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL ; fi
+  - if [ -n "${SHELL-}" ] && [ -n "${TEST_SUITE}" ]; then make TEST_SUITE=$TEST_SUITE URCHIN=/tmp/urchin/package/urchin test-$SHELL ; fi
 env:
   global:
     - CXX=g++-4.8
@@ -36,6 +39,7 @@ env:
     - PATH="~/.cabal/bin/:$(echo $PATH | sed 's/::/:/')"
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
   matrix:
+    - DOCTOCCHECK=true
     - SHELLCHECK=true
     - SHELL=bash TEST_SUITE=install_script
     - SHELL=sh TEST_SUITE=fast
