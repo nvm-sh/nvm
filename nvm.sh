@@ -1079,8 +1079,6 @@ nvm_get_checksum_alg() {
     nvm_echo 'sha-256'
   elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
     nvm_echo 'sha-256'
-  elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
-    nvm_echo 'sha-256'
   elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
     nvm_echo 'sha-256'
   elif nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
@@ -1090,7 +1088,7 @@ nvm_get_checksum_alg() {
   elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
     nvm_echo 'sha-1'
   else
-    nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, libressl, or bssl not found.'
+    nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
     nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
     return 1
   fi
@@ -1122,9 +1120,6 @@ nvm_compute_checksum() {
   elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
     nvm_err 'Computing checksum with openssl dgst -sha256'
     command openssl dgst -sha256 "${FILE}" | rev | command awk '{print $1}' | rev
-  elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
-    nvm_err 'Computing checksum with libressl dgst -sha256'
-    command libressl dgst -sha256 "${FILE}" | rev | command awk '{print $1}' | rev
   elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
     nvm_err 'Computing checksum with bssl sha256sum'
     command bssl sha256sum "${FILE}" | command awk '{print $1}'
@@ -1225,12 +1220,10 @@ nvm_checksum() {
       NVM_CHECKSUM="$(command gsha256sum "${1-}" | command awk '{print $1}')"
     elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
       NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | rev | command awk '{print $1}' | rev)"
-    elif nvm_has "libressl" && ! nvm_is_alias "libressl"; then
-      NVM_CHECKSUM="$(command libressl dgst -sha256 "${1-}" | rev | command awk '{print $1}' | rev)"
     elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
       NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | command awk '{print $1}')"
     else
-      nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, libressl, or bssl not found.'
+      nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
       nvm_err 'WARNING: Continuing *without checksum verification*'
       return
     fi
