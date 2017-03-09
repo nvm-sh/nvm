@@ -113,6 +113,7 @@ nvm_download() {
                             -e 's/-L //' \
                             -e 's/-I /--server-response /' \
                             -e 's/-s /-q /' \
+                            -e 's/-sS /-nv /' \
                             -e 's/-o /-O /' \
                             -e 's/-C - /-c /')
     # shellcheck disable=SC2086
@@ -1738,12 +1739,19 @@ nvm_install_binary() {
   local TMPDIR
   local VERSION_PATH
 
+  local PROGRESS_BAR
   local NODE_OR_IOJS
   if [ "${FLAVOR}" = 'node' ]; then
     NODE_OR_IOJS="${FLAVOR}"
   fi
+  if [ "${NVM_NO_PROGRESS-}" = "1" ]; then
+    # --silent, --show-error, use short option as @samrocketman mentions the compatibility issue.
+    PROGRESS_BAR="-sS"
+  else
+    PROGRESS_BAR="--progress-bar"
+  fi
   nvm_echo "Downloading and installing ${NODE_OR_IOJS-} ${VERSION}..."
-  TARBALL="$(nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
+  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
   if [ -f "${TARBALL}" ]; then
     TMPDIR="$(dirname "${TARBALL}")/files"
   fi
@@ -1900,7 +1908,7 @@ nvm_download_artifact() {
     command rm -rf "${TARBALL}"
   fi
   nvm_err "Downloading ${TARBALL_URL}..."
-  nvm_download -L -C - --progress-bar "${TARBALL_URL}" -o "${TARBALL}" || (
+  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || (
     command rm -rf "${TARBALL}" "${tmpdir}"
     nvm_err "Binary download from ${TARBALL_URL} failed, trying source."
     return 4
@@ -2047,6 +2055,13 @@ nvm_install_source() {
   local TMPDIR
   local VERSION_PATH
 
+  if [ "${NVM_NO_PROGRESS-}" = "1" ]; then
+    # --silent, --show-error, use short option as @samrocketman mentions the compatibility issue.
+    PROGRESS_BAR="-sS"
+  else
+    PROGRESS_BAR="--progress-bar"
+  fi
+
   local ZSH_HAS_SHWORDSPLIT_UNSET
   ZSH_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
@@ -2054,7 +2069,7 @@ nvm_install_source() {
     setopt shwordsplit
   fi
 
-  TARBALL="$(nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
+  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
   [ -f "${TARBALL}" ] && \
   TMPDIR="$(dirname "${TARBALL}")/files" && \
   if ! (
@@ -2366,6 +2381,7 @@ nvm() {
       nvm_echo '    --lts=<LTS name>                        When installing, only select from versions for a specific LTS line'
       nvm_echo '    --skip-default-packages                 When installing, skip the default-packages file if it exists'
       nvm_echo '    --latest-npm                            After installing, attempt to upgrade to the latest working npm on the given node version'
+      nvm_echo '    --no-progress                           Disable the progress bar on any downloads'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
       nvm_echo '  nvm uninstall --lts                       Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
       nvm_echo '  nvm uninstall --lts=<LTS name>            Uninstall using automatic alias for provided LTS line, if available.'
@@ -2517,7 +2533,9 @@ nvm() {
       fi
 
       local nobinary
+      local noprogress
       nobinary=0
+      noprogress=0
       local LTS
       local NVM_UPGRADE_NPM
       NVM_UPGRADE_NPM=0
@@ -2532,6 +2550,10 @@ nvm() {
             shift # consume "-j"
             nvm_get_make_jobs "$1"
             shift # consume job count
+          ;;
+          --no-progress)
+            noprogress=1
+            shift
           ;;
           --lts)
             LTS='*'
@@ -2741,7 +2763,7 @@ nvm() {
 
         # skip binary install if "nobinary" option specified.
         if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-          nvm_install_binary "${FLAVOR}" std "${VERSION}"
+          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_binary "${FLAVOR}" std "${VERSION}"
           EXIT_CODE=$?
         fi
         if [ "$EXIT_CODE" -ne 0 ]; then
@@ -2749,7 +2771,7 @@ nvm() {
             nvm_get_make_jobs
           fi
 
-          nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"
+          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"
           EXIT_CODE=$?
         fi
 
