@@ -216,6 +216,12 @@ nvm install 6 --reinstall-packages-from=5
 nvm install v4.2 --reinstall-packages-from=iojs
 ```
 
+If you want to simply copy t he installed packages from specific versions of Node, try `--copy-packages-from` instead of `--reinstall-packages-from` like this:
+
+```sh
+nvm install 6 --copy-packages-from=5
+```
+
 ### io.js
 If you want to install [io.js](https://github.com/iojs/io.js/):
 
