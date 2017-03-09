@@ -2973,9 +2973,8 @@ nvm() {
           if [ -n "$NVM_BIN" ]; then
             nvm_echo "$NVM_BIN"
             return
-          else
-            return 1
           fi
+          return 1
         else
           nvm_err 'System version of node not found.'
           return 127
@@ -3231,8 +3230,8 @@ nvm_supports_xz() {
   fi
 
   # 0.10x: node v0.10.42 and later have xz
-  if nvm_version_greater_than_or_equal_to "$1" "0.10.42" \
-    && nvm_version_greater "0.11.0" "$1"; then
+  if nvm_version_greater_than_or_equal_to "${1}" "0.10.42" \
+    && nvm_version_greater "0.11.0" "${1}"; then
     return 0
   fi
 
