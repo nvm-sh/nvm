@@ -19,4 +19,16 @@ v4.4.7 Argon
 v4.5.0 Argon
 v4.6.0 Argon
 v4.6.1 Argon
+v4.6.2 Argon
+v4.7.0 Argon
+v4.7.1 Argon
+v4.7.2 Argon
+v4.7.3 Argon
+v4.8.0 Argon
 v6.9.0 Boron
+v6.9.1 Boron
+v6.9.2 Boron
+v6.9.3 Boron
+v6.9.4 Boron
+v6.9.5 Boron
+v6.10.0 Boron

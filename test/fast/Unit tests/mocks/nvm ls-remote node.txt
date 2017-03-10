@@ -234,6 +234,7 @@
        v0.12.15
        v0.12.16
        v0.12.17
+       v0.12.18
          v4.0.0
          v4.1.0
          v4.1.1
@@ -258,7 +259,13 @@
          v4.4.7  [0;37m (LTS: Argon)[0m
          v4.5.0  [0;37m (LTS: Argon)[0m
          v4.6.0  [0;37m (LTS: Argon)[0m
-         v4.6.1  [1;32m (Latest LTS: Argon)[0m
+         v4.6.1  [0;37m (LTS: Argon)[0m
+         v4.6.2  [0;37m (LTS: Argon)[0m
+         v4.7.0  [0;37m (LTS: Argon)[0m
+         v4.7.1  [0;37m (LTS: Argon)[0m
+         v4.7.2  [0;37m (LTS: Argon)[0m
+         v4.7.3  [0;37m (LTS: Argon)[0m
+         v4.8.0  [1;32m (Latest LTS: Argon)[0m
          v5.0.0
          v5.1.0
          v5.1.1
@@ -291,4 +298,21 @@
          v6.7.0
          v6.8.0
          v6.8.1
-         v6.9.0  [1;32m (Latest LTS: Boron)[0m
+         v6.9.0  [0;37m (LTS: Boron)[0m
+         v6.9.1  [0;37m (LTS: Boron)[0m
+         v6.9.2  [0;37m (LTS: Boron)[0m
+         v6.9.3  [0;37m (LTS: Boron)[0m
+         v6.9.4  [0;37m (LTS: Boron)[0m
+         v6.9.5  [0;37m (LTS: Boron)[0m
+        v6.10.0  [1;32m (Latest LTS: Boron)[0m
+         v7.0.0
+         v7.1.0
+         v7.2.0
+         v7.2.1
+         v7.3.0
+         v7.4.0
+         v7.5.0
+         v7.6.0
+         v7.7.0
+         v7.7.1
+         v7.7.2
