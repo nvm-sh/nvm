@@ -2661,8 +2661,8 @@ nvm() {
       # Prepend current version
       PATH="$(nvm_prepend_path "$PATH" "$NVM_VERSION_DIR/bin")"
       if nvm_has manpath; then
-        local MANPATH
         if [ -z "$MANPATH" ]; then
+          local MANPATH
           MANPATH=$(manpath)
         fi
         # Strip other version from MANPATH
