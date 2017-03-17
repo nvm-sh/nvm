@@ -127,16 +127,6 @@ if [ -z "${NVM_DIR-}" ]; then
 fi
 unset NVM_SCRIPT_SOURCE 2> /dev/null
 
-
-# Setup mirror location if not already set
-if [ -z "${NVM_NODEJS_ORG_MIRROR-}" ]; then
-  export NVM_NODEJS_ORG_MIRROR="https://nodejs.org/dist"
-fi
-
-if [ -z "${NVM_IOJS_ORG_MIRROR-}" ]; then
-  export NVM_IOJS_ORG_MIRROR="https://iojs.org/dist"
-fi
-
 nvm_tree_contains_path() {
   local tree
   tree="${1-}"
@@ -1532,8 +1522,8 @@ nvm_is_merged_node_version() {
 
 nvm_get_mirror() {
   case "${1}-${2}" in
-    node-std) nvm_echo "${NVM_NODEJS_ORG_MIRROR}" ;;
-    iojs-std) nvm_echo "${NVM_IOJS_ORG_MIRROR}" ;;
+    node-std) nvm_echo "${NVM_NODEJS_ORG_MIRROR:-https://nodejs.org/dist}" ;;
+    iojs-std) nvm_echo "${NVM_IOJS_ORG_MIRROR:-https://iojs.org/dist}" ;;
     *)
       nvm_err 'unknown type of node.js or io.js release'
       return 1
