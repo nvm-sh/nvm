@@ -1826,7 +1826,11 @@ nvm_install_source() {
   local NVM_ARCH
   NVM_ARCH="$(nvm_get_arch)"
   if [ "${NVM_ARCH}" = 'armv6l' ] || [ "${NVM_ARCH}" = 'armv7l' ]; then
-    ADDITIONAL_PARAMETERS="--without-snapshot ${ADDITIONAL_PARAMETERS}"
+    if [ -n "${ADDITIONAL_PARAMETERS}" ]; then
+      ADDITIONAL_PARAMETERS="--without-snapshot ${ADDITIONAL_PARAMETERS}"
+    else
+      ADDITIONAL_PARAMETERS='--without-snapshot'
+    fi
   fi
 
   if [ -n "${ADDITIONAL_PARAMETERS}" ]; then
@@ -1883,6 +1887,7 @@ nvm_install_source() {
     command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
     VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
     nvm_cd "${TMPDIR}" && \
+    nvm_echo '$>'./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS'<' && \
     ./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} && \
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
