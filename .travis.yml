@@ -24,7 +24,7 @@ before_install:
   - if [ -n "${SHELLCHECK-}" ]; then cabal update && cabal install transformers-0.4.3.0 ShellCheck && shellcheck --version ; fi
   - if [ -n "${DOCTOCCHECK-}" ]; then nvm install node && npm install -g doctoc && type doctoc ; fi
 install:
-  - (mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
+  - (travis_retry mkdir /tmp/urchin && cd /tmp/urchin && curl -s "$(curl -s https://registry.npmjs.com/urchin | grep -Eo '"tarball":\s*"[^"]+"' | tail -n 1 | awk -F\" '{ print $4 }')" -O && tar -x -f urchin*)
   - chmod +x /tmp/urchin/package/urchin
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
