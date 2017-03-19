@@ -1181,9 +1181,7 @@ nvm_get_checksum() {
     SHASUMS_URL="${MIRROR}/${3}/SHASUMS.txt"
   fi
 
-  nvm_download -L -s "${SHASUMS_URL}" -o - | \
-    nvm_grep "${4}.tar.${5}" | \
-    command awk '{print $1}'
+  nvm_download -L -s "${SHASUMS_URL}" -o - | command awk "{ if (\"${4}.tar.${5}\" == \$2) print \$1}"
 }
 
 nvm_checksum() {
