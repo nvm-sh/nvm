@@ -10,7 +10,7 @@ cleanup() {
 
 EXPECTED_VERSION="v12.3.456"
 URL="https://github.com/creationix/nvm/releases/tag/$EXPECTED_VERSION"
-EXPECTED_CURL_ARGS="-q -w %{url_effective}\n -L -s -S http://latest.nvm.sh -o /dev/null"
+EXPECTED_CURL_ARGS="--compressed -q -w %{url_effective}\n -L -s -S http://latest.nvm.sh -o /dev/null"
 EXPECTED_WGET_ARGS="http://latest.nvm.sh --server-response -O /dev/null"
 
 curl() {

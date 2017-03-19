@@ -60,6 +60,8 @@ Homebrew installation is not supported. If you have issues with homebrew-install
 
 **Note:** Git versions before v1.7 may face a problem of cloning nvm source from GitHub via https protocol, and there is also different behavior of git before v1.6, so the minimum required git version is v1.7.0 and we recommend v1.7.9.5 as it's the default version of the widely used Ubuntu 12.04 LTS. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
 
+**Note:** `nvm` uses `curl` with the `--compressed` option which was introduced on September 3rd, 2002([curl/curl@64bbe9d](https://github.com/curl/curl/commit/64bbe9dfafc6693a96b742f3133c636385835a19)). It's unlikely, but if you have `curl` compiled without that feature, `nvm` may not be able to install or list remote `node` versions. Please file an issue if your `curl` does not work with `--compressed` (and you didn't explicitly compile `curl` to not have compression support).
+
 ### Install script
 
 To install or update nvm, you can use the [install script][2] using cURL:
