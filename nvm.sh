@@ -39,6 +39,10 @@ nvm_has() {
   type "${1-}" > /dev/null 2>&1
 }
 
+nvm_has_non_aliased() {
+  nvm_has "${1-}" && ! nvm_is_alias "${1-}"
+}
+
 nvm_is_alias() {
   # this is intentionally not "command alias" so it works in zsh.
   # shellcheck disable=SC1001
@@ -1059,23 +1063,23 @@ nvm_ls_remote_index_tab() {
 }
 
 nvm_get_checksum_alg() {
-  if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
+  if nvm_has_non_aliased "sha256sum"; then
     nvm_echo 'sha-256'
-  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+  elif nvm_has_non_aliased "shasum"; then
     nvm_echo 'sha-256'
-  elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
+  elif nvm_has_non_aliased "sha256"; then
     nvm_echo 'sha-256'
-  elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
+  elif nvm_has_non_aliased "gsha256sum"; then
     nvm_echo 'sha-256'
-  elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+  elif nvm_has_non_aliased "openssl"; then
     nvm_echo 'sha-256'
-  elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+  elif nvm_has_non_aliased "bssl"; then
     nvm_echo 'sha-256'
-  elif nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
+  elif nvm_has_non_aliased "sha1sum"; then
     nvm_echo 'sha-1'
-  elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
+  elif nvm_has_non_aliased "sha1"; then
     nvm_echo 'sha-1'
-  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+  elif nvm_has_non_aliased "shasum"; then
     nvm_echo 'sha-1'
   else
     nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
@@ -1095,31 +1099,31 @@ nvm_compute_checksum() {
     return 1
   fi
 
-  if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
+  if nvm_has_non_aliased "sha256sum"; then
     nvm_err 'Computing checksum with sha256sum'
     command sha256sum "${FILE}" | command awk '{print $1}'
-  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+  elif nvm_has_non_aliased "shasum"; then
     nvm_err 'Computing checksum with shasum -a 256'
     command shasum -a 256 "${FILE}" | command awk '{print $1}'
-  elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
+  elif nvm_has_non_aliased "sha256"; then
     nvm_err 'Computing checksum with sha256 -q'
     command sha256 -q "${FILE}" | command awk '{print $1}'
-  elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
+  elif nvm_has_non_aliased "gsha256sum"; then
     nvm_err 'Computing checksum with gsha256sum'
     command gsha256sum "${FILE}" | command awk '{print $1}'
-  elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+  elif nvm_has_non_aliased "openssl"; then
     nvm_err 'Computing checksum with openssl dgst -sha256'
     command openssl dgst -sha256 "${FILE}" | command awk '{print $NF}'
-  elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+  elif nvm_has_non_aliased "bssl"; then
     nvm_err 'Computing checksum with bssl sha256sum'
     command bssl sha256sum "${FILE}" | command awk '{print $1}'
-  elif nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
+  elif nvm_has_non_aliased "sha1sum"; then
     nvm_err 'Computing checksum with sha1sum'
     command sha1sum "${FILE}" | command awk '{print $1}'
-  elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
+  elif nvm_has_non_aliased "sha1"; then
     nvm_err 'Computing checksum with sha1 -q'
     command sha1 -q "${FILE}"
-  elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+  elif nvm_has_non_aliased "shasum"; then
     nvm_err 'Computing checksum with shasum'
     command shasum "${FILE}" | command awk '{print $1}'
   fi
@@ -1187,28 +1191,28 @@ nvm_get_checksum() {
 nvm_checksum() {
   local NVM_CHECKSUM
   if [ -z "${3-}" ] || [ "${3-}" = 'sha1' ]; then
-    if nvm_has "sha1sum" && ! nvm_is_alias "sha1sum"; then
+    if nvm_has_non_aliased "sha1sum"; then
       NVM_CHECKSUM="$(command sha1sum "${1-}" | command awk '{print $1}')"
-    elif nvm_has "sha1" && ! nvm_is_alias "sha1"; then
+    elif nvm_has_non_aliased "sha1"; then
       NVM_CHECKSUM="$(command sha1 -q "${1-}")"
-    elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    elif nvm_has_non_aliased "shasum"; then
       NVM_CHECKSUM="$(command shasum "${1-}" | command awk '{print $1}')"
     else
       nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
       return 2
     fi
   else
-    if nvm_has "sha256sum" && ! nvm_is_alias "sha256sum"; then
+    if nvm_has_non_aliased "sha256sum"; then
       NVM_CHECKSUM="$(command sha256sum "${1-}" | command awk '{print $1}')"
-    elif nvm_has "shasum" && ! nvm_is_alias "shasum"; then
+    elif nvm_has_non_aliased "shasum"; then
       NVM_CHECKSUM="$(command shasum -a 256 "${1-}" | command awk '{print $1}')"
-    elif nvm_has "sha256" && ! nvm_is_alias "sha256"; then
+    elif nvm_has_non_aliased "sha256"; then
       NVM_CHECKSUM="$(command sha256 -q "${1-}" | command awk '{print $1}')"
-    elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
+    elif nvm_has_non_aliased "gsha256sum"; then
       NVM_CHECKSUM="$(command gsha256sum "${1-}" | command awk '{print $1}')"
-    elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
+    elif nvm_has_non_aliased "openssl"; then
       NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | command awk '{print $NF}')"
-    elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
+    elif nvm_has_non_aliased "bssl"; then
       NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | command awk '{print $1}')"
     else
       nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
@@ -3156,7 +3160,7 @@ nvm() {
       unset -f nvm \
         nvm_iojs_prefix nvm_node_prefix \
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
-        nvm_is_iojs_version nvm_is_alias \
+        nvm_is_iojs_version nvm_is_alias nvm_has_non_aliased \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_binary nvm_clang_version \
