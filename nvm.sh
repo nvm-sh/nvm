@@ -933,7 +933,7 @@ nvm_ls_remote() {
   local PATTERN
   PATTERN="${1-}"
   if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
-    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command awk '{ print $1 }' | command tail -1)"
+    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command tail -1 | command awk '{ print $1 }')"
   elif [ -n "${PATTERN}" ]; then
     PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
   else
@@ -1109,7 +1109,7 @@ nvm_compute_checksum() {
     command gsha256sum "${FILE}" | command awk '{print $1}'
   elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
     nvm_err 'Computing checksum with openssl dgst -sha256'
-    command openssl dgst -sha256 "${FILE}" | rev | command awk '{print $1}' | rev
+    command openssl dgst -sha256 "${FILE}" | command awk '{print $NF}'
   elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
     nvm_err 'Computing checksum with bssl sha256sum'
     command bssl sha256sum "${FILE}" | command awk '{print $1}'
@@ -1209,7 +1209,7 @@ nvm_checksum() {
     elif nvm_has "gsha256sum" && ! nvm_is_alias "gsha256sum"; then
       NVM_CHECKSUM="$(command gsha256sum "${1-}" | command awk '{print $1}')"
     elif nvm_has "openssl" && ! nvm_is_alias "openssl"; then
-      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | rev | command awk '{print $1}' | rev)"
+      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | command awk '{print $NF}')"
     elif nvm_has "bssl" && ! nvm_is_alias "bssl"; then
       NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | command awk '{print $1}')"
     else
