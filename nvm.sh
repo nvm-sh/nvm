@@ -890,7 +890,7 @@ nvm_ls() {
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
-        | command sed "
+        | command sed -e "
             s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
             s#^${NVM_DIR}/##;
             \#^[^v]# d;
@@ -899,7 +899,7 @@ nvm_ls() {
             s#^v#${NVM_NODE_PREFIX}/v#;
             \#${SEARCH_PATTERN}# !d;
           " \
-        | command sed "s#^\([^/]\{1,\}\)/\(.*\)\$#\2.\1#;" \
+          -e "s#^\([^/]\{1,\}\)/\(.*\)\$#\2.\1#;" \
         | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
         | command sed "
             s#\(.*\)\.\([^\.]\{1,\}\)\$#\2-\1#;
