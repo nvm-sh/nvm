@@ -1,0 +1,40 @@
+#!/bin/sh
+
+cleanup() {
+  unalias wget
+  unset -f wget
+  unset WGET_EXPECTED_INFO WGET_COMMAND_INFO
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+
+# 1. test wget command
+WGET_COMMAND_INFO="$(nvm_command_info wget)"
+WGET_EXPECTED_INFO="$(which wget)"
+[ "${WGET_COMMAND_INFO}" = "${WGET_EXPECTED_INFO}" ] || die "wget command info wrong(stage 1), expected: '${WGET_EXPECTED_INFO}', got '${WGET_COMMAND_INFO}'"
+
+cleanup
+
+# 2. test aliased wget
+shopt -s expand_aliases
+# enable expand_aliases to make alias working in interactive shell
+alias wget="wget -V"
+WGET_COMMAND_INFO="$(nvm_command_info wget)"
+WGET_EXPECTED_INFO="$(which wget) (wget -V)"
+[ "${WGET_COMMAND_INFO}" = "${WGET_EXPECTED_INFO}" ] || die "wget command info wrong(stage 2), expected: '${WGET_EXPECTED_INFO}', got '${WGET_COMMAND_INFO}'"
+
+cleanup
+
+# 3. test wget function
+wget() {
+    echo "wget function"
+}
+
+WGET_COMMAND_INFO="$(nvm_command_info wget)"
+WGET_EXPECTED_INFO="$(type wget)"
+[ "${WGET_COMMAND_INFO}" = "${WGET_EXPECTED_INFO}" ] || die "wget command info wrong(stage 3), expected: '${WGET_EXPECTED_INFO}', got '${WGET_COMMAND_INFO}'"
+
+cleanup

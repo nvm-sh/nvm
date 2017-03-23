@@ -49,6 +49,24 @@ nvm_is_alias() {
   \alias "${1-}" > /dev/null 2>&1
 }
 
+nvm_command_info() {
+  local COMMAND
+  local INFO
+  COMMAND="${1}"
+  if type "${COMMAND}" | command grep -q hashed; then
+    INFO="$(type "${COMMAND}" | command sed -E 's/\(|)//g' | command awk '{print $4}')"
+  elif type "${COMMAND}" | command grep -q aliased; then
+    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | command sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
+  elif type "${COMMAND}" | command grep -q "^${COMMAND} is an alias for"; then
+    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4=$5="" ;print }' | command sed 's/^\ *//g'))"
+  elif type "${COMMAND}" | command grep -q "^${COMMAND} is \/"; then
+    INFO="$(type "${COMMAND}" | command awk '{print $3}')"
+  else
+    INFO="$(type "${COMMAND}")"
+  fi
+  nvm_echo "${INFO}"
+}
+
 nvm_has_colors() {
   local NVM_COLORS
   if nvm_has tput; then
@@ -2249,6 +2267,28 @@ nvm() {
       nvm_err "\$NPM_CONFIG_PREFIX: '$(nvm_sanitize_path "$NPM_CONFIG_PREFIX")'"
       nvm_err "\$NVM_NODEJS_ORG_MIRROR: '${NVM_NODEJS_ORG_MIRROR}'"
       nvm_err "\$NVM_IOJS_ORG_MIRROR: '${NVM_IOJS_ORG_MIRROR}'"
+      nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
+      nvm_err "uname -a: '$(uname -a | awk '{$2=""; print}' | xargs)'"
+      if [ "$(nvm_get_os)" = "darwin" ] && nvm_has sw_vers; then
+        nvm_err "OS version: $(sw_vers | command awk '{print $2}' | command xargs)"
+      elif [ -r "/etc/issue" ]; then
+        nvm_err "OS version: $(command head -n 1 /etc/issue | command sed 's/\\.//g')"
+      fi
+      if nvm_has "curl"; then
+        nvm_err "curl: $(nvm_command_info curl), $(command curl -V | command head -n 1)"
+      else
+        nvm_err "curl: not found"
+      fi
+      if nvm_has "wget"; then
+        nvm_err "wget: $(nvm_command_info wget), $(command wget -V | command head -n 1)"
+      else
+        nvm_err "wget: not found"
+      fi
+      if nvm_has "git"; then
+        nvm_err "git: $(nvm_command_info git), $(command git --version)"
+      else
+        nvm_err "git: not found"
+      fi
       local NVM_DEBUG_OUTPUT
       for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
       do
@@ -3204,7 +3244,7 @@ nvm() {
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
-        nvm_curl_libz_support \
+        nvm_curl_libz_support nvm_command_info \
         > /dev/null 2>&1
       unset RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \
