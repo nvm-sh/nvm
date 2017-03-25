@@ -22,9 +22,9 @@ before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
+install:
   - if [ -n "${SHELLCHECK-}" ]; then cabal update && cabal install transformers-0.4.3.0 ShellCheck && shellcheck --version ; fi
   - if [ -z "${SHELLCHECK-}" ]; then nvm install node && npm install && npm prune && npm ls urchin doctoc; fi
-install:
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
   - if [ -n "${DOCTOCCHECK-}" ]; then cp README.markdown README.markdown.orig && npm run doctoc && diff -q README.markdown README.markdown.orig ; fi
