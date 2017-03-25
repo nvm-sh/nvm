@@ -92,5 +92,5 @@ if [[ -n ${ZSH_VERSION-} ]]; then
   autoload -U +X bashcompinit && bashcompinit
 fi
 
-complete -o default -o nospace -F __nvm nvm
+complete -o default -F __nvm nvm
 
