@@ -1,4 +1,5 @@
 language: generic
+dist: trusty
 sudo: required
 addons:
   apt:
