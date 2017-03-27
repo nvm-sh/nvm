@@ -1926,26 +1926,39 @@ nvm_install_source() {
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install
   ); then
-    if ! nvm_has "npm" ; then
-      nvm_echo 'Installing npm...'
-      if nvm_version_greater 0.2.0 "$VERSION"; then
-        nvm_err 'npm requires node v0.2.3 or higher'
-      elif nvm_version_greater_than_or_equal_to "$VERSION" 0.2.0; then
-        if nvm_version_greater 0.2.3 "$VERSION"; then
-          nvm_err 'npm requires node v0.2.3 or higher'
-        else
-          nvm_download -L https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
-        fi
-      else
-        nvm_download -L https://npmjs.org/install.sh -o - | clean=yes sh
-      fi
-    fi
     return $?
   fi
 
   nvm_err "nvm: install ${VERSION} failed!"
   command rm -rf "${TMPDIR-}"
   return 1
+}
+
+nvm_use_if_needed() {
+  if [ "_${1-}" = "_$(nvm_ls_current)" ]; then
+    return
+  fi
+  nvm use "$@"
+}
+
+nvm_install_npm_if_needed() {
+  local VERSION
+  VERSION="$(nvm_ls_current)"
+  if ! nvm_has "npm"; then
+    nvm_echo 'Installing npm...'
+    if nvm_version_greater 0.2.0 "$VERSION"; then
+      nvm_err 'npm requires node v0.2.3 or higher'
+    elif nvm_version_greater_than_or_equal_to "$VERSION" 0.2.0; then
+      if nvm_version_greater 0.2.3 "$VERSION"; then
+        nvm_err 'npm requires node v0.2.3 or higher'
+      else
+        nvm_download -L https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
+      fi
+    else
+      nvm_download -L https://npmjs.org/install.sh -o - | clean=yes sh
+    fi
+  fi
+  return $?
 }
 
 nvm_match_version() {
@@ -2505,7 +2518,7 @@ nvm() {
 
       fi
 
-      if [ "$EXIT_CODE" -eq 0 ] && nvm use "$VERSION"; then
+      if [ "$EXIT_CODE" -eq 0 ] && nvm_use_if_needed "${VERSION}" && nvm_install_npm_if_needed "${VERSION}"; then
         if [ -n "${LTS-}" ]; then
           nvm_ensure_default_set "lts/${LTS}"
         else
@@ -2516,6 +2529,8 @@ nvm() {
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
           EXIT_CODE=$?
         fi
+      else
+        EXIT_CODE=$?
       fi
       return $EXIT_CODE
     ;;
@@ -3216,9 +3231,9 @@ nvm() {
         nvm_is_iojs_version nvm_is_alias nvm_has_non_aliased \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
         nvm_ls nvm_remote_version nvm_remote_versions \
-        nvm_install_binary nvm_clang_version \
+        nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
-        nvm_install_source nvm_check_file_permissions \
+        nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
         nvm_print_versions nvm_compute_checksum nvm_checksum \
         nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \
         nvm_version nvm_rc_version nvm_match_version \

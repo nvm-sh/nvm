@@ -23,8 +23,7 @@ OUTPUT="$(NVM_INSTALL_THIRD_PARTY_HOOK=succeed nvm install "${VERSION}")"
 USE_OUTPUT="$(nvm use "${VERSION}")"
 EXPECTED_OUTPUT="${VERSION} node std binary ${VERSION_PATH}
 Downloading and installing node ${VERSION}...
-${USE_OUTPUT}
-${USE_OUTPUT}" # double use output is from the normal install in succeed()
+${USE_OUTPUT}"
 
 [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
 
