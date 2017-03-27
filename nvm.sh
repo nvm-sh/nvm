@@ -2516,6 +2516,10 @@ nvm() {
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
           EXIT_CODE=$?
         fi
+        if [ ! -z "${NVM_POST_INSTALL-}" ]; then
+          nvm_echo 'Running post install hook.'
+          ($NVM_POST_INSTALL)
+        fi
       fi
       return $EXIT_CODE
     ;;
