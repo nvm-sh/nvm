@@ -35,6 +35,10 @@ nvm_grep() {
   GREP_OPTIONS='' command grep "$@"
 }
 
+nvm_awk() {
+  command awk "$@"
+}
+
 nvm_sed() {
   command sed "$@"
 }
@@ -58,13 +62,13 @@ nvm_command_info() {
   local INFO
   COMMAND="${1}"
   if type "${COMMAND}" | command grep -q hashed; then
-    INFO="$(type "${COMMAND}" | nvm_sed -E 's/\(|)//g' | command awk '{print $4}')"
+    INFO="$(type "${COMMAND}" | nvm_sed -E 's/\(|)//g' | nvm_awk '{print $4}')"
   elif type "${COMMAND}" | command grep -q aliased; then
-    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | nvm_sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
+    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | nvm_awk '{ $1=$2=$3=$4="" ;print }' | nvm_sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
   elif type "${COMMAND}" | command grep -q "^${COMMAND} is an alias for"; then
-    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4=$5="" ;print }' | nvm_sed 's/^\ *//g'))"
+    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | nvm_awk '{ $1=$2=$3=$4=$5="" ;print }' | nvm_sed 's/^\ *//g'))"
   elif type "${COMMAND}" | command grep -q "^${COMMAND} is \/"; then
-    INFO="$(type "${COMMAND}" | command awk '{print $3}')"
+    INFO="$(type "${COMMAND}" | nvm_awk '{print $3}')"
   else
     INFO="$(type "${COMMAND}")"
   fi
@@ -92,7 +96,7 @@ nvm_get_latest() {
   if nvm_has "curl"; then
     NVM_LATEST_URL="$(curl "${CURL_COMPRESSED_FLAG:-}" -q -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
-    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | nvm_awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
     nvm_err 'nvm needs curl or wget to proceed.'
     return 1
@@ -224,11 +228,11 @@ nvm_rc_version() {
 }
 
 nvm_clang_version() {
-  clang --version | command awk '{ if ($2 == "version") print $3; else if ($3 == "version") print $4 }' | nvm_sed 's/-.*$//g'
+  clang --version | nvm_awk '{ if ($2 == "version") print $3; else if ($3 == "version") print $4 }' | nvm_sed 's/-.*$//g'
 }
 
 nvm_version_greater() {
-  command awk 'BEGIN {
+  nvm_awk 'BEGIN {
     if (ARGV[1] == "" || ARGV[2] == "") exit(1)
     split(ARGV[1], a, /\./);
     split(ARGV[2], b, /\./);
@@ -243,7 +247,7 @@ nvm_version_greater() {
 }
 
 nvm_version_greater_than_or_equal_to() {
-  command awk 'BEGIN {
+  nvm_awk 'BEGIN {
     if (ARGV[1] == "" || ARGV[2] == "") exit(1)
     split(ARGV[1], a, /\./);
     split(ARGV[2], b, /\./);
@@ -362,7 +366,7 @@ nvm_remote_version() {
     VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN}" | command tail -1)"
   fi
   if [ -n "${NVM_VERSION_ONLY-}" ]; then
-    command awk 'BEGIN {
+    nvm_awk 'BEGIN {
       n = split(ARGV[1], a);
       print a[1]
     }' "${VERSION}"
@@ -459,7 +463,7 @@ nvm_is_valid_version() {
 }
 
 nvm_normalize_version() {
-  command awk 'BEGIN {
+  nvm_awk 'BEGIN {
     split(ARGV[1], a, /\./);
     printf "%d%06d%06d\n", a[1], a[2], a[3];
     exit;
@@ -972,7 +976,7 @@ nvm_ls_remote() {
   local PATTERN
   PATTERN="${1-}"
   if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
-    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command tail -1 | command awk '{ print $1 }')"
+    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command tail -1 | nvm_awk '{ print $1 }')"
   elif [ -n "${PATTERN}" ]; then
     PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
   else
@@ -1056,7 +1060,7 @@ nvm_ls_remote_index_tab() {
   local LTS_VERSION
   command mkdir -p "$(nvm_alias_path)/lts"
   nvm_echo "${VERSION_LIST}" \
-    | command awk '{
+    | nvm_awk '{
         if ($10 ~ /^\-?$/) { next }
         if ($10 && !a[tolower($10)]++) {
           if (alias) { print alias, version }
@@ -1078,7 +1082,7 @@ nvm_ls_remote_index_tab() {
     done
 
   VERSIONS="$(nvm_echo "${VERSION_LIST}" \
-    | command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
+    | nvm_awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
         if (!$1) { next }
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
         if (lts == "*" && $10 ~ /^\-?$/) { next }
@@ -1136,31 +1140,31 @@ nvm_compute_checksum() {
 
   if nvm_has_non_aliased "sha256sum"; then
     nvm_err 'Computing checksum with sha256sum'
-    command sha256sum "${FILE}" | command awk '{print $1}'
+    command sha256sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "shasum"; then
     nvm_err 'Computing checksum with shasum -a 256'
-    command shasum -a 256 "${FILE}" | command awk '{print $1}'
+    command shasum -a 256 "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "sha256"; then
     nvm_err 'Computing checksum with sha256 -q'
-    command sha256 -q "${FILE}" | command awk '{print $1}'
+    command sha256 -q "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "gsha256sum"; then
     nvm_err 'Computing checksum with gsha256sum'
-    command gsha256sum "${FILE}" | command awk '{print $1}'
+    command gsha256sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "openssl"; then
     nvm_err 'Computing checksum with openssl dgst -sha256'
-    command openssl dgst -sha256 "${FILE}" | command awk '{print $NF}'
+    command openssl dgst -sha256 "${FILE}" | nvm_awk '{print $NF}'
   elif nvm_has_non_aliased "bssl"; then
     nvm_err 'Computing checksum with bssl sha256sum'
-    command bssl sha256sum "${FILE}" | command awk '{print $1}'
+    command bssl sha256sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "sha1sum"; then
     nvm_err 'Computing checksum with sha1sum'
-    command sha1sum "${FILE}" | command awk '{print $1}'
+    command sha1sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "sha1"; then
     nvm_err 'Computing checksum with sha1 -q'
     command sha1 -q "${FILE}"
   elif nvm_has_non_aliased "shasum"; then
     nvm_err 'Computing checksum with shasum'
-    command shasum "${FILE}" | command awk '{print $1}'
+    command shasum "${FILE}" | nvm_awk '{print $1}'
   fi
 }
 
@@ -1220,35 +1224,35 @@ nvm_get_checksum() {
     SHASUMS_URL="${MIRROR}/${3}/SHASUMS.txt"
   fi
 
-  nvm_download -L -s "${SHASUMS_URL}" -o - | command awk "{ if (\"${4}.tar.${5}\" == \$2) print \$1}"
+  nvm_download -L -s "${SHASUMS_URL}" -o - | nvm_awk "{ if (\"${4}.tar.${5}\" == \$2) print \$1}"
 }
 
 nvm_checksum() {
   local NVM_CHECKSUM
   if [ -z "${3-}" ] || [ "${3-}" = 'sha1' ]; then
     if nvm_has_non_aliased "sha1sum"; then
-      NVM_CHECKSUM="$(command sha1sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha1sum "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "sha1"; then
       NVM_CHECKSUM="$(command sha1 -q "${1-}")"
     elif nvm_has_non_aliased "shasum"; then
-      NVM_CHECKSUM="$(command shasum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command shasum "${1-}" | nvm_awk '{print $1}')"
     else
       nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
       return 2
     fi
   else
     if nvm_has_non_aliased "sha256sum"; then
-      NVM_CHECKSUM="$(command sha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha256sum "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "shasum"; then
-      NVM_CHECKSUM="$(command shasum -a 256 "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command shasum -a 256 "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "sha256"; then
-      NVM_CHECKSUM="$(command sha256 -q "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha256 -q "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "gsha256sum"; then
-      NVM_CHECKSUM="$(command gsha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command gsha256sum "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "openssl"; then
-      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | command awk '{print $NF}')"
+      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | nvm_awk '{print $NF}')"
     elif nvm_has_non_aliased "bssl"; then
-      NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | nvm_awk '{print $1}')"
     else
       nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
       nvm_err 'WARNING: Continuing *without checksum verification*'
@@ -1281,7 +1285,7 @@ nvm_print_versions() {
   local LTS_FORMAT
   nvm_echo "${1-}" \
   | nvm_sed '1!G;h;$!d' \
-  | command awk '{ if ($2 && a[$2]++) { print $1, "(LTS: " $2 ")" } else if ($2) { print $1, "(Latest LTS: " $2 ")" } else { print $0 } }' \
+  | nvm_awk '{ if ($2 && a[$2]++) { print $1, "(LTS: " $2 ")" } else if ($2) { print $1, "(Latest LTS: " $2 ")" } else { print $0 } }' \
   | nvm_sed '1!G;h;$!d' \
   | while read -r VERSION_LINE; do
     VERSION="${VERSION_LINE%% *}"
@@ -2287,7 +2291,7 @@ nvm() {
       nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
       nvm_err "uname -a: '$(uname -a | awk '{$2=""; print}' | xargs)'"
       if [ "$(nvm_get_os)" = "darwin" ] && nvm_has sw_vers; then
-        nvm_err "OS version: $(sw_vers | command awk '{print $2}' | command xargs)"
+        nvm_err "OS version: $(sw_vers | nvm_awk '{print $2}' | command xargs)"
       elif [ -r "/etc/issue" ]; then
         nvm_err "OS version: $(command head -n 1 /etc/issue | nvm_sed 's/\\.//g')"
       fi
@@ -3255,7 +3259,7 @@ nvm() {
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
-        nvm_echo nvm_err nvm_grep nvm_cd nvm_sed \
+        nvm_echo nvm_err nvm_grep nvm_cd nvm_sed nvm_awk \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_version_installed \
