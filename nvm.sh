@@ -297,15 +297,13 @@ nvm_ensure_version_installed() {
   if [ "${EXIT_CODE}" != "0" ] || ! nvm_is_version_installed "${LOCAL_VERSION}"; then
     if VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"; then
       nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
-      nvm_err ""
-      nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
     else
       local PREFIXED_VERSION
       PREFIXED_VERSION="$(nvm_ensure_version_prefix "${PROVIDED_VERSION}")"
       nvm_err "N/A: version \"${PREFIXED_VERSION:-$PROVIDED_VERSION}\" is not yet installed."
-      nvm_err ""
-      nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
     fi
+    nvm_err ""
+    nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
     return 1
   fi
 }
@@ -726,8 +724,7 @@ nvm_resolve_alias() {
       break
     fi
 
-    if [ -n "${ALIAS_TEMP}" ] \
-      && command printf "${SEEN_ALIASES}" | nvm_grep -e "^${ALIAS_TEMP}$" > /dev/null; then
+    if command printf "${SEEN_ALIASES}" | nvm_grep -e "^${ALIAS_TEMP}$" > /dev/null; then
       ALIAS="∞"
       break
     fi
