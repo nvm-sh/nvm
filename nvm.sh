@@ -2202,6 +2202,7 @@ nvm() {
       nvm_echo '    --reinstall-packages-from=<version>     When installing, reinstall packages installed in <node|iojs|node version number>'
       nvm_echo '    --lts                                   When installing, only select from LTS (long-term support) versions'
       nvm_echo '    --lts=<LTS name>                        When installing, only select from versions for a specific LTS line'
+      nvm_echo '    --skip-default-packages                 When installing, skip the default-packages file if it exists'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
       nvm_echo '  nvm uninstall --lts                       Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
       nvm_echo '  nvm uninstall --lts=<LTS name>            Uninstall using automatic alias for provided LTS line, if available.'
@@ -2421,6 +2422,8 @@ nvm() {
       ADDITIONAL_PARAMETERS=''
       local PROVIDED_REINSTALL_PACKAGES_FROM
       local REINSTALL_PACKAGES_FROM
+      local SKIP_DEFAULT_PACKAGES
+      local DEFAULT_PACKAGES
 
       while [ $# -ne 0 ]
       do
@@ -2433,12 +2436,39 @@ nvm() {
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 22-)"
             REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")" ||:
           ;;
+          --skip-default-packages)
+            SKIP_DEFAULT_PACKAGES=true
+          ;;
           *)
             ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
           ;;
         esac
         shift
       done
+
+      if [ -z "$SKIP_DEFAULT_PACKAGES" ] && [ -f "${NVM_DIR}/default-packages" ]; then
+        DEFAULT_PACKAGES=""
+
+        # Read lines from $NVM_DIR/default-packages
+        local line
+        while IFS=" " read -r line; do
+          # Skip empty lines.
+          [ -n "${line}" ] || continue
+
+          # Skip comment lines that begin with `#`.
+          [ "$(echo "$line" | cut -c1)" != "#" ] || continue
+
+          # Fail on lines that have multiple space-separated words
+          case ${line} in
+            *\ * )
+              nvm_err "Only one package per line is allowed in the ${NVM_DIR}/default-packages file. Please remove any lines with multiple space-seperated values."
+              return 1
+            ;;
+          esac
+
+          DEFAULT_PACKAGES="${DEFAULT_PACKAGES}${line} "
+        done < "${NVM_DIR}/default-packages"
+      fi
 
       if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ] && [ "$(nvm_ensure_version_prefix "${PROVIDED_REINSTALL_PACKAGES_FROM}")" = "${VERSION}" ]; then
         nvm_err "You can't reinstall global packages from the same version of node you're installing."
@@ -2457,8 +2487,13 @@ nvm() {
 
       if nvm_is_version_installed "$VERSION"; then
         nvm_err "$VERSION is already installed."
-        if nvm use "$VERSION" && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
-          nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
+        if nvm use "$VERSION"; then
+          if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -n "${DEFAULT_PACKAGES-}" ]; then
+            nvm_install_default_packages "$DEFAULT_PACKAGES"
+          fi
+          if [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+            nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
+          fi
         fi
         if [ -n "${LTS-}" ]; then
           nvm_ensure_default_set "lts/${LTS}"
@@ -2525,8 +2560,10 @@ nvm() {
         else
           nvm_ensure_default_set "$provided_version"
         fi
-        if [ -n "${REINSTALL_PACKAGES_FROM-}" ] \
-          && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+        if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -n "${DEFAULT_PACKAGES-}" ]; then
+          nvm_install_default_packages "$DEFAULT_PACKAGES"
+        fi
+        if [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
           EXIT_CODE=$?
         fi
@@ -3247,7 +3284,7 @@ nvm() {
         nvm_version_greater nvm_version_greater_than_or_equal_to \
         nvm_print_npm_version nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
-        nvm_download nvm_get_latest nvm_has \
+        nvm_download nvm_get_latest nvm_has nvm_install_default_packages \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
         nvm_echo nvm_err nvm_grep nvm_cd \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
@@ -3268,6 +3305,15 @@ nvm() {
       return 127
     ;;
   esac
+}
+
+nvm_install_default_packages() {
+  nvm_echo "Installing default global packages from ${NVM_DIR}/default-packages..."
+
+  if ! nvm_echo "$1" | command xargs npm install -g --quiet; then
+    nvm_err "Failed installing default packages. Please check if your default-packages file or a package in it has problems!"
+    return 1
+  fi
 }
 
 nvm_supports_source_options() {

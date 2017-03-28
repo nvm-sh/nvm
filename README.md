@@ -13,6 +13,7 @@
 - [Usage](#usage)
   - [Long-term support](#long-term-support)
   - [Migrating global packages while installing](#migrating-global-packages-while-installing)
+  - [Default global packages from file while installing](#default-global-packages-from-file-while-installing)
   - [io.js](#iojs)
   - [System version of node](#system-version-of-node)
   - [Listing versions](#listing-versions)
@@ -226,6 +227,18 @@ You can also install and migrate npm packages from specific versions of Node lik
 ```sh
 nvm install 6 --reinstall-packages-from=5
 nvm install v4.2 --reinstall-packages-from=iojs
+```
+
+### Default global packages from file while installing
+
+If you have a list of default packages you want installed every time you install a new version we support that too. You can add anything npm would accept as a package argument on the command line.
+
+```sh
+# $NVM_DIR/default-packages
+
+rimraf
+object-inspect@1.0.2
+stevemao/left-pad
 ```
 
 ### io.js

@@ -10,7 +10,9 @@ die () { echo "$@" ; cleanup ; exit 1; }
 
 typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' > "${BEFORE}"
 
+set +e # TODO: fix
 \. ../../nvm.sh
+set -e
 
 type nvm > /dev/null 2>&1 || die "nvm not loaded"
 

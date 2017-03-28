@@ -7,7 +7,9 @@ die () { echo "$@" ; exit 1; }
 unset NVM_NODEJS_ORG_MIRROR
 unset NVM_IOJS_ORG_MIRROR
 
+set +e # TODO: fix
 \. ../../../nvm.sh
+set -e
 
 ! nvm_get_mirror || die 'unknown release type did not error'
 ! nvm_get_mirror node || die 'unknown release type did not error'
@@ -28,4 +30,3 @@ unset NVM_NODEJS_ORG_MIRROR
 NVM_IOJS_ORG_MIRROR="test://domain"
 [ "$(nvm_get_mirror iojs std)" = "test://domain" ] || die "iojs-std mirror should respect NVM_IOJS_ORG_MIRROR"
 unset NVM_IOJS_ORG_MIRROR
-
