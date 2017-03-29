@@ -11,7 +11,7 @@ addons:
       - cabal-install
       - ghc
       - zsh
-      - ksh
+    #  - ksh
 cache:
   directories:
     - $HOME/.npm
