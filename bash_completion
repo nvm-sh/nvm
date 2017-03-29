@@ -25,8 +25,8 @@ __nvm_commands ()
     help install uninstall use run exec
     alias unalias reinstall-packages
     current list ls list-remote ls-remote
-    clear-cache deactivate unload
-    version which'
+    cache clear-cache deactivate unload
+    version version-remote which'
 
     if [ ${#COMP_WORDS[@]} == 4 ]; then
 
