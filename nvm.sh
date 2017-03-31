@@ -289,6 +289,13 @@ nvm_version_path() {
 nvm_ensure_version_installed() {
   local PROVIDED_VERSION
   PROVIDED_VERSION="${1-}"
+  if [ "${PROVIDED_VERSION}" = 'system' ]; then
+    if nvm_has_system_iojs || nvm_has_system_node; then
+      return 0
+    fi
+    nvm_err "N/A: no system version of node/io.js is installed."
+    return 1
+  fi
   local LOCAL_VERSION
   local EXIT_CODE
   LOCAL_VERSION="$(nvm_version "${PROVIDED_VERSION}")"
