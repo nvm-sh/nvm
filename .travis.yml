@@ -4,12 +4,13 @@ sudo: required
 addons:
   apt:
     packages:
-      - gcc-4.8
-      - g++-4.8
       - cabal-install
       - ghc
       - zsh
     #  - ksh
+    #  - gcc-4.8
+    #  - g++-4.8
+
 cache:
   directories:
     - $HOME/.npm
