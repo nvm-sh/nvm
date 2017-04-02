@@ -28,6 +28,7 @@
   - [Usage](#usage-1)
 - [Compatibility Issues](#compatibility-issues)
 - [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
+- [Docker for development environment](#docker-for-development-environment)
 - [Problems](#problems)
 - [Mac OS "troubleshooting"](#mac-os-troubleshooting)
 
@@ -485,6 +486,36 @@ The Node project has some desire but no concrete plans (due to the overheads of 
 
 As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
 
+## Docker for development environment
+
+To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 14.04i base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
+
+```sh
+$ docker build -t nvm-dev .
+```
+
+This will package your current nvm repository with our pre-defiend deveopment environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
+
+```sh
+$ docker images
+
+REPOSITORY         TAG                 IMAGE ID            CREATED             SIZE
+nvm-dev            latest              9ca4c57a97d8        7 days ago          1.22 GB
+```
+
+If you got no error message, now you can easily involved in:
+
+```sh
+$ docker run -it nvm-dev -h nvm-dev
+
+nvm@nvm-dev:~/.nvm$
+```
+
+Please note that it'll take about 15 minutes to build the image and the image size would be about 1.2GB, so it's not sutable for production usage.
+
+For more information and documentation about docker, please refer to its official website:
+ - https://www.docker.com/
+ - https://docs.docker.com/
 
 ## Problems
 

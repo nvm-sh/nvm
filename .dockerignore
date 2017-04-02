@@ -1,0 +1,17 @@
+HEAD
+.cache
+v*
+alias
+
+# For testing
+test/bak
+.urchin.log
+.urchin_stdout
+test/**/test_output
+
+node_modules/
+npm-debug.log
+
+.DS_Store
+current
+
