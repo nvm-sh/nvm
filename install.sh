@@ -84,7 +84,7 @@ install_nvm_from_git() {
   if [ -d "$INSTALL_DIR/.git" ]; then
     echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
     command printf "\r=> "
-    command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch 2> /dev/null || {
+    command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin tag "$(nvm_latest_version)" --depth=1 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git fetch' in $INSTALL_DIR yourself."
       exit 1
     }
@@ -103,12 +103,12 @@ install_nvm_from_git() {
         echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
         exit 2
       }
-      command git --git-dir="${INSTALL_DIR}/.git" fetch origin --tags || {
+      command git --git-dir="${INSTALL_DIR}/.git" fetch origin tag "$(nvm_latest_version)" --depth=1 || {
         echo >&2 'Failed to fetch origin with tags. Please report this!'
         exit 2
       }
     else
-      command git clone "$(nvm_source)" "${INSTALL_DIR}" || {
+      command git clone "$(nvm_source)" -b "$(nvm_latest_version)" --depth=1 "${INSTALL_DIR}" || {
         echo >&2 'Failed to clone nvm repo. Please report this!'
         exit 2
       }
