@@ -183,6 +183,13 @@ install_nvm_as_script() {
   }
 }
 
+nvm_try_profile() {
+  if [ -z "${1-}" ] || [ ! -f "${1}" ]; then
+    return 1
+  fi
+  echo "${1}"
+}
+
 #
 # Detect profile file if not specified as environment variable
 # (eg: PROFILE=~/.myprofile)
@@ -211,15 +218,12 @@ nvm_detect_profile() {
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then
-    if [ -f "$HOME/.profile" ]; then
-      DETECTED_PROFILE="$HOME/.profile"
-    elif [ -f "$HOME/.bashrc" ]; then
-      DETECTED_PROFILE="$HOME/.bashrc"
-    elif [ -f "$HOME/.bash_profile" ]; then
-      DETECTED_PROFILE="$HOME/.bash_profile"
-    elif [ -f "$HOME/.zshrc" ]; then
-      DETECTED_PROFILE="$HOME/.zshrc"
-    fi
+    for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zshrc"
+    do
+      if DETECTED_PROFILE="$(nvm_try_profile "${HOME}/${EACH_PROFILE}")"; then
+        break
+      fi
+    done
   fi
 
   if [ ! -z "$DETECTED_PROFILE" ]; then
@@ -362,10 +366,10 @@ nvm_do_install() {
 # during the execution of the install script
 #
 nvm_reset() {
-  unset -f nvm_reset nvm_has nvm_latest_version \
-    nvm_source nvm_download install_nvm_as_script install_nvm_from_git \
-    nvm_detect_profile nvm_check_global_modules nvm_do_install \
-    nvm_install_dir nvm_node_version nvm_install_node
+  unset -f nvm_has nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
+    nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
+    install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_check_global_modules \
+    nvm_do_install nvm_reset
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
