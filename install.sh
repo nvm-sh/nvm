@@ -15,16 +15,16 @@ nvm_latest_version() {
 }
 
 nvm_profile_is_bash_or_zsh() {
-    local TEST_PROFILE
-    TEST_PROFILE="${1-}"
-    case "${TEST_PROFILE-}" in
-      *"/.bashrc" | *"/.bash_profile" | *"/.zshrc")
-          return
-      ;;
-      *)
-          return 1
-      ;;
-    esac
+  local TEST_PROFILE
+  TEST_PROFILE="${1-}"
+  case "${TEST_PROFILE-}" in
+    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc")
+      return
+    ;;
+    *)
+      return 1
+    ;;
+  esac
 }
 
 #
@@ -126,7 +126,7 @@ install_nvm_from_git() {
 
   echo "=> Compressing and cleaning up git repository"
   if ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" gc --aggressive --prune=now ; then
-      echo >&2 "Your version of git is out of date. Please update it!"
+    echo >&2 "Your version of git is out of date. Please update it!"
   fi
   return
 }
