@@ -242,8 +242,7 @@ nvm_check_global_modules() {
   local NPM_GLOBAL_MODULES
   NPM_GLOBAL_MODULES="$(
     npm list -g --depth=0 |
-    command sed '/ npm@/d' |
-    command sed '/ (empty)$/d'
+    command sed -e '/ npm@/d' -e '/ (empty)$/d'
   )"
 
   local MODULE_COUNT
