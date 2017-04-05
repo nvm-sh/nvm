@@ -76,7 +76,7 @@ nvm_has_colors() {
 }
 
 nvm_curl_libz_support() {
-  curl -V | grep "^Features:" | grep -q "libz"
+  curl -V 2>/dev/null | nvm_grep "^Features:" | nvm_grep -q "libz"
 }
 
 nvm_get_latest() {
@@ -102,10 +102,10 @@ nvm_get_latest() {
 
 nvm_download() {
   local CURL_COMPRESSED_FLAG
-  if nvm_curl_libz_support; then
-    CURL_COMPRESSED_FLAG="--compressed"
-  fi
   if nvm_has "curl"; then
+    if nvm_curl_libz_support; then
+      CURL_COMPRESSED_FLAG="--compressed"
+    fi
     curl "${CURL_COMPRESSED_FLAG:-}" -q "$@"
   elif nvm_has "wget"; then
     # Emulate curl with wget
