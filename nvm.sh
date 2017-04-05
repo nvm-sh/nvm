@@ -205,18 +205,16 @@ nvm_rc_version() {
   export NVM_RC_VERSION=''
   local NVMRC_PATH
   NVMRC_PATH="$(nvm_find_nvmrc)"
-  if [ -e "${NVMRC_PATH}" ]; then
-    read -r NVM_RC_VERSION < "${NVMRC_PATH}" || printf ''
-    if [ -n "${NVM_RC_VERSION}" ]; then
-      nvm_echo "Found '${NVMRC_PATH}' with version <${NVM_RC_VERSION}>"
-    else
-      nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
-      return 2
-    fi
-  else
+  if [ ! -e "${NVMRC_PATH}" ]; then
     nvm_err "No .nvmrc file found"
     return 1
   fi
+  read -r NVM_RC_VERSION < "${NVMRC_PATH}" || printf ''
+  if [ ! -n "${NVM_RC_VERSION}" ]; then
+    nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
+    return 2
+  fi
+  nvm_echo "Found '${NVMRC_PATH}' with version <${NVM_RC_VERSION}>"
 }
 
 nvm_clang_version() {
@@ -341,9 +339,8 @@ nvm_version() {
   if [ -z "${VERSION}" ] || [ "_${VERSION}" = "_N/A" ]; then
     nvm_echo "N/A"
     return 3;
-  else
-    nvm_echo "${VERSION}"
   fi
+  nvm_echo "${VERSION}"
 }
 
 nvm_remote_version() {
@@ -1261,10 +1258,9 @@ nvm_checksum() {
   elif [ -z "${2-}" ]; then
     nvm_echo 'Checksums empty' #missing in raspberry pi binary
     return
-  else
-    nvm_err 'Checksums do not match.'
-    return 1
   fi
+  nvm_err 'Checksums do not match.'
+  return 1
 }
 
 nvm_print_versions() {
@@ -1540,8 +1536,7 @@ nvm_ensure_default_set() {
   if [ -z "$VERSION" ]; then
     nvm_err 'nvm_ensure_default_set: a version is required'
     return 1
-  fi
-  if nvm_alias default >/dev/null 2>&1; then
+  elif nvm_alias default >/dev/null 2>&1; then
     # default already set
     return 0
   fi
@@ -1918,7 +1913,7 @@ nvm_install_source() {
   TARBALL="$(nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
   [ -f "${TARBALL}" ] && \
   TMPDIR="$(dirname "${TARBALL}")/files" && \
-  if (
+  if ! (
     # shellcheck disable=SC2086
     command mkdir -p "${TMPDIR}" && \
     command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
@@ -1930,12 +1925,10 @@ nvm_install_source() {
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install
   ); then
-    return $?
+    nvm_err "nvm: install ${VERSION} failed!"
+    command rm -rf "${TMPDIR-}"
+    return 1
   fi
-
-  nvm_err "nvm: install ${VERSION} failed!"
-  command rm -rf "${TMPDIR-}"
-  return 1
 }
 
 nvm_use_if_needed() {
@@ -2031,9 +2024,7 @@ nvm_die_on_prefix() {
     nvm_err "nvm is not compatible with the \"NPM_CONFIG_PREFIX\" environment variable: currently set to \"$NPM_CONFIG_PREFIX\""
     nvm_err 'Run `unset NPM_CONFIG_PREFIX` to unset it.'
     return 4
-  fi
-
-  if ! nvm_has 'npm'; then
+  elif ! nvm_has 'npm'; then
     return
   fi
 
@@ -2141,20 +2132,20 @@ nvm_check_file_permissions() {
     setopt nonomatch
   fi
   for FILE in $1/* $1/.[!.]* $1/..?* ; do
-      if [ -d "$FILE" ]; then
-        if ! nvm_check_file_permissions "$FILE"; then
-          if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
-            setopt nomatch
-          fi
-          return 2
-        fi
-      elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
-        nvm_err "file is not writable or self-owned: $(nvm_sanitize_path "$FILE")"
+    if [ -d "$FILE" ]; then
+      if ! nvm_check_file_permissions "$FILE"; then
         if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
           setopt nomatch
         fi
-        return 1
+        return 2
       fi
+    elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
+      nvm_err "file is not writable or self-owned: $(nvm_sanitize_path "$FILE")"
+      if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
+        setopt nomatch
+      fi
+      return 1
+    fi
   done
   if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
     setopt nomatch
@@ -2378,12 +2369,10 @@ nvm() {
           fi
         else
           nvm_rc_version
-          if [ $version_not_provided -eq 1 ]; then
-            if [ -z "$NVM_RC_VERSION" ]; then
-              unset NVM_RC_VERSION
-              >&2 nvm --help
-              return 127
-            fi
+          if [ $version_not_provided -eq 1 ] && [ -z "$NVM_RC_VERSION" ]; then
+            unset NVM_RC_VERSION
+            >&2 nvm --help
+            return 127
           fi
           provided_version="$NVM_RC_VERSION"
           unset NVM_RC_VERSION
@@ -3003,10 +2992,9 @@ nvm() {
       if [ -n "$NVM_OUTPUT" ]; then
         NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "$NVM_OUTPUT"
         return $EXIT_CODE
-      else
-        NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "N/A"
-        return 3
       fi
+      NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "N/A"
+      return 3
     ;;
     "current" )
       nvm_version current
@@ -3040,10 +3028,9 @@ nvm() {
             return
           fi
           return 1
-        else
-          nvm_err 'System version of node not found.'
-          return 127
         fi
+        nvm_err 'System version of node not found.'
+        return 127
       elif [ "_$VERSION" = "_∞" ]; then
         nvm_err "The alias \"$2\" leads to an infinite loop. Aborting."
         return 8
