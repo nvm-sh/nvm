@@ -390,29 +390,35 @@ Put the above sourcing line just below the sourcing line for nvm in your profile
 ### Usage
 
 nvm:
-
-    $ nvm [tab][tab]
-    alias               deactivate          install             ls                  run                 unload
-    clear-cache         exec                list                ls-remote           unalias             use
-    current             help                list-remote         reinstall-packages  uninstall           version
+> $ nvm <kbd>Tab</kbd>
+```
+alias               deactivate          install             ls                  run                 unload
+clear-cache         exec                list                ls-remote           unalias             use
+current             help                list-remote         reinstall-packages  uninstall           version
+```
 
 nvm alias:
+> $ nvm alias <kbd>Tab</kbd>
+```
+default
+```
 
-    $ nvm alias [tab][tab]
-    default
-
-    $ nvm alias my_alias [tab][tab]
-    v0.6.21        v0.8.26       v0.10.28
+> $ nvm alias my_alias <kbd>Tab</kbd>
+```
+v0.6.21        v0.8.26       v0.10.28
+```
 
 nvm use:
-
-    $ nvm use [tab][tab]
-    my_alias        default        v0.6.21        v0.8.26       v0.10.28
+> $ nvm use <kbd>Tab</kbd>
+```
+my_alias        default        v0.6.21        v0.8.26       v0.10.28
+```
 
 nvm uninstall:
-
-    $ nvm uninstall [tab][tab]
-    my_alias        default        v0.6.21        v0.8.26       v0.10.28
+> $ nvm uninstall <kbd>Tab</kbd>
+```
+my_alias        default        v0.6.21        v0.8.26       v0.10.28
+```
 
 ## Compatibility Issues
 `nvm` will encounter some issues if you have some non-default settings set. (see [#606](/../../issues/606))
