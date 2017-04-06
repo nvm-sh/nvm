@@ -7,6 +7,7 @@
 - [Installation](#installation)
   - [Install script](#install-script)
   - [Verify installation](#verify-installation)
+  - [Git Install](#git-install)
   - [Manual install](#manual-install)
   - [Manual upgrade](#manual-upgrade)
 - [Usage](#usage)
@@ -107,15 +108,26 @@ command -v nvm
 
 which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
 
-### Manual install
+### Git install
 
-For manual install create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm`.
+If you have `git` installed (requires git v1.7+):
 
-Or if you have `git` installed (requires git v1.7+):
-
-1. clone this repo
-1. check out the latest version
+1. clone this repo in the root of your user profile
+  - `cd ~/` from anywhere then `git clone https://github.com/creationix/nvm.git .nvm`
+1. check out the latest version with `git checkout v0.33.1`
 1. activate nvm by sourcing it from your shell
+
+Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
+(you may have to add to more than one of the above files)
+
+```sh
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+```
+
+### Manual Install
+
+For a fully manual install, create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm` and added the following to the `nvm.sh` file.
 
 ```sh
 export NVM_DIR="$HOME/.nvm" && (
@@ -125,7 +137,7 @@ export NVM_DIR="$HOME/.nvm" && (
 ) && . "$NVM_DIR/nvm.sh"
 ```
 
-Add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
+Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
 (you may have to add to more than one of the above files)
 
 ```sh
