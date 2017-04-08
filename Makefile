@@ -15,7 +15,7 @@ ifeq ($(findstring /,$(URCHIN)),) # urchin path was NOT passed in.
 	UTIL_CHECK := $(or $(shell PATH="$(PATH)" which $(UTILS) >/dev/null && echo 'ok'),$(error Did you forget to run `npm install` after cloning the repo? At least one of the required supporting utilities not found: $(UTILS)))
 endif
 	# The files that need updating when incrementing the version number.
-VERSIONED_FILES := nvm.sh install.sh README.markdown package.json
+VERSIONED_FILES := nvm.sh install.sh README.md package.json
 	# Define all shells to test with. Can be overridden with `make SHELLS=... <target>`.
 SHELLS := sh bash dash zsh # ksh (#574)
 	# Generate 'test-<shell>' target names from specified shells.
