@@ -18,6 +18,7 @@ cache:
     - $HOME/.cabal
     - $TRAVIS_BUILD_DIR/.cache
     - $TRAVIS_BUILD_DIR/node_modules
+    - $TRAVIS_BUILD_DIR/v0.10.7
 before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
