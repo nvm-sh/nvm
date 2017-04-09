@@ -471,25 +471,25 @@ As a potential alternative, @mhart (a Node contributor) has some [Docker images 
 
 ## Problems
 
-If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
+ - If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
 
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
-Where's my 'sudo node'? Check out this link:
+ - Where's my `sudo node`? Check out [#43](https://github.com/creationix/nvm/issues/43)
 
-https://github.com/creationix/nvm/issues/43
-
-On Arch Linux and other systems using python3 by default, before running *install* you need to:
+ - On Arch Linux and other systems using python3 by default, before running *install* you need to:
 
 ```sh
 export PYTHON=python2
 ```
 
-After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
+ - After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
 
-    nvm install -s 0.8.6
+```sh
+nvm install -s 0.8.6
+```
 
-If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node PATH is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
+ - If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node PATH is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
 
 ## Mac OS "troubleshooting"
 
