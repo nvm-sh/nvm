@@ -4,8 +4,6 @@ sudo: required
 addons:
   apt:
     packages:
-      - cabal-install
-      - ghc
       - zsh
     #  - ksh
     #  - gcc-4.8
@@ -14,8 +12,6 @@ addons:
 cache:
   directories:
     - $HOME/.npm
-    - $HOME/.ghc
-    - $HOME/.cabal
     - $TRAVIS_BUILD_DIR/.cache
     - $TRAVIS_BUILD_DIR/node_modules
 before_install:
@@ -23,15 +19,34 @@ before_install:
   - curl --version
   - wget --version
 install:
-  - if [ -n "${SHELLCHECK-}" ]; then cabal update && cabal install ShellCheck && shellcheck --version ; fi
   - if [ -z "${SHELLCHECK-}" ]; then nvm install node && npm install && npm prune && npm ls urchin doctoc; fi
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
   - if [ -n "${MAKE_RELEASE-}" ]; then export GIT_EDITOR="sed -i '1 s/^/99.99.99 make release test/'" && git fetch --unshallow --tags && echo proceed | make TAG=99.99.99 release ; fi
   - if [ -n "${DOCTOCCHECK-}" ]; then cp README.markdown README.markdown.orig && npm run doctoc && diff -q README.markdown README.markdown.orig ; fi
-  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh ; fi
-  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash install.sh bash_completion nvm-exec ; fi
   - if [ -n "${SHELL-}" ] && [ -n "${TEST_SUITE}" ]; then make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL ; fi
+matrix:
+  include:
+    - env: SHELLCHECK=true
+      addons:
+        apt:
+          packages:
+            - ghc
+            - cabal-install
+      cache:
+        directories:
+          - $HOME/.ghc
+          - $HOME/.cabal
+      before_install:
+        - cabal update
+      install:
+        - cabal install ShellCheck && shellcheck --version
+      script:
+        - shellcheck -s bash install.sh bash_completion nvm-exec
+        - shellcheck -s bash nvm.sh
+        - shellcheck -s sh nvm.sh
+        - shellcheck -s dash nvm.sh
+        - shellcheck -s ksh nvm.sh
 env:
   global:
     - CXX=g++-4.8
@@ -41,7 +56,6 @@ env:
   matrix:
     - MAKE_RELEASE=true
     - DOCTOCCHECK=true
-    - SHELLCHECK=true
     - SHELL=bash TEST_SUITE=install_script
     - SHELL=sh TEST_SUITE=fast
     - SHELL=dash TEST_SUITE=fast
