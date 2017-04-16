@@ -14,6 +14,7 @@
   - [Long-term support](#long-term-support)
   - [Migrating global packages while installing](#migrating-global-packages-while-installing)
   - [io.js](#iojs)
+  - [Nightly build of nodejs](#nightly-build-of-nodejs)
   - [System version of node](#system-version-of-node)
   - [Listing versions](#listing-versions)
   - [.nvmrc](#nvmrc)
@@ -242,6 +243,24 @@ nvm install iojs --reinstall-packages-from=iojs
 ```
 
 The same guidelines mentioned for migrating npm packages in Node.js are applicable to io.js.
+
+### Nightly build of nodejs
+If you want to use nightly builds of nodejs, you can temporarily set `NVM_NODEJS_ORG_MIRROR` to https://nodejs.org/download/nightly/ or other nightly build download site with `index.tab`, so that `nvm` will fetch nightly build version info and download nodejs from it.
+
+For example:
+```sh
+NVM_NODEJS_ORG_MIRROR="https://nodejs.org/download/nightly/" nvm install 8
+```
+
+The result would look like:
+```
+Downloading and installing node v8.0.0-nightly20170415e125f174dc...
+Downloading https://nodejs.org/download/nightly//v8.0.0-nightly20170415e125f174dc/node-v8.0.0-nightly20170415e125f174dc-linux-x64.tar.xz...
+######################################################################## 100.0%
+Computing checksum with sha256sum
+Checksums matched!
+Now using node v8.0.0-nightly20170415e125f174dc (npm v4.2.0)
+```
 
 ### System version of node
 If you want to use the system-installed version of node, you can use the special default alias "system":
