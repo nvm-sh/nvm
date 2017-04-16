@@ -354,6 +354,19 @@ add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
 
+## Other shells
+
+You can run nvm from other shells by using the script provided in the bin
+directory. It must remain relative to the install.
+
+Add `<prefix>/bin` and `<prefix>/current/bin` to your PATH and use nvm transparantly.
+
+### Example [fish-shell](http://fishshell.com/) config:
+
+Where nvm is installed at `~/.nvm`
+
+    set -x fish_user_paths $PATH $NVM_DIR/current/bin $NVM_DIR/bin
+
 ## License
 
 nvm is released under the MIT license.
