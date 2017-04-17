@@ -276,6 +276,8 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 nvm alias default node
 ```
 
+This creates a symlink to the stable version for the Node or to the verison you can mention instead of stable, so you don't have to `nvm use` everytime you start a shell session.
+
 To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 
 ```sh
