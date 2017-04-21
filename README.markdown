@@ -106,7 +106,7 @@ To verify that nvm has been installed, do:
 command -v nvm
 ```
 
-which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
+which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary. Also note, you may need to close your existing terminal window and run the command in a new window.
 
 ### Git install
 
