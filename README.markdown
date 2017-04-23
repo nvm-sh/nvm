@@ -477,12 +477,6 @@ As a potential alternative, @mhart (a Node contributor) has some [Docker images 
 
  - Where's my `sudo node`? Check out [#43](https://github.com/creationix/nvm/issues/43)
 
- - On Arch Linux and other systems using python3 by default, before running *install* you need to:
-
-```sh
-export PYTHON=python2
-```
-
  - After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
 
 ```sh
