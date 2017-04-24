@@ -353,6 +353,38 @@ load-nvmrc() {
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
+##### Automatic version switching for `.bashrc` with fallback to `nvm use default`
+
+Put this into your `$HOME/.bashrc` to enable automatic version swithing whenever you enter a directory than contains an
+`.nvmrc` file with a string telling nvm which node to `use`:
+
+```bash
+cd() {
+  builtin cd "$@"
+  if [[ -f .nvmrc && -r .nvmrc ]]; then
+    nvm use --silent
+  elif [[ `nvm current` != `nvm version default` ]]; then
+    nvm use --silent default
+  fi
+}
+cd .
+```
+
+Note for [`rvm`](https://github.com/rvm/rvm) users: rvm overrides builtin `cd` function so code should be a bit
+different to make `rvm` and `nvm` work both without conflicts and you should place it after `rvm` sourcing its scripts.
+For example, on Ubuntu it should be placed at the very bottom of `$HOME/.bash_profile`:
+
+```bash
+cd() {
+  __zsh_like_cd cd "$@"
+  if [[ -f .nvmrc && -r .nvmrc ]]; then
+    nvm use --silent
+  elif [[ `nvm current` != `nvm version default` ]]; then
+    nvm use --silent default
+  fi
+}
+cd .
+```
 
 ## License
 
