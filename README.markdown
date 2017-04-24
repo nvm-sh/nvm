@@ -31,6 +31,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Why? Node has a package manager, npm, right?
+
+Yes, it does. `nvm` manages different versions of the node interpreter and core libraries. Node is powerful, but the power of the Node ecosystem is the thousands of user-contributed libraries. If you want additional libraries and tools, you use `npm` for that.
+
+So why `nvm`?  Your operating system typically has one supported version of a programming language environment. So when developers want you to use any other version but the one installed in your operating system, you can't install these packages with `npm` because you have the wrong version of Node. With `nvm`, you have the power and flexibility to run many different versions of the Node platform simultaneously: for development, for testing, for daily use, the way you see fit.
+
 ## Installation
 
 If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
