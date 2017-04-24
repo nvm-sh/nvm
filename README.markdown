@@ -503,3 +503,15 @@ More on this issue in [dotphiles/dotzsh](https://github.com/dotphiles/dotzsh#mac
 [4]: https://github.com/creationix/nvm/releases/tag/v0.33.1
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
+
+## Uninstall
+
+```
+rm -rf $NVM_DIR 
+unset NVM_DIR 
+```
+You may have to remove the following from your ~/.*rc 
+```
+export NVM_DIR="~/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+```
