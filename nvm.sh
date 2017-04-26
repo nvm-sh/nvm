@@ -2639,6 +2639,17 @@ nvm() {
       unset NVM_BIN
     ;;
     "use" )
+      # If version not available, install it first, then use it
+      if [ -n "$1" ] && [ "$1" != "--silent" ] && \
+         ! nvm ls $1 &>/dev/null ; then
+        args=("$@")       # Preserve positional parameters
+
+        nvm install "$@"
+        [ $? -ne 0 ] && return 127  # Return immediately if install fails
+
+        set "${args[@]}"  # Restore positional parameters
+      fi
+
       local PROVIDED_VERSION
       local NVM_USE_SILENT
       NVM_USE_SILENT=0
