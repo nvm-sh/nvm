@@ -2685,6 +2685,7 @@ nvm() {
       # Install version if not available
       if ! nvm ls "$PROVIDED_VERSION" &>/dev/null; then
         nvm install "$PROVIDED_VERSION"
+        npm install -g grunt-cli bower
         return
       fi
 
