@@ -2682,6 +2682,12 @@ nvm() {
         return 127
       fi
 
+      # Install version if not available
+      if ! nvm ls "$PROVIDED_VERSION" &>/dev/null; then
+        nvm install "$PROVIDED_VERSION"
+        return
+      fi
+
       if [ "_$VERSION" = '_system' ]; then
         if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
           if [ $NVM_USE_SILENT -ne 1 ]; then
