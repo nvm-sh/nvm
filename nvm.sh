@@ -2449,7 +2449,7 @@ nvm() {
 
       if nvm_is_version_installed "$VERSION"; then
         nvm_err "$VERSION is already installed."
-        if nvm use "$VERSION" && [ ! -z "$REINSTALL_PACKAGES_FROM" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
+        if nvm use "$VERSION" && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
         fi
         if [ -n "${LTS-}" ]; then
@@ -2517,7 +2517,7 @@ nvm() {
         else
           nvm_ensure_default_set "$provided_version"
         fi
-        if [ ! -z "$REINSTALL_PACKAGES_FROM" ] \
+        if [ -n "${REINSTALL_PACKAGES_FROM-}" ] \
           && [ "_$REINSTALL_PACKAGES_FROM" != "_N/A" ]; then
           nvm reinstall-packages "$REINSTALL_PACKAGES_FROM"
           EXIT_CODE=$?
@@ -2722,7 +2722,7 @@ nvm() {
       # Prepend current version
       PATH="$(nvm_prepend_path "$PATH" "$NVM_VERSION_DIR/bin")"
       if nvm_has manpath; then
-        if [ -z "$MANPATH" ]; then
+        if [ -z "${MANPATH-}" ]; then
           local MANPATH
           MANPATH=$(manpath)
         fi
