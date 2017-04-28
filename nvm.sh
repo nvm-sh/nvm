@@ -2163,6 +2163,14 @@ nvm() {
     return
   fi
 
+  local DEFAULT_IFS
+  DEFAULT_IFS=" $(echo t | tr t \\t)
+"
+  if [ "${IFS}" != "${DEFAULT_IFS}" ]; then
+    IFS="${DEFAULT_IFS}" nvm "$@"
+    return $?
+  fi
+
   local COMMAND
   COMMAND="${1-}"
   shift

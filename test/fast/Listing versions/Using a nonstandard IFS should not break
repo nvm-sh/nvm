@@ -1,0 +1,18 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+
+mkdir "${NVM_DIR}/v0.0.1"
+mkdir "${NVM_DIR}/v0.0.3"
+mkdir "${NVM_DIR}/v0.0.9"
+mkdir "${NVM_DIR}/v0.3.1"
+mkdir "${NVM_DIR}/v0.3.3"
+mkdir "${NVM_DIR}/v0.3.9"
+mkdir -p "${NVM_DIR}/versions/node/v0.12.87"
+mkdir -p "${NVM_DIR}/versions/node/v0.12.9"
+mkdir -p "${NVM_DIR}/versions/io.js/v0.1.2"
+mkdir -p "${NVM_DIR}/versions/io.js/v0.10.2"
+
+set -e
+
+IFS='' nvm ls
