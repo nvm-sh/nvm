@@ -3157,15 +3157,16 @@ nvm() {
       nvm_echo "$INSTALLS" | command xargs npm install -g --quiet
 
       nvm_echo "Linking global packages from $VERSION..."
-      set -f; IFS='
+      (
+        set -f; IFS='
 ' # necessary to turn off variable expansion except for newlines
-      for LINK in $LINKS; do
-        set +f; unset IFS # restore variable expansion
-        if [ -n "$LINK" ]; then
-          (nvm_cd "$LINK" && npm link)
-        fi
-      done
-      set +f; unset IFS # restore variable expansion in case $LINKS was empty
+        for LINK in $LINKS; do
+          set +f; unset IFS # restore variable expansion
+          if [ -n "$LINK" ]; then
+            (nvm_cd "$LINK" && npm link)
+          fi
+        done
+      )
     ;;
     "clear-cache" )
       command rm -f "$NVM_DIR/v*" "$(nvm_version_dir)" 2>/dev/null
