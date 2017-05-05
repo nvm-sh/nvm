@@ -1,3 +1,4 @@
+#!/bin/bash
 # Node Version Manager
 # Implemented as a POSIX-compliant function
 # Should work on sh, dash, bash, ksh, zsh
