@@ -3145,7 +3145,7 @@ nvm() {
           unset ALIAS
         fi
 
-        nvm_list_aliases "${ALIAS}"
+        nvm_list_aliases "${ALIAS-}"
       fi
     ;;
     "unalias" )
