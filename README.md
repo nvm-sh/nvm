@@ -7,6 +7,7 @@
 - [Installation](#installation)
   - [Install script](#install-script)
   - [Verify installation](#verify-installation)
+  - [Important Notes](#important-notes)
   - [Git install](#git-install)
   - [Manual Install](#manual-install)
   - [Manual upgrade](#manual-upgrade)
@@ -33,36 +34,6 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Installation
-
-If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
-
-**Note:** `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
- - [nvm-windows](https://github.com/coreybutler/nvm-windows)
- - [nodist](https://github.com/marcelklehr/nodist)
-
-**Note:** `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
- - [bass](https://github.com/edc/bass) allows you to use utilities written for Bash in fish shell
- - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
- - [plugin-nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
- - [fnm](https://github.com/fisherman/fnm) - [fisherman](https://github.com/fisherman/fisherman)-based version manager for fish 
-
-**Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
- - [[#900] [Bug] nodejs on FreeBSD may need to be patched ](https://github.com/creationix/nvm/issues/900)
- - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
-
-**Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
- - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
-
-**Note:** On OS X, if you have/had a "system" node installed and want to install modules globally, keep in mind that:
- - When using nvm you do not need `sudo` to globally install a module with `npm -g`, so instead of doing `sudo npm install -g grunt`, do instead `npm install -g grunt`
- - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with nvm)
- - You can (but should not?) keep your previous "system" node install, but nvm will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
-
-Homebrew installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
-
-**Note:** If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm upgrade` to upgrade.
-
-**Note:** Git versions before v1.7 may face a problem of cloning nvm source from GitHub via https protocol, and there is also different behavior of git before v1.6, so the minimum required git version is v1.7.0 and we recommend v1.7.9.5 as it's the default version of the widely used Ubuntu 12.04 LTS. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
 
 ### Install script
 
@@ -98,7 +69,6 @@ If the above doesn't fix the problem, open your `.bash_profile` and add the foll
 
 - For more information about this issue and possible workarounds, please [refer here](https://github.com/creationix/nvm/issues/576)
 
-
 ### Verify installation
 
 To verify that nvm has been installed, do:
@@ -108,6 +78,38 @@ command -v nvm
 ```
 
 which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
+
+### Important Notes
+
+If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
+
+**Note:** `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
+ - [nvm-windows](https://github.com/coreybutler/nvm-windows)
+ - [nodist](https://github.com/marcelklehr/nodist)
+
+**Note:** `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
+ - [bass](https://github.com/edc/bass) allows you to use utilities written for Bash in fish shell
+ - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
+ - [plugin-nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
+ - [fnm](https://github.com/fisherman/fnm) - [fisherman](https://github.com/fisherman/fisherman)-based version manager for fish 
+
+**Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
+ - [[#900] [Bug] nodejs on FreeBSD may need to be patched ](https://github.com/creationix/nvm/issues/900)
+ - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
+
+**Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
+ - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
+
+**Note:** On OS X, if you have/had a "system" node installed and want to install modules globally, keep in mind that:
+ - When using nvm you do not need `sudo` to globally install a module with `npm -g`, so instead of doing `sudo npm install -g grunt`, do instead `npm install -g grunt`
+ - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with nvm)
+ - You can (but should not?) keep your previous "system" node install, but nvm will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
+
+Homebrew installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
+
+**Note:** If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm upgrade` to upgrade.
+
+**Note:** Git versions before v1.7 may face a problem of cloning nvm source from GitHub via https protocol, and there is also different behavior of git before v1.6, so the minimum required git version is v1.7.0 and we recommend v1.7.9.5 as it's the default version of the widely used Ubuntu 12.04 LTS. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
 
 ### Git install
 
