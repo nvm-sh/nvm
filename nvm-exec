@@ -1,6 +1,32 @@
 #!/usr/bin/env bash
 
-DIR="$(command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+function nvm_fail() {
+  echo "$1" >&2
+  exit 127
+}
+
+has_realpath=""
+
+function find_nvm_dir() {
+  if which realpath >& /dev/null; then
+    has_realpath=yes
+    dirname "$(realpath "$0")"
+  else
+    command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd
+  fi
+}
+
+DIR="$(find_nvm_dir)"
+
+function check_nvm_sh() {
+  if [ ! -f "$DIR/nvm.sh" ]; then
+    local rp_msg=""
+    [ "$has_realpath" == "yes" ] || rp_msg="; missing realpath command for finding nvm-exec's realpath to search for nvm.sh"
+    nvm_fail "Unable to find nvm.sh at $DIR$rp_msg"
+  fi
+}
+
+check_nvm_sh
 
 # shellcheck disable=SC1090
 \. "$DIR/nvm.sh" --no-use
