@@ -2197,7 +2197,7 @@ nvm() {
       nvm_echo
       nvm_echo 'Usage:'
       nvm_echo '  nvm --help                                Show this message'
-      nvm_echo '  nvm --version                             Print out the latest released version of nvm'
+      nvm_echo '  nvm --version                             Print out the installed version of nvm'
       nvm_echo '  nvm install [-s] <version>                Download and install a <version>, [-s] from source. Uses .nvmrc if available'
       nvm_echo '    --reinstall-packages-from=<version>     When installing, reinstall packages installed in <node|iojs|node version number>'
       nvm_echo '    --lts                                   When installing, only select from LTS (long-term support) versions'
