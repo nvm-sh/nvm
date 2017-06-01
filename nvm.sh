@@ -2317,11 +2317,12 @@ nvm() {
       nvm_echo '  nvm cache clear                           Empty cache directory for nvm'
       nvm_echo
       nvm_echo 'Example:'
-      nvm_echo '  nvm install v0.10.32                  Install a specific version number'
-      nvm_echo '  nvm use 0.10                          Use the latest available 0.10.x release'
-      nvm_echo '  nvm run 0.10.32 app.js                Run app.js using node v0.10.32'
-      nvm_echo '  nvm exec 0.10.32 node app.js          Run `node app.js` with the PATH pointing to node v0.10.32'
-      nvm_echo '  nvm alias default 0.10.32             Set default node version on a shell'
+      nvm_echo '  nvm install 8.0.0                     Install a specific version number'
+      nvm_echo '  nvm use 8.0                           Use the latest available 8.0.x release'
+      nvm_echo '  nvm run 6.10.3 app.js                 Run app.js using node 6.10.3'
+      nvm_echo '  nvm exec 4.8.3 node app.js            Run `node app.js` with the PATH pointing to node 4.8.3'
+      nvm_echo '  nvm alias default 8.1.0               Set default node version on a shell'
+      nvm_echo '  nvm alias default node                Always default to the latest available node version on a shell'
       nvm_echo
       nvm_echo 'Note:'
       nvm_echo '  to remove, delete, or uninstall nvm - just remove the `$NVM_DIR` folder (usually `~/.nvm`)'
