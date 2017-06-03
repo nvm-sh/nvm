@@ -1322,7 +1322,16 @@ nvm_print_versions() {
       esac
       command printf -- "${FORMAT}${LTS_FORMAT}\n" "$VERSION" " $LTS"
     else
-      command printf -- "${FORMAT}\n" "$VERSION"
+      local VERSION_POSTFIX
+      if echo "${VERSION}" | grep -q '\-nightly'; then
+        VERSION_POSTFIX="$(echo "${VERSION}" | command sed -E 's/^v.+-//g')"
+        VERSION="$(echo "${VERSION}" | command sed -E 's/-.+$//')"
+        FORMAT="$(echo "${FORMAT}" | command sed -e 's/s/s%s/' -e 's/34m/35m/')"
+        command printf -- "${FORMAT}\n" "$VERSION" "-${VERSION_POSTFIX}"
+        unset VERSION_POSTFIX
+      else
+        command printf -- "${FORMAT}\n" "$VERSION"
+      fi
     fi
   done
 }
