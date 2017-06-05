@@ -35,6 +35,14 @@ nvm_grep() {
   GREP_OPTIONS='' command grep "$@"
 }
 
+nvm_awk() {
+  command awk "$@"
+}
+
+nvm_sed() {
+  command sed "$@"
+}
+
 nvm_has() {
   type "${1-}" > /dev/null 2>&1
 }
@@ -54,13 +62,13 @@ nvm_command_info() {
   local INFO
   COMMAND="${1}"
   if type "${COMMAND}" | command grep -q hashed; then
-    INFO="$(type "${COMMAND}" | command sed -E 's/\(|)//g' | command awk '{print $4}')"
+    INFO="$(type "${COMMAND}" | nvm_sed -E 's/\(|)//g' | nvm_awk '{print $4}')"
   elif type "${COMMAND}" | command grep -q aliased; then
-    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | command sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
+    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | nvm_awk '{ $1=$2=$3=$4="" ;print }' | nvm_sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
   elif type "${COMMAND}" | command grep -q "^${COMMAND} is an alias for"; then
-    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4=$5="" ;print }' | command sed 's/^\ *//g'))"
+    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | nvm_awk '{ $1=$2=$3=$4=$5="" ;print }' | nvm_sed 's/^\ *//g'))"
   elif type "${COMMAND}" | command grep -q "^${COMMAND} is \/"; then
-    INFO="$(type "${COMMAND}" | command awk '{print $3}')"
+    INFO="$(type "${COMMAND}" | nvm_awk '{print $3}')"
   else
     INFO="$(type "${COMMAND}")"
   fi
@@ -88,7 +96,7 @@ nvm_get_latest() {
     fi
     NVM_LATEST_URL="$(curl "${CURL_COMPRESSED_FLAG:-}" -q -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
-    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | nvm_awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
     nvm_err 'nvm needs curl or wget to proceed.'
     return 1
@@ -109,7 +117,7 @@ nvm_download() {
     curl "${CURL_COMPRESSED_FLAG:-}" -q "$@"
   elif nvm_has "wget"; then
     # Emulate curl with wget
-    ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
+    ARGS=$(nvm_echo "$@" | nvm_sed -e 's/--progress-bar /--progress=bar /' \
                            -e 's/--compressed //' \
                            -e 's/-L //' \
                            -e 's/-I /--server-response /' \
@@ -218,11 +226,11 @@ nvm_rc_version() {
 }
 
 nvm_clang_version() {
-  clang --version | command awk '{ if ($2 == "version") print $3; else if ($3 == "version") print $4 }' | command sed 's/-.*$//g'
+  clang --version | nvm_awk '{ if ($2 == "version") print $3; else if ($3 == "version") print $4 }' | nvm_sed 's/-.*$//g'
 }
 
 nvm_version_greater() {
-  command awk 'BEGIN {
+  nvm_awk 'BEGIN {
     if (ARGV[1] == "" || ARGV[2] == "") exit(1)
     split(ARGV[1], a, /\./);
     split(ARGV[2], b, /\./);
@@ -237,7 +245,7 @@ nvm_version_greater() {
 }
 
 nvm_version_greater_than_or_equal_to() {
-  command awk 'BEGIN {
+  nvm_awk 'BEGIN {
     if (ARGV[1] == "" || ARGV[2] == "") exit(1)
     split(ARGV[1], a, /\./);
     split(ARGV[2], b, /\./);
@@ -360,7 +368,7 @@ nvm_remote_version() {
     VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN}" | command tail -1)"
   fi
   if [ -n "${NVM_VERSION_ONLY-}" ]; then
-    command awk 'BEGIN {
+    nvm_awk 'BEGIN {
       n = split(ARGV[1], a);
       print a[1]
     }' "${VERSION}"
@@ -429,7 +437,7 @@ nvm_remote_versions() {
 
   VERSIONS="$(nvm_echo "${NVM_LS_REMOTE_PRE_MERGED_OUTPUT}
 ${NVM_LS_REMOTE_IOJS_OUTPUT}
-${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^$/d')"
+${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | nvm_sed '/^$/d')"
 
   if [ -z "${VERSIONS}" ]; then
     nvm_echo 'N/A'
@@ -457,7 +465,7 @@ nvm_is_valid_version() {
 }
 
 nvm_normalize_version() {
-  command awk 'BEGIN {
+  nvm_awk 'BEGIN {
     split(ARGV[1], a, /\./);
     printf "%d%06d%06d\n", a[1], a[2], a[3];
     exit;
@@ -466,7 +474,7 @@ nvm_normalize_version() {
 
 nvm_ensure_version_prefix() {
   local NVM_VERSION
-  NVM_VERSION="$(nvm_strip_iojs_prefix "${1-}" | command sed -e 's/^\([0-9]\)/v\1/g')"
+  NVM_VERSION="$(nvm_strip_iojs_prefix "${1-}" | nvm_sed -e 's/^\([0-9]\)/v\1/g')"
   if nvm_is_iojs_version "${1-}"; then
     nvm_add_iojs_prefix "${NVM_VERSION}"
   else
@@ -496,7 +504,7 @@ nvm_num_version_groups() {
     return
   fi
   local NVM_NUM_DOTS
-  NVM_NUM_DOTS=$(nvm_echo "${VERSION}" | command sed -e 's/[^\.]//g')
+  NVM_NUM_DOTS=$(nvm_echo "${VERSION}" | nvm_sed -e 's/[^\.]//g')
   local NVM_NUM_GROUPS
   NVM_NUM_GROUPS=".${NVM_NUM_DOTS}" # add extra dot, since it's (n - 1) dots at this point
   nvm_echo "${#NVM_NUM_GROUPS}"
@@ -507,7 +515,7 @@ nvm_strip_path() {
     nvm_err '${NVM_DIR} not set!'
     return 1
   fi
-  nvm_echo "${1-}" | command sed \
+  nvm_echo "${1-}" | nvm_sed \
     -e "s#${NVM_DIR}/[^/]*${2-}[^:]*:##g" \
     -e "s#:${NVM_DIR}/[^/]*${2-}[^:]*##g" \
     -e "s#${NVM_DIR}/[^/]*${2-}[^:]*##g" \
@@ -922,11 +930,11 @@ nvm_ls() {
       PATTERN='v'
       SEARCH_PATTERN='.*'
     else
-      SEARCH_PATTERN="$(echo "${PATTERN}" | command sed "s#\.#\\\.#g;")"
+      SEARCH_PATTERN="$(echo "${PATTERN}" | nvm_sed "s#\.#\\\.#g;")"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
-        | command sed -e "
+        | nvm_sed -e "
             s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
             s#^${NVM_DIR}/##;
             \#^[^v]# d;
@@ -937,7 +945,7 @@ nvm_ls() {
           " \
           -e "s#^\([^/]\{1,\}\)/\(.*\)\$#\2.\1#;" \
         | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
-        | command sed "
+        | nvm_sed "
             s#\(.*\)\.\([^\.]\{1,\}\)\$#\2-\1#;
             s#^${NVM_NODE_PREFIX}-##;
           " \
@@ -969,7 +977,7 @@ nvm_ls_remote() {
   local PATTERN
   PATTERN="${1-}"
   if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
-    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command tail -1 | command awk '{ print $1 }')"
+    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command tail -1 | nvm_awk '{ print $1 }')"
   elif [ -n "${PATTERN}" ]; then
     PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
   else
@@ -1044,7 +1052,7 @@ nvm_ls_remote_index_tab() {
   fi
   local VERSION_LIST
   VERSION_LIST="$(nvm_download -L -s "${MIRROR}/index.tab" -o - \
-    | command sed "
+    | nvm_sed "
         1d;
         s/^/${PREFIX}/;
       " \
@@ -1053,7 +1061,7 @@ nvm_ls_remote_index_tab() {
   local LTS_VERSION
   command mkdir -p "$(nvm_alias_path)/lts"
   nvm_echo "${VERSION_LIST}" \
-    | command awk '{
+    | nvm_awk '{
         if ($10 ~ /^\-?$/) { next }
         if ($10 && !a[tolower($10)]++) {
           if (alias) { print alias, version }
@@ -1075,7 +1083,7 @@ nvm_ls_remote_index_tab() {
     done
 
   VERSIONS="$(nvm_echo "${VERSION_LIST}" \
-    | command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
+    | nvm_awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
         if (!$1) { next }
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
         if (lts == "*" && $10 ~ /^\-?$/) { next }
@@ -1133,31 +1141,31 @@ nvm_compute_checksum() {
 
   if nvm_has_non_aliased "sha256sum"; then
     nvm_err 'Computing checksum with sha256sum'
-    command sha256sum "${FILE}" | command awk '{print $1}'
+    command sha256sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "shasum"; then
     nvm_err 'Computing checksum with shasum -a 256'
-    command shasum -a 256 "${FILE}" | command awk '{print $1}'
+    command shasum -a 256 "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "sha256"; then
     nvm_err 'Computing checksum with sha256 -q'
-    command sha256 -q "${FILE}" | command awk '{print $1}'
+    command sha256 -q "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "gsha256sum"; then
     nvm_err 'Computing checksum with gsha256sum'
-    command gsha256sum "${FILE}" | command awk '{print $1}'
+    command gsha256sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "openssl"; then
     nvm_err 'Computing checksum with openssl dgst -sha256'
-    command openssl dgst -sha256 "${FILE}" | command awk '{print $NF}'
+    command openssl dgst -sha256 "${FILE}" | nvm_awk '{print $NF}'
   elif nvm_has_non_aliased "bssl"; then
     nvm_err 'Computing checksum with bssl sha256sum'
-    command bssl sha256sum "${FILE}" | command awk '{print $1}'
+    command bssl sha256sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "sha1sum"; then
     nvm_err 'Computing checksum with sha1sum'
-    command sha1sum "${FILE}" | command awk '{print $1}'
+    command sha1sum "${FILE}" | nvm_awk '{print $1}'
   elif nvm_has_non_aliased "sha1"; then
     nvm_err 'Computing checksum with sha1 -q'
     command sha1 -q "${FILE}"
   elif nvm_has_non_aliased "shasum"; then
     nvm_err 'Computing checksum with shasum'
-    command shasum "${FILE}" | command awk '{print $1}'
+    command shasum "${FILE}" | nvm_awk '{print $1}'
   fi
 }
 
@@ -1217,35 +1225,35 @@ nvm_get_checksum() {
     SHASUMS_URL="${MIRROR}/${3}/SHASUMS.txt"
   fi
 
-  nvm_download -L -s "${SHASUMS_URL}" -o - | command awk "{ if (\"${4}.tar.${5}\" == \$2) print \$1}"
+  nvm_download -L -s "${SHASUMS_URL}" -o - | nvm_awk "{ if (\"${4}.tar.${5}\" == \$2) print \$1}"
 }
 
 nvm_checksum() {
   local NVM_CHECKSUM
   if [ -z "${3-}" ] || [ "${3-}" = 'sha1' ]; then
     if nvm_has_non_aliased "sha1sum"; then
-      NVM_CHECKSUM="$(command sha1sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha1sum "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "sha1"; then
       NVM_CHECKSUM="$(command sha1 -q "${1-}")"
     elif nvm_has_non_aliased "shasum"; then
-      NVM_CHECKSUM="$(command shasum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command shasum "${1-}" | nvm_awk '{print $1}')"
     else
       nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
       return 2
     fi
   else
     if nvm_has_non_aliased "sha256sum"; then
-      NVM_CHECKSUM="$(command sha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha256sum "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "shasum"; then
-      NVM_CHECKSUM="$(command shasum -a 256 "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command shasum -a 256 "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "sha256"; then
-      NVM_CHECKSUM="$(command sha256 -q "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command sha256 -q "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "gsha256sum"; then
-      NVM_CHECKSUM="$(command gsha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command gsha256sum "${1-}" | nvm_awk '{print $1}')"
     elif nvm_has_non_aliased "openssl"; then
-      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | command awk '{print $NF}')"
+      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | nvm_awk '{print $NF}')"
     elif nvm_has_non_aliased "bssl"; then
-      NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | command awk '{print $1}')"
+      NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | nvm_awk '{print $1}')"
     else
       nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
       nvm_err 'WARNING: Continuing *without checksum verification*'
@@ -1276,9 +1284,9 @@ nvm_print_versions() {
   local LTS_LENGTH
   local LTS_FORMAT
   nvm_echo "${1-}" \
-  | command sed '1!G;h;$!d' \
-  | command awk '{ if ($2 && a[$2]++) { print $1, "(LTS: " $2 ")" } else if ($2) { print $1, "(Latest LTS: " $2 ")" } else { print $0 } }' \
-  | command sed '1!G;h;$!d' \
+  | nvm_sed '1!G;h;$!d' \
+  | nvm_awk '{ if ($2 && a[$2]++) { print $1, "(LTS: " $2 ")" } else if ($2) { print $1, "(Latest LTS: " $2 ")" } else { print $0 } }' \
+  | nvm_sed '1!G;h;$!d' \
   | while read -r VERSION_LINE; do
     VERSION="${VERSION_LINE%% *}"
     LTS="${VERSION_LINE#* }"
@@ -1384,7 +1392,7 @@ nvm_print_implicit_alias() {
       NVM_IOJS_VERSION="$($NVM_COMMAND)" &&:
       EXIT_CODE="$?"
       if [ "_$EXIT_CODE" = "_0" ]; then
-        NVM_IOJS_VERSION="$(nvm_echo "$NVM_IOJS_VERSION" | command sed "s/^$NVM_IMPLICIT-//" | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
+        NVM_IOJS_VERSION="$(nvm_echo "$NVM_IOJS_VERSION" | nvm_sed "s/^$NVM_IMPLICIT-//" | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
       fi
 
       if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
@@ -1981,16 +1989,16 @@ nvm_npm_global_modules() {
   local VERSION
   VERSION="$1"
   if [ "_$VERSION" = "_system" ]; then
-    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null | command sed 1,1d)
+    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null | nvm_sed 1,1d)
   else
-    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | command sed 1,1d)
+    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | nvm_sed 1,1d)
   fi
 
   local INSTALLS
-  INSTALLS=$(nvm_echo "$NPMLIST" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
+  INSTALLS=$(nvm_echo "$NPMLIST" | nvm_sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
 
   local LINKS
-  LINKS="$(nvm_echo "$NPMLIST" | command sed -n 's/.* -> \(.*\)/\1/ p')"
+  LINKS="$(nvm_echo "$NPMLIST" | nvm_sed -n 's/.* -> \(.*\)/\1/ p')"
 
   nvm_echo "$INSTALLS //// $LINKS"
 }
@@ -2102,10 +2110,10 @@ nvm_sanitize_path() {
   local SANITIZED_PATH
   SANITIZED_PATH="${1-}"
   if [ "_$SANITIZED_PATH" != "_$NVM_DIR" ]; then
-    SANITIZED_PATH="$(nvm_echo "$SANITIZED_PATH" | command sed -e "s#$NVM_DIR#\$NVM_DIR#g")"
+    SANITIZED_PATH="$(nvm_echo "$SANITIZED_PATH" | nvm_sed -e "s#$NVM_DIR#\$NVM_DIR#g")"
   fi
   if [ "_$SANITIZED_PATH" != "_$HOME" ]; then
-    SANITIZED_PATH="$(nvm_echo "$SANITIZED_PATH" | command sed -e "s#$HOME#\$HOME#g")"
+    SANITIZED_PATH="$(nvm_echo "$SANITIZED_PATH" | nvm_sed -e "s#$HOME#\$HOME#g")"
   fi
   nvm_echo "$SANITIZED_PATH"
 }
@@ -2287,9 +2295,9 @@ nvm() {
       nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
       nvm_err "uname -a: '$(uname -a | awk '{$2=""; print}' | xargs)'"
       if [ "$(nvm_get_os)" = "darwin" ] && nvm_has sw_vers; then
-        nvm_err "OS version: $(sw_vers | command awk '{print $2}' | command xargs)"
+        nvm_err "OS version: $(sw_vers | nvm_awk '{print $2}' | command xargs)"
       elif [ -r "/etc/issue" ]; then
-        nvm_err "OS version: $(command head -n 1 /etc/issue | command sed 's/\\.//g')"
+        nvm_err "OS version: $(command head -n 1 /etc/issue | nvm_sed 's/\\.//g')"
       fi
       if nvm_has "curl"; then
         nvm_err "curl: $(nvm_command_info curl), $(command curl -V | command head -n 1)"
@@ -3286,7 +3294,7 @@ nvm() {
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has nvm_install_default_packages \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
-        nvm_echo nvm_err nvm_grep nvm_cd \
+        nvm_echo nvm_err nvm_grep nvm_cd nvm_sed nvm_awk \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_version_installed \
