@@ -25,7 +25,7 @@ before_install:
 install:
   - if [ -n "${SHELLCHECK-}" ]; then cabal update && cabal install ShellCheck && shellcheck --version ; fi
   - if [ -z "${SHELLCHECK-}" ]; then nvm install node && npm install && npm prune && npm ls urchin doctoc; fi
-  - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
+  - '[ -z "$WITHOUT_CURL" ] || sudo rm -rf "$(which curl)"'
 script:
   - if [ -n "${MAKE_RELEASE-}" ]; then export GIT_EDITOR="sed -i '1 s/^/99.99.99 make release test/'" && git fetch --unshallow --tags && echo proceed | make TAG=99.99.99 release ; fi
   - if [ -n "${DOCTOCCHECK-}" ]; then cp README.md README.md.orig && npm run doctoc && diff -q README.md README.md.orig ; fi
