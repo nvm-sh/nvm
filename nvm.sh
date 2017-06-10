@@ -79,11 +79,15 @@ nvm_curl_libz_support() {
   curl -V 2>/dev/null | nvm_grep "^Features:" | nvm_grep -q "libz"
 }
 
+nvm_curl_use_compression() {
+  nvm_curl_libz_support && nvm_version_greater_than_or_equal_to "$(nvm_curl_version)" 7.21.0;
+}
+
 nvm_get_latest() {
   local NVM_LATEST_URL
   local CURL_COMPRESSED_FLAG
   if nvm_has "curl"; then
-    if nvm_curl_libz_support; then
+    if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
     NVM_LATEST_URL="$(curl "${CURL_COMPRESSED_FLAG:-}" -q -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
@@ -103,7 +107,7 @@ nvm_get_latest() {
 nvm_download() {
   local CURL_COMPRESSED_FLAG
   if nvm_has "curl"; then
-    if nvm_curl_libz_support; then
+    if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
     curl "${CURL_COMPRESSED_FLAG:-}" -q "$@"
@@ -219,6 +223,10 @@ nvm_rc_version() {
 
 nvm_clang_version() {
   clang --version | command awk '{ if ($2 == "version") print $3; else if ($3 == "version") print $4 }' | command sed 's/-.*$//g'
+}
+
+nvm_curl_version() {
+  curl -V | command awk '{ if ($1 == "curl") print $2 }' | command sed 's/-.*$//g'
 }
 
 nvm_version_greater() {
@@ -3284,7 +3292,7 @@ nvm() {
         nvm_version_greater nvm_version_greater_than_or_equal_to \
         nvm_print_npm_version nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
-        nvm_download nvm_get_latest nvm_has nvm_install_default_packages \
+        nvm_download nvm_get_latest nvm_has nvm_install_default_packages nvm_curl_use_compression nvm_curl_version \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
         nvm_echo nvm_err nvm_grep nvm_cd \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
