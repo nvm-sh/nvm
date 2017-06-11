@@ -143,6 +143,74 @@ nvm_print_npm_version() {
   fi
 }
 
+nvm_install_latest_npm() {
+  nvm_echo 'Attempting to upgrade to the latest working version of npm...'
+  local NODE_VERSION
+  NODE_VERSION="$(nvm_strip_iojs_prefix "$(nvm_ls_current)")"
+  if [ "${NODE_VERSION}" = 'system' ]; then
+    NODE_VERSION="$(node --version)"
+  elif [ "${NODE_VERSION}" = 'none' ]; then
+    nvm_echo "Detected node version ${NODE_VERSION}, npm version v${NPM_VERSION}"
+    NODE_VERSION=''
+  fi
+  if [ -z "${NODE_VERSION}" ]; then
+    nvm_err 'Unable to obtain node version.'
+    return 1
+  fi
+  local NPM_VERSION
+  NPM_VERSION="$(npm --version 2>/dev/null)"
+  if [ -z "${NPM_VERSION}" ]; then
+    nvm_err 'Unable to obtain npm version.'
+    return 2
+  fi
+
+  local NVM_NPM_CMD
+  NVM_NPM_CMD='npm'
+  if [ "${NVM_DEBUG-}" = 1 ]; then
+    nvm_echo "Detected node version ${NODE_VERSION}, npm version v${NPM_VERSION}"
+    NVM_NPM_CMD='echo npm'
+  fi
+
+  local NVM_IS_0_6
+  NVM_IS_0_6=0
+  if nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 0.6.0 && nvm_version_greater 0.7.0 "${NODE_VERSION}"; then
+    NVM_IS_0_6=1
+  fi
+  local NVM_IS_0_9
+  NVM_IS_0_9=0
+  if nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 0.9.0 && nvm_version_greater 0.10.0 "${NODE_VERSION}"; then
+    NVM_IS_0_9=1
+  fi
+
+  if [ $NVM_IS_0_6 -eq 1 ]; then
+    nvm_echo '* `node` v0.6.x can only upgrade to `npm` v1.3.x'
+    $NVM_NPM_CMD install -g npm@1.3
+  elif [ $NVM_IS_0_9 -eq 0 ]; then
+    # node 0.9 breaks here, for some reason
+    if nvm_version_greater_than_or_equal_to "${NPM_VERSION}" 1.0.0 && nvm_version_greater 2.0.0 "${NPM_VERSION}"; then
+      nvm_echo '* `npm` v1.x needs to first jump to `npm` v1.4.28 to be able to upgrade further'
+      $NVM_NPM_CMD install -g npm@1.4.28
+    elif nvm_version_greater_than_or_equal_to "${NPM_VERSION}" 2.0.0 && nvm_version_greater 3.0.0 "${NPM_VERSION}"; then
+      nvm_echo '* `npm` v2.x needs to first jump to the latest v2 to be able to upgrade further'
+      $NVM_NPM_CMD install -g npm@2
+    fi
+  fi
+
+  if [ $NVM_IS_0_9 -eq 1 ] || [ $NVM_IS_0_6 -eq 1 ]; then
+    nvm_echo '* node v0.6 and v0.9 are unable to upgrade further'
+  elif nvm_version_greater 1.0.0 "${NODE_VERSION}"; then
+    nvm_echo '* `npm` v4.5.x is the last version that works on `node` versions below v1.0.0'
+    $NVM_NPM_CMD install -g npm@4.5
+  elif nvm_version_greater 4.0.0 "${NODE_VERSION}"; then
+    nvm_echo '* `npm` v5 and higher do not work on `node` versions below v4.0.0'
+    $NVM_NPM_CMD install -g npm@4
+  elif [ $NVM_IS_0_9 -eq 0 ] && [ $NVM_IS_0_6 -eq 0 ]; then
+    nvm_echo '* Installing latest `npm`; if this does not work on your node version, please report a bug!'
+    $NVM_NPM_CMD install -g npm
+  fi
+  nvm_echo "* npm upgraded to: v$(npm --version 2>/dev/null)"
+}
+
 # Make zsh glob matching behave same as bash
 # This fixes the "zsh: no matches found" errors
 if [ -z "${NVM_CD_FLAGS-}" ]; then
@@ -2211,6 +2279,7 @@ nvm() {
       nvm_echo '    --lts                                   When installing, only select from LTS (long-term support) versions'
       nvm_echo '    --lts=<LTS name>                        When installing, only select from versions for a specific LTS line'
       nvm_echo '    --skip-default-packages                 When installing, skip the default-packages file if it exists'
+      nvm_echo '    --latest-npm                            After installing, attempt to upgrade to the latest working npm on the given node version'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
       nvm_echo '  nvm uninstall --lts                       Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
       nvm_echo '  nvm uninstall --lts=<LTS name>            Uninstall using automatic alias for provided LTS line, if available.'
@@ -2239,6 +2308,7 @@ nvm() {
       nvm_echo '  nvm alias [<pattern>]                     Show all aliases beginning with <pattern>'
       nvm_echo '  nvm alias <name> <version>                Set an alias named <name> pointing to <version>'
       nvm_echo '  nvm unalias <name>                        Deletes the alias named <name>'
+      nvm_echo '  nvm install-latest-npm                    Attempt to upgrade to the latest working `npm` on the current node version'
       nvm_echo '  nvm reinstall-packages <version>          Reinstall global `npm` packages contained in <version> to current version'
       nvm_echo '  nvm unload                                Unload `nvm` from shell'
       nvm_echo '  nvm which [<version>]                     Display path to installed node version. Uses .nvmrc if available'
@@ -2344,6 +2414,8 @@ nvm() {
       local nobinary
       nobinary=0
       local LTS
+      local NVM_UPGRADE_NPM
+      NVM_UPGRADE_NPM=0
       while [ $# -ne 0 ]
       do
         case "$1" in
@@ -2362,6 +2434,10 @@ nvm() {
           ;;
           --lts=*)
             LTS="${1##--lts=}"
+            shift
+          ;;
+          --latest-npm)
+            NVM_UPGRADE_NPM=1
             shift
           ;;
           *)
@@ -2496,6 +2572,9 @@ nvm() {
       if nvm_is_version_installed "$VERSION"; then
         nvm_err "$VERSION is already installed."
         if nvm use "$VERSION"; then
+          if [ "${NVM_UPGRADE_NPM}" = 1 ]; then
+            nvm install-latest-npm
+          fi
           if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -n "${DEFAULT_PACKAGES-}" ]; then
             nvm_install_default_packages "$DEFAULT_PACKAGES"
           fi
@@ -2567,6 +2646,10 @@ nvm() {
           nvm_ensure_default_set "lts/${LTS}"
         else
           nvm_ensure_default_set "$provided_version"
+        fi
+        if [ "${NVM_UPGRADE_NPM}" = 1 ]; then
+          nvm install-latest-npm
+          EXIT_CODE=$?
         fi
         if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -n "${DEFAULT_PACKAGES-}" ]; then
           nvm_install_default_packages "$DEFAULT_PACKAGES"
@@ -3174,6 +3257,14 @@ nvm() {
       command rm -f "$NVM_ALIAS_DIR/${1}"
       nvm_echo "Deleted alias ${1} - restore it with \`nvm alias \"${1}\" \"$NVM_ALIAS_ORIGINAL\"\`"
     ;;
+    "install-latest-npm")
+      if [ $# -ne 0 ]; then
+        >&2 nvm --help
+        return 127
+      fi
+
+      nvm_install_latest_npm
+    ;;
     "reinstall-packages" | "copy-packages" )
       if [ $# -ne 1 ]; then
         >&2 nvm --help
@@ -3290,7 +3381,7 @@ nvm() {
         nvm_version_path nvm_alias_path nvm_version_dir \
         nvm_find_nvmrc nvm_find_up nvm_tree_contains_path \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
-        nvm_print_npm_version nvm_npm_global_modules \
+        nvm_print_npm_version nvm_install_latest_npm nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
         nvm_download nvm_get_latest nvm_has nvm_install_default_packages nvm_curl_use_compression nvm_curl_version \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
