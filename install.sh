@@ -3,7 +3,7 @@
 { # this ensures the entire script is downloaded #
 
 nvm_has() {
-  type "$1" > /dev/null 2>&1
+  command which "${1-}" > /dev/null 2>&1
 }
 
 nvm_install_dir() {
