@@ -1895,7 +1895,7 @@ nvm_install_source() {
       make='gmake'
     ;;
   esac
-  if nvm_has "clang++" && nvm_has "clang" && nvm_version_greater_than_or_equal_to nvm_clang_version 3.5; then
+  if nvm_has "clang++" && nvm_has "clang" && nvm_version_greater_than_or_equal_to "$(nvm_clang_version)" 3.5; then
     if [ -z "${CC-}" ] || [ -z "${CXX-}" ] ; then
       nvm_echo "Clang v3.5+ detected! CC or CXX not specified, will use Clang as C/C++ compiler!"
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
