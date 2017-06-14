@@ -110,11 +110,12 @@ nvm_download() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    curl "${CURL_COMPRESSED_FLAG:-}" -q "$@"
+    curl --fail "${CURL_COMPRESSED_FLAG:-}" -q "$@"
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
                            -e 's/--compressed //' \
+                           -e 's/--fail //' \
                            -e 's/-L //' \
                            -e 's/-I /--server-response /' \
                            -e 's/-s /-q /' \
