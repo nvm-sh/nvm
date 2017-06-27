@@ -2231,7 +2231,11 @@ nvm_check_file_permissions() {
 }
 
 nvm_cache_dir() {
-  nvm_echo "${NVM_DIR}/.cache"
+  if [ -n "$NVM_CACHE_DIR" ]; then
+    nvm_echo "$NVM_CACHE_DIR"
+  else
+    nvm_echo "$NVM_DIR/.cache"
+  fi
 }
 
 nvm() {
