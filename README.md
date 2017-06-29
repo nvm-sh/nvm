@@ -41,12 +41,10 @@
   - [Use a mirror of node binaries](#use-a-mirror-of-node-binaries)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
-    - [bash](#bash)
-      - [Automatically call `nvm use`](#automatically-call-nvm-use)
-    - [zsh](#zsh)
-      - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
-    - [fish](#fish)
-      - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file-1)
+    - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
+      - [bash](#bash)
+      - [zsh](#zsh)
+      - [fish](#fish)
 - [Running Tests](#running-tests)
 - [Environment variables](#environment-variables)
 - [Bash Completion](#bash-completion)
@@ -575,52 +573,53 @@ You can also use [`nvshim`](https://github.com/iamogbz/nvshim) to shim the `node
 
 If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` maintainers. We are, however, accepting pull requests for more examples.
 
-#### bash
+#### Calling `nvm use` automatically in a directory with a `.nvmrc` file
 
-##### Automatically call `nvm use`
+In your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`), add the following to `nvm use` whenever you enter a new directory:
+
+##### bash
 
 Put the following at the end of your `$HOME/.bashrc`:
 
 ```bash
 cdnvm() {
     command cd "$@" || return $?
-    nvm_path=$(nvm_find_up .nvmrc | tr -d '\n')
+    nvm_path="$(nvm_find_up .nvmrc | command tr -d '\n')"
 
     # If there are no .nvmrc file, use the default nvm version
     if [[ ! $nvm_path = *[^[:space:]]* ]]; then
 
-        declare default_version;
-        default_version=$(nvm version default);
+        declare default_version
+        default_version="$(nvm version default)"
 
         # If there is no default version, set it to `node`
         # This will use the latest version on your machine
-        if [[ $default_version == "N/A" ]]; then
-            nvm alias default node;
-            default_version=$(nvm version default);
+        if [ $default_version = 'N/A' ]; then
+            nvm alias default node
+            default_version=$(nvm version default)
         fi
 
         # If the current version is not the default version, set it to use the default version
-        if [[ $(nvm current) != "$default_version" ]]; then
-            nvm use default;
+        if [ "$(nvm current)" != "${default_version}" ]; then
+            nvm use default
         fi
-
-    elif [[ -s $nvm_path/.nvmrc && -r $nvm_path/.nvmrc ]]; then
+    elif [[ -s "${nvm_path}/.nvmrc" && -r "${nvm_path}/.nvmrc" ]]; then
         declare nvm_version
-        nvm_version=$(<"$nvm_path"/.nvmrc)
+        nvm_version=$(<"${nvm_path}"/.nvmrc)
 
         declare locally_resolved_nvm_version
         # `nvm ls` will check all locally-available versions
         # If there are multiple matching versions, take the latest one
         # Remove the `->` and `*` characters and spaces
         # `locally_resolved_nvm_version` will be `N/A` if no local versions are found
-        locally_resolved_nvm_version=$(nvm ls --no-colors "$nvm_version" | tail -1 | tr -d '\->*' | tr -d '[:space:]')
+        locally_resolved_nvm_version=$(nvm ls --no-colors "${nvm_version}" | command tail -1 | command tr -d '\->*' | command tr -d '[:space:]')
 
         # If it is not already installed, install it
         # `nvm install` will implicitly use the newly-installed version
-        if [[ "$locally_resolved_nvm_version" == "N/A" ]]; then
-            nvm install "$nvm_version";
-        elif [[ $(nvm current) != "$locally_resolved_nvm_version" ]]; then
-            nvm use "$nvm_version";
+        if [ "${locally_resolved_nvm_version}" = 'N/A' ]; then
+            nvm install "${nvm_version}";
+        elif [ "$(nvm current)" != "${locally_resolved_nvm_version}" ]; then
+            nvm use "${nvm_version}";
         fi
     fi
 }
@@ -631,9 +630,9 @@ cdnvm "$PWD" || exit
 
 This alias would search 'up' from your current directory in order to detect a `.nvmrc` file. If it finds it, it will switch to that version; if not, it will use the default version.
 
-#### zsh
+##### zsh
 
-##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
+This shell function will install (if needed) and `nvm use` the specified Node version when an `.nvmrc` is found, and `nvm use default` otherwise.
 
 Put this into your `$HOME/.zshrc` to call `nvm use` automatically whenever you enter a directory that contains an
 `.nvmrc` file with a string telling nvm which node to `use`:
@@ -665,9 +664,8 @@ add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
 
-#### fish
+##### fish
 
-##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
 This requires that you have [bass](https://github.com/edc/bass) installed.
 ```fish
 # ~/.config/fish/functions/nvm.fish
