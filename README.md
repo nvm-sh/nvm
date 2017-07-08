@@ -488,13 +488,13 @@ As a potential alternative, @mhart (a Node contributor) has some [Docker images 
 
 ## Docker for development environment
 
-To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 14.04i base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
+To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 14.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
 
 ```sh
 $ docker build -t nvm-dev .
 ```
 
-This will package your current nvm repository with our pre-defiend deveopment environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
+This will package your current nvm repository with our pre-defiend development environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
 
 ```sh
 $ docker images
@@ -503,7 +503,7 @@ REPOSITORY         TAG                 IMAGE ID            CREATED             S
 nvm-dev            latest              9ca4c57a97d8        7 days ago          1.22 GB
 ```
 
-If you got no error message, now you can easily involved in:
+If you got no error message, now you can easily involve in:
 
 ```sh
 $ docker run -it nvm-dev -h nvm-dev
