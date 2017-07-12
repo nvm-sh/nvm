@@ -2357,6 +2357,9 @@ nvm() {
         setopt shwordsplit
       fi
       nvm_err "nvm --version: v$(nvm --version)"
+      if [ -n "${TERM_PROGRAM-}" ]; then
+        nvm_err "\$TERM_PROGRAM: $TERM_PROGRAM"
+      fi
       nvm_err "\$SHELL: $SHELL"
       nvm_err "\$HOME: $HOME"
       nvm_err "\$NVM_DIR: '$(nvm_sanitize_path "$NVM_DIR")'"
