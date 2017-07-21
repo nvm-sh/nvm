@@ -329,6 +329,11 @@ You can create a `.nvmrc` file containing version number in the project root dir
 
 For example, to make nvm default to the latest 5.9 release for the current directory:
 
+.nvmrc file:
+```
+5.9
+```
+
 ```sh
 $ echo "5.9" > .nvmrc
 
