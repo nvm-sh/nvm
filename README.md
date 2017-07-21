@@ -334,6 +334,8 @@ For example, to make nvm default to the latest 5.9 release for the current direc
 5.9
 ```
 
+Then:
+
 ```sh
 $ echo "5.9" > .nvmrc
 
