@@ -190,6 +190,13 @@ And then in any new shell just use the installed version:
 nvm use node
 ```
 
+Or to install and use a specific version:
+
+```sh
+nvm install 6.11.1
+nvm use 6.11.1
+```
+
 Or you can just run it:
 
 ```sh
