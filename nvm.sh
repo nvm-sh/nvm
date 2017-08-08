@@ -2807,9 +2807,9 @@ nvm() {
 
       if [ -n "${NVM_LTS-}" ]; then
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
-      elif [ -z "$PROVIDED_VERSION" ]; then
+      elif [ -z "${PROVIDED_VERSION-}" ]; then
         nvm_rc_version
-        if [ -n "$NVM_RC_VERSION" ]; then
+        if [ -n "${NVM_RC_VERSION-}" ]; then
           PROVIDED_VERSION="$NVM_RC_VERSION"
           VERSION="$(nvm_version "$PROVIDED_VERSION")"
         fi
