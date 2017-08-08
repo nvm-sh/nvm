@@ -40,6 +40,8 @@ nvm_source() {
   NVM_SOURCE_URL="$NVM_SOURCE"
   if [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
     NVM_SOURCE_URL="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm-exec"
+  elif [ "_$NVM_METHOD" = "_script-nvm-bash-completion" ]; then
+    NVM_SOURCE_URL="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/bash_completion"
   elif [ -z "$NVM_SOURCE_URL" ]; then
     if [ "_$NVM_METHOD" = "_script" ]; then
       NVM_SOURCE_URL="https://raw.githubusercontent.com/creationix/nvm/$(nvm_latest_version)/nvm.sh"
@@ -161,9 +163,11 @@ install_nvm_as_script() {
   local INSTALL_DIR
   INSTALL_DIR="$(nvm_install_dir)"
   local NVM_SOURCE_LOCAL
-  NVM_SOURCE_LOCAL=$(nvm_source script)
+  NVM_SOURCE_LOCAL="$(nvm_source script)"
   local NVM_EXEC_SOURCE
-  NVM_EXEC_SOURCE=$(nvm_source script-nvm-exec)
+  NVM_EXEC_SOURCE="$(nvm_source script-nvm-exec)"
+  local NVM_BASH_COMPLETION_SOURCE
+  NVM_BASH_COMPLETION_SOURCE="$(nvm_source script-nvm-bash-completion)"
 
   # Downloading to $INSTALL_DIR
   mkdir -p "$INSTALL_DIR"
@@ -178,6 +182,10 @@ install_nvm_as_script() {
   } &
   nvm_download -s "$NVM_EXEC_SOURCE" -o "$INSTALL_DIR/nvm-exec" || {
     echo >&2 "Failed to download '$NVM_EXEC_SOURCE'"
+    return 2
+  } &
+  nvm_download -s "$NVM_BASH_COMPLETION_SOURCE" -o "$INSTALL_DIR/bash_completion" || {
+    echo >&2 "Failed to download '$NVM_BASH_COMPLETION_SOURCE'"
     return 2
   } &
   for job in $(jobs -p | sort)
