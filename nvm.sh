@@ -2535,7 +2535,7 @@ nvm() {
         shift
       done
 
-      if [ -z "$SKIP_DEFAULT_PACKAGES" ] && [ -f "${NVM_DIR}/default-packages" ]; then
+      if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -f "${NVM_DIR}/default-packages" ]; then
         DEFAULT_PACKAGES=""
 
         # Read lines from $NVM_DIR/default-packages
