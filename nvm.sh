@@ -2117,22 +2117,22 @@ nvm_die_on_prefix() {
     fi
   done
 
-	if [[ -n $NVM_NPM_PREFIX ]]; then
-		if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
-			if [ "_$NVM_DELETE_PREFIX" = "_1" ]; then
-				npm config --loglevel=warn delete prefix
-			else
-				nvm deactivate >/dev/null 2>&1
-			  nvm_err "nvm is not compatible with the npm config \"prefix\" option: currently set to \"$NVM_NPM_PREFIX\""
-				if nvm_has 'npm'; then
-					nvm_err "Run \`npm config delete prefix\` or \`$NVM_COMMAND\` to unset it."
-				else
-					nvm_err "Run \`$NVM_COMMAND\` to unset it."
-				fi
-			  return 10
-		  fi
-	  fi
-	fi
+  if [[ -n $NVM_NPM_PREFIX ]]; then
+    if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
+      if [ "_$NVM_DELETE_PREFIX" = "_1" ]; then
+        npm config --loglevel=warn delete prefix
+      else
+        nvm deactivate >/dev/null 2>&1
+        nvm_err "nvm is not compatible with the npm config \"prefix\" option: currently set to \"$NVM_NPM_PREFIX\""
+        if nvm_has 'npm'; then
+          nvm_err "Run \`npm config delete prefix\` or \`$NVM_COMMAND\` to unset it."
+        else
+          nvm_err "Run \`$NVM_COMMAND\` to unset it."
+        fi
+        return 10
+      fi
+    fi
+  fi
 }
 
 # Succeeds if $IOJS_VERSION represents an io.js version that has a
