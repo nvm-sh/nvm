@@ -2106,10 +2106,9 @@ nvm_die_on_prefix() {
   fi
 
   local NVM_NPM_PREFIX
+  local npmrcs=". $HOME"
 
-  declare -a npmrcs=("." "$HOME")
-
-  for npmrc in "${npmrcs[@]}"; do
+  for npmrc in $npmrcs; do
     if [ -f "${npmrc}/.npmrc" ]; then
       NVM_NPM_PREFIX=$(grep ^prefix= ${npmrc}/.npmrc | sed s/prefix=\\\(.*\\\)$/\\1/)
       if [[ -n $NVM_NPM_PREFIX ]]; then
