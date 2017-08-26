@@ -57,12 +57,10 @@ EXIT_CODE="$(NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT'; got '$OUTPUT'"
 [ "_$EXIT_CODE" = "_4" ] || die "'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not exit with 4; got '$EXIT_CODE'"
 
-npm() {
+sed() {
   local args
   args="$@"
-  if [ "_$args" = "_config --loglevel=warn get prefix" ]; then
-    echo "./bad prefix"
-  fi
+  echo "./bad prefix"
 }
 OUTPUT="$(nvm_die_on_prefix 0 foo 2>&1)"
 EXPECTED_OUTPUT="nvm is not compatible with the npm config \"prefix\" option: currently set to \"./bad prefix\"

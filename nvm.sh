@@ -2112,6 +2112,7 @@ nvm_die_on_prefix() {
     if [ -f "${npmrc}/.npmrc" ]; then
       NVM_NPM_PREFIX=$(grep ^prefix= "${npmrc}"/.npmrc | sed s/prefix=\\\(.*\\\)$/\\1/)
       if ! [ -z "$NVM_NPM_PREFIX" ]; then
+        nvm_err "Incompatible prefix setting prefix=${npmrc} found in the config file ${npmrc}/.npmrc"
         break
       fi
     fi
