@@ -2111,13 +2111,13 @@ nvm_die_on_prefix() {
   for npmrc in $npmrcs; do
     if [ -f "${npmrc}/.npmrc" ]; then
       NVM_NPM_PREFIX=$(grep ^prefix= ${npmrc}/.npmrc | sed s/prefix=\\\(.*\\\)$/\\1/)
-      if [[ -n $NVM_NPM_PREFIX ]]; then
+      if ! [ -z $NVM_NPM_PREFIX ]; then
         break
       fi
     fi
   done
 
-  if [[ -n $NVM_NPM_PREFIX ]]; then
+  if ! [ -z $NVM_NPM_PREFIX ]; then
     if ! (nvm_tree_contains_path "$NVM_DIR" "$NVM_NPM_PREFIX" >/dev/null 2>&1); then
       if [ "_$NVM_DELETE_PREFIX" = "_1" ]; then
         npm config --loglevel=warn delete prefix
