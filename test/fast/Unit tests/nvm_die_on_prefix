@@ -63,7 +63,8 @@ sed() {
   echo "./bad prefix"
 }
 OUTPUT="$(nvm_die_on_prefix 0 foo 2>&1)"
-EXPECTED_OUTPUT="nvm is not compatible with the npm config \"prefix\" option: currently set to \"./bad prefix\"
+EXPECTED_OUTPUT="Incompatible prefix setting prefix=./bad prefix found in the config file ./.npmrc
+nvm is not compatible with the npm config \"prefix\" option: currently set to \"./bad prefix\"
 Run \`npm config delete prefix\` or \`foo\` to unset it."
 EXIT_CODE="$(nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo $?)"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT' with bad prefix set; got '$OUTPUT'"
