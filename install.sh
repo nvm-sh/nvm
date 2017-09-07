@@ -330,9 +330,12 @@ nvm_do_install() {
   BASH_OR_ZSH=false
 
   if [ -z "${NVM_PROFILE-}" ] ; then
-    echo "=> Profile not found. Tried ${NVM_PROFILE} (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
+    local TRIED_PROFILE
+    if [ -n "${PROFILE}" ]; then
+      TRIED_PROFILE="${NVM_PROFILE} (as defined in \$PROFILE), "
+    fi
+    echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
     echo "=> Create one of them and run this script again"
-    echo "=> Create it (touch ${NVM_PROFILE}) and run this script again"
     echo "   OR"
     echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
