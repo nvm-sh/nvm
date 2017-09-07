@@ -199,8 +199,8 @@ nvm_install_latest_npm() {
 
   if [ $NVM_IS_0_9 -eq 1 ] || [ $NVM_IS_0_6 -eq 1 ]; then
     nvm_echo '* node v0.6 and v0.9 are unable to upgrade further'
-  elif nvm_version_greater_than_or_equal_to 1.0.0 "${NODE_VERSION}"; then
-    nvm_echo '* `npm` v4.5.x is the last version that works on `node` versions <= v1.0.0'
+  elif nvm_version_greater 1.1.0 "${NODE_VERSION}"; then
+    nvm_echo '* `npm` v4.5.x is the last version that works on `node` versions < v1.1.0'
     $NVM_NPM_CMD install -g npm@4.5
   elif nvm_version_greater 4.0.0 "${NODE_VERSION}"; then
     nvm_echo '* `npm` v5 and higher do not work on `node` versions below v4.0.0'
