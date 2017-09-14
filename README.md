@@ -380,6 +380,28 @@ add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
 
+##### Lazy loading `nvm` if the `.nvmrc` version is different to your default
+
+Alternatively, you can specify a default version of Node to use generally and only load `nvm` if a `.nvmrc` specifies a different version.
+
+With this technique, you do not initialise `nvm` at the bottom of your `.zshrc`. Instead, you use it whenever needed to install Node versions and configure your path with the version you prefer.
+
+```zsh
+export PATH=$PATH:/Users/faizn1/.nvm/versions/node/v8.4.0/bin
+
+function chpwd {
+  if [[ -a .nvmrc ]]; then
+        CURRENT_NVER=`node -v`
+        NVER=`cat .nvmrc`
+        if [ "$CURRENT_NVER" != "$NVER" ]; then
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                eval "nvm use $NVER"
+        fi
+  fi
+}
+```
+
 ## License
 
 nvm is released under the MIT license.
