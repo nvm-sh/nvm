@@ -2402,11 +2402,15 @@ nvm() {
       else
         nvm_err "wget: not found"
       fi
-      if nvm_has "git"; then
-        nvm_err "git: $(nvm_command_info git), $(command git --version)"
-      else
-        nvm_err "git: not found"
-      fi
+
+      for tool in git grep awk sed cut basename rm mkdir xargs; do
+        if nvm_has "${tool}"; then
+          nvm_err "${tool}: $(nvm_command_info ${tool}), $(command ${tool} --version | command head -n 1)"
+        else
+          nvm_err "${tool}: not found"
+        fi
+      done
+
       local NVM_DEBUG_OUTPUT
       for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
       do
