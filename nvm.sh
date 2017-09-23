@@ -53,13 +53,13 @@ nvm_command_info() {
   local COMMAND
   local INFO
   COMMAND="${1}"
-  if type "${COMMAND}" | command grep -q hashed; then
+  if type "${COMMAND}" | nvm_grep -q hashed; then
     INFO="$(type "${COMMAND}" | command sed -E 's/\(|)//g' | command awk '{print $4}')"
-  elif type "${COMMAND}" | command grep -q aliased; then
+  elif type "${COMMAND}" | nvm_grep -q aliased; then
     INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | command sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
-  elif type "${COMMAND}" | command grep -q "^${COMMAND} is an alias for"; then
+  elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is an alias for"; then
     INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4=$5="" ;print }' | command sed 's/^\ *//g'))"
-  elif type "${COMMAND}" | command grep -q "^${COMMAND} is \/"; then
+  elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is \/"; then
     INFO="$(type "${COMMAND}" | command awk '{print $3}')"
   else
     INFO="$(type "${COMMAND}")"
@@ -607,8 +607,8 @@ nvm_change_path() {
     nvm_echo "${3-}${2-}"
   # if the initial path doesn’t contain an nvm path, prepend the supplementary
   # path
-  elif ! echo "${1-}" | grep -q "${NVM_DIR}/[^/]*${2-}" && \
-       ! echo "${1-}" | grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
+  elif ! echo "${1-}" | nvm_grep -q "${NVM_DIR}/[^/]*${2-}" && \
+       ! echo "${1-}" | nvm_grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
     nvm_echo "${3-}${2-}:${1-}"
   # use sed to replace the existing nvm path with the supplementary path. This
   # preserves the order of the path.
