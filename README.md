@@ -38,6 +38,9 @@
 
 ### Install script
 
+*Note: the instructions below will not work if you changed your shell from bash
+to [fish](https://fishshell.com/)  or some other shell which does not read the `.bashrc` file. If this is the case, please run `chsh -s /bin/bash`, log out and then log in again.*
+
 To install or update nvm, you can use the [install script][2] using cURL:
 
 ```sh
