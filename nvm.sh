@@ -206,12 +206,21 @@ nvm_install_latest_npm() {
     nvm_echo '* `npm` v5 and higher do not work on `node` versions below v4.0.0'
     $NVM_NPM_CMD install -g npm@4
   elif [ $NVM_IS_0_9 -eq 0 ] && [ $NVM_IS_0_6 -eq 0 ]; then
-    if nvm_version_greater 4.5.0 "${NODE_VERSION}" || (\
+    local NVM_IS_4_4_OR_BELOW
+    NVM_IS_4_4_OR_BELOW=0
+    if nvm_version_greater 4.5.0 "${NODE_VERSION}"; then
+      NVM_IS_4_4_OR_BELOW=1
+    fi
+
+    if $NVM_IS_4_4_OR_BELOW -eq 1 || (\
       nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 5.0.0 \
       && nvm_version_greater 5.10.0 "${NODE_VERSION}"\
     ); then
       nvm_echo '* `npm` `v5.3.x` is the last version that works on `node` 4.x versions below v4.4, or 5.x versions below v5.10, due to `Buffer.alloc`'
       $NVM_NPM_CMD install -g npm@5.3
+    elif $NVM_IS_4_4_OR_BELOW -eq 0 && nvm_version_greater 4.7.0 "${NODE_VERSION}"; then
+      nvm_echo '* `npm` `v5.4.x` is the last version that works on `node` `v4.5` and `v4.6`'
+      $NVM_NPM_CMD install -g npm@5.4
     else
       nvm_echo '* Installing latest `npm`; if this does not work on your node version, please report a bug!'
       $NVM_NPM_CMD install -g npm
