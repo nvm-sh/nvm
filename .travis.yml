@@ -1,6 +1,6 @@
 language: generic
 dist: trusty
-sudo: required
+sudo: false
 addons:
   apt:
     packages:
