@@ -16,5 +16,15 @@ For pull requests:
 
 Even if you don't have all of these items covered, please still feel free to submit a PR/issue! Someone else may be inspired and volunteer to complete it for you.
 
-Thanks again!
+## Running the test suite
 
+The most important part of any contribution is running the test suite to make sure the thing you did actually worked!
+
+```
+npm install
+make test
+```
+
+You might be asked for your password for some tests that require a few extra privilages. If you don't want to enter it, feel free not to, but the related tests will fail.
+
+Thanks again!

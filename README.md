@@ -346,7 +346,7 @@ Now using node v5.9.1 (npm v3.7.3)
 
 ### .node-version
 
-For a little compatability with other node version managers, nvm will also sniff for `.node-version` files. They're the same as `.rmvrc`, they just share a common name.
+For a little compatability with other node version managers, nvm will also sniff for `.node-version` files. They're the same as `.nmvrc`, they just share a common name.
 
 $ echo "5.9" > .node-version
 
