@@ -19,6 +19,7 @@
   - [System version of node](#system-version-of-node)
   - [Listing versions](#listing-versions)
   - [.nvmrc](#nvmrc)
+  - [.node-version](#node-version)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [zsh](#zsh)
       - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
@@ -101,7 +102,7 @@ If you're running a system without prepackaged binary available, which means you
  - [bass](https://github.com/edc/bass) allows you to use utilities written for Bash in fish shell
  - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
  - [plugin-nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
- - [fnm](https://github.com/fisherman/fnm) - [fisherman](https://github.com/fisherman/fisherman)-based version manager for fish 
+ - [fnm](https://github.com/fisherman/fnm) - [fisherman](https://github.com/fisherman/fisherman)-based version manager for fish
 
 **Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
  - [[#900] [Bug] nodejs on FreeBSD may need to be patched ](https://github.com/creationix/nvm/issues/900)
@@ -342,6 +343,15 @@ $ nvm use
 Found '/path/to/project/.nvmrc' with version <5.9>
 Now using node v5.9.1 (npm v3.7.3)
 ```
+
+### .node-version
+
+For a little compatability with other node version managers, nvm will also sniff for `.node-version` files. They're the same as `.rmvrc`, they just share a common name.
+
+$ echo "5.9" > .node-version
+
+They'll be loaded after `.nvmrc`, and can contain the same values as `.nvmrc`.
+
 
 ### Deeper Shell Integration
 

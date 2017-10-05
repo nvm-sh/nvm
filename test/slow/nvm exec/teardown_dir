@@ -7,8 +7,11 @@ nvm uninstall v1.0.0
 nvm uninstall --lts
 
 rm .nvmrc
+rm .node-version
 
 if [ -f ".nvmrc.bak" ]; then
   mv .nvmrc.bak .nvmrc
 fi
-
+if [ -f ".node-version.bak" ]; then
+  mv .node-version.bak .node-version
+fi

@@ -281,27 +281,30 @@ nvm_find_up() {
   nvm_echo "${path}"
 }
 
-
 nvm_find_nvmrc() {
   local dir
   dir="$(nvm_find_up '.nvmrc')"
   if [ -e "${dir}/.nvmrc" ]; then
     nvm_echo "${dir}/.nvmrc"
+  else
+    dir="$(nvm_find_up '.node-version')"
+    if [ -e "${dir}/.node-version" ]; then
+      nvm_echo "${dir}/.node-version"
+    fi
   fi
 }
 
-# Obtain nvm version from rc file
 nvm_rc_version() {
   export NVM_RC_VERSION=''
   local NVMRC_PATH
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ ! -e "${NVMRC_PATH}" ]; then
-    nvm_err "No .nvmrc file found"
+    nvm_err "No .nvmrc or .node-version file found"
     return 1
   fi
   read -r NVM_RC_VERSION < "${NVMRC_PATH}" || printf ''
   if [ ! -n "${NVM_RC_VERSION}" ]; then
-    nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
+    nvm_err "Warning: empty nvm file found at \"${NVMRC_PATH}\""
     return 2
   fi
   nvm_echo "Found '${NVMRC_PATH}' with version <${NVM_RC_VERSION}>"

@@ -11,3 +11,14 @@ echo "0.10.7" > .nvmrc
 
 [ "$(nvm run --version | head -1)" = "Found '$PWD/.nvmrc' with version <0.10.7>" ] || die "\`nvm run\` failed to print out the \"found in .nvmrc\" message"
 
+echo "0.12.0" > .node-version
+
+[ "$(nvm run --version | tail -1)" = "v0.10.7" ] || die "\`nvm run\` failed to run with the .nvmrc version"
+
+[ "$(nvm run --version | head -1)" = "Found '$PWD/.nvmrc' with version <0.10.7>" ] || die "\`nvm run\` failed to print out the \"found in .nvmrc\" message"
+
+rm .nvmrc
+
+[ "$(nvm run --version | tail -1)" = "v0.12.0" ] || die "\`nvm run\` failed to run with the .node-version version"
+
+[ "$(nvm run --version | head -1)" = "Found '$PWD/.node-version' with version <0.12.0>" ] || die "\`nvm run\` failed to print out the \"found in .node-version\" message"
