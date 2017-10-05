@@ -464,6 +464,11 @@ nvm_find_nvmrc() {
   dir="$(nvm_find_up '.nvmrc')"
   if [ -e "${dir}/.nvmrc" ]; then
     nvm_echo "${dir}/.nvmrc"
+  else
+    dir="$(nvm_find_up '.node-version')"
+    if [ -e "${dir}/.node-version" ]; then
+      nvm_echo "${dir}/.node-version"
+    fi
   fi
 }
 
@@ -474,14 +479,14 @@ nvm_rc_version() {
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ ! -e "${NVMRC_PATH}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-      nvm_err "No .nvmrc file found"
+      nvm_err "No .nvmrc or .node-version file found"
     fi
     return 1
   fi
   NVM_RC_VERSION="$(command head -n 1 "${NVMRC_PATH}" | command tr -d '\r')" || command printf ''
   if [ -z "${NVM_RC_VERSION}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-      nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
+      nvm_err "Warning: empty nvm file found at \"${NVMRC_PATH}\""
     fi
     return 2
   fi

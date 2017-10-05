@@ -8,3 +8,7 @@ nvm install --lts
 if [ -f ".nvmrc" ]; then
   mv .nvmrc .nvmrc.bak
 fi
+
+if [ -f ".node-version" ]; then
+  mv .node-version .node-version.bak
+fi

@@ -40,6 +40,7 @@
   - [Set default node version](#set-default-node-version)
   - [Use a mirror of node binaries](#use-a-mirror-of-node-binaries)
   - [.nvmrc](#nvmrc)
+  - [.node-version](#node-version)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
       - [bash](#bash)
@@ -564,6 +565,14 @@ Now using node v5.9.1 (npm v3.7.3)
 `nvm use` et. al. will traverse directory structure upwards from the current directory looking for the `.nvmrc` file. In other words, running `nvm use` et. al. in any subdirectory of a directory with an `.nvmrc` will result in that `.nvmrc` being utilized.
 
 The contents of a `.nvmrc` file **must** be the `<version>` (as described by `nvm --help`) followed by a newline. No trailing spaces are allowed, and the trailing newline is required.
+
+### .node-version
+
+For a little compatability with other node version managers, nvm will also sniff for `.node-version` files. They're the same as `.nmvrc`, they just share a common name.
+
+$ echo "5.9" > .node-version
+
+They'll be loaded after `.nvmrc`, and can contain the same values as `.nvmrc`.
 
 ### Deeper Shell Integration
 
