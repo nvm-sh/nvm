@@ -333,7 +333,7 @@ If you want to install a new version of io.js and migrate npm packages from a pr
 nvm install iojs --reinstall-packages-from=iojs
 ```
 
-The same guidelines mentioned for migrating npm packages in Node.js are applicable to io.js.
+The same guidelines mentioned for migrating npm packages in node are applicable to io.js.
 
 ### System version of node
 
@@ -704,7 +704,7 @@ For more information and documentation about docker, please refer to its officia
 
 ## Problems
 
-  - If you try to install a node version and the installation fails, be sure to delete the node downloads from src (`~/.nvm/src/`) or you might get an error when trying to reinstall them again or you might get an error like the following:
+  - If you try to install a node version and the installation fails, be sure to run `nvm cache clear` to delete cached node downloads, or you might get an error like the following:
 
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
