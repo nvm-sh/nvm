@@ -346,11 +346,13 @@ Now using node v5.9.1 (npm v3.7.3)
 
 ### .node-version
 
-For a little compatability with other node version managers, nvm will also sniff for `.node-version` files. They're the same as `.nmvrc`, they just share a common name.
+For a little compatability with other node version managers, nvm will also sniff for `.node-version` files, defaulting to `.nvmrc` if both are found in the same folder.
 
+```
 $ echo "5.9" > .node-version
+```
 
-They'll be loaded after `.nvmrc`, and can contain the same values as `.nvmrc`.
+Unlike `.nvmrc`, `.node-version` cannot contain a "versionish" (an alias, like `node`, `iojs`, or a custom alias you’ve defined). `.node-version` can only have versions in the format of v1, v1.2, or v1.2.3 (the `v` is optional).
 
 
 ### Deeper Shell Integration

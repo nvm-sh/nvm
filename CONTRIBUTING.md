@@ -25,6 +25,6 @@ npm install
 make test
 ```
 
-You might be asked for your password for some tests that require a few extra privilages. If you don't want to enter it, feel free not to, but the related tests will fail.
+You might be asked for your password for some tests that require a few extra privileges. If you don't want to enter it, feel free not to, but the related tests will fail.
 
 Thanks again!
