@@ -127,8 +127,8 @@ If you have `git` installed (requires git v1.7+):
 
 1. clone this repo in the root of your user profile
   - `cd ~/` from anywhere then `git clone https://github.com/creationix/nvm.git .nvm`
-1. check out the latest version with `git checkout v0.33.5`
-1. activate nvm by sourcing it from your shell
+2. `cd ~/.nvm` and check out the latest version with `git checkout v0.33.5`
+3. activate nvm by sourcing it from your shell: `. nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
 (you may have to add to more than one of the above files)
