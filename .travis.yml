@@ -4,7 +4,6 @@ sudo: required
 addons:
   apt:
     packages:
-      - ghc
       - zsh
     #  - ksh
     #  - gcc-4.8
@@ -13,7 +12,6 @@ addons:
 cache:
   directories:
     - $HOME/.npm
-    - $HOME/.ghc
     - $TRAVIS_BUILD_DIR/.cache
     - $TRAVIS_BUILD_DIR/node_modules
 before_install:
