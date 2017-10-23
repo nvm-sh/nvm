@@ -519,7 +519,7 @@ $ docker run -it nvm-dev -h nvm-dev
 nvm@nvm-dev:~/.nvm$
 ```
 
-Please note that it'll take about 15 minutes to build the image and the image size would be about 1.2GB, so it's not sutable for production usage.
+Please note that it'll take about 15 minutes to build the image and the image size would be about 1.2GB, so it's not suitable for production usage.
 
 For more information and documentation about docker, please refer to its official website:
  - https://www.docker.com/
@@ -527,7 +527,7 @@ For more information and documentation about docker, please refer to its officia
 
 ## Problems
 
- - If you try to install a node version and the installation fails, be sure to delete the node downloads from src (~/.nvm/src/) or you might get an error when trying to reinstall them again or you might get an error like the following:
+ - If you try to install a node version and the installation fails, be sure to delete the node downloads from src (`~/.nvm/src/`) or you might get an error when trying to reinstall them again or you might get an error like the following:
 
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
@@ -539,7 +539,7 @@ For more information and documentation about docker, please refer to its officia
 nvm install -s 0.8.6
 ```
 
- - If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node PATH is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
+ - If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node `PATH` is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
 
 ## Mac OS "troubleshooting"
 
