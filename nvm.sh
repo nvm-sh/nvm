@@ -2363,9 +2363,9 @@ nvm() {
           local DIR
           DIR="$(nvm_cache_dir)"
           if command rm -rf "${DIR}" && command mkdir -p "${DIR}"; then
-            nvm_echo 'Cache cleared.'
+            nvm_echo 'nvm cache cleared.'
           else
-            nvm_err "Unable to clear cache: ${DIR}"
+            nvm_err "Unable to clear nvm cache: ${DIR}"
             return 1
           fi
         ;;
@@ -3346,7 +3346,7 @@ nvm() {
     ;;
     "clear-cache" )
       command rm -f "$NVM_DIR/v*" "$(nvm_version_dir)" 2>/dev/null
-      nvm_echo 'Cache cleared.'
+      nvm_echo 'nvm cache cleared.'
     ;;
     "version" )
       nvm_version "${1}"
