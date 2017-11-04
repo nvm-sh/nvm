@@ -2397,6 +2397,8 @@ nvm() {
         nvm_err "\$TERM_PROGRAM: $TERM_PROGRAM"
       fi
       nvm_err "\$SHELL: $SHELL"
+      # shellcheck disable=SC2169
+      nvm_err "\$SHLVL: ${SHLVL-}"
       nvm_err "\$HOME: $HOME"
       nvm_err "\$NVM_DIR: '$(nvm_sanitize_path "$NVM_DIR")'"
       nvm_err "\$PREFIX: '$(nvm_sanitize_path "$PREFIX")'"
