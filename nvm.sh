@@ -2446,13 +2446,35 @@ nvm() {
         nvm_err "wget: not found"
       fi
 
-      for tool in git grep awk sed cut basename rm mkdir xargs; do
+      local TEST_TOOLS ADD_TEST_TOOLS
+      TEST_TOOLS="git grep awk"
+      ADD_TEST_TOOLS="sed cut basename rm mkdir xargs"
+      if [ "darwin" != "$(nvm_get_os)" ] && [ "freebsd" != "$(nvm_get_os)" ]; then
+        TEST_TOOLS="${TEST_TOOLS} ${ADD_TEST_TOOLS}"
+      else
+        for tool in ${ADD_TEST_TOOLS} ; do
+          if nvm_has "${tool}"; then
+            nvm_err "${tool}: $(nvm_command_info "${tool}")"
+          else
+            nvm_err "${tool}: not found"
+          fi
+        done
+      fi
+      for tool in ${TEST_TOOLS} ; do
+        local NVM_TOOL_VERSION
         if nvm_has "${tool}"; then
-          nvm_err "${tool}: $(nvm_command_info ${tool}), $(command ${tool} --version | command head -n 1)"
+          if command ls -l "$(nvm_command_info "${tool}" | command awk '{print $1}')" | command grep -q busybox; then
+            NVM_TOOL_VERSION="$(command "${tool}" --help 2>&1 | command head -n 1)"
+          else
+            NVM_TOOL_VERSION="$(command "${tool}" --version 2>&1 | command head -n 1)"
+          fi
+          nvm_err "${tool}: $(nvm_command_info "${tool}"), ${NVM_TOOL_VERSION}"
         else
           nvm_err "${tool}: not found"
         fi
+        unset NVM_TOOL_VERSION
       done
+      unset TEST_TOOLS ADD_TEST_TOOLS
 
       local NVM_DEBUG_OUTPUT
       for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'
