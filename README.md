@@ -325,7 +325,7 @@ NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 ### .nvmrc
 
 You can create a `.nvmrc` file containing version number in the project root directory (or any parent directory).
-`nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied.
+`nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied on the command line.
 
 For example, to make nvm default to the latest 5.9 release for the current directory:
 
