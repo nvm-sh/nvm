@@ -514,6 +514,7 @@ nvm_remote_versions() {
   local NVM_LS_REMOTE_IOJS_EXIT_CODE
   NVM_LS_REMOTE_IOJS_EXIT_CODE=0
   local NVM_LS_REMOTE_IOJS_OUTPUT
+  NVM_LS_REMOTE_IOJS_OUTPUT=
   if [ -z "${NVM_LTS-}" ] && ( \
     [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_IOJS_PREFIX}" ] \
   ); then
