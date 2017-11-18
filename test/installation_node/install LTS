@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -ex
+set -eux
 
 die () { echo "$@" ; exit 1; }
 
