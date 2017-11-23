@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -ex
+set -eux
 
 cleanup() {
   unset -f nvm_has_system_node nvm_print_npm_version
