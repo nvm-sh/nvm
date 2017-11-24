@@ -324,15 +324,17 @@ NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 
 ### .nvmrc
 
-You can create a `.nvmrc` file containing version number in the project root directory (or any parent directory).
-`nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will all respect an `.nvmrc` file when a version is not supplied on the command line.
+You can create a `.nvmrc` file containing a node version number (or any other string that `nvm` understands; see `nvm --help` for details) in the project root directory (or any parent directory).
+Afterwards, `nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will use the version specified in the `.nvmrc` file if no version is supplied on the command line.
 
-For example, to make nvm default to the latest 5.9 release for the current directory:
+For example, to make nvm default to the latest 5.9 release, the latest LTS version, or the latest node version for the current directory:
 
 ```sh
 $ echo "5.9" > .nvmrc
 
 $ echo "lts/*" > .nvmrc # to default to the latest LTS version
+
+$ echo "node" > .nvmrc # to default to the latest version
 ```
 
 Then when you run nvm:
@@ -342,6 +344,10 @@ $ nvm use
 Found '/path/to/project/.nvmrc' with version <5.9>
 Now using node v5.9.1 (npm v3.7.3)
 ```
+
+`nvm use` et. al. will traverse directory structure upwards from the current directory looking for the `.nvmrc` file. In other words, running `nvm use` et. al. in any subdirectory of a directory with an `.nvmrc` will result in that `.nvmrc` being utilized.
+
+The contents of a `.nvmrc` file **must** be the `<version>` (as described by `nvm --help`) followed by a newline. No trailing spaces are allowed, and the trailing newline is required.
 
 ### Deeper Shell Integration
 
