@@ -140,22 +140,22 @@ install_nvm_from_git() {
 # Automatically install Node.js
 #
 nvm_install_node() {
-  local NODE_VERSION
-  NODE_VERSION="$(nvm_node_version)"
+  local NODE_VERSION_LOCAL
+  NODE_VERSION_LOCAL="$(nvm_node_version)"
 
-  if [ -z "$NODE_VERSION" ]; then
+  if [ -z "$NODE_VERSION_LOCAL" ]; then
     return 0
   fi
 
-  echo "=> Installing Node.js version $NODE_VERSION"
-  nvm install "$NODE_VERSION"
+  echo "=> Installing Node.js version $NODE_VERSION_LOCAL"
+  nvm install "$NODE_VERSION_LOCAL"
   local CURRENT_NVM_NODE
 
   CURRENT_NVM_NODE="$(nvm_version current)"
-  if [ "$(nvm_version "$NODE_VERSION")" == "$CURRENT_NVM_NODE" ]; then
-    echo "=> Node.js version $NODE_VERSION has been successfully installed"
+  if [ "$(nvm_version "$NODE_VERSION_LOCAL")" == "$CURRENT_NVM_NODE" ]; then
+    echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
   else
-    echo >&2 "Failed to install Node.js $NODE_VERSION"
+    echo >&2 "Failed to install Node.js $NODE_VERSION_LOCAL"
   fi
 }
 
