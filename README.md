@@ -21,7 +21,7 @@
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [zsh](#zsh)
-      - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
+    - [bash](#bash)
 - [License](#license)
 - [Running tests](#running-tests)
 - [Bash completion](#bash-completion)
@@ -351,10 +351,8 @@ If you prefer a lighter-weight solution, the recipes below have been contributed
 
 #### zsh
 
-##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
-
 Put this into your `$HOME/.zshrc` to call `nvm use` automatically whenever you enter a directory that contains an
-`.nvmrc` file with a string telling nvm which node to `use`:
+`.nvmrc` file with a string telling nvm which node to use:
 
 ```zsh
 # place this after nvm initialization!
@@ -378,6 +376,19 @@ load-nvmrc() {
 }
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
+```
+
+#### bash
+
+Put this into your `$HOME/.bashrc` to call `nvm use` automatically whenever you enter a directory that contains an
+`.nvmrc` file with a string telling nvm which node to use:
+
+```bash
+# place this after nvm initialization!
+cd() {
+  builtin cd "$1"
+  [ -f ".nvmrc" ] && [ -s ".nvmrc" ] && nvm use
+}
 ```
 
 ## License
