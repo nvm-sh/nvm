@@ -386,13 +386,8 @@ Put this into your `$HOME/.bashrc` to call `nvm use` automatically whenever you 
 ```bash
 # place this after nvm initialization!
 cd() {
-	if [ -z "$1" ]
-	then
-		builtin cd
-	else
-		builtin cd $1
-	fi
-	[ -f ".nvmrc" ] && [ -s ".nvmrc" ] && nvm use
+	builtin cd "$@"
+	[ $? -eq 0 ] && [ -f ".nvmrc" ] && [ -s ".nvmrc" ] && nvm use
 }
 ```
 
