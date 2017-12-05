@@ -2111,19 +2111,35 @@ nvm_die_on_prefix() {
     return 2
   fi
 
-  if [ -n "${PREFIX-}" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$PREFIX" >/dev/null 2>&1); then
+  # npm first looks at $PREFIX (case-sensitive)
+  # we do not bother to test the value here; if this env var is set, unset it to continue.
+  if [ -n "${PREFIX-}" ]; then
     nvm deactivate >/dev/null 2>&1
-    nvm_err "nvm is not compatible with the \"PREFIX\" environment variable: currently set to \"$PREFIX\""
+    nvm_err "nvm is not compatible with the \"PREFIX\" environment variable: currently set to \"${PREFIX}\""
     nvm_err 'Run `unset PREFIX` to unset it.'
     return 3
   fi
 
-  if [ -n "${NPM_CONFIG_PREFIX-}" ] && ! (nvm_tree_contains_path "$NVM_DIR" "$NPM_CONFIG_PREFIX" >/dev/null 2>&1); then
-    nvm deactivate >/dev/null 2>&1
-    nvm_err "nvm is not compatible with the \"NPM_CONFIG_PREFIX\" environment variable: currently set to \"$NPM_CONFIG_PREFIX\""
-    nvm_err 'Run `unset NPM_CONFIG_PREFIX` to unset it.'
-    return 4
-  elif ! nvm_has 'npm'; then
+  # npm normalizes NPM_CONFIG_-prefixed env vars
+  # https://github.com/npm/npmconf/blob/22827e4038d6eebaafeb5c13ed2b92cf97b8fb82/npmconf.js#L331-L348
+  # https://github.com/npm/npm/blob/5e426a78ca02d0044f8dd26e0c5f881217081cbd/lib/config/core.js#L343-L359
+  #
+  # here, we avoid trying to replicate "which one wins" or testing the value; if any are defined, it errors
+  # until none are left.
+  local NVM_NPM_CONFIG_PREFIX_ENV
+  NVM_NPM_CONFIG_PREFIX_ENV="$(command env | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1 | command awk -F '=' '{print $1}')"
+  if [ -n "${NVM_NPM_CONFIG_PREFIX_ENV-}" ]; then
+    local NVM_CONFIG_VALUE
+    eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_PREFIX_ENV}\""
+    if [ -n "${NVM_CONFIG_VALUE-}" ]; then
+      nvm deactivate >/dev/null 2>&1
+      nvm_err "nvm is not compatible with the \"${NVM_NPM_CONFIG_PREFIX_ENV}\" environment variable: currently set to \"${NVM_CONFIG_VALUE}\""
+      nvm_err "Run \`unset ${NVM_NPM_CONFIG_PREFIX_ENV}\` to unset it."
+      return 4
+    fi
+  fi
+
+  if ! nvm_has 'npm'; then
     return
   fi
 
