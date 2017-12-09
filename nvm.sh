@@ -206,7 +206,7 @@ nvm_install_latest_npm() {
       NVM_IS_4_4_OR_BELOW=1
     fi
 
-    if $NVM_IS_4_4_OR_BELOW -eq 1 || (\
+    if [ $NVM_IS_4_4_OR_BELOW -eq 1 ] || (\
       nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 5.0.0 \
       && nvm_version_greater 5.10.0 "${NODE_VERSION}"\
     ); then
