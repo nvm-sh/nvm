@@ -136,6 +136,9 @@ nvm_print_npm_version() {
   if nvm_has "npm"; then
     command printf " (npm v$(npm --version 2>/dev/null))"
   fi
+  if nvm_has "yarn"; then
+    command printf " (yarn v$(yarn --version 2>/dev/null))"
+  fi
 }
 
 nvm_install_latest_npm() {
