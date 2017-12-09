@@ -53,7 +53,7 @@ nvm_command_info() {
     INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | command sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
   elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is an alias for"; then
     INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4=$5="" ;print }' | command sed 's/^\ *//g'))"
-  elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is \/"; then
+  elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is \\/"; then
     INFO="$(type "${COMMAND}" | command awk '{print $3}')"
   else
     INFO="$(type "${COMMAND}")"
@@ -84,7 +84,7 @@ nvm_get_latest() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
+    NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
     NVM_LATEST_URL="$(wget http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
@@ -645,16 +645,16 @@ nvm_print_formatted_alias() {
   DEST_FORMAT='%s'
   VERSION_FORMAT='%s'
   local NEWLINE
-  NEWLINE="\n"
+  NEWLINE='\n'
   if [ "_${DEFAULT}" = '_true' ]; then
-    NEWLINE=" (default)\n"
+    NEWLINE=' (default)\n'
   fi
   local ARROW
   ARROW='->'
   if [ -z "${NVM_NO_COLORS}" ] && nvm_has_colors; then
     ARROW='\033[0;90m->\033[0m'
     if [ "_${DEFAULT}" = '_true' ]; then
-      NEWLINE=" \033[0;37m(default)\033[0m\n"
+      NEWLINE=' \033[0;37m(default)\033[0m\n'
     fi
     if [ "_${VERSION}" = "_${NVM_CURRENT-}" ]; then
       ALIAS_FORMAT='\033[0;32m%s\033[0m'
@@ -832,7 +832,7 @@ nvm_resolve_alias() {
       break
     fi
 
-    SEEN_ALIASES="${SEEN_ALIASES}\n${ALIAS_TEMP}"
+    SEEN_ALIASES="${SEEN_ALIASES}\\n${ALIAS_TEMP}"
     ALIAS="${ALIAS_TEMP}"
   done
 
@@ -1021,25 +1021,23 @@ nvm_ls() {
       PATTERN='v'
       SEARCH_PATTERN='.*'
     else
-      SEARCH_PATTERN="$(echo "${PATTERN}" | command sed "s#\.#\\\.#g;")"
+      SEARCH_PATTERN="$(echo "${PATTERN}" | command sed 's#\.#\\\.#g;')"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
         | command sed -e "
             s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
             s#^${NVM_DIR}/##;
-            \#^[^v]# d;
-            \#^versions\$# d;
+            \\#^[^v]# d;
+            \\#^versions\$# d;
             s#^versions/##;
             s#^v#${NVM_NODE_PREFIX}/v#;
-            \#${SEARCH_PATTERN}# !d;
+            \\#${SEARCH_PATTERN}# !d;
           " \
-          -e "s#^\([^/]\{1,\}\)/\(.*\)\$#\2.\1#;" \
+          -e 's#^\([^/]\{1,\}\)/\(.*\)$#\2.\1#;' \
         | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
-        | command sed "
-            s#\(.*\)\.\([^\.]\{1,\}\)\$#\2-\1#;
-            s#^${NVM_NODE_PREFIX}-##;
-          " \
+        | command sed -e 's#\(.*\)\.\([^\.]\{1,\}\)$#\2-\1#;' \
+                      -e "s#^${NVM_NODE_PREFIX}-##;" \
       )"
     fi
 
@@ -1405,7 +1403,7 @@ nvm_print_versions() {
           LTS="${LTS##Latest }"
           LTS_LENGTH="${#LTS}"
           if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-            LTS_FORMAT="  \033[1;32m%${LTS_LENGTH}s\033[0m"
+            LTS_FORMAT="  \\033[1;32m%${LTS_LENGTH}s\\033[0m"
           else
             LTS_FORMAT="  %${LTS_LENGTH}s"
           fi
@@ -1413,15 +1411,15 @@ nvm_print_versions() {
         *)
           LTS_LENGTH="${#LTS}"
           if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-            LTS_FORMAT="  \033[0;37m%${LTS_LENGTH}s\033[0m"
+            LTS_FORMAT="  \\033[0;37m%${LTS_LENGTH}s\\033[0m"
           else
             LTS_FORMAT="  %${LTS_LENGTH}s"
           fi
         ;;
       esac
-      command printf -- "${FORMAT}${LTS_FORMAT}\n" "$VERSION" " $LTS"
+      command printf -- "${FORMAT}${LTS_FORMAT}\\n" "$VERSION" " $LTS"
     else
-      command printf -- "${FORMAT}\n" "$VERSION"
+      command printf -- "${FORMAT}\\n" "$VERSION"
     fi
   done
 }
