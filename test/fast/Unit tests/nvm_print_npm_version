@@ -21,8 +21,16 @@ npm() {
     echo "error"
   fi
 }
+yarn() {
+  if [ "_$@" = "_--version" ]; then
+    echo "1.2.3"
+  else
+    echo "error"
+  fi
+}
+
 OUTPUT="$(nvm_print_npm_version)"
-EXPECTED_OUTPUT=" (npm v1.2.3)"
+EXPECTED_OUTPUT=" (npm v1.2.3) (yarn v1.2.3)"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_npm_version did not provided '$EXPECTED_OUTPUT', got '$OUTPUT'"
 
 cleanup
