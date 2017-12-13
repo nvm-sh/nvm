@@ -10,6 +10,7 @@ __nvm_generate_completion()
 {
   declare current_word
   current_word="${COMP_WORDS[COMP_CWORD]}"
+  # shellcheck disable=SC2207
   COMPREPLY=($(compgen -W "$1" -- "$current_word"))
   return 0
 }

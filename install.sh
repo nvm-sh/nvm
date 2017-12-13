@@ -85,7 +85,7 @@ install_nvm_from_git() {
 
   if [ -d "$INSTALL_DIR/.git" ]; then
     echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
-    command printf "\r=> "
+    command printf '\r=> '
     command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin tag "$(nvm_latest_version)" --depth=1 2> /dev/null || {
       echo >&2 "Failed to update nvm, run 'git fetch' in $INSTALL_DIR yourself."
       exit 1
@@ -93,7 +93,7 @@ install_nvm_from_git() {
   else
     # Cloning to $INSTALL_DIR
     echo "=> Downloading nvm from git to '$INSTALL_DIR'"
-    command printf "\r=> "
+    command printf '\r=> '
     mkdir -p "${INSTALL_DIR}"
     if [ "$(ls -A "${INSTALL_DIR}")" ]; then
       command git init "${INSTALL_DIR}" || {
@@ -325,8 +325,9 @@ nvm_do_install() {
   local PROFILE_INSTALL_DIR
   PROFILE_INSTALL_DIR="$(nvm_install_dir| sed "s:^$HOME:\$HOME:")"
 
-  SOURCE_STR="\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\n"
-  COMPLETION_STR="[ -s \"\$NVM_DIR/bash_completion\" ] && \\. \"\$NVM_DIR/bash_completion\"  # This loads nvm bash_completion\n"
+  SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\\n"
+  # shellcheck disable=SC2016
+  COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion\n'
   BASH_OR_ZSH=false
 
   if [ -z "${NVM_PROFILE-}" ] ; then
