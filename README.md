@@ -329,6 +329,13 @@ Afterwards, `nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` wil
 
 For example, to make nvm default to the latest 5.9 release, the latest LTS version, or the latest node version for the current directory:
 
+.nvmrc file:
+```
+5.9
+```
+
+Then:
+
 ```sh
 $ echo "5.9" > .nvmrc
 
