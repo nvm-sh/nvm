@@ -386,13 +386,17 @@ Put this into your `$HOME/.bashrc` to call `nvm use` automatically whenever you 
 ```bash
 # place this after nvm initialization!
 cd() {
-	if [ -z "$1" ]
+  if [ -z "$1" ]
 	then
 		builtin cd
 	else
 		builtin cd $1
 	fi
+  CD_EXIT_CODE=$?
+
 	[ -f ".nvmrc" ] && [ -s ".nvmrc" ] && nvm use
+
+  exit $CD_EXIT_CODE
 }
 ```
 
