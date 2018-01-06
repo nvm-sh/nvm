@@ -294,6 +294,10 @@ nvm_check_global_modules() {
 }
 
 nvm_do_install() {
+  if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
+    echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
+    exit 1
+  fi
   if [ -z "${METHOD}" ]; then
     # Autodetect install method
     if nvm_has git; then
@@ -323,7 +327,7 @@ nvm_do_install() {
   local NVM_PROFILE
   NVM_PROFILE="$(nvm_detect_profile)"
   local PROFILE_INSTALL_DIR
-  PROFILE_INSTALL_DIR="$(nvm_install_dir| sed "s:^$HOME:\$HOME:")"
+  PROFILE_INSTALL_DIR="$(nvm_install_dir | sed "s:^$HOME:\$HOME:")"
 
   SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\\n"
   # shellcheck disable=SC2016
