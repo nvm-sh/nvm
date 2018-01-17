@@ -2348,7 +2348,7 @@ nvm() {
       nvm_echo '  nvm install-latest-npm                    Attempt to upgrade to the latest working `npm` on the current node version'
       nvm_echo '  nvm reinstall-packages <version>          Reinstall global `npm` packages contained in <version> to current version'
       nvm_echo '  nvm unload                                Unload `nvm` from shell'
-      nvm_echo '  nvm which [<version>]                     Display path to installed node version. Uses .nvmrc if available'
+      nvm_echo '  nvm which [current | <version>]           Display path to installed node version. Uses .nvmrc if available'
       nvm_echo '  nvm cache dir                             Display path to the cache directory for nvm'
       nvm_echo '  nvm cache clear                           Empty cache directory for nvm'
       nvm_echo
