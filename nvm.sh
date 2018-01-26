@@ -476,12 +476,12 @@ nvm_remote_versions() {
 
   case "${PATTERN}" in
     "${NVM_IOJS_PREFIX}" | "io.js")
-       NVM_FLAVOR="${NVM_IOJS_PREFIX}"
-       unset PATTERN
+      NVM_FLAVOR="${NVM_IOJS_PREFIX}"
+      unset PATTERN
     ;;
     "${NVM_NODE_PREFIX}")
-       NVM_FLAVOR="${NVM_NODE_PREFIX}"
-       unset PATTERN
+      NVM_FLAVOR="${NVM_NODE_PREFIX}"
+      unset PATTERN
     ;;
   esac
 
@@ -1584,9 +1584,9 @@ nvm_get_arch() {
       HOST_ARCH=$(isainfo -n)
     fi
   elif [ "_$NVM_OS" = "_aix" ]; then
-     HOST_ARCH=ppc64
+    HOST_ARCH=ppc64
   else
-     HOST_ARCH="$(command uname -m)"
+    HOST_ARCH="$(command uname -m)"
   fi
 
   local NVM_ARCH
@@ -1646,7 +1646,7 @@ nvm_ensure_default_set() {
 }
 
 nvm_is_merged_node_version() {
-   nvm_version_greater_than_or_equal_to "$1" v4.0.0
+  nvm_version_greater_than_or_equal_to "$1" v4.0.0
 }
 
 nvm_get_mirror() {
@@ -1761,7 +1761,7 @@ nvm_get_download_slug() {
   NVM_ARCH="$(nvm_get_arch)"
   if ! nvm_is_merged_node_version "${VERSION}"; then
     if [ "${NVM_ARCH}" = 'armv6l' ] || [ "${NVM_ARCH}" = 'armv7l' ]; then
-       NVM_ARCH="arm-pi"
+      NVM_ARCH="arm-pi"
     fi
   fi
 
@@ -2664,9 +2664,9 @@ nvm() {
           nvm_err "Currently, there is no binary for $NVM_OS"
         elif [ "_$NVM_OS" = "_sunos" ]; then
           # Not all node/io.js versions have a Solaris binary
-            if ! nvm_has_solaris_binary "$VERSION"; then
-              nobinary=1
-              nvm_err "Currently, there is no binary of version $VERSION for $NVM_OS"
+          if ! nvm_has_solaris_binary "$VERSION"; then
+            nobinary=1
+            nvm_err "Currently, there is no binary of version $VERSION for $NVM_OS"
           fi
         fi
 
@@ -3510,7 +3510,7 @@ nvm_auto() {
       nvm install >/dev/null
     fi
   elif [ "_$NVM_MODE" = '_use' ]; then
-   VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+    VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
     if [ -n "$VERSION" ]; then
       nvm use --silent "$VERSION" >/dev/null
     elif nvm_rc_version >/dev/null 2>&1; then
