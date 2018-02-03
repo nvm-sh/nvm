@@ -827,7 +827,7 @@ nvm_resolve_alias() {
       break
     fi
 
-    if command printf "${SEEN_ALIASES}" | nvm_grep -e "^${ALIAS_TEMP}$" > /dev/null; then
+    if command printf "${SEEN_ALIASES}" | nvm_grep -q -e "^${ALIAS_TEMP}$" ; then
       ALIAS="∞"
       break
     fi
@@ -972,7 +972,7 @@ nvm_ls() {
     local ZSH_HAS_SHWORDSPLIT_UNSET
     ZSH_HAS_SHWORDSPLIT_UNSET=1
     if nvm_has "setopt"; then
-      ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
+      ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
       setopt shwordsplit
     fi
 
@@ -1136,7 +1136,7 @@ nvm_ls_remote_index_tab() {
 
   ZSH_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
-    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
+    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
     setopt shwordsplit
   fi
   local VERSION_LIST
@@ -1472,7 +1472,7 @@ nvm_print_implicit_alias() {
 
       ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
         setopt shwordsplit
       fi
 
@@ -1507,7 +1507,7 @@ nvm_print_implicit_alias() {
 
       ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
         setopt shwordsplit
       fi
 
@@ -1526,7 +1526,7 @@ nvm_print_implicit_alias() {
 
   ZSH_HAS_SHWORDSPLIT_UNSET=1
   if nvm_has "setopt"; then
-    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
+    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
     setopt shwordsplit
   fi
   for MINOR in $LAST_TWO; do
@@ -2237,7 +2237,7 @@ nvm_check_file_permissions() {
   local ZSH_HAS_NONOMATCH_UNSET
   ZSH_HAS_NONOMATCH_UNSET=1
   if nvm_has "setopt"; then
-    ZSH_HAS_NONOMATCH_UNSET="$(set +e ; setopt | nvm_grep nonomatch > /dev/null ; nvm_echo $?)"
+    ZSH_HAS_NONOMATCH_UNSET="$(set +e ; setopt | nvm_grep -q nonomatch ; nvm_echo $?)"
     setopt nonomatch
   fi
   for FILE in $1/* $1/.[!.]* $1/..?* ; do
@@ -2385,7 +2385,7 @@ nvm() {
       local ZSH_HAS_SHWORDSPLIT_UNSET
       ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
         setopt shwordsplit
       fi
       nvm_err "nvm --version: v$(nvm --version)"
@@ -3011,7 +3011,7 @@ nvm() {
       local ZSH_HAS_SHWORDSPLIT_UNSET
       ZSH_HAS_SHWORDSPLIT_UNSET=1
       if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep shwordsplit > /dev/null ; nvm_echo $?)"
+        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
         setopt shwordsplit
       fi
       local LTS_ARG
