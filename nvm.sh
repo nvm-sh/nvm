@@ -2077,11 +2077,7 @@ nvm_npm_global_modules() {
   local NPMLIST
   local VERSION
   VERSION="$1"
-  if [ "_$VERSION" = "_system" ]; then
-    NPMLIST=$(nvm use system > /dev/null && npm list -g --depth=0 2> /dev/null | command sed 1,1d)
-  else
-    NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | command sed 1,1d)
-  fi
+  NPMLIST=$(nvm use "$VERSION" > /dev/null && npm list -g --depth=0 2> /dev/null | command sed 1,1d)
 
   local INSTALLS
   INSTALLS=$(nvm_echo "$NPMLIST" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
