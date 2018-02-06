@@ -2397,6 +2397,7 @@ nvm() {
       nvm_err "\$SHLVL: ${SHLVL-}"
       nvm_err "\$HOME: $HOME"
       nvm_err "\$NVM_DIR: '$(nvm_sanitize_path "$NVM_DIR")'"
+      nvm_err "\$PATH: $(nvm_sanitize_path "$PATH")"
       nvm_err "\$PREFIX: '$(nvm_sanitize_path "$PREFIX")'"
       nvm_err "\$NPM_CONFIG_PREFIX: '$(nvm_sanitize_path "$NPM_CONFIG_PREFIX")'"
       nvm_err "\$NVM_NODEJS_ORG_MIRROR: '${NVM_NODEJS_ORG_MIRROR}'"
