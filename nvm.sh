@@ -293,7 +293,7 @@ nvm_rc_version() {
     nvm_err "No .nvmrc file found"
     return 1
   fi
-  read -r NVM_RC_VERSION < "${NVMRC_PATH}" || command printf ''
+  NVM_RC_VERSION="$(command head -n 1 "${NVMRC_PATH}" | command tr -d '\r')" || command printf ''
   if [ ! -n "${NVM_RC_VERSION}" ]; then
     nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
     return 2
