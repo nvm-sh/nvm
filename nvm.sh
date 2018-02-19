@@ -293,7 +293,7 @@ nvm_rc_version() {
     nvm_err "No .nvmrc file found"
     return 1
   fi
-  read -r NVM_RC_VERSION < "${NVMRC_PATH}" || printf ''
+  read -r NVM_RC_VERSION < "${NVMRC_PATH}" || command printf ''
   if [ ! -n "${NVM_RC_VERSION}" ]; then
     nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
     return 2
@@ -2402,7 +2402,7 @@ nvm() {
       nvm_err "\$NVM_NODEJS_ORG_MIRROR: '${NVM_NODEJS_ORG_MIRROR}'"
       nvm_err "\$NVM_IOJS_ORG_MIRROR: '${NVM_IOJS_ORG_MIRROR}'"
       nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
-      nvm_err "uname -a: '$(uname -a | awk '{$2=""; print}' | xargs)'"
+      nvm_err "uname -a: '$(command uname -a | command awk '{$2=""; print}' | command xargs)'"
       if [ "$(nvm_get_os)" = "darwin" ] && nvm_has sw_vers; then
         nvm_err "OS version: $(sw_vers | command awk '{print $2}' | command xargs)"
       elif [ -r "/etc/issue" ]; then
@@ -2583,7 +2583,7 @@ nvm() {
           [ -n "${line}" ] || continue
 
           # Skip comment lines that begin with `#`.
-          [ "$(echo "$line" | cut -c1)" != "#" ] || continue
+          [ "$(echo "$line" | command cut -c1)" != "#" ] || continue
 
           # Fail on lines that have multiple space-separated words
           case ${line} in
