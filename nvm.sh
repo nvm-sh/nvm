@@ -2277,7 +2277,7 @@ nvm() {
   fi
 
   local DEFAULT_IFS
-  DEFAULT_IFS=" $(echo t | tr t \\t)
+  DEFAULT_IFS=" $(echo t | command tr t \\t)
 "
   if [ "${IFS}" != "${DEFAULT_IFS}" ]; then
     IFS="${DEFAULT_IFS}" nvm "$@"
