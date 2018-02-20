@@ -3512,7 +3512,10 @@ nvm_auto() {
       nvm install >/dev/null
     fi
   elif [ "_$NVM_MODE" = '_use' ]; then
-    VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+    VERSION="$NVM_AUTO_LOAD_VERSION"
+    if [ -z "$VERSION" ]; then
+      VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+    fi
     if [ -n "$VERSION" ]; then
       nvm use --silent "$VERSION" >/dev/null
     elif nvm_rc_version >/dev/null 2>&1; then
