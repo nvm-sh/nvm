@@ -41,9 +41,9 @@ list:
 .PHONY: $(SHELL_TARGETS)
 $(SHELL_TARGETS):
 	@shell='$@'; shell=$${shell##*-}; which "$$shell" >/dev/null || { printf '\033[0;31m%s\033[0m\n' "WARNING: Cannot test with shell '$$shell': not found." >&2; exit 0; } && \
-	 printf '\n\033[0;34m%s\033[0m\n' "Running tests in $$shell"; \
-	 [ -z "$$TRAVIS_BUILD_DIR" ] && for v in $$(set | awk -F'=' '$$1 ~ "^NVM_" { print $$1 }'); do unset $$v; done && unset v; \
-	 for suite in $(TEST_SUITE); do $(URCHIN) -f -s $$shell test/$$suite || exit; done
+	printf '\n\033[0;34m%s\033[0m\n' "Running tests in $$shell"; \
+	[ -z "$$TRAVIS_BUILD_DIR" ] && for v in $$(set | awk -F'=' '$$1 ~ "^NVM_" { print $$1 }'); do unset $$v; done && unset v; \
+	for suite in $(TEST_SUITE); do $(URCHIN) -f -s $$shell test/$$suite || exit; done
 
 # All-tests target: invokes the specified test suites for ALL shells defined in $(SHELLS).
 .PHONY: test
@@ -72,14 +72,14 @@ _ensure-clean:
 .PHONY: release
 release: _ensure-tag _ensure-clean _ensure-current-version
 	@old_ver=`git describe --abbrev=0 --tags --match 'v[0-9]*.[0-9]*.[0-9]*'` || { echo "Failed to determine current version." >&2; exit 1; }; old_ver=$${old_ver#v}; \
-	 new_ver=`echo "$(TAG)" | sed 's/^v//'`; new_ver=$${new_ver:-patch}; \
-	 if printf "$$new_ver" | grep -q '^[0-9]'; then \
-	   semver "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be major.minor.patch' >&2; exit 2; }; \
-	   semver -r "> $$old_ver" "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be HIGHER than current one.' >&2; exit 2; } \
-	 else \
-	   new_ver=`semver -i "$$new_ver" "$$old_ver"` || { echo 'Invalid version-increment specifier: $(TAG)' >&2; exit 2; } \
-	 fi; \
-	 printf "=== Bumping version **$$old_ver** to **$$new_ver** before committing and tagging:\n=== TYPE 'proceed' TO PROCEED, anything else to abort: " && read response && [ "$$response" = 'proceed' ] || { echo 'Aborted.' >&2; exit 2; };  \
-	 replace "$$old_ver" "$$new_ver" -- $(VERSIONED_FILES) && \
-	 git commit -m "v$$new_ver" $(VERSIONED_FILES) && \
-	 git tag -a "v$$new_ver"
+	new_ver=`echo "$(TAG)" | sed 's/^v//'`; new_ver=$${new_ver:-patch}; \
+	if printf "$$new_ver" | grep -q '^[0-9]'; then \
+	  semver "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be major.minor.patch' >&2; exit 2; }; \
+	  semver -r "> $$old_ver" "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be HIGHER than current one.' >&2; exit 2; } \
+	else \
+	  new_ver=`semver -i "$$new_ver" "$$old_ver"` || { echo 'Invalid version-increment specifier: $(TAG)' >&2; exit 2; } \
+	fi; \
+	printf "=== Bumping version **$$old_ver** to **$$new_ver** before committing and tagging:\n=== TYPE 'proceed' TO PROCEED, anything else to abort: " && read response && [ "$$response" = 'proceed' ] || { echo 'Aborted.' >&2; exit 2; };  \
+	replace "$$old_ver" "$$new_ver" -- $(VERSIONED_FILES) && \
+	git commit -m "v$$new_ver" $(VERSIONED_FILES) && \
+	git tag -a "v$$new_ver"

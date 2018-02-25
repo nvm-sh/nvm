@@ -47,7 +47,7 @@ fi
 # $PROFILE should override .zshrc profile detection
 NVM_DETECT_PROFILE="$(SHELL="/usr/bin/zsh"; PROFILE="test_profile"; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
- die "nvm_detect_profile ignored \$PROFILE"
+  die "nvm_detect_profile ignored \$PROFILE"
 fi
 
 
