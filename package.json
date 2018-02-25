@@ -14,7 +14,8 @@
     "test/installation/node": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_node test-$shell",
     "test/installation/iojs": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_iojs test-$shell",
     "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell",
-    "doctoc": "doctoc --title='## Table of Contents' --github README.md"
+    "doctoc": "doctoc --title='## Table of Contents' --github README.md",
+    "eclint": "eclint check ."
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
   },
   "homepage": "https://github.com/creationix/nvm",
   "devDependencies": {
+    "eclint": "^2.6.0",
     "replace": "^0.3.0",
     "semver": "^5.0.1",
     "urchin": "^0.0.5",
