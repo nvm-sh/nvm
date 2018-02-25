@@ -9,10 +9,10 @@ die () { echo "$@" ; cleanup ; exit 1; }
 NVM_ENV=testing \. ../../install.sh
 
 # nvm_source with no parameter returns the git endpoint
-echo $(nvm_source) | grep "nvm.git$" > /dev/null || die "nvm_source without arguments should return the location of the git repo" 
+echo $(nvm_source) | grep "nvm.git$" > /dev/null || die "nvm_source without arguments should return the location of the git repo"
 
 # nvm_source with git parameter returns the location of the nvm repo
-echo $(nvm_source "git") | grep "nvm.git$" > /dev/null || die "nvm_source without arguments should return the location of the git repo" 
+echo $(nvm_source "git") | grep "nvm.git$" > /dev/null || die "nvm_source without arguments should return the location of the git repo"
 
 # nvm_source with script parameter returns the location of nvm.sh
 echo $(nvm_source "script") | grep "nvm.sh$" > /dev/null || die "nvm_source \"script\" should return the location of nvm.sh"
