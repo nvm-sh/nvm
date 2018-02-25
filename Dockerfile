@@ -106,4 +106,3 @@ RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
 WORKDIR /home/nvm/.nvm
 
 ENTRYPOINT /bin/bash
-

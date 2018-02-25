@@ -37,4 +37,3 @@ out=$(nvm_source "anything")
 [ "_$out" = "_my_location" ] || die "nvm_source script should have returned \$NVM_SOURCE. Got \"$out\""
 
 cleanup
-

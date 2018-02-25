@@ -119,4 +119,3 @@ EXIT_CODE="$(nvm_get_latest >/dev/null 2>&1 ; echo $?)"
 
 
 cleanup
-

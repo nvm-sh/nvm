@@ -20,4 +20,3 @@ nvm_do_install > /dev/null 2>&1
 command -v nvm || die 'nvm could not be loaded'
 
 cleanup
-

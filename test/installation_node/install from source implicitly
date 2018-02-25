@@ -21,4 +21,3 @@ nvm install $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
 # Check
 [ -d ../../$NVM_TEST_VERSION ]
 nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || "'nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"
-

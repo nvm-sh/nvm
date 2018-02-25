@@ -75,4 +75,3 @@ EXIT_CODE="$(nvm_remote_versions iojs >/dev/null 2>&1 ; echo $?)"
 [ "_$EXIT_CODE" = "_0" ] || die "nvm_remote_versions iojs did not exit with 0, got $EXIT_CODE"
 
 cleanup
-

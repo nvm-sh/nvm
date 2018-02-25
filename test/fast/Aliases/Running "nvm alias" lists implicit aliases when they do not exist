@@ -24,4 +24,3 @@ EXPECTED_IOJS="$(nvm_print_implicit_alias local iojs)"
 IOJS_VERSION="$(nvm_version "$EXPECTED_IOJS")"
 echo "$NVM_ALIAS_OUTPUT" | \grep -F "iojs -> $EXPECTED_IOJS (-> $IOJS_VERSION) (default)" \
   || die "nvm alias did not contain the default local iojs version; got '$NVM_ALIAS_OUTPUT'"
-

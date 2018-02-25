@@ -7,4 +7,3 @@ echo three > ../../../../alias/two
 echo one > ../../../../alias/three
 
 echo two > ../../../../alias/four
-

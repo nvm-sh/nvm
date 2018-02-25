@@ -23,4 +23,3 @@ EXPECTED_SECOND_MSG="Only implicit aliases 'stable', 'unstable', 'iojs', and 'no
 SECOND_EXIT_CODE="$(nvm_print_implicit_alias local > /dev/null 2>&1 ; echo $?)"
 [ "_$SECOND_EXIT_CODE" = "_2" ] \
   || die "nvm_print_implicit_alias without stable|unstable|iojs|node had wrong exit code: expected 2, got $SECOND_EXIT_CODE"
-

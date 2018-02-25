@@ -30,4 +30,3 @@ NVM_LS_CURRENT="$(nvm ls current | strip_colors | command grep -o v0.10.2)"
 NVM_ALIAS_DEFAULT="$(nvm alias default | strip_colors)"
 [ "_$NVM_ALIAS_DEFAULT" = "_default -> 0.10.2 (-> v0.10.2)" ] \
   || die "'nvm alias default did not return 'default -> 0.10.2 (-> v0.10.2)', got '$NVM_ALIAS_DEFAULT'"
-

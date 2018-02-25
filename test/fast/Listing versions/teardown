@@ -14,4 +14,3 @@ rmdir ../../../versions >/dev/null 2>&1
 unalias nvm_has_system_node >/dev/null 2>&1
 rm -f ../../../alias/stable >/dev/null 2>&1
 rm -f ../../../alias/unstable >/dev/null 2>&1
-

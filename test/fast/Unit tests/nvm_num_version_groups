@@ -22,4 +22,3 @@ die () { echo "$@" ; exit 1; }
 [ "~$(nvm_num_version_groups 1.2.3)" = "~3" ] || die "1.2.3 should give 3"
 [ "~$(nvm_num_version_groups v1.2.3)" = "~3" ] || die "v1.2.3 should give 3"
 [ "~$(nvm_num_version_groups v1.2.3.)" = "~3" ] || die "v1.2.3. should give 3"
-

@@ -17,4 +17,3 @@ For pull requests:
 Even if you don't have all of these items covered, please still feel free to submit a PR/issue! Someone else may be inspired and volunteer to complete it for you.
 
 Thanks again!
-

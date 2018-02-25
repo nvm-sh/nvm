@@ -23,4 +23,3 @@ TEST_DIR="$PWD"
 [ "~$(PWD=$TEST_DIR/tmp_nvm_find_up/a/b/c/d nvm_find_up 'test')" = "~$TEST_DIR/tmp_nvm_find_up/a/b/c" ] || die "failed to find 1 level up from current dir"
 
 cleanup
-

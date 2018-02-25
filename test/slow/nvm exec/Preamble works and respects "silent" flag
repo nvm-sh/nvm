@@ -28,4 +28,3 @@ ${NPM_VERSION_ONE}"
 OUTPUT="$(nvm exec --silent 1 npm --version | head -1)"
 EXPECTED_OUTPUT="${NPM_VERSION_ONE}"
 [ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "\`nvm exec --silent\` failed to suppress io.js preamble; expected '$EXPECTED_OUTPUT', got '$OUTPUT'"
-

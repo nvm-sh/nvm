@@ -13,4 +13,3 @@ fi
 if nvm_version_greater 0.10.0 0.10.0; then
   die '"nvm_version_greater" returned false for the same two versions'
 fi
-

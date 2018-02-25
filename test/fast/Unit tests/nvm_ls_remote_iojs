@@ -35,4 +35,3 @@ iojs-v1.0.4"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote_iojs 1.0 did not output 1.0.x versions; got $OUTPUT"
 
 cleanup
-

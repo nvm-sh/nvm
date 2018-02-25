@@ -36,4 +36,3 @@ nvm_reset || die 'nvm_reset failed'
 ! safe_type nvm_detect_profile || die 'nvm_detect_profile is still available'
 
 cleanup
-

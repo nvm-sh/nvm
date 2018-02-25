@@ -30,4 +30,3 @@ OUTPUT="$(nvm_alias test)"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias test' produced wrong output; got $OUTPUT"
 
 cleanup
-

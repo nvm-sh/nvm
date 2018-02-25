@@ -29,4 +29,3 @@ nvm_tree_contains_path tmp2 tmp2/node || die '"tmp2" should contain "tmp2/node"'
 nvm_tree_contains_path tmp2 tmp/node && die '"tmp2" should not contain "tmp/node"'
 
 cleanup
-

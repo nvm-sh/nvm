@@ -18,4 +18,3 @@ INPUT="1.2.3.4.5"
 OUTPUT="$(nvm_format_version "$INPUT")"
 EXPECTED_OUTPUT="v1.2.3"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_format_version $INPUT did not return $EXPECTED_OUTPUT; got $OUTPUT"
-

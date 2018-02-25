@@ -23,4 +23,3 @@ EXIT_CODE="$(nvm_get_latest >/dev/null 2>&1 ; echo $?)"
   || die "failed redirect did not exit with code 2, got $EXIT_CODE"
 
 cleanup
-

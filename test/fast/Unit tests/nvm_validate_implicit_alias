@@ -18,4 +18,3 @@ nvm_validate_implicit_alias stable || die "nvm_validate_implicit_alias stable di
 nvm_validate_implicit_alias unstable || die "nvm_validate_implicit_alias unstable did not exit 0"
 nvm_validate_implicit_alias node || die "nvm_validate_implicit_alias node did not exit 0"
 nvm_validate_implicit_alias iojs || die "nvm_validate_implicit_alias iojs did not exit 0"
-

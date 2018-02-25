@@ -25,4 +25,3 @@ nvm_version 0.10.2 >/dev/null 2>&1 || die "v0.10.2 not installed: $(nvm ls)"
 
 NVM_LS_CURRENT="$(nvm ls current | \grep -o v0.10.2)"
 [ "_$NVM_LS_CURRENT" = '_v0.10.2' ] || die "'nvm ls current' did not return '-> v0.10.2', got '$NVM_LS_CURRENT' `nvm ls`"
-

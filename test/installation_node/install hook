@@ -37,5 +37,3 @@ ${USE_OUTPUT}
 failed"
 
 [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
-
-

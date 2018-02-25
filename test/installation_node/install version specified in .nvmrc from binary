@@ -18,5 +18,3 @@ nvm install || die "'nvm install' failed"
 [ -d ../../$NVM_TEST_VERSION ] || die "./$NVM_TEST_VERSION did not exist"
 nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION \
   || "'nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"
-
-

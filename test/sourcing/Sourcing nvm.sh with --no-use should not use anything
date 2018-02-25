@@ -29,4 +29,3 @@ echo 'sourcing complete.'
 
 NVM_CURRENT="$(nvm current)"
 [ "_$NVM_CURRENT" = '_none' ] || [ "_$NVM_CURRENT" = '_system' ] || die "'nvm current' did not return 'none' or 'system', got '$NVM_CURRENT' `nvm ls`"
-

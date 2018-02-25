@@ -4,4 +4,3 @@ rm -rf ../../alias
 rm -rf ../../v0.10.1
 rm -rf ../../v0.10.2
 rm -f ../../.nvmrc
-

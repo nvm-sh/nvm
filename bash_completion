@@ -95,4 +95,3 @@ if [[ -n ${ZSH_VERSION-} ]]; then
 fi
 
 complete -o default -F __nvm nvm
-

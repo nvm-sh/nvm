@@ -22,4 +22,3 @@ install_dir=$(nvm_install_dir)
 [ "_$install_dir" = "_$HOME/.nvm" ] || die "nvm_install_dir should default to \$HOME/.nvm. Current output: $install_dir"
 
 cleanup
-

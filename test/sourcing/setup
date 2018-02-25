@@ -11,4 +11,3 @@ rm -rf ../../v0.9.12
 nvm install 0.10.1 || echo >&2 'nvm install 0.10.1 failed'
 nvm unalias default || 'removing default alias failed'
 nvm unload || echo >&2 'nvm unload failed'
-

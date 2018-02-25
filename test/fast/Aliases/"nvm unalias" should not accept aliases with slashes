@@ -24,4 +24,3 @@ EXPECTED_OUTPUT="Aliases in subdirectories are not supported."
 
 EXIT_CODE="$(nvm unalias /bar >/dev/null 2>&1 ; echo $?)"
 [ "$EXIT_CODE" = "1" ] || die "trying to remove an alias starting with a slash should fail with code 1, got '$EXIT_CODE'"
-
