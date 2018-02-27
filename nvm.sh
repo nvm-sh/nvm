@@ -3339,19 +3339,27 @@ nvm() {
       LINKS="${NPMLIST##* //// }"
 
       nvm_echo "Reinstalling global packages from $VERSION..."
-      nvm_echo "$INSTALLS" | command xargs npm install -g --quiet
+      if [ -n "${INSTALLS}" ]; then
+        nvm_echo "$INSTALLS" | command xargs npm install -g --quiet
+      else
+        nvm_echo "No installed global packages found..."
+      fi
 
       nvm_echo "Linking global packages from $VERSION..."
-      (
-        set -f; IFS='
+      if [ -n "${LINKS}" ]; then
+        (
+          set -f; IFS='
 ' # necessary to turn off variable expansion except for newlines
-        for LINK in $LINKS; do
-          set +f; unset IFS # restore variable expansion
-          if [ -n "$LINK" ]; then
-            (nvm_cd "$LINK" && npm link)
-          fi
-        done
-      )
+          for LINK in $LINKS; do
+            set +f; unset IFS # restore variable expansion
+            if [ -n "$LINK" ]; then
+              (nvm_cd "$LINK" && npm link)
+            fi
+          done
+        )
+      else
+        nvm_echo "No linked global packages found..."
+      fi
     ;;
     "clear-cache" )
       command rm -f "$NVM_DIR/v*" "$(nvm_version_dir)" 2>/dev/null
