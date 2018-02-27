@@ -163,7 +163,7 @@ nvm_install_latest_npm() {
   NVM_NPM_CMD='npm'
   if [ "${NVM_DEBUG-}" = 1 ]; then
     nvm_echo "Detected node version ${NODE_VERSION}, npm version v${NPM_VERSION}"
-    NVM_NPM_CMD='echo npm'
+    NVM_NPM_CMD='nvm_echo npm'
   fi
 
   local NVM_IS_0_6
@@ -611,8 +611,8 @@ nvm_change_path() {
     nvm_echo "${3-}${2-}"
   # if the initial path doesn’t contain an nvm path, prepend the supplementary
   # path
-  elif ! echo "${1-}" | nvm_grep -q "${NVM_DIR}/[^/]*${2-}" \
-    && ! echo "${1-}" | nvm_grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
+  elif ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/[^/]*${2-}" \
+    && ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
     nvm_echo "${3-}${2-}:${1-}"
   # use sed to replace the existing nvm path with the supplementary path. This
   # preserves the order of the path.
@@ -821,7 +821,7 @@ nvm_resolve_alias() {
   local SEEN_ALIASES
   SEEN_ALIASES="${ALIAS}"
   while true; do
-    ALIAS_TEMP="$(nvm_alias "${ALIAS}" 2> /dev/null || echo)"
+    ALIAS_TEMP="$(nvm_alias "${ALIAS}" 2> /dev/null || nvm_echo)"
 
     if [ -z "${ALIAS_TEMP}" ]; then
       break
@@ -1021,7 +1021,7 @@ nvm_ls() {
       PATTERN='v'
       SEARCH_PATTERN='.*'
     else
-      SEARCH_PATTERN="$(echo "${PATTERN}" | command sed 's#\.#\\\.#g;')"
+      SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's#\.#\\\.#g;')"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
@@ -1579,7 +1579,7 @@ nvm_get_arch() {
   # kernel.
   if [ "_$NVM_OS" = "_sunos" ]; then
     if HOST_ARCH=$(pkg_info -Q MACHINE_ARCH pkg_install); then
-      HOST_ARCH=$(echo "${HOST_ARCH}" | command tail -1)
+      HOST_ARCH=$(nvm_echo "${HOST_ARCH}" | command tail -1)
     else
       HOST_ARCH=$(isainfo -n)
     fi
@@ -2273,7 +2273,7 @@ nvm() {
   fi
 
   local DEFAULT_IFS
-  DEFAULT_IFS=" $(echo t | command tr t \\t)
+  DEFAULT_IFS=" $(nvm_echo t | command tr t \\t)
 "
   if [ "${IFS}" != "${DEFAULT_IFS}" ]; then
     IFS="${DEFAULT_IFS}" nvm "$@"
@@ -2584,7 +2584,7 @@ nvm() {
           [ -n "${line}" ] || continue
 
           # Skip comment lines that begin with `#`.
-          [ "$(echo "$line" | command cut -c1)" != "#" ] || continue
+          [ "$(nvm_echo "$line" | command cut -c1)" != "#" ] || continue
 
           # Fail on lines that have multiple space-separated words
           case ${line} in
@@ -3458,7 +3458,7 @@ nvm_install_default_packages() {
 
 nvm_supports_source_options() {
   # shellcheck disable=SC1091
-  [ "_$(echo '[ $# -gt 0 ] && echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
+  [ "_$(nvm_echo '[ $# -gt 0 ] && nvm_echo $1' | . /dev/stdin yes 2> /dev/null)" = "_yes" ]
 }
 
 nvm_supports_xz() {
