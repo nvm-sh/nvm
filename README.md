@@ -212,7 +212,7 @@ In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the f
   - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
   - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
   - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
-  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in semver, versions communicate breakage, not stability).
+  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in SemVer, versions communicate breakage, not stability).
 
 ### Long-term support
 Node has a [schedule](https://github.com/nodejs/LTS#lts_schedule) for long-term support (LTS) You can reference LTS versions in aliases and `.nvmrc` files with the notation `lts/*` for the latest LTS, and `lts/argon` for LTS releases from the "argon" line, for example. In addition, the following commands support LTS arguments:
@@ -485,7 +485,7 @@ set -e
 ## Installing nvm on Alpine Linux
 In order to provide the best performance (and other optimisations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides pre-these compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
 
-Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [busybox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. Busybox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
+Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
 
 There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally.
 

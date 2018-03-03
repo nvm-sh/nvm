@@ -21,7 +21,7 @@
 ```
 </details>
 
-- How did you install `nvm`? (e.g. install script in readme, homebrew):
+- How did you install `nvm`? (e.g. install script in readme, Homebrew):
 
 - What steps did you perform?
 
