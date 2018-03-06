@@ -2176,7 +2176,7 @@ iojs_version_has_solaris_binary() {
 # Succeeds if $NODE_VERSION represents a node version that has a
 # Solaris binary, fails otherwise.
 # Currently, node versions starting from v0.8.6 have a Solaris binary
-# avaliable.
+# available.
 node_version_has_solaris_binary() {
   local NODE_VERSION
   NODE_VERSION="$1"
@@ -2589,7 +2589,7 @@ nvm() {
           # Fail on lines that have multiple space-separated words
           case ${line} in
             *\ * )
-              nvm_err "Only one package per line is allowed in the ${NVM_DIR}/default-packages file. Please remove any lines with multiple space-seperated values."
+              nvm_err "Only one package per line is allowed in the ${NVM_DIR}/default-packages file. Please remove any lines with multiple space-separated values."
               return 1
             ;;
           esac

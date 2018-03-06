@@ -508,7 +508,7 @@ To make the development and testing work easier, we have a Dockerfile for develo
 $ docker build -t nvm-dev .
 ```
 
-This will package your current nvm repository with our pre-defiend development environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
+This will package your current nvm repository with our pre-defined development environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
 
 ```sh
 $ docker images

@@ -16,7 +16,7 @@ assert_not_ok node_version_has_solaris_binary "v3.3.1"
 # Valid io.js version numbers that have a Solaris binary fail
 assert_not_ok node_version_has_solaris_binary "iojs-v3.3.1"
 
-# Invvalid io.js version numbers fail
+# Invalid io.js version numbers fail
 assert_not_ok node_version_has_solaris_binary "iojs-v0.12.7"
 
 # Valid node version numbers that don't have a Solaris binary fail
