@@ -2,7 +2,7 @@
 
 # bash completion for Node Version Manager (NVM)
 
-if ! nvm &> /dev/null; then
+if ! command -v nvm &> /dev/null; then
     return
 fi
 
