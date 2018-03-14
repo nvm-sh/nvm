@@ -2558,7 +2558,15 @@ nvm() {
         case "$1" in
           --reinstall-packages-from=*)
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 27-)"
+            if [ -z "${PROVIDED_REINSTALL_PACKAGES_FROM}" ]; then
+              nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node.'
+              return 6
+            fi
             REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")" ||:
+          ;;
+          --reinstall-packages-from)
+            nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node using `=`.'
+            return 6
           ;;
           --copy-packages-from=*)
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 22-)"
