@@ -58,7 +58,7 @@ export NVM_DIR="$HOME/.nvm"
 ```
 
 You can customize the install source, directory, profile, and version using the `NVM_SOURCE`, `NVM_DIR`, `PROFILE`, and `NODE_VERSION` variables.
-Eg: `curl ... | NVM_DIR=/usr/local/nvm bash` for a global install. Ensure that the `NVM_DIR` does not contain a trailing slash.
+Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not contain a trailing slash.
 
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
