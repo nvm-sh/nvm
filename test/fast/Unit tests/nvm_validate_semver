@@ -1,0 +1,54 @@
+#!/bin/sh
+
+die () { printf "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+# INPUT:EXPECTED_OUTPUT
+# TODO refactor test cases into clearer structure
+test_cases="1.2.3:1.2.3
+1.2.3 - 1.2.4:>=1.2.3 <=1.2.4
+1.2.3-1.2.4:>=1.2.3 <=1.2.4
+11.22.33 - 11.22.44:>=11.22.33 <=11.22.44
+1.2.x - 1.2.4:>=1.2.0 <=1.2.4
+1.2.xx - 1.2.4:
+1.2.3 || 1.2.4:1.2.3 || 1.2.4
+*:>0.0.0
+x:>0.0.0
+X:>0.0.0
+1:>=1.0.0 <2.0.0
+1.2:>=1.2.0 <1.3.0
+< 1.2.3:<1.2.3
+> 1.2.3:>1.2.3
+<= 1.2.3:<=1.2.3
+>= 1.2.3:>=1.2.3
+= 1.2.3:1.2.3
+^0.0.1 ^0.1.2 ^1.2.3:>=0.0.1 <0.0.2 >=0.1.2 <0.2.0 >=1.2.3 <2.0.0
+~0.0.1 ~0.1.2 ~1.2.3:>=0.0.1 <0.1.0 >=0.1.2 <0.2.0 >=1.2.3 <1.3.0
+~ 1.2.3:>=1.2.3 <1.3.0
+^ 1.2.3:>=1.2.3 <2.0.0
+1.2.3 || 1.2.4 1.2.5:1.2.3 || 1.2.4 1.2.5
+a:
+1 || 2 a:
+1 || a:
+a || 1.2.3:
+1.2.?:
+^0.0.1:>=0.0.1 <0.0.2
+<x.x.x:
+>=x.1.1:>0.0.0
+>x.1.1:>0.0.0
+~x.1.1:>0.0.0
+^x.1.1:>0.0.0
+11.22.33:11.22.33"
+
+while [ -n "$test_cases" ]; do
+  LINE=$(echo "$test_cases" | head -n1)
+  INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
+  EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
+  ACTUAL_OUTPUT=$(nvm_validate_semver "$INPUT")
+  [ "$ACTUAL_OUTPUT" = "$EXPECTED_OUTPUT" ] \
+    && [ -n "$INPUT" ] \
+    || die "Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
+  test_cases=$(echo "$test_cases" | tail -n +2)
+done
+exit 0

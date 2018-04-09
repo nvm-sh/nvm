@@ -1,0 +1,9 @@
+verifies compatibility with basic package.json with keys in the 'engines' object that have brackets
+
+{
+  "name": "fake",
+  "engines": {
+    "potentialFutureKeyWithBracket}": "fake",
+    "node": "NODE_SEMVER"
+  }
+}

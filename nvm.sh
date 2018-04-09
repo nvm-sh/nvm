@@ -299,6 +299,357 @@ nvm_find_up() {
   nvm_echo "${path_}"
 }
 
+nvm_string_contains_regexp() {
+  local string
+  string="${1-}"
+  local regexp
+  regexp="${2-}"
+  if [ -z  "${string-}" ] || [ -z "${regexp-}" ]; then
+    return 1
+  fi
+  # e.g. "nvm_string_contains_regexp abbc ^aa?b+.$" returns 0
+  command printf "%s" "$string" | command awk "/$regexp/{ exit 0 }{ exit 1 }"
+}
+
+# scoped function returns nothing or a normalized semver adhering to the following grammar:
+#
+# semver         ::= comparator_set ( ' || '  comparator_set )*
+# comparator_set ::= comparator ( ' ' comparator )*
+# comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
+nvm_validate_semver() { (
+  semver=$(command printf "%s" "${1-}" | command tr '||' '\n')
+  [ -n "$semver" ] || return 1
+  validated_semver='';
+  while [ -n "$semver" ]; do
+    comparator_set=$(command printf "%s" "$semver" | head -n1)
+    semver=$(command printf "%s" "$semver" | tail -n +2)
+    [ -n "$comparator_set" ] || continue
+
+    # convert comparators into required grammar
+    validated_comparator_set=$(command printf " %s " "$comparator_set" |
+      # exactly 1 space is needed before and after every comparator (including the first and last comparators)
+      command sed -E 's/\011/ /g;s/ +/ /g' |
+
+      # normalize all wildcards to `x`
+      command sed -E 's/X|\*/x/g' |
+
+      # ` 1 ` => ` 1.x.x `
+      # ` x ` => ` x.x.x `
+      command sed -E 's/ ([0-9]+|x) / \1.x.x /g' |
+
+      # ` 1.2 ` => ` 1.2.x `
+      # ` 1.x ` => ` 1.x.x `
+      # ` x.x ` => ` x.x.x `
+      command sed -E 's/ (([0-9]+|x)\.([0-9]+|x)) / \1.x /g' |
+
+      # ` 1.2.3 - 1.2.4 ` => ` >=1.2.3 <=1.2.4 `
+      command sed -E 's/ (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) ?\- ?(([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / >=\1 <=\5 /g' |
+
+      # ` > 1.2.3 ` => ` >1.2.3 `
+      # ` < 1.2.5 ` => ` <1.2.5 `
+      # ` <= 1.2.3 ` => ` <=1.2.3 `
+      # ` >= 1.2.3 ` => ` >=1.2.3 `
+      # ` = 1.2.3 ` => ` =1.2.3 `
+      # ` ~ 1.2.3 ` => ` ~1.2.3 `
+      # ` ^ 1.2.3 ` => ` ^1.2.3 `
+      command sed -E 's/ (<|>|<=|>=|=|~|\^) (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / \1\2 /g' |
+
+      # ` =1.2.3 ` => ` 1.2.3 `
+      command sed -E 's/ =//g' |
+
+      # trim leading/trailing spaces
+      command sed -E 's/^ //;s/ $//' |
+
+      # handle conversions of comparators with '^' or '~' or 'x' into required grammar
+      # ` ^0.0.1 ` => ` >=0.0.1 <0.0.2 `
+      # ` ^0.1.2 ` => ` >=0.1.2 <0.2.0 `
+      # ` ^1.2.3 ` => ` >=1.2.3 <2.0.0 `
+      # ` ~0.0.1 ` => ` >=0.0.1 <0.1.0 `
+      # ` ~0.1.2 ` => ` >=0.1.2 <0.2.0 `
+      # ` ~1.2.3 ` => ` >=1.2.3 <1.3.0 `
+      # ` x.x.x ` => ` >0.0.0 `
+      # ` x.x.1 ` => ` >0.0.0 `
+      # ` x.1.x ` => ` >0.0.0 `
+      # ` x.1.2 ` => ` >0.0.0 `
+      # ` 1.2.x ` => ` >=1.2.0 <1.3.0 `
+      # ` 1.x.1 ` => ` >=1.0.0 <2.0.0 ` NOTE the last "1" is ignored in this grammar
+      # ` 1.x.x ` => ` >=1.0.0 <2.0.0 `
+      command awk '{
+        if ( ! match($0, /[\^~x]/) ) {
+          print $0
+          exit 0
+        }
+        split($0, comparators, / /)
+        output=""
+        for (i = 1; i <= length(comparators); i++) {
+          comparator=comparators[i]
+          if ( match(comparator, /^([\^~>]|>=)?x.[0-9x]+.[0-9x]$/ ) ) {
+            comparator=">0.0.0"
+          } else if ( match(comparator, /^([\^~<>]|>=|<=)?[0-9]+.x.[0-9x]$/) ) {
+            split(comparator, a, /\./);
+            if ( match(comparator, /^([\^~<>]|>=|<=).*$/ ) ) {
+              comparator=a[1] ".0.0";
+            } else {
+              comparator=">=" a[1] ".0.0 <" a[1]+1 ".0.0"
+            }
+          } else if ( match(comparator, /^([\^~<>]|<=|>=)?[0-9]+.[0-9]+.x$/) ) {
+            split(comparator, a, /\./);
+            if ( match(comparator, /^([\^~<>]|<=|>=).*$/ ) ) {
+              comparator=a[1] "." a[2] ".0";
+            } else {
+              comparator=">=" a[1] "." a[2] ".0 <" a[1] "." a[2]+1 ".0"
+            }
+          }
+
+          if ( match(comparator, /^\^/) ) {
+            if ( match(comparator, /^\^0.0.[0-9]+$/) ) {
+              version=substr(comparator,2);
+              split(version, a, /\./);
+              output=output ">=" version " <0.0." a[3]+1 " ";
+            } else if ( match(comparator, /^\^0.[0-9]+.[0-9]+$/) ) {
+              version=substr(comparator,2);
+              split(version, a, /\./);
+              output=output ">=" version " <0." a[2]+1 ".0 ";
+            } else if ( match(comparator, /^\^[0-9]+.[0-9]+.[0-9]+$/) ) {
+              version=substr(comparator,2);
+              split(version, a, /\./);
+              output=output ">=" version " <" a[1]+1 ".0.0 ";
+            }
+          } else if ( match(comparator, /^~/)  ) {
+            if ( match(comparator, /^~0.0.[0-9]+$/) ) {
+              version=substr(comparator,2)
+              split(version, a, /\./)
+              output=output ">=" version " <0." a[2]+1 ".0 "
+            } else if ( match(comparator, /^~0.[0-9]+.[0-9]+$/) ) {
+              version=substr(comparator,2)
+              split(version, a, /\./)
+              output=output ">=" version " <0." a[2]+1 ".0 "
+            } else if ( match(comparator, /^~[0-9]+.[0-9]+.[0-9]+$/) ) {
+              version=substr(comparator,2)
+              split(version, a, /\./)
+              output=output ">=" version " <" a[1] "." a[2]+1 ".0 "
+            }
+          } else {
+            output=output comparator " "
+          }
+        }
+        print output
+      }' |
+
+      # remove leading/trailing spaces
+      command sed -E 's/^ +//;s/ +$//'
+    )
+
+    # only comparator_sets composed of the required grammar are marked as valid
+    if nvm_string_contains_regexp "$validated_comparator_set" '^( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+$'; then
+      validated_semver="$validated_semver || $validated_comparator_set"
+    else
+      return 1
+    fi
+  done
+
+  nvm_echo "$(command printf "%s" "$validated_semver" | command sed -E 's/^ \|\| //')"
+) }
+
+nvm_interpret_complex_semver() { (
+  [ -n "${1-}" ] || return 1
+
+  # Validate incoming semver and transform it into the grammar that is expected by the following logic
+  valid_transformed_semver=$(nvm_validate_semver "${1-}")
+  [ -n "$valid_transformed_semver" ] || ( nvm_err "invalid semantic version: '${1-}'" && return 1 )
+
+  # Iterate through the comparator_sets in the semver.
+  # For each comparator_set, evaluate it to the highest compatible node version.
+  # Output this function with the highest node version among all the node versions collected in the previous step.
+  valid_transformed_semver=$(command printf "%s" "$valid_transformed_semver" | command tr '||' '\n')
+  highest_compatible_node_versions=''
+
+  # TODO add tests verifying this logic correctly gets list of node versions and that the order is from oldest to newest
+  # list of node versions is sorted from oldest to newest
+  remote_node_versions=$(nvm_ls_remote | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
+  [ -n "$remote_node_versions" ] || ( nvm_err "failure retrieving remote node versions" && return 1 )
+
+  while [ -n "$valid_transformed_semver" ]; do
+    remote_node_versions_copy=$(command printf "%s" "$remote_node_versions")
+    comparator_set=$(command printf "%s" "$valid_transformed_semver" | head -n1 | command sed -E 's/^ +//;s/ +$//')
+    valid_transformed_semver=$(command printf "%s" "$valid_transformed_semver" | tail -n +2)
+    [ -n "$comparator_set" ] || continue
+
+
+    # variable indicating the state of the current comparator_set
+    TRUE=0;FALSE=1
+    node_version_compatible=$FALSE
+    no_remote_version_will_satisfy_all_comparators=$FALSE
+
+    # compare each remote node version (from newest to oldest) to each comparator and stop when you find the newest compatible remote node version
+    # $node_version_compatible being true indicates that we have found a remote node version that satisfies all the comparators.
+    # $no_remote_version_will_satisfy_all_comparators being true indicates that there is no remote node version that will satisfy all comparators.
+    while [ -n "$remote_node_versions_copy" ] && [ $node_version_compatible -eq $FALSE ] && [ $no_remote_version_will_satisfy_all_comparators -eq $FALSE ]; do
+      # current node version being iterated on
+      current_remote_node_version=$(command printf "%s" "$remote_node_versions_copy" | tail -n1 | command sed -E 's/^ +//;s/ +$//' | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')
+      # remove current_remote_node_version from remote_node_versions_copy so that the next iteration will check the next newest node version
+      remote_node_versions_copy=$(command printf "%s" "$remote_node_versions_copy" | sed '$d')
+      [ -n "$current_remote_node_version" ] || continue
+
+      node_version_compatible=$FALSE # initialize state
+      # check if current_remote_node_version is compatible with every comparator in comparator_set.
+      # stop checking upon finding a comparator that is not satisfied by the current_remote_node_version.
+      comparator_set_copy=$(command printf "%s" "$comparator_set" | command tr ' ' '\n')
+      while [ -n "$comparator_set_copy" ]; do
+        comparator=$(command printf "%s" "$comparator_set_copy" | head -n1 | command sed -E 's/^ +//;s/ +$//')
+        comparator_set_copy=$(command printf "%s" "$comparator_set_copy" | tail -n +2)
+        [ -n "$comparator" ] || continue
+
+        # if comparator is satisfied by current_remote_node_version, update state variable node_version_compatible
+        stripped_version_from_comparator="$(command printf "%s" "$comparator" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')"
+
+        if nvm_string_contains_regexp "$comparator" '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          if [ "$comparator" = "$current_remote_node_version" ]; then
+            # comparator is looking for an exact match and the current_remote_node_version is that semver so this comparator is satisfied.
+            node_version_compatible=$TRUE
+          elif nvm_version_greater "$comparator" "$current_remote_node_version"; then
+            # looking for a version that is equal to $comparator but $current_remote_node_version is less than $comparator so there is no point continuing.
+            node_version_compatible=$FALSE
+            no_remote_version_will_satisfy_all_comparators=$TRUE
+          else
+            node_version_compatible=$FALSE
+          fi
+
+        elif nvm_string_contains_regexp "$comparator" '^<=[0-9]+\.[0-9]+\.[0-9]+$'; then
+          if nvm_version_greater_than_or_equal_to "$stripped_version_from_comparator" "$current_remote_node_version"; then
+            # current_remote_node_version is less and or equal to the current comparator version number so this comparator is satisfied.
+            node_version_compatible=$TRUE
+          else
+            node_version_compatible=$FALSE
+          fi
+
+        elif nvm_string_contains_regexp "$comparator" '^>=[0-9]+\.[0-9]+\.[0-9]+$'; then
+          if nvm_version_greater_than_or_equal_to "$current_remote_node_version" "$stripped_version_from_comparator"; then
+            node_version_compatible=$TRUE
+          else
+            node_version_compatible=$FALSE
+            no_remote_version_will_satisfy_all_comparators=$TRUE
+          fi
+
+        elif nvm_string_contains_regexp "$comparator" '^<[0-9]+\.[0-9]+\.[0-9]+$'; then
+          if nvm_version_greater "$stripped_version_from_comparator" "$current_remote_node_version"; then
+            node_version_compatible=$TRUE
+          else
+            node_version_compatible=$FALSE
+          fi
+
+        elif nvm_string_contains_regexp "$comparator" '^>[0-9]+\.[0-9]+\.[0-9]+$'; then
+          if nvm_version_greater "$current_remote_node_version" "$stripped_version_from_comparator"; then
+            node_version_compatible=$TRUE
+          else
+            node_version_compatible=$FALSE
+            no_remote_version_will_satisfy_all_comparators=$TRUE
+          fi
+
+        else
+          node_version_compatible=$FALSE
+        fi
+        # stop checking if all comparators are compatible with current_remote_node_version upon finding one that is incompatible
+        [ $node_version_compatible -eq $FALSE ] && comparator_set_copy=''
+      done # while [ -n "$comparator_set_copy" ]; do
+      # stop iterating through remote_node_versions_copy for this comparator_set upon finding the first remote node version that is compatible with all comparators.
+      [ $node_version_compatible -eq $TRUE ] && highest_compatible_node_versions="$highest_compatible_node_versions $current_remote_node_version"
+    done # while [ -n "$remote_node_versions_copy" ] && [ $node_version_compatible -eq $FALSE ] && [ $no_remote_version_will_satisfy_all_comparators -eq $FALSE ]; do
+
+  done
+
+  highest_compatible_node_version='0.0.0'
+
+  highest_compatible_node_versions=$(command printf "%s" "$highest_compatible_node_versions" | command tr ' ' '\n')
+  while [ -n "$highest_compatible_node_versions" ]; do
+    compatible_node_version=$(command printf "%s" "$highest_compatible_node_versions" | head -n1 | command sed -E 's/^ +//;s/ +$//')
+    highest_compatible_node_versions=$(command printf "%s" "$highest_compatible_node_versions" | tail -n +2)
+    [ -n "$compatible_node_version" ] || continue
+
+    if nvm_version_greater "$compatible_node_version" "$highest_compatible_node_version"; then
+      highest_compatible_node_version="$compatible_node_version"
+    fi
+  done
+  [ "$highest_compatible_node_version" != '0.0.0' ] && nvm_echo "$highest_compatible_node_version"
+) }
+
+nvm_find_package_json() { (
+  dir="$(nvm_find_up 'package.json')"
+  if [ -e "${dir}/package.json" ]; then
+    nvm_echo "${dir}/package.json"
+  fi
+) }
+
+# extracts engines.node value from package.json exactly except:
+#  - removes all line breaks and carriage returns
+#  - normalizes all consecutive whitespace to 1 occurrence
+#  - must match regexp: "[|<> [:alnum:].^=~*-]\+"
+nvm_get_node_from_pkg_json() { (
+  package_json_contents=${1-}
+  engines_node_value=''
+  open_brackets=0
+  closed_brackets=0
+  in_quotes='false'
+
+  command printf "%s" "$package_json_contents" \
+    | command tr -d '\n\r' \
+    | command tr '\t' ' ' \
+    | command tr -s ' ' \
+    | nvm_grep -o '"engines": \?{ \?".*' \
+    | nvm_grep -o '{.*' \
+    | nvm_grep -o . \
+    | while read -r i; do
+        engines_node_value="$engines_node_value$i"
+        if [ "$i" = '"' ]; then
+          if [ "$in_quotes" = 'false' ]; then
+            in_quotes='true'
+         else
+            in_quotes='false'
+         fi
+        # spaces are interpretted as '' here but they need to be retained
+        elif [ "$i" = '' ]; then
+          engines_node_value="$engines_node_value "
+        elif [ "$in_quotes" = 'false' ]; then
+          if [ "$i" = '{' ]; then
+            open_brackets=$((open_brackets+1))
+          elif [ "$i" = '}' ]; then
+            closed_brackets=$((closed_brackets+1))
+          fi
+        fi
+        if [ "$open_brackets" -ne 0 ] && [ "$open_brackets" -eq "$closed_brackets" ]; then
+          command printf "%s" "$engines_node_value" \
+            | nvm_grep -o '"node": \?"[|<> [:alnum:].^=~*-]\+"' \
+            | command tr -d '"' \
+            | command awk -F: '{ print $2 }' \
+            | command sed 's/^ //; s/ $//; s/^ //'
+          return 0
+        fi
+    done
+    return 2
+) }
+
+nvm_package_json_version() {
+  export PKG_JSON_VERSION=''
+  local pkg_json_path
+  pkg_json_path="$(nvm_find_package_json)"
+  if [ ! -e "${pkg_json_path}" ]; then
+    nvm_err "No package.json file found"
+    return 1
+  fi
+  PKG_JSON_VERSION=$(nvm_get_node_from_pkg_json "$(command cat "$pkg_json_path")" || command printf '')
+  if [ ! -n "${PKG_JSON_VERSION}"  ]; then
+    nvm_echo "Warning: could not retrieve engines.node semver expression in package.json file found at \"${pkg_json_path}\""
+    return 2
+  else
+    nvm_echo "Found '${pkg_json_path}' with semver expression <${PKG_JSON_VERSION}>"
+    # attempt complex semver range evaluation
+    PKG_JSON_VERSION=$(nvm_interpret_complex_semver "$PKG_JSON_VERSION")
+    if [ ! -n "${PKG_JSON_VERSION}" ]; then
+      nvm_echo "Warning: could not interpret engines.node semver expression obtained from package.json file."
+      return 2
+    fi
+  fi
+}
 
 nvm_find_nvmrc() {
   local dir
@@ -430,6 +781,7 @@ nvm_version() {
   local PATTERN
   PATTERN="${1-}"
   local VERSION
+
   # The default version is the current one
   if [ -z "${PATTERN}" ]; then
     PATTERN='current'
@@ -2596,14 +2948,19 @@ nvm() {
             shift
           fi
         else
-          nvm_rc_version
-          if [ $version_not_provided -eq 1 ] && [ -z "$NVM_RC_VERSION" ]; then
+          nvm_rc_version || nvm_package_json_version
+          if [ -n "${NVM_RC_VERSION-}" ]; then
+            provided_version="$NVM_RC_VERSION"
+          elif [ -n "${PKG_JSON_VERSION-}" ]; then
+            provided_version="$PKG_JSON_VERSION"
+          elif [ $version_not_provided -eq 1 ]; then
             unset NVM_RC_VERSION
+            unset PKG_JSON_VERSION
             >&2 nvm --help
             return 127
           fi
-          provided_version="$NVM_RC_VERSION"
           unset NVM_RC_VERSION
+          unset PKG_JSON_VERSION
         fi
       elif [ $# -gt 0 ]; then
         shift
@@ -2947,12 +3304,20 @@ nvm() {
       if [ -n "${NVM_LTS-}" ]; then
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
       elif [ -z "${PROVIDED_VERSION-}" ]; then
-        nvm_rc_version
+        nvm_rc_version || nvm_package_json_version
         if [ -n "${NVM_RC_VERSION-}" ]; then
           PROVIDED_VERSION="$NVM_RC_VERSION"
-          VERSION="$(nvm_version "$PROVIDED_VERSION")"
+        elif [ -n "${PKG_JSON_VERSION-}" ]; then
+          PROVIDED_VERSION="$PKG_JSON_VERSION"
+        else
+          unset NVM_RC_VERSION
+          unset PKG_JSON_VERSION
+          >&2 nvm --help
+          return 127
         fi
+        VERSION="$(nvm_version "$PROVIDED_VERSION")"
         unset NVM_RC_VERSION
+        unset PKG_JSON_VERSION
       else
         VERSION="$(nvm_match_version "$PROVIDED_VERSION")"
       fi
@@ -3543,6 +3908,9 @@ nvm() {
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info \
+        nvm_get_node_from_pkg_json nvm_find_package_json nvm_package_json_version \
+        nvm_interpret_complex_semver nvm_validate_semver \
+        nvm_string_contains_regexp \
         > /dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \

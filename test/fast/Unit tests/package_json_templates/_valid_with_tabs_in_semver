@@ -1,0 +1,9 @@
+verifies compatibility with basic package.json with tabs in the 'engines.node' value
+
+{
+				"name": "fake",
+				"engines": {
+								"node": "			NODE_SEMVER		"
+				},
+				"description": "fake"
+}
