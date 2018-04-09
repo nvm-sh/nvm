@@ -330,6 +330,8 @@ nvm_do_install() {
   PROFILE_INSTALL_DIR="$(nvm_install_dir | command sed "s:^$HOME:\$HOME:")"
 
   SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\\n"
+  ZSH_COMPLETION_STR='# Load compinit/compdef\n autoload -U compinit\n compinit'
+  
   # shellcheck disable=SC2016
   COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion\n'
   BASH_OR_ZSH=false
@@ -358,6 +360,7 @@ nvm_do_install() {
     # shellcheck disable=SC2016
     if ${BASH_OR_ZSH} && ! command grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
       echo "=> Appending bash_completion source string to $NVM_PROFILE"
+      command printf "$ZSH_COMPLETION_STR" >> "$NVM_PROFILE"
       command printf "$COMPLETION_STR" >> "$NVM_PROFILE"
     else
       echo "=> bash_completion source string already in ${NVM_PROFILE}"

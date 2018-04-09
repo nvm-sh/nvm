@@ -92,6 +92,7 @@ __nvm ()
 # ZSH, load and run bashcompinit before calling the complete function.
 if [[ -n ${ZSH_VERSION-} ]]; then
   autoload -U +X bashcompinit && bashcompinit
+  autoload -U +X compinit && compinit
 fi
 
 complete -o default -F __nvm nvm
