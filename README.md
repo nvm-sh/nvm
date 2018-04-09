@@ -28,6 +28,8 @@
   - [Usage](#usage-1)
 - [Compatibility Issues](#compatibility-issues)
 - [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
+- [Removal](#removal)
+  - [Manual Uninstall](#manual-uninstall)
 - [Docker for development environment](#docker-for-development-environment)
 - [Problems](#problems)
 - [Mac OS "troubleshooting"](#mac-os-troubleshooting)
@@ -499,6 +501,22 @@ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | b
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
 
 As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
+
+## Removal
+
+### Manual Uninstall
+
+To remove nvm manually, execute the following:
+```sh
+$ rm -rf "$NVM_DIR"
+```
+
+Edit ~/.bashrc (or other shell resource config) and remove the lines below:
+```sh
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[[ -r $NVM_DIR/bash_completion ]] && \. $NVM_DIR/bash_completion
+```
 
 ## Docker for development environment
 
