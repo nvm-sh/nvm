@@ -293,6 +293,10 @@ nvm_check_global_modules() {
   fi
 }
 
+nvm_install_manpage() {
+    ln -s $PWD/nvm.1 /usr/local/share/man/man1/nvm.1
+}
+
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
     echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
@@ -375,6 +379,8 @@ nvm_do_install() {
 
   nvm_install_node
 
+  nvm_install_manpage
+
   nvm_reset
 
   echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
@@ -392,7 +398,7 @@ nvm_reset() {
   unset -f nvm_has nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
     install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_check_global_modules \
-    nvm_do_install nvm_reset
+    nvm_do_install nvm_install_manpage nvm_reset
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
