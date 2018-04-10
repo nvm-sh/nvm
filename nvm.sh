@@ -2635,6 +2635,7 @@ nvm() {
           fi
         fi
         if [ -n "${LTS-}" ]; then
+          LTS="$(echo "${LTS}" | tr '[:upper:]' '[:lower:]')"
           nvm_ensure_default_set "lts/${LTS}"
         else
           nvm_ensure_default_set "$provided_version"
