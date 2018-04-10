@@ -344,6 +344,7 @@ nvm_do_install() {
     echo "   OR"
     echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
+    echo
   else
     if nvm_profile_is_bash_or_zsh "${NVM_PROFILE-}"; then
       BASH_OR_ZSH=true
