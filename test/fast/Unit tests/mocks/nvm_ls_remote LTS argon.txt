@@ -25,3 +25,12 @@ v4.7.1 Argon
 v4.7.2 Argon
 v4.7.3 Argon
 v4.8.0 Argon
+v4.8.1 Argon
+v4.8.2 Argon
+v4.8.3 Argon
+v4.8.4 Argon
+v4.8.5 Argon
+v4.8.6 Argon
+v4.8.7 Argon
+v4.9.0 Argon
+v4.9.1 Argon
