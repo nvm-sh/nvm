@@ -71,6 +71,8 @@ command -v nvm
 ```
 simply close your current terminal, open a new terminal, and try verifying again.
 
+**Note:** Since OS X 10.9, `/usr/bin/git` was preset by Xcode command line tools, which caused Git can't be properly detected if it's installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/creationix/nvm/issues/1782))
+
 **Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:-
   - your system may not have a [`.bash_profile file`] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again
   - you might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
