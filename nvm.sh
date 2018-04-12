@@ -257,6 +257,11 @@ if [ -z "${NVM_DIR-}" ]; then
   # shellcheck disable=SC1001
   NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" > /dev/null && \pwd)"
   export NVM_DIR
+else
+  while echo "${NVM_DIR}" | nvm_grep -q "/$"; do
+    export NVM_DIR="${NVM_DIR%/}"
+  done
+  nvm_err "Warning: \$NVM_DIR should not have trailing slash"
 fi
 unset NVM_SCRIPT_SOURCE 2> /dev/null
 
