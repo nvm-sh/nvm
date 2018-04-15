@@ -193,6 +193,7 @@ And then in any new shell just use the installed version:
 ```sh
 nvm use node
 ```
+**Note:** `nvm use` does not change global pointer. It changes pointer for the lifetime of the shell only.
 
 Or you can just run it:
 
