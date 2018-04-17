@@ -38,3 +38,11 @@ WGET_EXPECTED_INFO="$(type wget)"
 [ "${WGET_COMMAND_INFO}" = "${WGET_EXPECTED_INFO}" ] || die "wget command info wrong(stage 3), expected: '${WGET_EXPECTED_INFO}', got '${WGET_COMMAND_INFO}'"
 
 cleanup
+
+# 4. nvm_command_info() should not have standard error
+nvm_command_info ls   2>&1 >/dev/null | grep . && die "\`nvm_command_info ls\`   should not return standard error message(stage 4)"
+nvm_command_info rm   2>&1 >/dev/null | grep . && die "\`nvm_command_info rm\`   should not return standard error message(stage 4)"
+nvm_command_info git  2>&1 >/dev/null | grep . && die "\`nvm_command_info git\`  should not return standard error message(stage 4)"
+nvm_command_info grep 2>&1 >/dev/null | grep . && die "\`nvm_command_info grep\` should not return standard error message(stage 4)"
+
+cleanup

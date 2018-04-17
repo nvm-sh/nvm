@@ -48,7 +48,7 @@ nvm_command_info() {
   local INFO
   COMMAND="${1}"
   if type "${COMMAND}" | nvm_grep -q hashed; then
-    INFO="$(type "${COMMAND}" | command sed -E 's/\(|)//g' | command awk '{print $4}')"
+    INFO="$(type "${COMMAND}" | command sed -E 's/\(|\)//g' | command awk '{print $4}')"
   elif type "${COMMAND}" | nvm_grep -q aliased; then
     INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | command sed -e 's/^\ *//g' -Ee "s/\`|'//g" ))"
   elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is an alias for"; then
