@@ -257,6 +257,15 @@ if [ -z "${NVM_DIR-}" ]; then
   # shellcheck disable=SC1001
   NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" > /dev/null && \pwd)"
   export NVM_DIR
+else
+  # https://unix.stackexchange.com/a/198289
+  case $NVM_DIR in
+    *[!/]*/)
+      NVM_DIR="${NVM_DIR%"${NVM_DIR##*[!/]}"}"
+      export NVM_DIR
+      nvm_err "Warning: \$NVM_DIR should not have trailing slashes"
+    ;;
+  esac
 fi
 unset NVM_SCRIPT_SOURCE 2> /dev/null
 

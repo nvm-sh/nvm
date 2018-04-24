@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR_BASE="/tmp"
+export NVM_DIR="${NVM_DIR_BASE}/"
+
+\. ../../nvm.sh
+
+[ "${NVM_DIR}" = "${NVM_DIR_BASE}" ] || die 'nvm should remove the last trailing slash in "$NVM_DIR"'
+
+export NVM_DIR="${NVM_DIR_BASE}//"
+
+\. ../../nvm.sh
+
+[ "${NVM_DIR}" = "${NVM_DIR_BASE}" ] || die 'nvm should remove all the last trailing slashes in "$NVM_DIR"'
