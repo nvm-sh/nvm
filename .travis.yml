@@ -30,6 +30,7 @@ script:
   - if [ -n "${SHELL-}" ] && [ -n "${TEST_SUITE}" ]; then if [ "${TEST_SUITE}" = 'installation_iojs' ]; then travis_retry make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL ; else make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL; fi; fi
 before_cache:
   - if [ -n "$WITHOUT_CURL" ]; then sudo apt-get install curl -y ; fi
+  - if [ -n "${NODE-}" ]; then . nvm.sh && nvm install --latest-npm "${NODE}" && npm --version; fi
 env:
   global:
     - CXX=g++-4.8
@@ -77,3 +78,14 @@ env:
     - SHELL=zsh TEST_SUITE=installation_iojs WITHOUT_CURL=1
   #  - SHELL=ksh TEST_SUITE=installation_iojs
   #  - SHELL=ksh TEST_SUITE=installation_iojs WITHOUT_CURL=1
+    - NODE=10 TEST="nvm install-latest-npm"
+    - NODE=9 TEST="nvm install-latest-npm"
+    - NODE=8 TEST="nvm install-latest-npm"
+    - NODE=7 TEST="nvm install-latest-npm"
+    - NODE=6 TEST="nvm install-latest-npm"
+    - NODE=5 TEST="nvm install-latest-npm"
+    - NODE=5.9 TEST="nvm install-latest-npm"
+    - NODE=4 TEST="nvm install-latest-npm"
+    - NODE=4.6 TEST="nvm install-latest-npm"
+    - NODE=4.5 TEST="nvm install-latest-npm"
+    - NODE=4.4 TEST="nvm install-latest-npm"
