@@ -2047,6 +2047,13 @@ nvm_install_source() {
   local TMPDIR
   local VERSION_PATH
 
+  local ZSH_HAS_SHWORDSPLIT_UNSET
+  ZSH_HAS_SHWORDSPLIT_UNSET=1
+  if nvm_has "setopt"; then
+    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
+    setopt shwordsplit
+  fi
+
   TARBALL="$(nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
   [ -f "${TARBALL}" ] && \
   TMPDIR="$(dirname "${TARBALL}")/files" && \
@@ -2062,9 +2069,15 @@ nvm_install_source() {
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install
   ); then
+    if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+      unsetopt shwordsplit
+    fi
     nvm_err "nvm: install ${VERSION} failed!"
     command rm -rf "${TMPDIR-}"
     return 1
+  fi
+  if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
+    unsetopt shwordsplit
   fi
 }
 
