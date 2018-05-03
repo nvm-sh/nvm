@@ -212,6 +212,11 @@ nvm_try_profile() {
 # Otherwise, an empty string is returned
 #
 nvm_detect_profile() {
+  if [ "${PROFILE-}" = '/dev/null' ]; then
+    # the user has specifically requested NOT to have nvm touch their profile
+    return
+  fi
+
   if [ -n "${PROFILE}" ] && [ -f "${PROFILE}" ]; then
     echo "${PROFILE}"
     return

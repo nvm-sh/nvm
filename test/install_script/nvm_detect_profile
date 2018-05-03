@@ -28,6 +28,12 @@ setup
 # Confirm profile detection via $SHELL works and that $PROFILE overrides profile detection
 #
 
+# setting $PROFILE to /dev/null should return no detected profile
+NVM_DETECT_PROFILE="$(PROFILE='/dev/null'; nvm_detect_profile)"
+if [ -n "$NVM_DETECT_PROFILE" ]; then
+  die "nvm_detect_profile still detected a profile even though PROFILE=/dev/null"
+fi
+
 # .bashrc should be detected for bash
 NVM_DETECT_PROFILE="$(BASH_VERSION="1"; unset PROFILE; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
