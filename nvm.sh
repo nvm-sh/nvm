@@ -1218,8 +1218,7 @@ nvm_ls_remote_index_tab() {
       nvm_make_alias "$LTS_ALIAS" "$LTS_VERSION" >/dev/null 2>&1
     done
 
-  VERSIONS="$(nvm_echo "${VERSION_LIST}" \
-    | command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
+  VERSIONS="$({ command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
         if (!$1) { next }
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
         if (lts == "*" && $10 ~ /^\-?$/) { next }
@@ -1227,7 +1226,10 @@ nvm_ls_remote_index_tab() {
         if ($10 !~ /^\-?$/) print $1, $10; else print $1
       }' \
     | nvm_grep -w "${PATTERN:-.*}" \
-    | $SORT_COMMAND)"
+    | $SORT_COMMAND; } << EOF
+$VERSION_LIST
+EOF
+)"
   if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
     unsetopt shwordsplit
   fi
