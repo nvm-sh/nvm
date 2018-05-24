@@ -1107,7 +1107,13 @@ nvm_ls_remote() {
   local PATTERN
   PATTERN="${1-}"
   if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
-    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command tail -1 | command awk '{ print $1 }')"
+    local IMPLICIT
+    IMPLICIT="$(nvm_print_implicit_alias remote "${PATTERN}")"
+    if [ -z "${IMPLICIT-}" ] || [ "${IMPLICIT}" = 'N/A' ]; then
+      nvm_echo "N/A"
+      return 3
+    fi
+    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${IMPLICIT}" | command tail -1 | command awk '{ print $1 }')"
   elif [ -n "${PATTERN}" ]; then
     PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
   else
@@ -1212,8 +1218,7 @@ nvm_ls_remote_index_tab() {
       nvm_make_alias "$LTS_ALIAS" "$LTS_VERSION" >/dev/null 2>&1
     done
 
-  VERSIONS="$(nvm_echo "${VERSION_LIST}" \
-    | command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
+  VERSIONS="$({ command awk -v pattern="${PATTERN-}" -v lts="${LTS-}" '{
         if (!$1) { next }
         if (pattern && tolower($1) !~ tolower(pattern)) { next }
         if (lts == "*" && $10 ~ /^\-?$/) { next }
@@ -1221,7 +1226,10 @@ nvm_ls_remote_index_tab() {
         if ($10 !~ /^\-?$/) print $1, $10; else print $1
       }' \
     | nvm_grep -w "${PATTERN:-.*}" \
-    | $SORT_COMMAND)"
+    | $SORT_COMMAND; } << EOF
+$VERSION_LIST
+EOF
+)"
   if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
     unsetopt shwordsplit
   fi
@@ -1590,7 +1598,7 @@ nvm_print_implicit_alias() {
   if [ "_$2" = '_stable' ]; then
     nvm_echo "${STABLE}"
   elif [ "_$2" = '_unstable' ]; then
-    nvm_echo "${UNSTABLE}"
+    nvm_echo "${UNSTABLE:-"N/A"}"
   fi
 }
 
