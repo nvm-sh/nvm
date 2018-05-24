@@ -57,7 +57,8 @@
         v6.13.0  [0;37m (LTS: Boron)[0m
         v6.13.1  [0;37m (LTS: Boron)[0m
         v6.14.0  [0;37m (LTS: Boron)[0m
-        v6.14.1  [1;32m (Latest LTS: Boron)[0m
+        v6.14.1  [0;37m (LTS: Boron)[0m
+        v6.14.2  [1;32m (Latest LTS: Boron)[0m
          v8.9.0  [0;37m (LTS: Carbon)[0m
          v8.9.1  [0;37m (LTS: Carbon)[0m
          v8.9.2  [0;37m (LTS: Carbon)[0m
@@ -65,4 +66,5 @@
          v8.9.4  [0;37m (LTS: Carbon)[0m
         v8.10.0  [0;37m (LTS: Carbon)[0m
         v8.11.0  [0;37m (LTS: Carbon)[0m
-        v8.11.1  [1;32m (Latest LTS: Carbon)[0m
+        v8.11.1  [0;37m (LTS: Carbon)[0m
+        v8.11.2  [1;32m (Latest LTS: Carbon)[0m

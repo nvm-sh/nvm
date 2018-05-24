@@ -58,6 +58,7 @@ v6.13.0 Boron
 v6.13.1 Boron
 v6.14.0 Boron
 v6.14.1 Boron
+v6.14.2 Boron
 v8.9.0 Carbon
 v8.9.1 Carbon
 v8.9.2 Carbon
@@ -66,3 +67,4 @@ v8.9.4 Carbon
 v8.10.0 Carbon
 v8.11.0 Carbon
 v8.11.1 Carbon
+v8.11.2 Carbon
