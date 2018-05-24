@@ -1107,7 +1107,13 @@ nvm_ls_remote() {
   local PATTERN
   PATTERN="${1-}"
   if nvm_validate_implicit_alias "${PATTERN}" 2> /dev/null ; then
-    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "$(nvm_print_implicit_alias remote "${PATTERN}")" | command tail -1 | command awk '{ print $1 }')"
+    local IMPLICIT
+    IMPLICIT="$(nvm_print_implicit_alias remote "${PATTERN}")"
+    if [ -z "${IMPLICIT-}" ] || [ "${IMPLICIT}" = 'N/A' ]; then
+      nvm_echo "N/A"
+      return 3
+    fi
+    PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${IMPLICIT}" | command tail -1 | command awk '{ print $1 }')"
   elif [ -n "${PATTERN}" ]; then
     PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
   else
@@ -1590,7 +1596,7 @@ nvm_print_implicit_alias() {
   if [ "_$2" = '_stable' ]; then
     nvm_echo "${STABLE}"
   elif [ "_$2" = '_unstable' ]; then
-    nvm_echo "${UNSTABLE}"
+    nvm_echo "${UNSTABLE:-"N/A"}"
   fi
 }
 
