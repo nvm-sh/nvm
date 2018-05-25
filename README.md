@@ -378,7 +378,7 @@ load-nvmrc() {
 
     if [ "$nvmrc_node_version" = "N/A" ]; then
       nvm install
-    elif [ "$nvmrc_node_version" != "$node_version" ]; then
+    elif [ "$nvmrc_node_version" = "$node_version" ]; then
       nvm use
     fi
   elif [ "$node_version" != "$(nvm version default)" ]; then
