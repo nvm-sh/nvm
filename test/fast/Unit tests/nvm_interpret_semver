@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# TODO this test currently takes about 1 minute and will take even longer with the rest of the needed test cases so maybe it shouldn't live in the "fast" tests directory.
+
 die () { printf "$@" ; exit 1; }
 
 \. ../../../nvm.sh
@@ -27,7 +29,7 @@ while [ -n "$test_cases" ]; do
   LINE=$(echo "$test_cases" | head -n1)
   INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
   EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
-  ACTUAL_OUTPUT=$(nvm_interpret_complex_semver "$INPUT")
+  ACTUAL_OUTPUT=$(nvm_interpret_semver "$INPUT")
   [ "$ACTUAL_OUTPUT" = "$EXPECTED_OUTPUT" ] \
     && [ -n "$INPUT" ] \
     || die "Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
