@@ -30,9 +30,9 @@ while [ -n "$test_cases" ]; do
   INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
   EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
   ACTUAL_OUTPUT=$(nvm_interpret_semver "$INPUT")
-  [ "$ACTUAL_OUTPUT" = "$EXPECTED_OUTPUT" ] \
-    && [ -n "$INPUT" ] \
-    || die "Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
+  if [ "$ACTUAL_OUTPUT" != "$EXPECTED_OUTPUT" ] || [ -z "$INPUT" ]; then
+    die "Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
+  fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
 exit 0

@@ -5,7 +5,6 @@ die () { printf "$@" ; exit 1; }
 \. ../../../nvm.sh
 
 # INPUT:EXPECTED_OUTPUT
-# TODO refactor test cases into clearer structure
 test_cases="1.2.3:1.2.3
 1.2.3 - 1.2.4:>=1.2.3 <=1.2.4
 1.2.3-1.2.4:>=1.2.3 <=1.2.4
@@ -46,9 +45,9 @@ while [ -n "$test_cases" ]; do
   INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
   EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
   ACTUAL_OUTPUT=$(nvm_validate_semver "$INPUT")
-  [ "$ACTUAL_OUTPUT" = "$EXPECTED_OUTPUT" ] \
-    && [ -n "$INPUT" ] \
-    || die "Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
+  if [ -z "$INPUT" ] || [ "$ACTUAL_OUTPUT" != "$EXPECTED_OUTPUT" ]; then
+    die "nvm_validate_semver test case failed. Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
+  fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
 exit 0

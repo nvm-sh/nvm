@@ -114,10 +114,7 @@ xx:xx
 # - validate that leading trailing spaces and tabs are removed
 TEST_SEMVERS="$TEST_SEMVERS
  1		1 :1 1
-	1	1	:1 1"
-
-# remove first line which is just an empty line
-TEST_SEMVERS=$(echo "$TEST_SEMVERS" | tail -n +2)
+	2	2	:2 2"
 
 
 # POSITIVE TEST CASES
@@ -129,22 +126,22 @@ PREV_TEST_SEMVER=''
 for TEMPLATE_NAME in package_json_templates/_valid_*; do
   while [ -n "$TEST_SEMVERS_COPY" ]; do
     LINE=$(echo "$TEST_SEMVERS_COPY" | head -n1)
+    TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
+    [ -n "$LINE" ] || continue
     TEST_SEMVER_INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
     EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
-    TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
 
-    [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ] \
-      && die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #1). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+      die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #1). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
 
     PKG_JSON_CONTENTS=$(sed 's/NODE_SEMVER/'"$TEST_SEMVER_INPUT"'/g' "$TEMPLATE_NAME" | tail -n +3)
     ACTUAL_OUTPUT=$(nvm_get_node_from_pkg_json "$PKG_JSON_CONTENTS")
 
-    [ "$ACTUAL_OUTPUT" = "$EXPECTED_OUTPUT" ] \
-      && [ -n "$ACTUAL_OUTPUT" ] \
-      && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' POSITIVE test case failed (TEST SET #1).
-        Expected '$EXPECTED_OUTPUT' but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    if [ "$ACTUAL_OUTPUT" != "$EXPECTED_OUTPUT" ] || [ -z "$ACTUAL_OUTPUT" ] || [ -z "$PKG_JSON_CONTENTS" ]; then
+      die "'nvm_get_node_from_pkg_json' POSITIVE test case failed (TEST SET #1). Expected '$EXPECTED_OUTPUT' but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    fi
   done
 done
 
@@ -158,21 +155,21 @@ PREV_TEST_SEMVER=''
 for TEMPLATE_NAME in package_json_templates/_invalid_*; do
   while [ -n "$TEST_SEMVERS_COPY" ]; do
     LINE=$(echo "$TEST_SEMVERS_COPY" | head -n1)
-    TEST_SEMVER_INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
     TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
+    [ -n "$LINE" ] || continue
+    TEST_SEMVER_INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
 
-    [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ] \
-      && die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #2). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+      die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #2). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
 
     PKG_JSON_CONTENTS=$(sed 's/NODE_SEMVER/'"$TEST_SEMVER_INPUT"'/g' "$TEMPLATE_NAME" | tail -n +3)
     ACTUAL_OUTPUT=$(nvm_get_node_from_pkg_json "$PKG_JSON_CONTENTS")
 
-    [ "$ACTUAL_OUTPUT" = "" ] \
-      && [ -n "$TEST_SEMVER_INPUT" ] \
-      && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #2).
-        Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    if [ "$ACTUAL_OUTPUT" != "" ] || [ -z "$TEST_SEMVER_INPUT" ] || [ -z "$PKG_JSON_CONTENTS" ]; then
+      die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #2). Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    fi
   done
 done
 
@@ -201,20 +198,20 @@ PREV_TEST_SEMVER=''
 for TEMPLATE_NAME in package_json_templates/_valid_*; do
   while [ -n "$TEST_SEMVERS_COPY" ]; do
     TEST_SEMVER_INPUT=$(echo "$TEST_SEMVERS_COPY" | head -n1)
+    [ -n "$TEST_SEMVER_INPUT" ] || continue
     TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
 
-    [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ] \
-      && die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #3). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+      die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #3). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
 
     PKG_JSON_CONTENTS=$(sed 's/NODE_SEMVER/'"$TEST_SEMVER_INPUT"'/g' "$TEMPLATE_NAME" | tail -n +3)
     ACTUAL_OUTPUT=$(nvm_get_node_from_pkg_json "$PKG_JSON_CONTENTS")
 
-    [ "$ACTUAL_OUTPUT" = "" ] \
-      && [ -n "$TEST_SEMVER_INPUT" ] \
-      && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #3).
-        Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    if [ "$ACTUAL_OUTPUT" != "" ] || [ -z "$TEST_SEMVER_INPUT" ] || [ -z "$PKG_JSON_CONTENTS" ]; then
+      die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #3). Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    fi
   done
 done
 
@@ -224,19 +221,19 @@ PREV_TEST_SEMVER=''
 for TEMPLATE_NAME in package_json_templates/_invalid_*; do
   while [ -n "$TEST_SEMVERS_COPY" ]; do
     TEST_SEMVER_INPUT=$(echo "$TEST_SEMVERS_COPY" | head -n1)
+    [ -n "$TEST_SEMVER_INPUT" ] || continue
     TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
 
-    [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ] \
-      && die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #4). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+      die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #4). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
+    fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
 
     PKG_JSON_CONTENTS=$(sed 's/NODE_SEMVER/'"$TEST_SEMVER_INPUT"'/g' "$TEMPLATE_NAME" | tail -n +3)
     ACTUAL_OUTPUT=$(nvm_get_node_from_pkg_json "$PKG_JSON_CONTENTS")
 
-    [ "$ACTUAL_OUTPUT" = "" ] \
-      && [ -n "$TEST_SEMVER_INPUT" ] \
-      && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #4).
-        Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    if [ "$ACTUAL_OUTPUT" != "" ] || [ -z "$TEST_SEMVER_INPUT" ] || [ -z "$PKG_JSON_CONTENTS" ]; then
+      die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #4). Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
+    fi
   done
 done

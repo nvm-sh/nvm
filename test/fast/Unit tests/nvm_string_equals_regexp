@@ -16,10 +16,9 @@ while [ -n "$test_cases" ]; do
   LINE=$(echo "$test_cases" | head -n1)
   STRING=$(echo "$LINE" | awk -F: '{ print $1 }')
   REGEXP=$(echo "$LINE" | awk -F: '{ print $2 }')
-  [ -n "$REGEXP" ] \
-    && [ -n "$STRING" ] \
-    && nvm_string_contains_regexp "$STRING" "$REGEXP" \
-    || die "nvm_string_contains_regexp POSITIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+  if [ -z "$REGEXP" ] || [ -z "$STRING" ] || ! nvm_string_contains_regexp "$STRING" "$REGEXP"; then
+    die "nvm_string_contains_regexp POSITIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+  fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
 
@@ -34,9 +33,9 @@ while [ -n "$test_cases" ]; do
   LINE=$(echo "$test_cases" | head -n1)
   STRING=$(echo "$LINE" | awk -F: '{ print $1 }')
   REGEXP=$(echo "$LINE" | awk -F: '{ print $2 }')
-  [ -n "$REGEXP" ] \
-    && ! nvm_string_contains_regexp "$STRING" "$REGEXP" \
-    || die "nvm_string_contains_regexp NEGATIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+  if [ -z "$REGEXP" ] || nvm_string_contains_regexp "$STRING" "$REGEXP"; then
+    die "nvm_string_contains_regexp NEGATIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+  fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
 exit 0
