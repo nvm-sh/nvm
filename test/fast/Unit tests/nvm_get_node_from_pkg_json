@@ -128,9 +128,9 @@ TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS")
 PREV_TEST_SEMVER=''
 for TEMPLATE_NAME in package_json_templates/_valid_*; do
   while [ -n "$TEST_SEMVERS_COPY" ]; do
-		LINE=$(echo "$TEST_SEMVERS_COPY" | head -n1)
+    LINE=$(echo "$TEST_SEMVERS_COPY" | head -n1)
     TEST_SEMVER_INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
-		EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
+    EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
     TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
 
     [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ] \
@@ -143,7 +143,7 @@ for TEMPLATE_NAME in package_json_templates/_valid_*; do
     [ "$ACTUAL_OUTPUT" = "$EXPECTED_OUTPUT" ] \
       && [ -n "$ACTUAL_OUTPUT" ] \
       && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' POSITIVE test case failed (TEST SET #1). 
+      || die "'nvm_get_node_from_pkg_json' POSITIVE test case failed (TEST SET #1).
         Expected '$EXPECTED_OUTPUT' but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
   done
 done
@@ -157,7 +157,7 @@ TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS")
 PREV_TEST_SEMVER=''
 for TEMPLATE_NAME in package_json_templates/_invalid_*; do
   while [ -n "$TEST_SEMVERS_COPY" ]; do
-		LINE=$(echo "$TEST_SEMVERS_COPY" | head -n1)
+    LINE=$(echo "$TEST_SEMVERS_COPY" | head -n1)
     TEST_SEMVER_INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
     TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
 
@@ -171,7 +171,7 @@ for TEMPLATE_NAME in package_json_templates/_invalid_*; do
     [ "$ACTUAL_OUTPUT" = "" ] \
       && [ -n "$TEST_SEMVER_INPUT" ] \
       && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #2). 
+      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #2).
         Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
   done
 done
@@ -213,7 +213,7 @@ for TEMPLATE_NAME in package_json_templates/_valid_*; do
     [ "$ACTUAL_OUTPUT" = "" ] \
       && [ -n "$TEST_SEMVER_INPUT" ] \
       && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #3). 
+      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #3).
         Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
   done
 done
@@ -236,7 +236,7 @@ for TEMPLATE_NAME in package_json_templates/_invalid_*; do
     [ "$ACTUAL_OUTPUT" = "" ] \
       && [ -n "$TEST_SEMVER_INPUT" ] \
       && [ -n "$PKG_JSON_CONTENTS" ] \
-      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #4). 
+      || die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST SET #4).
         Expected to get empty string but got '$ACTUAL_OUTPUT' when given input template '$TEMPLATE_NAME':\n$PKG_JSON_CONTENTS"
   done
 done

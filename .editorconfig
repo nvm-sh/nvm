@@ -14,3 +14,10 @@ indent_size = false
 
 [Makefile]
 indent_style = tab
+
+[test/fast/Unit tests/package_json_templates/*]
+indent_style = unset
+
+[test/fast/Unit tests/nvm_get_node_from_pkg_json]
+indent_style = unset
+indent_size = unset

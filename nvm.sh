@@ -328,7 +328,7 @@ nvm_is_valid_semver() {
 # semver         ::= comparator_set ( ' || '  comparator_set )*
 # comparator_set ::= comparator ( ' ' comparator )*
 # comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
-# 
+#
 # NOTE: Surrounding the function body in parens limits the scope of variables in this function to only this function.
 nvm_validate_semver() { (
   # split the semantic version into comparator_set's
@@ -512,7 +512,7 @@ nvm_interpret_complex_semver() { (
       is_current_version_compatible=1 # initialized to false
 
       # For each comparator in the current_comparator_set_copy:
-      #   - If current_version is compatible with all comparators, we know current_version is the newest compatible version 
+      #   - If current_version is compatible with all comparators, we know current_version is the newest compatible version
       current_comparator_set_copy=$(command printf "%s" "$current_comparator_set" | command tr ' ' '\n')
       while [ -n "$current_comparator_set_copy" ]; do
         current_comparator=$(command printf "%s" "$current_comparator_set_copy" | command head -n1 | command sed -E 's/^ +//;s/ +$//')
@@ -733,9 +733,9 @@ nvm_get_node_from_pkg_json() { (
         if [ "$i" = '"' ]; then
           if [ "$in_quotes" = 1 ]; then
             in_quotes=0
-         else
+          else
             in_quotes=1
-         fi
+          fi
         # spaces are interpretted as '' here but they need to be retained
         elif [ "$i" = '' ]; then
           engines_node_value="$engines_node_value "
