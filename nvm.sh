@@ -478,11 +478,7 @@ nvm_validate_semver() { (
 nvm_interpret_complex_semver() { (
   semver="${1-}"
   version_list="${2-}" # expected to be sorted from oldest to newest
-  if [ -z "$semver" ] || [ -z "$version_list" ]; then
-    nvm_err "Error interpretting complex semver: Missing required parameter(s)"
-    return 1
-  elif ! nvm_is_valid_semver "$semver"; then
-    nvm_err "Error interpretting complex semver: Given an invalid semver"
+  if [ -z "$semver" ] || [ -z "$version_list" ] || ! nvm_is_valid_semver "$semver"; then
     return 1
   fi
 
@@ -499,17 +495,13 @@ nvm_interpret_complex_semver() { (
     semver=$(command printf "%s" "$semver" | command tail -n +2)
     [ -n "$current_comparator_set" ] || continue
 
-    is_current_version_compatible=1 # initialized to false
-
-    # For each version in the version_list_copy (from newest to oldest):
-    #   - If current_version satisfies all comparators, we've found the newest version compatible with all comparators in current current_comparator_set.
-    #   - Add discovered version to highest_compatible_versions and stop iterating through versions.
-    while [ -n "$version_list_copy" ] && [ $is_current_version_compatible -eq 1 ]; do
+    # For each version in the version_list_copy (iterating from newest to oldest):
+    #   - If current_version satisfies all comparators in current_comparator_set, we've found the newest version compatible with all comparators in current current_comparator_set.
+    #   - Add discovered version to highest_compatible_versions and stop iterating through versions for current_comparator_set.
+    while [ -n "$version_list_copy" ]; do
       current_version=$(command printf "%s" "$version_list_copy" | command tail -n1 | command sed -E 's/^ +//;s/ +$//' | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')
       version_list_copy=$(command printf "%s" "$version_list_copy" | command sed '$d')
       [ -n "$current_version" ] || continue
-
-      is_current_version_compatible=1 # initialized to false
 
       # For each comparator in the current_comparator_set_copy:
       #   - If current_version is compatible with all comparators, we know current_version is the newest compatible version
@@ -520,67 +512,86 @@ nvm_interpret_complex_semver() { (
         [ -n "$current_comparator" ] || continue
 
         stripped_version_from_comparator="$(command printf "%s" "$current_comparator" | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')"
+        if [ -z "$stripped_version_from_comparator" ]; then
+          return 1
+        fi
 
         if nvm_string_contains_regexp "$current_comparator" '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-          if [ "$current_comparator" = "$current_version" ]; then
-            # current_omparator is looking for an exact match, and the current_version is the exact match, so this current_comparator is satisfied.
-            is_current_version_compatible=0
-          elif nvm_version_greater "$current_comparator" "$current_version"; then
-            # Looking for a version that is equal to current_comparator but current_version is less than current_comparator so there is no point continuing.
-            is_current_version_compatible=1
-            no_remote_version_will_satisfy_all_comparators=0
+          if [ "$stripped_version_from_comparator" = "$current_version" ]; then
+            # current_comparator is looking for an exact match, and the current_version is the exact match, so this current_comparator is satisfied.
+            if [ -z "$current_comparator_set_copy" ]; then
+              # Also, this is the last comparator in the current_comparator_set_copy so we can assume we've found the newest compatible version of the current_comparator_set.
+              highest_compatible_versions="$highest_compatible_versions $current_version"
+              version_list_copy=''
+            fi
+          elif nvm_version_greater "$stripped_version_from_comparator" "$current_version"; then
+            # current_version is less than the stripped_version_from_comparator, so continuing iterating through version_list_copy is pointless.
+            current_comparator_set_copy=''
+            version_list_copy=''
           else
-            is_current_version_compatible=1
+            # current_version is greater than the stripped_version_from_comparator, so we should continuing iterating through version_list_copy.
+            current_comparator_set_copy=''
           fi
 
         elif nvm_string_contains_regexp "$current_comparator" '^<=[0-9]+\.[0-9]+\.[0-9]+$'; then
           if nvm_version_greater_than_or_equal_to "$stripped_version_from_comparator" "$current_version"; then
-            # current_version is less and or equal to the current_comparator version number so this current_comparator is satisfied.
-            is_current_version_compatible=0
+            # current_version is less than or equal to the current_comparator version number so this current_comparator is satisfied.
+            if [ -z "$current_comparator_set_copy" ]; then
+              # Also, this is the last comparator in the current_comparator_set_copy so we can assume we've found the newest compatible version of the current_comparator_set.
+              highest_compatible_versions="$highest_compatible_versions $current_version"
+              version_list_copy=''
+            fi
           else
-            is_current_version_compatible=1
+            # current_version is greater than the current_comparator version number so we should continue iterating through version_list_copy.
+            current_comparator_set_copy=''
           fi
 
         elif nvm_string_contains_regexp "$current_comparator" '^>=[0-9]+\.[0-9]+\.[0-9]+$'; then
           if nvm_version_greater_than_or_equal_to "$current_version" "$stripped_version_from_comparator"; then
-            is_current_version_compatible=0
+            # current_version is greater than or equal to the current_comparator version number so this current_comparator is satisfied.
+            if [ -z "$current_comparator_set_copy" ]; then
+              # Also, this is the last comparator in the current_comparator_set_copy so we can assume we've found the newest compatible version of the current_comparator_set.
+              highest_compatible_versions="$highest_compatible_versions $current_version"
+              version_list_copy=''
+            fi
           else
-            is_current_version_compatible=1
-            no_remote_version_will_satisfy_all_comparators=0
+            # current_version is less than the current_comparator version number so continuing iterating through version_list_copy is pointless.
+            current_comparator_set_copy=''
+            version_list_copy=''
           fi
 
         elif nvm_string_contains_regexp "$current_comparator" '^<[0-9]+\.[0-9]+\.[0-9]+$'; then
           if nvm_version_greater "$stripped_version_from_comparator" "$current_version"; then
-            is_current_version_compatible=0
+            # current_version is less than the current_comparator version number so this current_comparator is satisfied.
+            if [ -z "$current_comparator_set_copy" ]; then
+              # Also, this is the last comparator in the current_comparator_set_copy so we can assume we've found the newest compatible version of the current_comparator_set.
+              highest_compatible_versions="$highest_compatible_versions $current_version"
+              version_list_copy=''
+            fi
           else
-            is_current_version_compatible=1
+            # current_version is greater than or equal to the current_comparator version number so we should continue iterating through version_list_copy.
+            current_comparator_set_copy=''
           fi
 
         elif nvm_string_contains_regexp "$current_comparator" '^>[0-9]+\.[0-9]+\.[0-9]+$'; then
           if nvm_version_greater "$current_version" "$stripped_version_from_comparator"; then
-            is_current_version_compatible=0
+            # current_version is greater than the current_comparator version number so this current_comparator is satisfied.
+            if [ -z "$current_comparator_set_copy" ];then
+              # Also, this is the last comparator in the current_comparator_set_copy so we can assume we've found the newest compatible version of the current_comparator_set.
+              highest_compatible_versions="$highest_compatible_versions $current_version"
+              version_list_copy=''
+            fi
           else
-            is_current_version_compatible=1
-            no_remote_version_will_satisfy_all_comparators=0
+            # current_version is less than or equal to the current_comparator version number so continuing iterating through version_list_copy is pointless.
+            current_comparator_set_copy=''
+            version_list_copy=''
           fi
 
         else
-          is_current_version_compatible=1
-        fi
-        # If current_version is not compatible with current_comparator, stop iterating through current_comparator_set_copy.
-        if [ $is_current_version_compatible -eq 1 ]; then
           current_comparator_set_copy=''
         fi
-        # If determined that continuing iterating through version_list_copy will not find a version compatible with all comparators, stop iterating through version_list_copy.
-        if [ ${no_remote_version_will_satisfy_all_comparators-1} -eq 0 ]; then
-          version_list_copy=''
-        fi
-      done # while [ -n "$current_comparator_set_copy" ] && [ $no_remote_version_will_satisfy_all_comparators -eq 1 ]; do
-      # If the current_version is compatible with all comparators in current_comparator_set, add it to the list of highest_compatible_versions.
-      if [ $is_current_version_compatible -eq 0 ]; then
-        highest_compatible_versions="$highest_compatible_versions $current_version"
-      fi
-    done # while [ -n "$version_list_copy" ] && [ $is_current_version_compatible -eq 1 ]; do
+      done # while [ -n "$current_comparator_set_copy" ]; do
+    done # while [ -n "$version_list_copy" ]; do
   done # while [ -n "$semver" ]; do
 
   # Iterate through each of the versions in highest_compatible_versions, which are the highest versions that satisfy each of the comparator sets.
@@ -607,18 +618,12 @@ nvm_interpret_complex_semver() { (
 nvm_interpret_simple_semver() { (
   semver="${1-}"
   version_list="${2-}" # expected to be sorted from oldest to newest
-  if [ -z "$semver" ] || [ -z "$version_list" ]; then
-    nvm_err "Error interpretting simple semver: Missing required parameter(s)"
-    return 1
-  fi
-  if ! nvm_string_contains_regexp "$semver" '^[<>=]*[0-9]+\.[0-9]+\.[0-9]+$'; then
-    # semver is not a semver with only a single comparator
+  if [ -z "$semver" ] || [ -z "$version_list" ] || ! nvm_string_contains_regexp "$semver" '^[<>=]*[0-9]+\.[0-9]+\.[0-9]+$'; then
     return 1
   fi
   stripped_version_from_semver="$(command printf "%s" "$semver" | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')"
   newest_version_from_list=$(command printf "%s" "$version_list" | tail -n 1 | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')
-  if [ -z "$stripped_version_from_semver" ]; then
-    nvm_err "Error interpretting simple semver: error retrieving stripped version from semver"
+  if [ -z "$stripped_version_from_semver" ] || [ -z "$newest_version_from_list" ]; then
     return 1
   fi
   # if the semver is looking for an exact match, and it exists in the provided list of versions, resolve to that version
@@ -627,6 +632,7 @@ nvm_interpret_simple_semver() { (
       command printf "%s" "$stripped_version_from_semver"
       return 0
     else
+      # TODO we know it's not worth doing the complex semver interpratation at this point
       return 1
     fi
 
@@ -645,6 +651,7 @@ nvm_interpret_simple_semver() { (
       command printf "%s" "$newest_version_from_list"
       return 0
     else
+      # TODO we know it's not worth doing the complex semver interpretation at this point
       return 1
     fi
 
@@ -653,6 +660,7 @@ nvm_interpret_simple_semver() { (
       command printf "%s" "$newest_version_from_list"
       return 0
     else
+      # TODO we know it's not worth doing the complex semver interpretation at this point
       return 1
     fi
 
@@ -663,28 +671,25 @@ nvm_interpret_simple_semver() { (
 
 # Given a semantic version, resolve it to the newest compatible remote node version.
 # NOTE: Surrounding the function body in parens limits the scope of variables in this function to only this function.
-nvm_interpret_semver() { (
+nvm_interpret_node_semver() { (
   semver="${1-}"
   if [ -z "$semver" ]; then
-    nvm_err "Error interpretting semver: Missing semver parameter"
     return 1
   fi
 
   # Validate incoming semver and transform it into the grammar that is expected by the following logic
   valid_transformed_semver=$(nvm_validate_semver "$semver")
   if [ -z "$valid_transformed_semver" ]; then
-    nvm_err "Error interpretting semver: invalid semver: '$semver'"
     return 1
   fi
 
-  # TODO add tests verifying this logic correctly gets list of node versions and that the order is from oldest to newest
   # list of node versions is sorted from oldest to newest
   remote_node_versions=$(nvm_ls_remote | nvm_grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
   if [ -z "$remote_node_versions" ]; then
-    nvm_err "Error interpretting semver: failure retrieving remote node versions"
     return 1
   fi
 
+  # TODO update nvm_interpret_simple_semver failure output to indicate if it is worth doing complex semver interpretation
   # If semver is a single comparator, use quick algorithm to determine newest compatible version
   resolved_version=$(nvm_interpret_simple_semver "$valid_transformed_semver" "$remote_node_versions")
   if [ -n "$resolved_version" ]; then
@@ -774,7 +779,7 @@ nvm_package_json_version() {
   else
     nvm_echo "Found '${pkg_json_path}' with semver expression <${pkg_json_semver}>"
     # attempt complex semver range evaluation
-    RESOLVED_PKG_JSON_VERSION=$(nvm_interpret_semver "$pkg_json_semver")
+    RESOLVED_PKG_JSON_VERSION=$(nvm_interpret_node_semver "$pkg_json_semver")
     if [ ! -n "${RESOLVED_PKG_JSON_VERSION}" ]; then
       nvm_err "Warning: could not interpret engines.node semver expression obtained from package.json file."
       return 2
@@ -4040,7 +4045,7 @@ nvm() {
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info \
         nvm_get_node_from_pkg_json nvm_find_package_json nvm_package_json_version \
-        nvm_interpret_semver nvm_interpret_simple_semver nvm_interpret_complex_semver nvm_validate_semver \
+        nvm_interpret_node_semver nvm_interpret_simple_semver nvm_interpret_complex_semver nvm_validate_semver \
         nvm_is_valid_semver nvm_string_contains_regexp \
         > /dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \

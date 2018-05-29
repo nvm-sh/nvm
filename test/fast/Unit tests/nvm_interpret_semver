@@ -29,7 +29,7 @@ while [ -n "$test_cases" ]; do
   LINE=$(echo "$test_cases" | head -n1)
   INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
   EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
-  ACTUAL_OUTPUT=$(nvm_interpret_semver "$INPUT")
+  ACTUAL_OUTPUT=$(nvm_interpret_node_semver "$INPUT")
   if [ "$ACTUAL_OUTPUT" != "$EXPECTED_OUTPUT" ] || [ -z "$INPUT" ]; then
     die "Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
   fi

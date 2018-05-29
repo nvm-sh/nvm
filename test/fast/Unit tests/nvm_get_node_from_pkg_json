@@ -131,7 +131,7 @@ for TEMPLATE_NAME in package_json_templates/_valid_*; do
     TEST_SEMVER_INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
     EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
 
-    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+    if [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ]; then
       die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #1). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
     fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
@@ -159,7 +159,7 @@ for TEMPLATE_NAME in package_json_templates/_invalid_*; do
     [ -n "$LINE" ] || continue
     TEST_SEMVER_INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
 
-    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+    if [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ]; then
       die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #2). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
     fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
@@ -201,7 +201,7 @@ for TEMPLATE_NAME in package_json_templates/_valid_*; do
     [ -n "$TEST_SEMVER_INPUT" ] || continue
     TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
 
-    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+    if [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ]; then
       die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #3). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
     fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
@@ -224,7 +224,7 @@ for TEMPLATE_NAME in package_json_templates/_invalid_*; do
     [ -n "$TEST_SEMVER_INPUT" ] || continue
     TEST_SEMVERS_COPY=$(echo "$TEST_SEMVERS_COPY" | tail -n +2)
 
-    if [ "$PREV_TEST_SEMVER" == "$TEST_SEMVER_INPUT" ]; then
+    if [ "$PREV_TEST_SEMVER" = "$TEST_SEMVER_INPUT" ]; then
       die "Problem iterating through TEST_SEMVERS_COPY (TEST SET #4). Encountered the same value twice in a row. PREV_TEST_SEMVER='$PREV_TEST_SEMVER' TEST_SEMVER_INPUT='$TEST_SEMVER_INPUT'.\n"
     fi
     PREV_TEST_SEMVER=$(printf "%s" "$TEST_SEMVER_INPUT")
