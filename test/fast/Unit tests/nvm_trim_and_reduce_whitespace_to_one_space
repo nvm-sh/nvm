@@ -1,0 +1,28 @@
+#!/bin/sh
+
+die () { printf "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+# TODO add more test cases
+# input:expected_output
+test_cases="1.2.3:$valid_semver_regexp
+11.22.33:$valid_semver_regexp"
+
+test_cases='1:1
+      1.2.3:1.2.3
+ 1		1  :1 1
+	2			2			:2 2'
+
+while [ -n "$test_cases" ]; do
+  line=$(echo "$test_cases" | head -n1)
+  input=$(echo "$line" | awk -F: '{ print $1 }')
+  expected_output=$(echo "$line" | awk -F: '{ print $2 }')
+  actual_output=$(nvm_trim_and_reduce_whitespace_to_one_space "$input")
+  if [ -z "$input" ] || [ -z "$expected_output" ] || [ "$expected_output" != "$actual_output" ]; then
+    die "nvm_reduce_whitespace_to_one_space test case failed. expected_output: '$expected_output'. actual_output: '$actual_output'.\n"
+  fi
+  test_cases=$(echo "$test_cases" | tail -n +2)
+done
+exit 0
+

@@ -8,34 +8,36 @@ valid_semver_regexp='^( ?(<|<=|>|>=|=|~|\^)?([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x))+
 
 # POSITIVE TEST CASES
 
-# STRING:REGEXP
+# TODO add more test cases
+# string:regexp
 test_cases="1.2.3:$valid_semver_regexp
 11.22.33:$valid_semver_regexp"
 
 while [ -n "$test_cases" ]; do
-  LINE=$(echo "$test_cases" | head -n1)
-  STRING=$(echo "$LINE" | awk -F: '{ print $1 }')
-  REGEXP=$(echo "$LINE" | awk -F: '{ print $2 }')
-  if [ -z "$REGEXP" ] || [ -z "$STRING" ] || ! nvm_string_contains_regexp "$STRING" "$REGEXP"; then
-    die "nvm_string_contains_regexp POSITIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+  line=$(echo "$test_cases" | head -n1)
+  string=$(echo "$line" | awk -F: '{ print $1 }')
+  regexp=$(echo "$line" | awk -F: '{ print $2 }')
+  if [ -z "$regexp" ] || [ -z "$string" ] || ! nvm_string_contains_regexp "$string" "$regexp"; then
+    die "nvm_string_contains_regexp POSITIVE test case failed. regexp: '$regexp'. string: '$string'.\n"
   fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
 
 # NEGATIVE TEST CASES
 
-# STRING:REGEXP
+# string:regexp
 test_cases="1.2.a:$valid_semver_regexp
 :$valid_semver_regexp
 11.22.a:$valid_semver_regexp"
 
 while [ -n "$test_cases" ]; do
-  LINE=$(echo "$test_cases" | head -n1)
-  STRING=$(echo "$LINE" | awk -F: '{ print $1 }')
-  REGEXP=$(echo "$LINE" | awk -F: '{ print $2 }')
-  if [ -z "$REGEXP" ] || nvm_string_contains_regexp "$STRING" "$REGEXP"; then
-    die "nvm_string_contains_regexp NEGATIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+  line=$(echo "$test_cases" | head -n1)
+  string=$(echo "$line" | awk -F: '{ print $1 }')
+  regexp=$(echo "$line" | awk -F: '{ print $2 }')
+  if [ -z "$regexp" ] || nvm_string_contains_regexp "$string" "$regexp"; then
+    die "nvm_string_contains_regexp NEGATIVE test case failed. regexp: '$regexp'. string: '$string'.\n"
   fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
 exit 0
+

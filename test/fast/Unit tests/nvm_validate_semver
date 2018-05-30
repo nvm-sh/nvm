@@ -4,7 +4,9 @@ die () { printf "$@" ; exit 1; }
 
 \. ../../../nvm.sh
 
-# INPUT:EXPECTED_OUTPUT
+# TODO add more test cases here
+# Some test cases should just test that valid semvers from sharedTestResources/semvers just produce some result
+# input:expected_output
 test_cases="1.2.3:1.2.3
 1.2.3 - 1.2.4:>=1.2.3 <=1.2.4
 1.2.3-1.2.4:>=1.2.3 <=1.2.4
@@ -41,13 +43,14 @@ a || 1.2.3:
 11.22.33:11.22.33"
 
 while [ -n "$test_cases" ]; do
-  LINE=$(echo "$test_cases" | head -n1)
-  INPUT=$(echo "$LINE" | awk -F: '{ print $1 }')
-  EXPECTED_OUTPUT=$(echo "$LINE" | awk -F: '{ print $2 }')
-  ACTUAL_OUTPUT=$(nvm_validate_semver "$INPUT")
-  if [ -z "$INPUT" ] || [ "$ACTUAL_OUTPUT" != "$EXPECTED_OUTPUT" ]; then
-    die "nvm_validate_semver test case failed. Expected output: '$EXPECTED_OUTPUT'. Actual output: '$ACTUAL_OUTPUT'. Input: '$INPUT'.\n"
+  line=$(echo "$test_cases" | head -n1)
+  input=$(echo "$line" | awk -F: '{ print $1 }')
+  expected_output=$(echo "$line" | awk -F: '{ print $2 }')
+  actual_output=$(nvm_validate_semver "$input")
+  if [ -z "$input" ] || [ "$actual_output" != "$expected_output" ]; then
+    die "nvm_validate_semver test case failed. Expected output: '$expected_output'. Actual output: '$actual_output'. Input: '$input'.\n"
   fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
 exit 0
+

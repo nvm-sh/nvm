@@ -299,6 +299,7 @@ nvm_find_up() {
   nvm_echo "${path_}"
 }
 
+# NOTE: this function only validates across one line
 nvm_string_contains_regexp() {
   local string
   string="${1-}"
@@ -324,6 +325,16 @@ nvm_is_valid_semver() {
   fi
 }
 
+# TODO figure out if the commented out logic is needed anywhere
+nvm_trim_and_reduce_whitespace_to_one_space() {
+  command printf "%s" "${1-}" |
+    command tr -d '\n\r' |
+    command tr '\t' ' ' |
+    command tr -s ' ' |
+    command sed 's/^ //; s/ $//; s/^ //'
+}
+
+# TODO rename this function to 'nvm_normalize_semver'
 # Attempts to convert given semver to the following grammar:
 #
 # semver         ::= comparator_set ( ' || '  comparator_set )*
@@ -332,7 +343,7 @@ nvm_is_valid_semver() {
 nvm_validate_semver() {
   # split the semantic version into comparator_set's
   local semver
-  semver=$(command printf "%s" "${1-}" | command tr '||' '\n')
+  semver=$(nvm_trim_and_reduce_whitespace_to_one_space "${1-}" | command tr '||' '\n')
   if [ -z "$semver" ]; then
     return 1
   fi
@@ -354,6 +365,9 @@ nvm_validate_semver() {
       # normalize all wildcards to x
       s/X|\*/x/g;
 
+      # space out numbers surrounding '-'
+      s/ ?- ?/ - /g;
+
       # ' 1 ' => ' 1.x.x '
       # ' x ' => ' x.x.x '
       s/ ([0-9]+|x) / \1.x.x /g;
@@ -373,10 +387,12 @@ nvm_validate_semver() {
       # ' = 1.2.3 ' => ' =1.2.3 '
       # ' ~ 1.2.3 ' => ' ~1.2.3 '
       # ' ^ 1.2.3 ' => ' ^1.2.3 '
-      s/ (<|>|<=|>=|=|~|\^) (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / \1\2 /g;
+      # ' v 1.2.3 ' => ' v1.2.3 '
+      s/ (v|<|>|<=|>=|=|~|\^) (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / \1\2 /g;
 
       # ' =1.2.3 ' => ' 1.2.3 '
-      s/ =//g;
+      # ' v1.2.3 ' => ' 1.2.3 '
+      s/ (=|v)//g;
       " \
       | command awk '{
         # handle conversions of comparators with '^' or '~' or 'x' into required grammar
@@ -506,7 +522,7 @@ nvm_interpret_complex_semver() {
     #   - Add discovered version to highest_compatible_versions and stop iterating through versions for current_comparator_set.
     while [ -n "$version_list_copy" ]; do
       local current_version
-      current_version=$(command printf "%s" "$version_list_copy" | command tail -n1 | command sed -E 's/^ +//;s/ +$//' | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')
+      current_version=$(command printf "%s" "$version_list_copy" | command tail -n1 | command sed -E 's/^ +//;s/ +$//' | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')
       version_list_copy=$(command printf "%s" "$version_list_copy" | command sed '$d')
       [ -n "$current_version" ] || continue
 
@@ -635,16 +651,18 @@ nvm_interpret_simple_semver() {
     return 1
   fi
   local stripped_version_from_semver
-  stripped_version_from_semver="$(command printf "%s" "$semver" | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')"
+  stripped_version_from_semver="$(command printf "%s" "$semver" | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')"
   local newest_version_from_list
-  newest_version_from_list=$(command printf "%s" "$version_list" | tail -n 1 | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')
+  newest_version_from_list=$(command printf "%s" "$version_list" | tail -n 1 | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')
   if [ -z "$stripped_version_from_semver" ] || [ -z "$newest_version_from_list" ]; then
     return 1
   fi
+  local retrieved_version
   # if the semver is looking for an exact match, and it exists in the provided list of versions, resolve to that version
   if nvm_string_contains_regexp "$semver" '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-    if nvm_string_contains_regexp "$version_list" "^v$stripped_version_from_semver$"; then
-      command printf "%s" "$stripped_version_from_semver"
+    retrieved_version=$(command printf "%s"  "$version_list" | nvm_grep "^$stripped_version_from_semver$")
+    if [ -n "$retrieved_version" ]; then
+      command printf "%s" "$retrieved_version"
       return 0
     else
       # TODO we know it's not worth doing the complex semver interpratation at this point
@@ -653,11 +671,12 @@ nvm_interpret_simple_semver() {
 
   # Semver is looking for the newest version that is <= to a sepcific version, and the version exists in the provided list of versions, resolve to that version
   elif nvm_string_contains_regexp "$semver" '^<=[0-9]+\.[0-9]+\.[0-9]+$'; then
-    if nvm_string_contains_regexp "$version_list" "^v$stripped_version_from_semver$"; then
-      command printf "%s" "$stripped_version_from_semver"
+    retrieved_version=$(command printf "%s"  "$version_list" | nvm_grep "^$stripped_version_from_semver$")
+    if [ -n "$retrieved_version" ]; then
+      command printf "%s" "$retrieved_version"
       return 0
     else
-      return 1
+      return 1 # go on to try complex semver interpretation
     fi
 
   # Semver is looking for the newest version >= a specific version, and the newest version in the provided list of versions is >= the specified version, resolve to that version.
@@ -701,7 +720,7 @@ nvm_interpret_node_semver() {
 
   # list of node versions is sorted from oldest to newest
   local remote_node_versions
-  remote_node_versions=$(nvm_ls_remote | nvm_grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+')
+  remote_node_versions=$(nvm_ls_remote | nvm_grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | sed 's/^v//g')
   if [ -z "$remote_node_versions" ]; then
     return 1
   fi
@@ -747,11 +766,7 @@ nvm_get_node_from_pkg_json() {
   closed_brackets=0 # a counter variable
   local in_quotes
   in_quotes=1 # a true/false variable
-
-  command printf "%s" "$package_json_contents" \
-    | command tr -d '\n\r' \
-    | command tr '\t' ' ' \
-    | command tr -s ' ' \
+  nvm_trim_and_reduce_whitespace_to_one_space "$package_json_contents" \
     | nvm_grep -o '"engines": \?{ \?".*' \
     | nvm_grep -o '{.*' \
     | nvm_grep -o . \
@@ -4067,7 +4082,7 @@ nvm() {
         nvm_curl_libz_support nvm_command_info \
         nvm_get_node_from_pkg_json nvm_find_package_json nvm_package_json_version \
         nvm_interpret_node_semver nvm_interpret_simple_semver nvm_interpret_complex_semver nvm_validate_semver \
-        nvm_is_valid_semver nvm_string_contains_regexp \
+        nvm_is_valid_semver nvm_string_contains_regexp nvm_trim_and_reduce_whitespace_to_one_space \
         > /dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \

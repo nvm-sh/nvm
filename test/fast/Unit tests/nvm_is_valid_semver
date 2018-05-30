@@ -3,39 +3,52 @@
 die () { printf "$@" ; exit 1; }
 
 \. ../../../nvm.sh
+\. sharedTestResources/semvers
 
-valid_semver_regexp='^( ?(<|<=|>|>=|=|~|\^)?([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x))+$'
+# nvm_is_valid_semver validates that given semvers adhere to the following grammer
+#
+# semver         ::= comparator_set ( ' || '  comparator_set )*
+# comparator_set ::= comparator ( ' ' comparator )*
+# comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
 
 # POSITIVE TEST CASES
 
-# STRING:REGEXP
-test_cases="1.2.3:$valid_semver_regexp
-11.22.33:$valid_semver_regexp"
+positive_test_cases="$VALID_NORMALIZED_SEMVERS"
+if [ -z "$positive_test_cases" ]; then
+  die "positive test cases are empty"
+fi
 
-while [ -n "$test_cases" ]; do
-  LINE=$(echo "$test_cases" | head -n1)
-  STRING=$(echo "$LINE" | awk -F: '{ print $1 }')
-  REGEXP=$(echo "$LINE" | awk -F: '{ print $2 }')
-  if [ -z "$REGEXP" ] || [ -z "$STRING" ] || ! nvm_string_contains_regexp "$STRING" "$REGEXP"; then
-    die "nvm_string_contains_regexp POSITIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+prev_semver=''
+while [ -n "$positive_test_cases" ]; do
+  semver=$(echo "$positive_test_cases" | head -n1)
+  if [ -z "$semver" ] || ! nvm_is_valid_semver "$semver"; then
+    die "nvm_string_contains_regexp POSITIVE test case failed. semver: '$semver'.\n"
   fi
-  test_cases=$(echo "$test_cases" | tail -n +2)
+  if [ "$prev_semver" = "$semver" ]; then
+    die "something is wrong. positive test cases received the same test case twice in a row. semver: '$semver'"
+  fi
+  prev_semver="$semver"
+  positive_test_cases=$(echo "$positive_test_cases" | tail -n +2)
 done
 
 # NEGATIVE TEST CASES
 
-# STRING:REGEXP
-test_cases="1.2.a:$valid_semver_regexp
-:$valid_semver_regexp
-11.22.a:$valid_semver_regexp"
+negative_test_cases="$VALID_NON_NORMALIZED_SEMVERS"
+if [ -z "$negative_test_cases" ]; then
+  die "negative test cases are empty"
+fi
 
-while [ -n "$test_cases" ]; do
-  LINE=$(echo "$test_cases" | head -n1)
-  STRING=$(echo "$LINE" | awk -F: '{ print $1 }')
-  REGEXP=$(echo "$LINE" | awk -F: '{ print $2 }')
-  if [ -z "$REGEXP" ] || nvm_string_contains_regexp "$STRING" "$REGEXP"; then
-    die "nvm_string_contains_regexp NEGATIVE test case failed. REGEXP: '$REGEXP'. STRING: '$STRING'.\n"
+prev_semver='initialized to non empty string'
+while [ -n "$negative_test_cases" ]; do
+  semver=$(echo "$negative_test_cases" | head -n1)
+  if nvm_is_valid_semver "$semver"; then
+    die "nvm_string_contains_regexp NEGATIVE test case failed. semver: '$semver'.\n"
   fi
-  test_cases=$(echo "$test_cases" | tail -n +2)
+  if [ "$prev_semver" = "$semver" ]; then
+    die "something is wrong. negative test cases received the same test case twice in a row. semver: '$semver'"
+  fi
+  prev_semver="$semver"
+  negative_test_cases=$(echo "$negative_test_cases" | tail -n +2)
 done
 exit 0
+
