@@ -2,13 +2,11 @@
 
 set -ex
 
-cd ../..
-mkdir v0.0.1
-mkdir src/node-v0.0.1
+\. ../../nvm.sh
+\. ../common.sh
 
-sudo touch v0.0.1/sudo
-
-. ./nvm.sh
+make_fake_node v0.0.1
+sudo touch ""$(nvm_version_path v0.0.1)"/sudo"
 
 RETURN_MESSAGE="$(nvm uninstall v0.0.1 2>&1 || echo)"
 CHECK_FOR="Cannot uninstall, incorrect permissions on installation folder"

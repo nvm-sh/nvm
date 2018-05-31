@@ -130,7 +130,7 @@ nvm_has_system_iojs() {
 }
 
 nvm_is_version_installed() {
-  [ -n "${1-}" ] && [ -d "$(nvm_version_path "${1-}" 2> /dev/null)" ]
+  [ -n "${1-}" ] && [ -x "$(nvm_version_path "$1" 2> /dev/null)"/bin/node ]
 }
 
 nvm_print_npm_version() {
