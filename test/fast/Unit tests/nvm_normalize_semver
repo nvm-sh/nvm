@@ -1,11 +1,11 @@
 #!/bin/sh
 
-die () { printf "$@" ; exit 1; }
-
 \. ../../../nvm.sh
+\. ../../generated_semvers.sh
 
 # TODO add more test cases here
-# Some test cases should just test that valid semvers from sharedTestResources/semvers just produce some result
+# Some test cases should just test that valid semvers from 'Shared test tesources'/semvers just produce some result
+
 # input:expected_output
 test_cases="1.2.3:1.2.3
 1.2.3 - 1.2.4:>=1.2.3 <=1.2.4
@@ -46,7 +46,7 @@ while [ -n "$test_cases" ]; do
   line=$(echo "$test_cases" | head -n1)
   input=$(echo "$line" | awk -F: '{ print $1 }')
   expected_output=$(echo "$line" | awk -F: '{ print $2 }')
-  actual_output=$(nvm_validate_semver "$input")
+  actual_output=$(nvm_normalize_semver "$input")
   if [ -z "$input" ] || [ "$actual_output" != "$expected_output" ]; then
     die "nvm_validate_semver test case failed. Expected output: '$expected_output'. Actual output: '$actual_output'. Input: '$input'.\n"
   fi

@@ -1,9 +1,7 @@
 #!/bin/sh
 
-die () { printf "$@" ; exit 1; }
-
 \. ../../../nvm.sh
-\. sharedTestResources/semvers
+\. ../../generated_semvers.sh
 
 
 # POSITIVE TEST CASES

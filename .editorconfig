@@ -18,6 +18,11 @@ indent_style = tab
 [test/fast/Unit tests/package_json_templates/*]
 indent_style = unset
 
-[test/fast/Unit tests/nvm_get_node_from_pkg_json]
+[test/generated_semvers.sh]
 indent_style = unset
 indent_size = unset
+
+[test/fast/Unit tests/nvm_trim_and_reduce_whitespace_to_one_space]
+indent_style = unset
+indent_size = unset
+

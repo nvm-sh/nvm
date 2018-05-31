@@ -318,14 +318,9 @@ nvm_string_contains_regexp() {
 # comparator_set ::= comparator ( ' ' comparator )*
 # comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
 nvm_is_valid_semver() {
-  if nvm_string_contains_regexp "${1-}" '^( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+( \|\| ( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+)*$'; then
-    return 0
-  else
-    return 1
-  fi
+  nvm_string_contains_regexp "${1-}" '^( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+( \|\| ( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+)*$'
 }
 
-# TODO figure out if the commented out logic is needed anywhere
 nvm_trim_and_reduce_whitespace_to_one_space() {
   command printf "%s" "${1-}" |
     command tr -d '\n\r' |
@@ -334,14 +329,13 @@ nvm_trim_and_reduce_whitespace_to_one_space() {
     command sed 's/^ //; s/ $//; s/^ //'
 }
 
-# TODO rename this function to 'nvm_normalize_semver'
-# Attempts to convert given semver to the following grammar:
+# Attempts to normalize the given semver to the following grammar:
 #
 # semver         ::= comparator_set ( ' || '  comparator_set )*
 # comparator_set ::= comparator ( ' ' comparator )*
 # comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
-nvm_validate_semver() {
-  # split the semantic version into comparator_set's
+nvm_normalize_semver() {
+  # split the semantic version's comparator_set's onto their own lines for iteration
   local semver
   semver=$(nvm_trim_and_reduce_whitespace_to_one_space "${1-}" | command tr '||' '\n')
   if [ -z "$semver" ]; then
@@ -395,7 +389,7 @@ nvm_validate_semver() {
       s/ (=|v)//g;
       " \
       | command awk '{
-        # handle conversions of comparators with '^' or '~' or 'x' into required grammar
+        # handle conversions of comparators with ^ or ~ or x into required grammar
         # ` ^0.0.1 ` => ` >=0.0.1 <0.0.2 `
         # ` ^0.1.2 ` => ` >=0.1.2 <0.2.0 `
         # ` ^1.2.3 ` => ` >=1.2.3 <2.0.0 `
@@ -537,7 +531,7 @@ nvm_interpret_complex_semver() {
         [ -n "$current_comparator" ] || continue
 
         local stripped_version_from_comparator
-        stripped_version_from_comparator="$(command printf "%s" "$current_comparator" | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')"
+        stripped_version_from_comparator=$(command printf "%s" "$current_comparator" | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')
         if [ -z "$stripped_version_from_comparator" ]; then
           return 1
         fi
@@ -638,6 +632,8 @@ nvm_interpret_complex_semver() {
   done
   if [ "$highest_compatible_version" != '0.0.0' ]; then
     command printf "%s" "$highest_compatible_version"
+  else
+    return 1
   fi
 }
 
@@ -651,7 +647,7 @@ nvm_interpret_simple_semver() {
     return 1
   fi
   local stripped_version_from_semver
-  stripped_version_from_semver="$(command printf "%s" "$semver" | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')"
+  stripped_version_from_semver=$(command printf "%s" "$semver" | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')
   local newest_version_from_list
   newest_version_from_list=$(command printf "%s" "$version_list" | tail -n 1 | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')
   if [ -z "$stripped_version_from_semver" ] || [ -z "$newest_version_from_list" ]; then
@@ -713,7 +709,7 @@ nvm_interpret_node_semver() {
 
   # Validate incoming semver and transform it into the grammar that is expected by the following logic
   local valid_transformed_semver
-  valid_transformed_semver=$(nvm_validate_semver "$semver")
+  valid_transformed_semver=$(nvm_normalize_semver "$semver")
   if [ -z "$valid_transformed_semver" ]; then
     return 1
   fi
@@ -797,13 +793,13 @@ nvm_get_node_from_pkg_json() {
           return 0
         fi
     done
-    return 2
+    return 1
 }
 
 nvm_package_json_version() {
   export RESOLVED_PKG_JSON_VERSION=''
   local pkg_json_path
-  pkg_json_path="$(nvm_find_package_json)"
+  pkg_json_path=$(nvm_find_package_json)
   if [ ! -e "${pkg_json_path}" ]; then
     nvm_err "No package.json file found"
     return 1
@@ -812,14 +808,14 @@ nvm_package_json_version() {
   pkg_json_semver=$(nvm_get_node_from_pkg_json "$(command cat "$pkg_json_path")" || command printf '')
   if [ ! -n "${pkg_json_semver}"  ]; then
     nvm_err "Warning: could not retrieve engines.node semver expression in package.json file found at \"${pkg_json_path}\""
-    return 2
+    return 1
   else
     nvm_echo "Found '${pkg_json_path}' with semver expression <${pkg_json_semver}>"
     # attempt complex semver range evaluation
     RESOLVED_PKG_JSON_VERSION=$(nvm_interpret_node_semver "$pkg_json_semver")
     if [ ! -n "${RESOLVED_PKG_JSON_VERSION}" ]; then
       nvm_err "Warning: could not interpret engines.node semver expression obtained from package.json file."
-      return 2
+      return 1
     fi
   fi
 }
@@ -4081,7 +4077,7 @@ nvm() {
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info \
         nvm_get_node_from_pkg_json nvm_find_package_json nvm_package_json_version \
-        nvm_interpret_node_semver nvm_interpret_simple_semver nvm_interpret_complex_semver nvm_validate_semver \
+        nvm_interpret_node_semver nvm_interpret_simple_semver nvm_interpret_complex_semver nvm_normalize_semver \
         nvm_is_valid_semver nvm_string_contains_regexp nvm_trim_and_reduce_whitespace_to_one_space \
         > /dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \

@@ -1,11 +1,9 @@
 #!/bin/sh
 
-# TODO this test currently takes about 16 minutes so it should not be in the "fast" test directory and maybe is too long regardless.
-
 die () { printf "$@" ; exit 1; }
 
-\. ../../../nvm.sh
-\. sharedTestResources/semvers
+\. ../../nvm.sh
+\. ../generated_semvers.sh
 
 # Verify that all generated valid normalized semvers produce some result
 test_cases="$VALID_SEMVERS"
