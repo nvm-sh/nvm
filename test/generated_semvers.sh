@@ -96,7 +96,7 @@ VALID_NORMALIZED_COMPLEX_SEMVERS='10.3.0 || 8.1.1 || 4.1.0
 8.0.0 || <6.12.0'
 
 # Valid semvers that should resolve to a node version but need to be validated/normalized before interpretting.
-VALID_NON_NORMALIZED_SEMVERS='x
+VALID_NON_NORMALIZED_COMPLEX_SEMVERS='x
 X
 *
 x.x
@@ -175,10 +175,14 @@ VALID_NORMALIZED_SEMVERS=$(printf "%s\n%s\n%s" \
   "$(generate_semvers "$VALID_NORMALIZED_VERSIONS" "$VALID_NORMALIZED_SEMVER_OPERATORS")" \
 )
 
-VALID_SEMVERS=$(printf "%s\n%s\n%s" \
+VALID_NON_NORMALIZED_SEMVERS=$(printf "%s\n%s" \
+  "$VALID_NON_NORMALIZED_COMPLEX_SEMVERS" \
+  "$(generate_semvers "$VALID_NORMALIZED_VERSIONS" "$VALID_NON_NORMALIZED_SEMVER_OPERATORS" 0)" \
+)
+
+VALID_SEMVERS=$(printf "%s\n%s" \
   "$VALID_NORMALIZED_SEMVERS" \
   "$VALID_NON_NORMALIZED_SEMVERS" \
-  "$(generate_semvers "$VALID_NORMALIZED_VERSIONS" "$VALID_NON_NORMALIZED_SEMVER_OPERATORS" 0)" \
 )
 
 VALID_SEMVERS_FOR_PKG_JSON=$(printf "%s\n%s" \

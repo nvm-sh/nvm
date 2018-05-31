@@ -1,24 +1,17 @@
 #!/bin/sh
 
-die () { printf "$@" ; exit 1; }
-
 \. ../../../nvm.sh
+\. ../../generated_semvers.sh
 
-valid_semver_regexp='^( ?(<|<=|>|>=|=|~|\^)?([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x))+$'
+normalized_semver_regexp='^( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+( \|\| ( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+)*$'
 
 # POSITIVE TEST CASES
 
-# TODO add more test cases
-# string:regexp
-test_cases="1.2.3:$valid_semver_regexp
-11.22.33:$valid_semver_regexp"
-
+test_cases="$VALID_NORMALIZED_SEMVERS"
 while [ -n "$test_cases" ]; do
-  line=$(echo "$test_cases" | head -n1)
-  string=$(echo "$line" | awk -F: '{ print $1 }')
-  regexp=$(echo "$line" | awk -F: '{ print $2 }')
-  if [ -z "$regexp" ] || [ -z "$string" ] || ! nvm_string_contains_regexp "$string" "$regexp"; then
-    die "nvm_string_contains_regexp POSITIVE test case failed. regexp: '$regexp'. string: '$string'.\n"
+  string=$(echo "$test_cases" | head -n1)
+  if [ -z "$normalized_semver_regexp" ] || [ -z "$string" ] || ! nvm_string_contains_regexp "$string" "$normalized_semver_regexp"; then
+    die "nvm_string_contains_regexp POSITIVE test case failed. regexp: '$normalized_semver_regexp'. string: '$string'.\n"
   fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
@@ -26,16 +19,12 @@ done
 # NEGATIVE TEST CASES
 
 # string:regexp
-test_cases="1.2.a:$valid_semver_regexp
-:$valid_semver_regexp
-11.22.a:$valid_semver_regexp"
+test_cases=$(printf "%s\n%s" "$VALID_NON_NORMALIZED_SEMVERS" "$INVALID_SEMVERS_FOR_PKG_JSON")
 
 while [ -n "$test_cases" ]; do
-  line=$(echo "$test_cases" | head -n1)
-  string=$(echo "$line" | awk -F: '{ print $1 }')
-  regexp=$(echo "$line" | awk -F: '{ print $2 }')
-  if [ -z "$regexp" ] || nvm_string_contains_regexp "$string" "$regexp"; then
-    die "nvm_string_contains_regexp NEGATIVE test case failed. regexp: '$regexp'. string: '$string'.\n"
+  string=$(echo "$test_cases" | head -n1)
+  if [ -z "$normalized_semver_regexp" ] || nvm_string_contains_regexp "$string" "$normalized_semver_regexp"; then
+    die "nvm_string_contains_regexp NEGATIVE test case failed. regexp: '$normalized_semver_regexp'. string: '$string'.\n"
   fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done

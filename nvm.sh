@@ -317,23 +317,18 @@ nvm_string_contains_regexp() {
 # semver         ::= comparator_set ( ' || '  comparator_set )*
 # comparator_set ::= comparator ( ' ' comparator )*
 # comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
-nvm_is_valid_semver() {
+nvm_is_normalized_semver() {
   nvm_string_contains_regexp "${1-}" '^( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+( \|\| ( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+)*$'
 }
 
 nvm_trim_and_reduce_whitespace_to_one_space() {
   command printf '%s' "${1-}" |
-    command tr -d '\n\r' |
-    command tr '\t' ' ' |
+    command tr '\n\r\t\v\b' ' ' |
     command tr -s ' ' |
     command sed 's/^ //; s/ $//; s/^ //'
 }
 
-# Attempts to normalize the given semver to the following grammar:
-#
-# semver         ::= comparator_set ( ' || '  comparator_set )*
-# comparator_set ::= comparator ( ' ' comparator )*
-# comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
+# Attempts to normalize the given semver to the grammar defined with the function nvm_is_normalized_semver
 nvm_normalize_semver() {
   # split the semantic version's comparator_set's onto their own lines for iteration
   local semver
@@ -475,7 +470,7 @@ nvm_normalize_semver() {
 
   validated_semver=$(command printf '%s' "$validated_semver" | command sed -E 's/^ \|\| //')
 
-  if nvm_is_valid_semver "$validated_semver"; then
+  if nvm_is_normalized_semver "$validated_semver"; then
     command printf '%s' "$validated_semver"
   else
     return 1
@@ -490,7 +485,7 @@ nvm_interpret_complex_semver() {
   semver="${1-}"
   local version_list
   version_list="${2-}" # expected to be sorted from oldest to newest
-  if [ -z "$semver" ] || [ -z "$version_list" ] || ! nvm_is_valid_semver "$semver"; then
+  if [ -z "$semver" ] || [ -z "$version_list" ] || ! nvm_is_normalized_semver "$semver"; then
     return 1
   fi
 
@@ -506,6 +501,7 @@ nvm_interpret_complex_semver() {
   local current_comparator
   local stripped_version_from_comparator
   local highest_compatible_versions
+  # TODO make this just always store the highest possible compatible version
   highest_compatible_versions=''
 
   while [ -n "$semver" ]; do
@@ -521,6 +517,7 @@ nvm_interpret_complex_semver() {
       current_version=$(command printf '%s' "$version_list_copy" | command tail -n1 | command sed -E 's/^ +//;s/ +$//' | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')
       version_list_copy=$(command printf '%s' "$version_list_copy" | command sed '$d')
       [ -n "$current_version" ] || continue
+      # TODO if current_version is less than the highest version in highest_compatile_versions, no need to continue
 
       # For each comparator in the current_comparator_set_copy:
       #   - If current_version is compatible with all comparators, we know current_version is the newest compatible version
@@ -4078,7 +4075,7 @@ nvm() {
         nvm_curl_libz_support nvm_command_info \
         nvm_get_node_from_pkg_json nvm_find_package_json nvm_package_json_version \
         nvm_interpret_node_semver nvm_interpret_simple_semver nvm_interpret_complex_semver nvm_normalize_semver \
-        nvm_is_valid_semver nvm_string_contains_regexp nvm_trim_and_reduce_whitespace_to_one_space \
+        nvm_is_normalized_semver nvm_string_contains_regexp nvm_trim_and_reduce_whitespace_to_one_space \
         > /dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \

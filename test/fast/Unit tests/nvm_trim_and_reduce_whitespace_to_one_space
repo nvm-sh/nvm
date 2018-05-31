@@ -4,12 +4,11 @@ die () { printf "$@" ; exit 1; }
 
 \. ../../../nvm.sh
 
-# TODO add more test cases
+# Test cases that have no new lines
 # input:expected_output
-test_cases="1.2.3:$valid_semver_regexp
-11.22.33:$valid_semver_regexp"
-
 test_cases='1:1
+   1    2    3:1 2 3
+   1.1 		2.2 :1.1 2.2
       1.2.3:1.2.3
  1		1  :1 1
 	2			2			:2 2'
@@ -24,5 +23,30 @@ while [ -n "$test_cases" ]; do
   fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done
+
+# Test cases that have new lines
+expected_output='1 2 3'
+new_line_1=' 1
+ 2 	3 '
+actual_output=$(nvm_trim_and_reduce_whitespace_to_one_space "$new_line_1")
+if [ "$actual_output" != "$expected_output" ]; then
+  die "nvm_trim_and_reduce_whitespace_to_one_space test with new_line_1 failed. Actual output: '$actual_output' Expected output: '$expected_output'"
+fi
+
+new_line_2=' 1	 2
+3	 '
+actual_output=$(nvm_trim_and_reduce_whitespace_to_one_space "$new_line_2")
+if [ "$actual_output" != "$expected_output" ]; then
+  die "nvm_trim_and_reduce_whitespace_to_one_space test with new_line_2 failed. Actual output: '$actual_output' Expected output: '$expected_output'"
+fi
+
+new_line_3='	1
+
+2
+3'
+actual_output=$(nvm_trim_and_reduce_whitespace_to_one_space "$new_line_3")
+if [ "$actual_output" != "$expected_output" ]; then
+  die "nvm_trim_and_reduce_whitespace_to_one_space test with new_line_3 failed. Actual output: '$actual_output' Expected output: '$expected_output'"
+fi
 exit 0
 
