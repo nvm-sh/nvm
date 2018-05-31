@@ -48,7 +48,7 @@ while [ -n "$test_cases" ]; do
   expected_output=$(echo "$line" | awk -F: '{ print $2 }')
   actual_output=$(nvm_normalize_semver "$input")
   if [ -z "$input" ] || [ "$actual_output" != "$expected_output" ]; then
-    die "nvm_validate_semver test case failed. Expected output: '$expected_output'. Actual output: '$actual_output'. Input: '$input'.\n"
+    die "nvm_normalize_semver test case failed. Expected output: '$expected_output'. Actual output: '$actual_output'. Input: '$input'.\n"
   fi
   test_cases=$(echo "$test_cases" | tail -n +2)
 done

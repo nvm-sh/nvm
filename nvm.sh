@@ -341,54 +341,53 @@ nvm_normalize_semver() {
   if [ -z "$semver" ]; then
     return 1
   fi
+  local comparator_set
+  local validated_comparator_set
   local validated_semver
   validated_semver='';
   while [ -n "$semver" ]; do
-    local comparator_set
     comparator_set=$(command printf "%s" "$semver" | command head -n1)
     semver=$(command printf "%s" "$semver" | command tail -n +2)
     [ -n "$comparator_set" ] || continue
 
     # convert comparators into required grammar
-    local validated_comparator_set
-    validated_comparator_set=$(command printf " %s " "$comparator_set" \
-      | command sed -E "
-      # exactly 1 space is needed before and after every comparator (including the first and last comparators)
-      s/\011/ /g;s/ +/ /g;
+    validated_comparator_set=$(command printf " %s " "$comparator_set" |
+      command sed -E "
+        # exactly 1 space is needed before and after every comparator (including the first and last comparators)
+        s/\011/ /g;s/ +/ /g;
 
-      # normalize all wildcards to x
-      s/X|\*/x/g;
+        # normalize all wildcards to x
+        s/X|\*/x/g;
 
-      # space out numbers surrounding '-'
-      s/ ?- ?/ - /g;
+        # space out numbers surrounding '-'
+        s/ ?- ?/ - /g;
 
-      # ' 1 ' => ' 1.x.x '
-      # ' x ' => ' x.x.x '
-      s/ ([0-9]+|x) / \1.x.x /g;
+        # ' 1 ' => ' 1.x.x '
+        # ' x ' => ' x.x.x '
+        s/ ([0-9]+|x) / \1.x.x /g;
 
-      # ' 1.2 ' => ' 1.2.x '
-      # ' 1.x ' => ' 1.x.x '
-      # ' x.x ' => ' x.x.x '
-      s/ (([0-9]+|x)\.([0-9]+|x)) / \1.x /g;
+        # ' 1.2 ' => ' 1.2.x '
+        # ' 1.x ' => ' 1.x.x '
+        # ' x.x ' => ' x.x.x '
+        s/ (([0-9]+|x)\.([0-9]+|x)) / \1.x /g;
 
-      # ' 1.2.3 - 1.2.4 ' => ' >=1.2.3 <=1.2.4 '
-      s/ (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) ?\- ?(([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / >=\1 <=\5 /g;
+        # ' 1.2.3 - 1.2.4 ' => ' >=1.2.3 <=1.2.4 '
+        s/ (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) ?\- ?(([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / >=\1 <=\5 /g;
 
-      # ' > 1.2.3 ' => ' >1.2.3 '
-      # ' < 1.2.5 ' => ' <1.2.5 '
-      # ' <= 1.2.3 ' => ' <=1.2.3 '
-      # ' >= 1.2.3 ' => ' >=1.2.3 '
-      # ' = 1.2.3 ' => ' =1.2.3 '
-      # ' ~ 1.2.3 ' => ' ~1.2.3 '
-      # ' ^ 1.2.3 ' => ' ^1.2.3 '
-      # ' v 1.2.3 ' => ' v1.2.3 '
-      s/ (v|<|>|<=|>=|=|~|\^) (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / \1\2 /g;
+        # ' > 1.2.3 ' => ' >1.2.3 '
+        # ' < 1.2.5 ' => ' <1.2.5 '
+        # ' <= 1.2.3 ' => ' <=1.2.3 '
+        # ' >= 1.2.3 ' => ' >=1.2.3 '
+        # ' = 1.2.3 ' => ' =1.2.3 '
+        # ' ~ 1.2.3 ' => ' ~1.2.3 '
+        # ' ^ 1.2.3 ' => ' ^1.2.3 '
+        # ' v 1.2.3 ' => ' v1.2.3 '
+        s/ (v|<|>|<=|>=|=|~|\^) (([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x)) / \1\2 /g;
 
-      # ' =1.2.3 ' => ' 1.2.3 '
-      # ' v1.2.3 ' => ' 1.2.3 '
-      s/ (=|v)//g;
-      " \
-      | command awk '{
+        # ' =1.2.3 ' => ' 1.2.3 '
+        # ' v1.2.3 ' => ' 1.2.3 '
+        s/ (=|v)//g;" |
+      command awk '{
         # handle conversions of comparators with ^ or ~ or x into required grammar
         # ` ^0.0.1 ` => ` >=0.0.1 <0.0.2 `
         # ` ^0.1.2 ` => ` >=0.1.2 <0.2.0 `
@@ -462,8 +461,8 @@ nvm_normalize_semver() {
           }
         }
         print output
-      }' \
-      | command sed -E 's/^ +//;s/ +$//'
+      }' |
+      command sed -E 's/^ +//;s/ +$//'
     )
 
     # only comparator_sets composed of the required grammar are marked as valid
@@ -500,13 +499,17 @@ nvm_interpret_complex_semver() {
   #   - Add the discovered newest compatible version to highest_compatible_versions.
   #   - Choose the highest version among all the versions collected in highest_compatible_versions.
   semver=$(command printf "%s" "$semver" | command tr '||' '\n')
+  local version_list_copy
+  local current_comparator_set
+  local current_version
+  local current_comparator_set_copy
+  local current_comparator
+  local stripped_version_from_comparator
   local highest_compatible_versions
   highest_compatible_versions=''
 
   while [ -n "$semver" ]; do
-    local version_list_copy
     version_list_copy=$(command printf "%s" "$version_list")
-    local current_comparator_set
     current_comparator_set=$(command printf "%s" "$semver" | command head -n1 | command sed -E 's/^ +//;s/ +$//')
     semver=$(command printf "%s" "$semver" | command tail -n +2)
     [ -n "$current_comparator_set" ] || continue
@@ -515,22 +518,18 @@ nvm_interpret_complex_semver() {
     #   - If current_version satisfies all comparators in current_comparator_set, we've found the newest version compatible with all comparators in current current_comparator_set.
     #   - Add discovered version to highest_compatible_versions and stop iterating through versions for current_comparator_set.
     while [ -n "$version_list_copy" ]; do
-      local current_version
       current_version=$(command printf "%s" "$version_list_copy" | command tail -n1 | command sed -E 's/^ +//;s/ +$//' | nvm_grep -o '^[0-9]\+\.[0-9]\+\.[0-9]\+$')
       version_list_copy=$(command printf "%s" "$version_list_copy" | command sed '$d')
       [ -n "$current_version" ] || continue
 
       # For each comparator in the current_comparator_set_copy:
       #   - If current_version is compatible with all comparators, we know current_version is the newest compatible version
-      local current_comparator_set_copy
       current_comparator_set_copy=$(command printf "%s" "$current_comparator_set" | command tr ' ' '\n')
       while [ -n "$current_comparator_set_copy" ]; do
-        local current_comparator
         current_comparator=$(command printf "%s" "$current_comparator_set_copy" | command head -n1 | command sed -E 's/^ +//;s/ +$//')
         current_comparator_set_copy=$(command printf "%s" "$current_comparator_set_copy" | command tail -n +2)
         [ -n "$current_comparator" ] || continue
 
-        local stripped_version_from_comparator
         stripped_version_from_comparator=$(command printf "%s" "$current_comparator" | nvm_grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+$')
         if [ -z "$stripped_version_from_comparator" ]; then
           return 1
@@ -618,10 +617,10 @@ nvm_interpret_complex_semver() {
   # Since comparator sets are separated by '||', choosing any of the highest versions compatible with any of the comparator_sets would be compatible with the whole semver.
   # Therefore, we should resolve to the highest version in highest_compatible_versions.
   local highest_compatible_version
+  local compatible_node_version
   highest_compatible_version='0.0.0'
   highest_compatible_versions=$(command printf "%s" "$highest_compatible_versions" | command tr ' ' '\n')
   while [ -n "$highest_compatible_versions" ]; do
-    local compatible_node_version
     compatible_node_version=$(command printf "%s" "$highest_compatible_versions" | command head -n1 | command sed -E 's/^ +//;s/ +$//')
     highest_compatible_versions=$(command printf "%s" "$highest_compatible_versions" | command tail -n +2)
     [ -n "$compatible_node_version" ] || continue
