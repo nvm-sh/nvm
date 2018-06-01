@@ -3,19 +3,13 @@
 \. ../../../nvm.sh
 \. ../../generated_semvers.sh
 
-# nvm_is_normalized_semver validates that given semvers adhere to the following grammer
-#
-# semver         ::= comparator_set ( ' || '  comparator_set )*
-# comparator_set ::= comparator ( ' ' comparator )*
-# comparator     ::= ( '<' | '<=' | '>' | '>=' | '' ) [0-9]+ '.' [0-9]+ '.' [0-9]+
+# nvm_is_normalized_semver validates that a given semver adheres to a particular grammar. See grammar with definition of function nvm_is_normalized_semver() in nvm.sh.
 
 # POSITIVE TEST CASES
-
 positive_test_cases="$VALID_NORMALIZED_SEMVERS"
 if [ -z "$positive_test_cases" ]; then
   die 'positive test cases are empty'
 fi
-
 prev_semver=''
 while [ -n "$positive_test_cases" ]; do
   semver=$(echo "$positive_test_cases" | head -n1)
@@ -30,12 +24,10 @@ while [ -n "$positive_test_cases" ]; do
 done
 
 # NEGATIVE TEST CASES
-
 negative_test_cases=$(printf "%s\n%s" "$VALID_NON_NORMALIZED_SEMVERS" "$INVALID_SEMVERS_FOR_PKG_JSON")
 if [ -z "$negative_test_cases" ]; then
   die 'negative test cases are empty'
 fi
-
 prev_semver='initialized to non empty string'
 while [ -n "$negative_test_cases" ]; do
   semver=$(echo "$negative_test_cases" | head -n1)

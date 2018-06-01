@@ -2,11 +2,11 @@
 
 \. ../../../nvm.sh
 \. ../../generated_semvers.sh
-
 normalized_semver_regexp='^( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+( \|\| ( ?(<|<=|>|>=)?[0-9]+\.[0-9]+\.[0-9]+)+)*$'
 
-# POSITIVE TEST CASES
+# Validates the behavior of nvm_string_contains_regexp() which returns 0 if the given string contains the given regular expression.
 
+# POSITIVE TEST CASES
 test_cases="$VALID_NORMALIZED_SEMVERS"
 while [ -n "$test_cases" ]; do
   string=$(echo "$test_cases" | head -n1)
@@ -17,10 +17,8 @@ while [ -n "$test_cases" ]; do
 done
 
 # NEGATIVE TEST CASES
-
 # string:regexp
 test_cases=$(printf "%s\n%s" "$VALID_NON_NORMALIZED_SEMVERS" "$INVALID_SEMVERS_FOR_PKG_JSON")
-
 while [ -n "$test_cases" ]; do
   string=$(echo "$test_cases" | head -n1)
   if [ -z "$normalized_semver_regexp" ] || nvm_string_contains_regexp "$string" "$normalized_semver_regexp"; then

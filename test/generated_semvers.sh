@@ -18,7 +18,7 @@ VALID_NON_NORMALIZED_SEMVER_OPERATORS='v
 # Versions (stripped of any operators) that are considered valid inputs to the semver interpretation logic.
 VALID_NORMALIZED_VERSIONS='4.1.0
 0.12.18
-0.11.16
+8.0.0
 6.11.4
 10.0.0'
 
@@ -62,8 +62,6 @@ asdf
 1111
 1  1
 1.
-1.1
-1.*
 1.2
 11.222
 1.2.a
@@ -71,8 +69,6 @@ asdf
 1.x.x
 11.22.a
 =1.2.3
-~1.2.3
-^1.2.3
 1.1.1 2.2.2
 >1.1.1 <1.1.0
 1.2 - 1.3
@@ -81,9 +77,7 @@ asdf
 1.2.3 - 1.2.4
 1.2.3-1.2.4
 1.2 1.3
-1 2
-1.2.3||1.2.4
-1.2||1.3
+10 20
 1||2
 >1000
 <0"
@@ -97,12 +91,23 @@ VALID_NORMALIZED_COMPLEX_SEMVERS='10.3.0 || 8.1.1 || 4.1.0
 
 # Valid semvers that should resolve to a node version but need to be validated/normalized before interpretting.
 VALID_NON_NORMALIZED_COMPLEX_SEMVERS='x
+10
+~10
+^10
 X
 *
 x.x
 X.X
 *.*
+10.x
+~10.x
+^10.x
+10.X.X
+~10.X.X
+^10.X.X
 x.x.x
+~X.X.X
+^X.X.X
 X.X.X
 x.X.*
 *.x.X

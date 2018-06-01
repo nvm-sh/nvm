@@ -29,14 +29,23 @@ while [ -n "$test_cases" ]; do
   fi
 done
 
-# TODO add more test cases here
-# TODO get the following semvers working: ^7 ^7.x ^7.0 ~8 ~8.0
 # Verify actual outputs given some inputs
 # input:expected_output
 test_cases="*:$NEWEST_NODE_VERSION
+^5:$NEWEST_NODE_VERSION_5
+^5.0:$NEWEST_NODE_VERSION_5
+^5.x:$NEWEST_NODE_VERSION_5
+^5.X:$NEWEST_NODE_VERSION_5
+^5.*:$NEWEST_NODE_VERSION_5
+~5:$NEWEST_NODE_VERSION_5
+~5.0:$NEWEST_NODE_VERSION_5
+~5.x:$NEWEST_NODE_VERSION_5
+~5.X:$NEWEST_NODE_VERSION_5
+~5.*:$NEWEST_NODE_VERSION_5
 5:$NEWEST_NODE_VERSION_5
 x:$NEWEST_NODE_VERSION
 X:$NEWEST_NODE_VERSION
+x.x.x:$NEWEST_NODE_VERSION
 0.12.18:0.12.18
 0.11.16:0.11.16
 7.0.0||7.2.1:7.2.1

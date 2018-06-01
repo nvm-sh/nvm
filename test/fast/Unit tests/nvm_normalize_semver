@@ -3,6 +3,8 @@
 \. ../../../nvm.sh
 \. ../../generated_semvers.sh
 
+# This test suite validates the behavior of normalizing a semver from its raw form to a specific grammar. See the grammar defined with nvm_is_normalized_semver() in nvm.sh.
+
 # TEST 1: Validate that for already normalized semvers, nvm_normalize_semver outputs the same semver.
 test_cases="$VALID_NORMALIZED_SEMVERS"
 if [ -z "$test_cases" ]; then
