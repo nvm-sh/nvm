@@ -533,9 +533,9 @@ nvm_remote_versions() {
   NVM_LS_REMOTE_IOJS_EXIT_CODE=0
   local NVM_LS_REMOTE_IOJS_OUTPUT
   NVM_LS_REMOTE_IOJS_OUTPUT=''
-  if [ -z "${NVM_LTS-}" ] && ( \
-    [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_IOJS_PREFIX}" ] \
-  ); then
+  if [ -z "${NVM_LTS-}" ] && {
+    [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_IOJS_PREFIX}" ];
+  }; then
     NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "${PATTERN-}") &&:
     NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
   fi
@@ -783,14 +783,14 @@ nvm_list_aliases() {
     local ALIAS_NAME
     for ALIAS_NAME in "$(nvm_node_prefix)" "stable" "unstable"; do
       {
-        if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && ([ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]); then
+        if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && { [ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]; }; then
           NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
         fi
       } &
     done
     wait
     ALIAS_NAME="$(nvm_iojs_prefix)"
-    if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && ([ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]); then
+    if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && { [ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]; }; then
       NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
     fi
   ) | sort
