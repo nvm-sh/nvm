@@ -2316,7 +2316,7 @@ nvm_check_file_permissions() {
     ZSH_HAS_NONOMATCH_UNSET="$(set +e ; setopt | nvm_grep -q nonomatch ; nvm_echo $?)"
     setopt nonomatch
   fi
-  for FILE in $1/* $1/.[!.]* $1/..?* ; do
+  for FILE in "$1"/* "$1"/.[!.]* "$1"/..?* ; do
     if [ -d "$FILE" ]; then
       if ! nvm_check_file_permissions "$FILE"; then
         if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
