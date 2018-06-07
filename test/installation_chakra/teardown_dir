@@ -1,0 +1,15 @@
+#!/bin/sh
+
+\. ../../nvm.sh
+nvm deactivate
+nvm uninstall chakra-v8.2.1
+nvm uninstall chakra-v8.3.0
+nvm uninstall chakra-v8.4.0
+
+if [ -f ".nvmrc" ]; then
+  rm .nvmrc
+fi
+
+if [ -f ".nvmrc.bak" ]; then
+  mv .nvmrc.bak .nvmrc
+fi

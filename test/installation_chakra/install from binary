@@ -1,0 +1,18 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+NVM_TEST_VERSION="v8.3.0"
+NVM_PREFIXED_TEST_VERSION="chakra-$NVM_TEST_VERSION"
+
+# Remove the stuff we're clobbering.
+[ -e "${NVM_DIR}/versions/chakra/${NVM_TEST_VERSION}" ] && rm -R "${NVM_DIR}/versions/chakra/${NVM_TEST_VERSION}"
+
+# Install from binary
+nvm install $NVM_PREFIXED_TEST_VERSION || die "install $NVM_PREFIXED_TEST_VERSION failed"
+
+# Check
+[ -d "${NVM_DIR}/versions/chakra/${NVM_TEST_VERSION}" ]
+nvm run "${NVM_PREFIXED_TEST_VERSION}" --version | grep "${NVM_TEST_VERSION}" || die "'nvm run ${NVM_PREFIXED_TEST_VERSION} --version | grep ${NVM_TEST_VERSION}' failed"

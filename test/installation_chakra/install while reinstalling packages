@@ -1,0 +1,31 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+# Remove the stuff we're clobbering.
+[ -e "${NVM_DIR}/versions/chakra/v8.3.0" ] && rm -R "${NVM_DIR}/versions/chakra/v8.3.0"
+[ -e "${NVM_DIR}/versions/chakra/v8.4.0" ] && rm -R "${NVM_DIR}/versions/chakra/v8.4.0"
+
+# Install from binary
+nvm install chakra-v8.3.0
+
+# Check
+[ -d "${NVM_DIR}/versions/chakra/v8.3.0" ] || die "nvm install chakra-v8.3.0 didn't install"
+
+node --version | grep v8.3.0 > /dev/null || die "nvm install didn't use chakra-v8.3.0"
+
+npm install -g object-is@0.0.0 || die "npm install -g object-is failed"
+npm list --global | grep object-is > /dev/null || die "object-is isn't installed"
+
+nvm ls chakra-1 | grep chakra-v8.3.0 > /dev/null || die "nvm ls chakra-1 didn't show chakra-v8.3.0"
+
+nvm install chakra-v8.4.0 --reinstall-packages-from=chakra-8.3.0 || die "nvm install chakra-v8.4.0 --reinstall-packages-from=chakra-8.3.0 failed"
+
+[ -d "${NVM_DIR}/versions/chakra/v8.4.0" ] || die "nvm install chakra-v8.4.0 didn't install"
+
+nvm use chakra-1
+node --version | grep v8.4.0 > /dev/null || die "nvm use chakra-1 didn't use v8.4.0"
+
+npm list --global | grep object-is > /dev/null || die "object-is isn't installed"

@@ -125,6 +125,10 @@ nvm_has_system_node() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v node)" != '' ]
 }
 
+nvm_has_system_chakra() {
+  [ "$(nvm deactivate >/dev/null 2>&1 && command -v chakracore)" != '' ]
+}
+
 nvm_has_system_iojs() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v iojs)" != '' ]
 }
@@ -369,6 +373,8 @@ nvm_version_dir() {
     nvm_echo "${NVM_DIR}/versions/node"
   elif [ "_${NVM_WHICH_DIR}" = "_iojs" ]; then
     nvm_echo "${NVM_DIR}/versions/io.js"
+  elif [ "_${NVM_WHICH_DIR}" = "_chakra" ]; then
+    nvm_echo "${NVM_DIR}/versions/chakra"
   elif [ "_${NVM_WHICH_DIR}" = "_old" ]; then
     nvm_echo "${NVM_DIR}"
   else
@@ -389,6 +395,8 @@ nvm_version_path() {
     return 3
   elif nvm_is_iojs_version "${VERSION}"; then
     nvm_echo "$(nvm_version_dir iojs)/$(nvm_strip_iojs_prefix "${VERSION}")"
+  elif nvm_is_chakra_version "${VERSION}"; then
+    nvm_echo "$(nvm_version_dir chakra)/$(nvm_strip_chakra_prefix "${VERSION}")"
   elif nvm_version_greater 0.12.0 "${VERSION}"; then
     nvm_echo "$(nvm_version_dir old)/${VERSION}"
   else
@@ -464,6 +472,9 @@ nvm_remote_version() {
       "$(nvm_iojs_prefix)")
         VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_iojs | command tail -1)" &&:
       ;;
+      "$(nvm_chakra_prefix)")
+        VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote_chakra | command tail -1)" &&:
+      ;;
       *)
         VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN}")" &&:
       ;;
@@ -485,6 +496,8 @@ nvm_remote_version() {
 }
 
 nvm_remote_versions() {
+  local NVM_CHAKRA_PREFIX
+  NVM_CHAKRA_PREFIX="$(nvm_chakra_prefix)"
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
   local NVM_NODE_PREFIX
@@ -499,6 +512,10 @@ nvm_remote_versions() {
   fi
 
   case "${PATTERN}" in
+    "${NVM_CHAKRA_PREFIX}" | "chakra")
+      NVM_FLAVOR="${NVM_CHAKRA_PREFIX}"
+      unset PATTERN
+    ;;
     "${NVM_IOJS_PREFIX}" | "io.js")
       NVM_FLAVOR="${NVM_IOJS_PREFIX}"
       unset PATTERN
@@ -540,8 +557,19 @@ nvm_remote_versions() {
     NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
   fi
 
+  local NVM_LS_REMOTE_CHAKRA_EXIT_CODE
+  NVM_LS_REMOTE_CHAKRA_EXIT_CODE=0
+  local NVM_LS_REMOTE_CHAKRA_OUTPUT
+  NVM_LS_REMOTE_CHAKRA_OUTPUT=''
+  if [ -z "${NVM_LTS-}" ] && ( \
+    [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_CHAKRA_PREFIX}" ] \
+  ); then
+    NVM_LS_REMOTE_CHAKRA_OUTPUT=$(nvm_ls_remote_chakra "${PATTERN-}") &&:
+    NVM_LS_REMOTE_CHAKRA_EXIT_CODE=$?
+  fi
+
   VERSIONS="$(nvm_echo "${NVM_LS_REMOTE_PRE_MERGED_OUTPUT}
-${NVM_LS_REMOTE_IOJS_OUTPUT}
+${NVM_LS_REMOTE_IOJS_OUTPUT} ${NVM_LS_REMOTE_CHAKRA_OUTPUT}
 ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^$/d')"
 
   if [ -z "${VERSIONS}" ]; then
@@ -549,7 +577,7 @@ ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^$/d')"
     return 3
   fi
   nvm_echo "${VERSIONS}"
-  return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
+  return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE || $NVM_LS_REMOTE_CHAKRA_EXIT_CODE
 }
 
 nvm_is_valid_version() {
@@ -649,7 +677,7 @@ nvm_change_path() {
 
 nvm_binary_available() {
   # binaries started with node 0.8.6
-  nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix "${1-}")" v0.8.6
+  nvm_version_greater_than_or_equal_to "$(nvm_strip_chakra_prefix "$(nvm_strip_iojs_prefix "${1-}")")" v0.8.6
 }
 
 nvm_print_formatted_alias() {
@@ -925,6 +953,9 @@ nvm_resolve_local_alias() {
   fi
 }
 
+nvm_chakra_prefix() {
+  nvm_echo 'chakra'
+}
 nvm_iojs_prefix() {
   nvm_echo 'iojs'
 }
@@ -937,9 +968,29 @@ nvm_is_iojs_version() {
   return 1
 }
 
+nvm_is_chakra_version() {
+  case "${1-}" in chakra-*) return 0 ;; esac
+  return 1
+}
+
 nvm_add_iojs_prefix() {
   nvm_echo "$(nvm_iojs_prefix)-$(nvm_ensure_version_prefix "$(nvm_strip_iojs_prefix "${1-}")")"
 }
+
+nvm_add_chakra_prefix() {
+  nvm_echo "$(nvm_chakra_prefix)-$(nvm_ensure_version_prefix "$(nvm_strip_chakra_prefix "${1-}")")"
+}
+
+nvm_strip_chakra_prefix() {
+  local NVM_CHAKRA_PREFIX
+  NVM_CHAKRA_PREFIX="$(nvm_chakra_prefix)"
+  if [ "${1-}" = "${NVM_CHAKRA_PREFIX}" ]; then
+    nvm_echo
+  else
+    nvm_echo "${1#${NVM_CHAKRA_PREFIX}-}"
+  fi
+}
+
 
 nvm_strip_iojs_prefix() {
   local NVM_IOJS_PREFIX
@@ -963,17 +1014,21 @@ nvm_ls() {
 
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local NVM_CHAKRA_PREFIX
+  NVM_CHAKRA_PREFIX="$(nvm_chakra_prefix)"
   local NVM_NODE_PREFIX
   NVM_NODE_PREFIX="$(nvm_node_prefix)"
   local NVM_VERSION_DIR_IOJS
   NVM_VERSION_DIR_IOJS="$(nvm_version_dir "${NVM_IOJS_PREFIX}")"
+  local NVM_VERSION_DIR_CHAKRA
+  NVM_VERSION_DIR_CHAKRA="$(nvm_version_dir "${NVM_CHAKRA_PREFIX}")"
   local NVM_VERSION_DIR_NEW
   NVM_VERSION_DIR_NEW="$(nvm_version_dir new)"
   local NVM_VERSION_DIR_OLD
   NVM_VERSION_DIR_OLD="$(nvm_version_dir old)"
 
   case "${PATTERN}" in
-    "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}" )
+    "${NVM_CHAKRA_PREFIX}" | "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}" )
       PATTERN="${PATTERN}-"
     ;;
     *)
@@ -983,6 +1038,7 @@ nvm_ls() {
       PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
     ;;
   esac
+
   if [ "${PATTERN}" = 'N/A' ]; then
     return
   fi
@@ -997,10 +1053,12 @@ nvm_ls() {
       VERSIONS="${PATTERN}"
     elif nvm_is_version_installed "$(nvm_add_iojs_prefix "${PATTERN}")"; then
       VERSIONS="$(nvm_add_iojs_prefix "${PATTERN}")"
+    elif nvm_is_version_installed "$(nvm_add_chakra_prefix "${PATTERN}")"; then
+      VERSIONS="$(nvm_add_chakra_prefix "${PATTERN}")"
     fi
   else
     case "${PATTERN}" in
-      "${NVM_IOJS_PREFIX}-" | "${NVM_NODE_PREFIX}-" | "system") ;;
+      "${NVM_CHAKRA_PREFIX}-" | "${NVM_IOJS_PREFIX}-" | "${NVM_NODE_PREFIX}-" | "system") ;;
       *)
         local NUM_VERSION_GROUPS
         NUM_VERSION_GROUPS="$(nvm_num_version_groups "${PATTERN}")"
@@ -1029,6 +1087,12 @@ nvm_ls() {
       NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_IOJS}"
       PATTERN="$(nvm_strip_iojs_prefix "${PATTERN}")"
       if nvm_has_system_iojs; then
+        NVM_ADD_SYSTEM=true
+      fi
+    elif nvm_is_chakra_version "${PATTERN}"; then
+      NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_CHAKRA}"
+      PATTERN="$(nvm_strip_chakra_prefix "${PATTERN}")"
+      if nvm_has_system_chakra; then
         NVM_ADD_SYSTEM=true
       fi
     elif [ "${PATTERN}" = "${NVM_NODE_PREFIX}-" ]; then
@@ -1068,6 +1132,7 @@ nvm_ls() {
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
         | command sed -e "
             s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
+            s#${NVM_VERSION_DIR_CHAKRA}/#versions/${NVM_CHAKRA_PREFIX}/#;
             s#^${NVM_DIR}/##;
             \\#^[^v]# d;
             \\#^versions\$# d;
@@ -1126,6 +1191,10 @@ nvm_ls_remote_iojs() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "${1-}"
 }
 
+nvm_ls_remote_chakra() {
+  NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab chakra std "${1-}"
+}
+
 # args flavor, type, version
 nvm_ls_remote_index_tab() {
   local LTS
@@ -1150,8 +1219,13 @@ nvm_ls_remote_index_tab() {
   local PREFIX
   PREFIX=''
   case "${FLAVOR}-${TYPE}" in
+    chakra-std) PREFIX="$(nvm_chakra_prefix)-" ;;
     iojs-std) PREFIX="$(nvm_iojs_prefix)-" ;;
     node-std) PREFIX='' ;;
+    chakra-*)
+      nvm_err 'unknown type of node-chakra release'
+      return 4
+    ;;
     iojs-*)
       nvm_err 'unknown type of io.js release'
       return 4
@@ -1165,6 +1239,7 @@ nvm_ls_remote_index_tab() {
   SORT_COMMAND='command sort'
   case "${FLAVOR}" in
     node) SORT_COMMAND='command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n' ;;
+    chakra) SORT_COMMAND='command sort -t. -k1,1dr -k2,2n' ;;
   esac
 
   local PATTERN
@@ -1174,6 +1249,8 @@ nvm_ls_remote_index_tab() {
   if [ -n "${PATTERN}" ]; then
     if [ "${FLAVOR}" = 'iojs' ]; then
       PATTERN="$(nvm_ensure_version_prefix "$(nvm_strip_iojs_prefix "${PATTERN}")")"
+    elif [ "${FLAVOR}" = 'chakra' ]; then
+      PATTERN="$(nvm_ensure_version_prefix "$(nvm_strip_chakra_prefix "${PATTERN}")")"
     else
       PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
     fi
@@ -1343,9 +1420,9 @@ nvm_compare_checksum() {
 nvm_get_checksum() {
   local FLAVOR
   case "${1-}" in
-    node | iojs) FLAVOR="${1}" ;;
+    node | iojs | chakra) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_err 'supported flavors: node, iojs, chakra'
       return 2
     ;;
   esac
@@ -1474,17 +1551,19 @@ nvm_print_versions() {
 }
 
 nvm_validate_implicit_alias() {
+  local NVM_CHAKRA_PREFIX
+  NVM_CHAKRA_PREFIX="$(nvm_chakra_prefix)"
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
   local NVM_NODE_PREFIX
   NVM_NODE_PREFIX="$(nvm_node_prefix)"
 
   case "$1" in
-    "stable" | "unstable" | "$NVM_IOJS_PREFIX" | "$NVM_NODE_PREFIX" )
+    "stable" | "unstable" | "$NVM_IOJS_PREFIX" | "$NVM_CHAKRA_PREFIX" | "$NVM_NODE_PREFIX" )
       return
     ;;
     *)
-      nvm_err "Only implicit aliases 'stable', 'unstable', '$NVM_IOJS_PREFIX', and '$NVM_NODE_PREFIX' are supported."
+      nvm_err "Only implicit aliases 'stable', 'unstable', '$NVM_IOJS_PREFIX', '$NVM_CHAKRA_PREFIX', and '$NVM_NODE_PREFIX' are supported."
       return 1
     ;;
   esac
@@ -1702,6 +1781,7 @@ nvm_get_mirror() {
   case "${1}-${2}" in
     node-std) nvm_echo "${NVM_NODEJS_ORG_MIRROR:-https://nodejs.org/dist}" ;;
     iojs-std) nvm_echo "${NVM_IOJS_ORG_MIRROR:-https://iojs.org/dist}" ;;
+    chakra-std) nvm_echo "${NVM_CHAKRA_MIRROR:-https://nodejs.org/download/chakracore-release}" ;;
     *)
       nvm_err 'unknown type of node.js or io.js release'
       return 1
@@ -1713,9 +1793,9 @@ nvm_get_mirror() {
 nvm_install_binary() {
   local FLAVOR
   case "${1-}" in
-    node | iojs) FLAVOR="${1}" ;;
+    node | iojs | chakra) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_err 'supported flavors: node, iojs, chakra'
       return 4
     ;;
   esac
@@ -1731,7 +1811,7 @@ nvm_install_binary() {
   fi
 
   local VERSION
-  VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
+  VERSION="$(nvm_strip_chakra_prefix "$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")")"
 
   if [ -z "$(nvm_get_os)" ]; then
     return 2
@@ -1791,9 +1871,9 @@ nvm_install_binary() {
 nvm_get_download_slug() {
   local FLAVOR
   case "${1-}" in
-    node | iojs) FLAVOR="${1}" ;;
+    node | iojs | chakra) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_err 'supported flavors: node, iojs, chakra'
       return 1
     ;;
   esac
@@ -1822,9 +1902,20 @@ nvm_get_download_slug() {
   fi
 
   if [ "${KIND}" = 'binary' ]; then
-    nvm_echo "${FLAVOR}-${VERSION}-${NVM_OS}-${NVM_ARCH}"
+    if [ "${FLAVOR}" = chakra ]; then
+      VERSION="$(nvm_strip_chakra_prefix "${VERSION}")"
+      nvm_echo "node-${VERSION}-${NVM_OS}-${NVM_ARCH}"
+    else
+      nvm_echo "${FLAVOR}-${VERSION}-${NVM_OS}-${NVM_ARCH}"
+    fi
   elif [ "${KIND}" = 'source' ]; then
-    nvm_echo "${FLAVOR}-${VERSION}"
+    if [ "${FLAVOR}" = chakra ]; then
+      VERSION="$(nvm_strip_chakra_prefix "${VERSION}")"
+      nvm_err "node-${VERSION}"
+      nvm_echo "node-${VERSION}"
+    else
+      nvm_echo "${FLAVOR}-${VERSION}"
+    fi
   fi
 }
 
@@ -1832,9 +1923,9 @@ nvm_get_download_slug() {
 nvm_download_artifact() {
   local FLAVOR
   case "${1-}" in
-    node | iojs) FLAVOR="${1}" ;;
+    node | iojs | chakra) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_err 'supported flavors: node, iojs, chakra'
       return 1
     ;;
   esac
@@ -1865,6 +1956,7 @@ nvm_download_artifact() {
     return 3
   fi
 
+
   if [ "${KIND}" = 'binary' ] && ! nvm_binary_available "${VERSION}"; then
     nvm_err "No precompiled binary available for ${VERSION}."
     return
@@ -1872,6 +1964,11 @@ nvm_download_artifact() {
 
   local SLUG
   SLUG="$(nvm_get_download_slug "${FLAVOR}" "${KIND}" "${VERSION}")"
+
+  if [ "${FLAVOR}" = chakra ]; then
+    VERSION="$(nvm_strip_chakra_prefix "${VERSION}")"
+  fi
+
 
   local COMPRESSION
   COMPRESSION='gz'
@@ -1886,7 +1983,7 @@ nvm_download_artifact() {
   if [ "${KIND}" = 'binary' ]; then
     tmpdir="$(nvm_cache_dir)/bin/${SLUG}"
   else
-    tmpdir="$(nvm_cache_dir)/src/${SLUG}"
+    tmpdir="$(nvm_cache_dir)/src/${FLAVOR}-${SLUG}"
   fi
   command mkdir -p "${tmpdir}/files" || (
     nvm_err "creating directory ${tmpdir}/files failed"
@@ -1897,6 +1994,10 @@ nvm_download_artifact() {
   TARBALL="${tmpdir}/${SLUG}.tar.${COMPRESSION}"
   local TARBALL_URL
   if nvm_version_greater_than_or_equal_to "${VERSION}" 0.1.14; then
+    TARBALL_URL="${MIRROR}/${VERSION}/${SLUG}.tar.${COMPRESSION}"
+  elif nvm_is_chakra_version "${VERSION}"; then
+    local VERSION
+    VERSION="$(nvm_strip_chakra_prefix "${VERSION}")"
     TARBALL_URL="${MIRROR}/${VERSION}/${SLUG}.tar.${COMPRESSION}"
   else
     # node <= 0.1.13 does not have a directory
@@ -1982,9 +2083,9 @@ nvm_get_make_jobs() {
 nvm_install_source() {
   local FLAVOR
   case "${1-}" in
-    node | iojs) FLAVOR="${1}" ;;
+    node | iojs | chakra) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_err 'supported flavors: node, iojs, chakra'
       return 4
     ;;
   esac
@@ -2133,12 +2234,18 @@ nvm_install_npm_if_needed() {
 
 nvm_match_version() {
   local NVM_IOJS_PREFIX
+  local NVM_CHAKRA_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  NVM_CHAKRA_PREFIX="$(nvm_chakra_prefix)"
   local PROVIDED_VERSION
   PROVIDED_VERSION="$1"
+
   case "_$PROVIDED_VERSION" in
     "_$NVM_IOJS_PREFIX" | '_io.js')
       nvm_version "$NVM_IOJS_PREFIX"
+    ;;
+    "_$NVM_CHAKRA_PREFIX")
+      nvm_version "$NVM_CHAKRA_PREFIX"
     ;;
     '_system')
       nvm_echo 'system'
@@ -2480,6 +2587,7 @@ nvm() {
       nvm_err "\$NPM_CONFIG_PREFIX: '$(nvm_sanitize_path "$NPM_CONFIG_PREFIX")'"
       nvm_err "\$NVM_NODEJS_ORG_MIRROR: '${NVM_NODEJS_ORG_MIRROR}'"
       nvm_err "\$NVM_IOJS_ORG_MIRROR: '${NVM_IOJS_ORG_MIRROR}'"
+      nvm_err "\$NVM_CHAKRA_MIRROR: '${NVM_CHAKRA_MIRROR}'"
       nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
       nvm_err "uname -a: '$(command uname -a | command awk '{$2=""; print}' | command xargs)'"
       if [ "$(nvm_get_os)" = "darwin" ] && nvm_has sw_vers; then
@@ -2708,6 +2816,8 @@ nvm() {
       local FLAVOR
       if nvm_is_iojs_version "$VERSION"; then
         FLAVOR="$(nvm_iojs_prefix)"
+      elif nvm_is_chakra_version "$VERSION"; then
+        FLAVOR="$(nvm_chakra_prefix)"
       else
         FLAVOR="$(nvm_node_prefix)"
       fi
@@ -2756,6 +2866,7 @@ nvm() {
         fi
         EXIT_CODE=0
       else
+
 
         if [ "_$NVM_OS" = "_freebsd" ]; then
           # node.js and io.js do not have a FreeBSD binary
@@ -2983,6 +3094,7 @@ nvm() {
         fi
         return 8
       fi
+
       if [ "${VERSION}" = 'N/A' ]; then
         nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
         nvm_err ""
@@ -3544,7 +3656,7 @@ nvm() {
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info \
         > /dev/null 2>&1
-      unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
+      unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_CHAKRA_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \
         > /dev/null 2>&1
     ;;

@@ -78,6 +78,16 @@ env:
     - SHELL=zsh TEST_SUITE=installation_iojs WITHOUT_CURL=1
   #  - SHELL=ksh TEST_SUITE=installation_iojs
   #  - SHELL=ksh TEST_SUITE=installation_iojs WITHOUT_CURL=1
+    - SHELL=sh TEST_SUITE=installation_chakra
+    - SHELL=sh TEST_SUITE=installation_chakra WITHOUT_CURL=1
+    - SHELL=dash TEST_SUITE=installation_chakra
+    - SHELL=dash TEST_SUITE=installation_chakra WITHOUT_CURL=1
+    - SHELL=bash TEST_SUITE=installation_chakra
+    - SHELL=bash TEST_SUITE=installation_chakra WITHOUT_CURL=1
+    - SHELL=zsh TEST_SUITE=installation_chakra
+    - SHELL=zsh TEST_SUITE=installation_chakra WITHOUT_CURL=1
+  #  - SHELL=ksh TEST_SUITE=installation_chakra
+  #  - SHELL=ksh TEST_SUITE=installation_chakra WITHOUT_CURL=1
     - NODE=10 TEST="nvm install-latest-npm"
     - NODE=9 TEST="nvm install-latest-npm"
     - NODE=8 TEST="nvm install-latest-npm"

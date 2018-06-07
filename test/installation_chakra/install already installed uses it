@@ -1,0 +1,23 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+[ "$(nvm install invalid.invalid 2>&1)" = "Version 'invalid.invalid' not found - try \`nvm ls-remote\` to browse available versions." ] || die "nvm installing an invalid version did not print a nice error message"
+
+# Remove the stuff we're clobbering.
+[ -e "${NVM_DIR}/versions/chakra/v8.3.0" ] && rm -R "${NVM_DIR}/versions/chakra/v8.3.0"
+[ -e "${NVM_DIR}/versions/chakra/v8.4.0" ] && rm -R "${NVM_DIR}/versions/chakra/v8.4.0"
+
+# Install from binary
+nvm install chakra-v8.3.0
+nvm install chakra-v8.4.0
+
+nvm use chakra-v8.3.0
+
+node --version | grep v8.3.0 || die "precondition failed: chakra node doesn't start at v8.3.0"
+
+nvm install chakra-v8.4.0
+
+node --version | grep v8.4.0 || die "nvm install on already installed version doesn't use it (node binary)"
