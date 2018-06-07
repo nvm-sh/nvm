@@ -89,3 +89,4 @@ env:
     - NODE=4.6 TEST="nvm install-latest-npm"
     - NODE=4.5 TEST="nvm install-latest-npm"
     - NODE=4.4 TEST="nvm install-latest-npm"
+    - NODE=2 TEST="nvm install-latest-npm"
