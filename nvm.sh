@@ -638,12 +638,19 @@ nvm_change_path() {
   elif ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/[^/]*${2-}" \
     && ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
     nvm_echo "${3-}${2-}:${1-}"
+  # if the initial path contains BOTH an nvm path (checked for above) and
+  # that nvm path is preceded by a system binary path, just prepend the
+  # supplementary path instead of replacing it.
+  # https://github.com/creationix/nvm/issues/1652#issuecomment-342571223
+  elif nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR}/[^/]*${2-}" \
+    || nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
+    nvm_echo "${3-}${2-}:${1-}"
   # use sed to replace the existing nvm path with the supplementary path. This
   # preserves the order of the path.
   else
     nvm_echo "${1-}" | command sed \
-      -e "s#${NVM_DIR}/[^/]*${2-}[^:]*#${3-}${2-}#g" \
-      -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*#${3-}${2-}#g"
+      -e "s#${NVM_DIR}/[^/]*${2-}[^:]*#${3-}${2-}#" \
+      -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*#${3-}${2-}#"
   fi
 }
 
