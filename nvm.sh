@@ -3039,6 +3039,9 @@ nvm() {
       if [ -n "${NVM_USE_OUTPUT-}" ]; then
         nvm_echo "$NVM_USE_OUTPUT"
       fi
+      
+      NODE_PATH="$(nvm_change_path "$NODE_PATH" "" $(npm root --quiet -g))"
+      export NODE_PATH
     ;;
     "run" )
       local provided_version
