@@ -3,6 +3,7 @@
 set -ex
 
 \. ../../nvm.sh
+\. ../common.sh
 
 TEST_NODE_VERSION="v0.10.29"
 
@@ -35,9 +36,9 @@ cleanup() {
 }
 
 runNvmUse() {
-  mkdir "${NVM_DIR}/${TEST_NODE_VERSION}"
+  make_fake_node "$TEST_NODE_VERSION"
   nvm use --delete-prefix "${TEST_NODE_VERSION}" > /dev/null 2>&1
-  rmdir "${NVM_DIR}/${TEST_NODE_VERSION}"
+  rm -rf "${NVM_DIR}/${TEST_NODE_VERSION}"
 }
 
 isCurrentSymlinkPresent() {

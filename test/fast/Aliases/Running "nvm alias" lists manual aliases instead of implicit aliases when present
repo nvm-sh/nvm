@@ -14,9 +14,9 @@ cleanup () {
   rm -rf "${NVM_DIR}/versions/io.js/v0.2.1"
 }
 
-mkdir "${NVM_DIR}/v0.8.1"
-mkdir "${NVM_DIR}/v0.9.1"
-mkdir -p "${NVM_DIR}/versions/io.js/v0.2.1"
+make_fake_node v0.8.1
+make_fake_node v0.9.1
+make_fake_iojs v0.2.1
 
 EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
 STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"

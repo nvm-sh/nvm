@@ -7,8 +7,9 @@ cleanup () {
 }
 
 \. ../../../nvm.sh
+\. ../../common.sh
 
-mkdir -p "$(nvm_version_path v0.1.2)"
+make_fake_node v0.1.2
 
 OUTPUT="$(nvm_ensure_version_installed foo 2>&1)"
 EXIT_CODE=$?
