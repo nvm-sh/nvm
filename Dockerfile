@@ -42,6 +42,7 @@ RUN apt update         && \
         bsdutils              \
         file                  \
         openssl               \
+        libssl-dev            \
         ca-certificates       \
         ssh                   \
         wget                  \
