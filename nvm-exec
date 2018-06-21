@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 SOURCE=${BASH_SOURCE[0]}
-test -L "$SOURCE" && SOURCE=$(readlink "$SOURCE")
+test -L "$SOURCE" && command cd "$( dirname "$SOURCE" )" && \
+  SOURCE=$(readlink "$SOURCE")
 DIR="$(command cd "$( dirname "$SOURCE" )" && pwd )"
 
 unset NVM_CD_FLAGS
