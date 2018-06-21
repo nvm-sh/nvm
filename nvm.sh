@@ -3872,7 +3872,7 @@ nvm() {
         fi
       fi
       NVM_EXEC="$NVM_DIR/nvm-exec"
-      test ! -f "$NVM_EXEC" && NVM_EXEC=`dirname ${BASH_SOURCE[0]-}`/nvm-exec
+      test ! -f "$NVM_EXEC" && NVM_EXEC="$(dirname "${BASH_SOURCE[0]-}")/nvm-exec"
       NODE_VERSION="$VERSION" "$NVM_EXEC" "$@"
     ;;
     "ls" | "list")
