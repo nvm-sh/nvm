@@ -4078,7 +4078,7 @@ nvm() {
 
       NVM_EXEC="${NVM_DIR}/nvm-exec"
       if [ ! -f "${NVM_EXEC}" ]; then
-        NVM_EXEC=`dirname ${BASH_SOURCE[0]-}`/nvm-exec
+        NVM_EXEC="$(dirname "${BASH_SOURCE[0]-}")/nvm-exec"
       fi
       NODE_VERSION="${VERSION}" "${NVM_EXEC}" "$@"
     ;;

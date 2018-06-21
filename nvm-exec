@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DIR="$(dirname $(realpath "${BASH_SOURCE[0]}"))"
+DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
 unset NVM_CD_FLAGS
 
