@@ -8,7 +8,7 @@
 
 # Use Ubuntu Trusty Tahr as base image as we're using on Travis CI
 # I also tested with Ubuntu 16.04, should be good with it!
-From ubuntu:14.04
+FROM ubuntu:14.04
 LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 LABEL name="nvm-dev-env"
 LABEL version="latest"
