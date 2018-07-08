@@ -93,10 +93,10 @@ USER nvm
 
 # nvm
 COPY . /home/nvm/.nvm/
-RUN sudo chown nvm:nvm -R $HOME/.nvm
-RUN echo 'export NVM_DIR="$HOME/.nvm"'                                        >> $HOME/.bashrc
-RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> $HOME/.bashrc
-RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> $HOME/.bashrc
+RUN sudo chown nvm:nvm -R "$HOME/.nvm"
+RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$HOME/.bashrc"
+RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
+RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
 
 # nodejs and tools
 RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
