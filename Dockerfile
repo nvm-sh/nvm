@@ -17,7 +17,7 @@ LABEL version="latest"
 ENV DEBIAN_FRONTEND noninteractive
 
 # ShellCheck version
-ENV SHELLCHECK_VERSION=0.4.7
+ENV SHELLCHECK_VERSION=0.5.0
 
 # Pick a Ubuntu apt mirror site for better speed
 # ref: https://launchpad.net/ubuntu/+archivemirrors
