@@ -107,4 +107,4 @@ RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
 # Set WORKDIR to nvm directory
 WORKDIR /home/nvm/.nvm
 
-ENTRYPOINT /bin/bash
+ENTRYPOINT ["/bin/bash"]
