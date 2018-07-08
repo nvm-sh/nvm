@@ -10,6 +10,8 @@
 # I also tested with Ubuntu 16.04, should be good with it!
 From ubuntu:14.04
 LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
+LABEL name="nvm-dev-env"
+LABEL version="latest"
 
 # Prevent dialog during apt install
 ENV DEBIAN_FRONTEND noninteractive
