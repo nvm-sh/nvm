@@ -9,7 +9,7 @@
 # Use Ubuntu Trusty Tahr as base image as we're using on Travis CI
 # I also tested with Ubuntu 16.04, should be good with it!
 From ubuntu:14.04
-MAINTAINER Peter Dave Hello <hsu@peterdavehello.org>
+LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 
 # Prevent dialog during apt install
 ENV DEBIAN_FRONTEND noninteractive
