@@ -8,14 +8,16 @@
 
 # Use Ubuntu Trusty Tahr as base image as we're using on Travis CI
 # I also tested with Ubuntu 16.04, should be good with it!
-From ubuntu:14.04
-MAINTAINER Peter Dave Hello <hsu@peterdavehello.org>
+FROM ubuntu:14.04
+LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
+LABEL name="nvm-dev-env"
+LABEL version="latest"
 
 # Prevent dialog during apt install
 ENV DEBIAN_FRONTEND noninteractive
 
 # ShellCheck version
-ENV SHELLCHECK_VERSION=0.4.7
+ENV SHELLCHECK_VERSION=0.5.0
 
 # Pick a Ubuntu apt mirror site for better speed
 # ref: https://launchpad.net/ubuntu/+archivemirrors
@@ -91,10 +93,10 @@ USER nvm
 
 # nvm
 COPY . /home/nvm/.nvm/
-RUN sudo chown nvm:nvm -R $HOME/.nvm
-RUN echo 'export NVM_DIR="$HOME/.nvm"'                                        >> $HOME/.bashrc
-RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> $HOME/.bashrc
-RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> $HOME/.bashrc
+RUN sudo chown nvm:nvm -R "$HOME/.nvm"
+RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$HOME/.bashrc"
+RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
+RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
 
 # nodejs and tools
 RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
@@ -105,4 +107,4 @@ RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
 # Set WORKDIR to nvm directory
 WORKDIR /home/nvm/.nvm
 
-ENTRYPOINT /bin/bash
+ENTRYPOINT ["/bin/bash"]
