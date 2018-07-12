@@ -101,7 +101,7 @@ RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # Th
 # nodejs and tools
 RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
     nvm install node                    && \
-    npm install -g doctoc urchin        && \
+    npm install -g doctoc urchin eclint && \
     npm install --prefix "$HOME/.nvm/"'
 
 # Set WORKDIR to nvm directory
