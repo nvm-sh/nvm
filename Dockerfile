@@ -88,6 +88,10 @@ RUN wget --version
 # Add user "nvm" as non-root user
 RUN useradd -ms /bin/bash nvm
 
+# Copy and set permission for nvm directory
+COPY . /home/nvm/.nvm/
+RUN chown nvm:nvm -R "home/nvm/.nvm"
+
 # Set sudoer for "nvm"
 RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
@@ -95,8 +99,6 @@ RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 USER nvm
 
 # nvm
-COPY . /home/nvm/.nvm/
-RUN sudo chown nvm:nvm -R "$HOME/.nvm"
 RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$HOME/.bashrc"
 RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
 RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
