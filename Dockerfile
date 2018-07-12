@@ -13,6 +13,9 @@ LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 LABEL name="nvm-dev-env"
 LABEL version="latest"
 
+# Set the SHELL to bash with pipefail option
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Prevent dialog during apt install
 ENV DEBIAN_FRONTEND noninteractive
 
