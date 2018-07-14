@@ -75,11 +75,13 @@ Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not conta
 ```sh
 command -v nvm
 ```
+
 simply close your current terminal, open a new terminal, and try verifying again.
 
 **Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/creationix/nvm/issues/1782))
 
 **Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:-
+
   - your system may not have a [`.bash_profile file`] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again
   - you might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
 
@@ -104,10 +106,12 @@ which should output 'nvm' if the installation was successful. Please note that `
 If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
 **Note:** `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
+
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
 
 **Note:** `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
+
   - [bass](https://github.com/edc/bass) allows you to use utilities written for Bash in fish shell
   - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
   - [plugin-nvm](https://github.com/derekstavis/plugin-nvm) plugin for [Oh My Fish](https://github.com/oh-my-fish/oh-my-fish), which makes nvm and its completions available in fish shell
@@ -115,13 +119,16 @@ If you're running a system without prepackaged binary available, which means you
   - [fish-nvm](https://github.com/FabioAntunes/fish-nvm) - Wrapper around nvm for fish, delays sourcing nvm until it's actually used.
 
 **Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
-  - [[#900] [Bug] nodejs on FreeBSD may need to be patched ](https://github.com/creationix/nvm/issues/900)
+
+  - [[#900] [Bug] nodejs on FreeBSD may need to be patched](https://github.com/creationix/nvm/issues/900)
   - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
 
 **Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
+
   - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
 
 **Note:** On OS X, if you have/had a "system" node installed and want to install modules globally, keep in mind that:
+
   - When using nvm you do not need `sudo` to globally install a module with `npm -g`, so instead of doing `sudo npm install -g grunt`, do instead `npm install -g grunt`
   - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with nvm)
   - You can (but should not?) keep your previous "system" node install, but nvm will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
@@ -138,8 +145,8 @@ If you have `git` installed (requires git v1.7.10+):
 
 1. clone this repo in the root of your user profile
   - `cd ~/` from anywhere then `git clone https://github.com/creationix/nvm.git .nvm`
-2. `cd ~/.nvm` and check out the latest version with `git checkout v0.33.11`
-3. activate nvm by sourcing it from your shell: `. nvm.sh`
+1. `cd ~/.nvm` and check out the latest version with `git checkout v0.33.11`
+1. activate nvm by sourcing it from your shell: `. nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
 (you may have to add to more than one of the above files)
@@ -239,7 +246,9 @@ In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the f
   - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in SemVer, versions communicate breakage, not stability).
 
 ### Long-term support
+
 Node has a [schedule](https://github.com/nodejs/LTS#lts_schedule) for long-term support (LTS) You can reference LTS versions in aliases and `.nvmrc` files with the notation `lts/*` for the latest LTS, and `lts/argon` for LTS releases from the "argon" line, for example. In addition, the following commands support LTS arguments:
+
   - `nvm install --lts` / `nvm install --lts=argon` / `nvm install 'lts/*'` / `nvm install lts/argon`
   - `nvm uninstall --lts` / `nvm uninstall --lts=argon` / `nvm uninstall 'lts/*'` / `nvm uninstall lts/argon`
   - `nvm use --lts` / `nvm use --lts=argon` / `nvm use 'lts/*'` / `nvm use lts/argon`
@@ -251,6 +260,7 @@ Node has a [schedule](https://github.com/nodejs/LTS#lts_schedule) for long-term 
 Any time your local copy of `nvm` connects to https://nodejs.org, it will re-create the appropriate local aliases for all available LTS lines. These aliases (stored under `$NVM_DIR/alias/lts`), are managed by `nvm`, and you should not modify, remove, or create these files - expect your changes to be undone, and expect meddling with these files to cause bugs that will likely not be supported.
 
 ### Migrating global packages while installing
+
 If you want to install a new version of Node.js and migrate npm packages from a previous version:
 
 ```sh
@@ -279,6 +289,7 @@ stevemao/left-pad
 ```
 
 ### io.js
+
 If you want to install [io.js](https://github.com/iojs/io.js/):
 
 ```sh
@@ -294,6 +305,7 @@ nvm install iojs --reinstall-packages-from=iojs
 The same guidelines mentioned for migrating npm packages in Node.js are applicable to io.js.
 
 ### System version of node
+
 If you want to use the system-installed version of node, you can use the special default alias "system":
 
 ```sh
@@ -302,6 +314,7 @@ nvm run system --version
 ```
 
 ### Listing versions
+
 If you want to see what versions are installed:
 
 ```sh
@@ -485,6 +498,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Running tests
+
 Tests are written in [Urchin]. Install Urchin (and other dependencies) like so:
 
     npm install
@@ -520,6 +534,7 @@ Put the above sourcing line just below the sourcing line for nvm in your profile
 
 nvm:
 > $ nvm <kbd>Tab</kbd>
+
 ```
 alias               deactivate          install             ls                  run                 unload
 clear-cache         exec                list                ls-remote           unalias             use
@@ -528,46 +543,57 @@ current             help                list-remote         reinstall-packages  
 
 nvm alias:
 > $ nvm alias <kbd>Tab</kbd>
+
 ```
 default
 ```
 
 > $ nvm alias my_alias <kbd>Tab</kbd>
+
 ```
 v0.6.21        v0.8.26       v0.10.28
 ```
 
 nvm use:
 > $ nvm use <kbd>Tab</kbd>
+
 ```
 my_alias        default        v0.6.21        v0.8.26       v0.10.28
 ```
 
 nvm uninstall:
 > $ nvm uninstall <kbd>Tab</kbd>
+
 ```
 my_alias        default        v0.6.21        v0.8.26       v0.10.28
 ```
 
 ## Compatibility Issues
+
 `nvm` will encounter some issues if you have some non-default settings set. (see [#606](/../../issues/606))
 The following are known to cause issues:
 
 Inside `~/.npmrc`:
+
 ```sh
 prefix='some/path'
 ```
+
 Environment Variables:
+
 ```sh
 $NPM_CONFIG_PREFIX
 $PREFIX
 ```
+
 Shell settings:
+
 ```sh
 set -e
 ```
 
 ## Installing nvm on Alpine Linux
+
 In order to provide the best performance (and other optimisations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides pre-these compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
 
 Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
@@ -590,11 +616,13 @@ As a potential alternative, @mhart (a Node contributor) has some [Docker images 
 ### Manual Uninstall
 
 To remove nvm manually, execute the following:
+
 ```sh
 $ rm -rf "$NVM_DIR"
 ```
 
 Edit ~/.bashrc (or other shell resource config) and remove the lines below:
+
 ```sh
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
@@ -629,6 +657,7 @@ nvm@nvm-dev:~/.nvm$
 Please note that it'll take about 8 minutes to build the image and the image size would be about 650MB, so it's not suitable for production usage.
 
 For more information and documentation about docker, please refer to its official website:
+
   - https://www.docker.com/
   - https://docs.docker.com/
 
