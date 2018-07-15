@@ -20,6 +20,8 @@
   - [Listing versions](#listing-versions)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
+    - [bash](#bash)
+      - [Automatically call `nvm use`](#automatically-call-nvm-use)
     - [zsh](#zsh)
       - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
 - [License](#license)
@@ -376,6 +378,38 @@ The contents of a `.nvmrc` file **must** be the `<version>` (as described by `nv
 You can use [`avn`](https://github.com/wbyoung/avn) to deeply integrate into your shell and automatically invoke `nvm` when changing directories. `avn` is **not** supported by the `nvm` development team. Please [report issues to the `avn` team](https://github.com/wbyoung/avn/issues/new).
 
 If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` development team. We are, however, accepting pull requests for more examples.
+
+#### bash
+
+##### Automatically call `nvm use`
+
+Put the following at the end of your `$HOME/.bashrc`:
+
+```bash
+cdnvm(){
+  cd $@
+  if [[ -f .nvmrc && -s .nvmrc && -r .nvmrc ]]; then
+    <.nvmrc nvm install;
+  elif [[ $(nvm current) != $(nvm version default) ]]; then
+    nvm use default;
+  fi
+}
+alias cd='cdnvm'
+```
+
+This alias would automatically detect a `.nvmrc` file in the directory you're `cd`ing into, and switch to that version. And when you `cd` back, it will automatically switch back to the `default` version.
+
+If you prefer one-liners:
+
+```
+alias cd='cdnvm(){ cd $@; if [[ -f .nvmrc && -s .nvmrc && -r .nvmrc ]]; then <.nvmrc nvm install; elif [[ $(nvm current) != $(nvm version default) ]]; then nvm use default; fi; };cdnvm'
+```
+
+You may also run this directly on your terminal:
+
+```bash
+$ echo 'alias cd='\''cdnvm(){ cd $@; if [[ -f .nvmrc && -s .nvmrc && -r .nvmrc ]]; then <.nvmrc nvm install; elif [[ $(nvm current) != $(nvm version default) ]]; then nvm use default; fi; };cdnvm'\''' >> ~/.bashrc
+```
 
 #### zsh
 
