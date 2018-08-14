@@ -7,7 +7,13 @@ nvm_has() {
 }
 
 nvm_install_dir() {
-  command printf %s "${NVM_DIR:-"$HOME/.nvm"}"
+  if [ ! -z "$NVM_DIR" ]; then
+    printf %s "${NVM_DIR}"
+  elif [ ! -z "$XDG_CONFIG_HOME" ]; then
+    printf %s "${XDG_CONFIG_HOME/nvm}"
+  else
+    printf %s "$HOME/.nvm"
+  fi
 }
 
 nvm_latest_version() {
