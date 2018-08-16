@@ -2641,7 +2641,11 @@ nvm() {
         else
           REMOTE_CMD='nvm ls-remote'
         fi
-        nvm_err "Version '$provided_version' ${LTS_MSG-}not found - try \`${REMOTE_CMD}\` to browse available versions."
+        if [ "${provided_version}" = 'lts' ]; then
+          nvm_err "To install the latest LTS version of Node.js use the command \`nvm install --lts\`."
+        else
+          nvm_err "Version '$provided_version' ${LTS_MSG-}not found - try \`${REMOTE_CMD}\` to browse available versions."
+        fi
         return 3
       fi
 
