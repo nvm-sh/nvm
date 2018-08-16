@@ -2617,6 +2617,10 @@ nvm() {
       fi
 
       case "${provided_version}" in
+        lts)
+          LTS='*'
+          provided_version=''
+        ;;
         'lts/*')
           LTS='*'
           provided_version=''
