@@ -189,7 +189,19 @@ For manual upgrade with `git` (requires git v1.7.10+):
 To download, compile, and install the latest release of node, do this:
 
 ```sh
-nvm install node
+nvm install node # "node" is an alias for the latest version
+```
+
+To install a specific version of node:
+
+```sh
+nvm install 6.14.4 # or 10.10.0, 8.9.1, etc
+```
+
+You can list available versions using ls-remote:
+
+```sh
+nvm ls-remote
 ```
 
 And then in any new shell just use the installed version:
@@ -203,6 +215,7 @@ Or you can just run it:
 ```sh
 nvm run node --version
 ```
+
 Or, you can run any arbitrary command in a subshell with the desired version of node:
 
 ```sh
