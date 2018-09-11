@@ -8,8 +8,9 @@ cleanup () {
 }
 
 \. ../../nvm.sh
+\. ../common.sh
 
-mkdir "${NVM_DIR}/v0.10.4"
+make_fake_node v0.10.4
 
 nvm deactivate >/dev/null 2>&1
 

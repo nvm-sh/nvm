@@ -130,7 +130,7 @@ nvm_has_system_iojs() {
 }
 
 nvm_is_version_installed() {
-  [ -n "${1-}" ] && [ -d "$(nvm_version_path "${1-}" 2> /dev/null)" ]
+  [ -n "${1-}" ] && [ -x "$(nvm_version_path "$1" 2> /dev/null)"/bin/node ]
 }
 
 nvm_print_npm_version() {
@@ -1043,9 +1043,9 @@ nvm_remote_versions() {
   NVM_LS_REMOTE_IOJS_EXIT_CODE=0
   local NVM_LS_REMOTE_IOJS_OUTPUT
   NVM_LS_REMOTE_IOJS_OUTPUT=''
-  if [ -z "${NVM_LTS-}" ] && ( \
-    [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_IOJS_PREFIX}" ] \
-  ); then
+  if [ -z "${NVM_LTS-}" ] && {
+    [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_IOJS_PREFIX}" ];
+  }; then
     NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "${PATTERN-}") &&:
     NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
   fi
@@ -1148,12 +1148,19 @@ nvm_change_path() {
   elif ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/[^/]*${2-}" \
     && ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
     nvm_echo "${3-}${2-}:${1-}"
+  # if the initial path contains BOTH an nvm path (checked for above) and
+  # that nvm path is preceded by a system binary path, just prepend the
+  # supplementary path instead of replacing it.
+  # https://github.com/creationix/nvm/issues/1652#issuecomment-342571223
+  elif nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR}/[^/]*${2-}" \
+    || nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
+    nvm_echo "${3-}${2-}:${1-}"
   # use sed to replace the existing nvm path with the supplementary path. This
   # preserves the order of the path.
   else
     nvm_echo "${1-}" | command sed \
-      -e "s#${NVM_DIR}/[^/]*${2-}[^:]*#${3-}${2-}#g" \
-      -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*#${3-}${2-}#g"
+      -e "s#${NVM_DIR}/[^/]*${2-}[^:]*#${3-}${2-}#" \
+      -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*#${3-}${2-}#"
   fi
 }
 
@@ -1293,14 +1300,14 @@ nvm_list_aliases() {
     local ALIAS_NAME
     for ALIAS_NAME in "$(nvm_node_prefix)" "stable" "unstable"; do
       {
-        if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && ([ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]); then
+        if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && { [ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]; }; then
           NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
         fi
       } &
     done
     wait
     ALIAS_NAME="$(nvm_iojs_prefix)"
-    if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && ([ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]); then
+    if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && { [ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]; }; then
       NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
     fi
   ) | sort
@@ -2826,7 +2833,7 @@ nvm_check_file_permissions() {
     ZSH_HAS_NONOMATCH_UNSET="$(set +e ; setopt | nvm_grep -q nonomatch ; nvm_echo $?)"
     setopt nonomatch
   fi
-  for FILE in $1/* $1/.[!.]* $1/..?* ; do
+  for FILE in "$1"/* "$1"/.[!.]* "$1"/..?* ; do
     if [ -d "$FILE" ]; then
       if ! nvm_check_file_permissions "$FILE"; then
         if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
@@ -4132,6 +4139,8 @@ nvm_supports_xz() {
 }
 
 nvm_auto() {
+  local NVM_CURRENT
+  NVM_CURRENT="$(nvm_ls_current)"
   local NVM_MODE
   NVM_MODE="${1-}"
   local VERSION
@@ -4143,11 +4152,15 @@ nvm_auto() {
       nvm install >/dev/null
     fi
   elif [ "_$NVM_MODE" = '_use' ]; then
-    VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
-    if [ -n "$VERSION" ]; then
-      nvm use --silent "$VERSION" >/dev/null
-    elif nvm_rc_version >/dev/null 2>&1; then
-      nvm use --silent >/dev/null
+    if [ "_${NVM_CURRENT}" = '_none' ] || [ "_${NVM_CURRENT}" = '_system' ]; then
+      VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+      if [ -n "${VERSION}" ]; then
+        nvm use --silent "${VERSION}" >/dev/null
+      elif nvm_rc_version >/dev/null 2>&1; then
+        nvm use --silent >/dev/null
+      fi
+    else
+      nvm use --silent "${NVM_CURRENT}" >/dev/null
     fi
   elif [ "_$NVM_MODE" != '_none' ]; then
     nvm_err 'Invalid auto mode supplied.'

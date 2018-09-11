@@ -1,10 +1,11 @@
 #!/bin/sh
 
 \. ../../../nvm.sh
+\. ../../common.sh
 
-mkdir -p "${NVM_DIR}/v0.0.2"
-mkdir -p "${NVM_DIR}/v0.0.20"
-mkdir -p "${NVM_DIR}/versions/node/v0.12.0"
+make_fake_node v0.0.2
+make_fake_node v0.0.20
+make_fake_node v0.12.0
 
 die () { echo "$@" ; exit 1; }
 

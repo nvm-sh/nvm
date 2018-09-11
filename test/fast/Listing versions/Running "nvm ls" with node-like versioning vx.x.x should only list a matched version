@@ -1,8 +1,9 @@
 #!/bin/sh
 
 \. ../../../nvm.sh
+\. ../../common.sh
 
-mkdir "${NVM_DIR}/v0.1.2"
+make_fake_node v0.1.2
 
 nvm ls v0.1 | grep v0.1.2 &&
 nvm ls v0.1.2 | grep v0.1.2 &&

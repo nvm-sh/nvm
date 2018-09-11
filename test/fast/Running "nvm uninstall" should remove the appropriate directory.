@@ -2,11 +2,11 @@
 
 set -ex
 
-cd ../..
-mkdir v0.0.1
-mkdir src/node-v0.0.1
+\. ../../nvm.sh
+\. ../common.sh
 
-. ./nvm.sh
+make_fake_node v0.0.1
+
 nvm uninstall v0.0.1
 
-[ ! -d 'v0.0.1' ] && [ ! -d 'src/node-v0.0.1/files' ]
+[ ! -d 'v0.0.1' ]

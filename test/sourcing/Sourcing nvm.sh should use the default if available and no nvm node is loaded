@@ -1,0 +1,28 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../common.sh
+
+# We need to unload nvm again first, as by the time this test is run,
+# despite being unloaded in setup, the inherited PATH still contains
+# an nvm-installed node version. We have to reset NVM_DIR after the unload.
+\. ../../nvm.sh || die 'sourcing returned nonzero exit code'
+NVM_DIR_CACHED="$NVM_DIR"
+nvm unload || die 'unloading returned nonzero exit code'
+NVM_DIR="$NVM_DIR_CACHED"
+
+echo '0.10.1' > ../../alias/default || die 'creation of default alias failed'
+
+# Now to begin the real test
+\. ../../nvm.sh || die 'sourcing returned nonzero exit code'
+
+NVM_LS_CURRENT_NOT_GREPPED="$(nvm ls current | strip_colors)"
+NVM_LS_CURRENT="$(nvm ls current | strip_colors | \grep -o v0.10.1)"
+[ "_$NVM_LS_CURRENT" = '_v0.10.1' ] || die "'nvm ls current' did not return '-> v0.10.1', got '$NVM_LS_CURRENT_NOT_GREPPED'"
+
+# NVM_LS_CURRENT_COLORED="$(nvm ls current | sed -n l)"
+
+NVM_ALIAS_DEFAULT="$(nvm alias default | strip_colors)"
+[ "_$NVM_ALIAS_DEFAULT" = "_default -> 0.10.1 (-> v0.10.1)" ] \
+  || die "'nvm alias default did not return 'default -> 0.10.1 (-> v0.10.1)', got '$NVM_ALIAS_DEFAULT'"
