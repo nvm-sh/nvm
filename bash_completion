@@ -85,7 +85,11 @@ __nvm() {
 # ZSH, load and run bashcompinit before calling the complete function.
 if [[ -n ${ZSH_VERSION-} ]]; then
   autoload -U +X bashcompinit && bashcompinit
-  autoload -U +X compinit && compinit
+  autoload -U +X compinit && if [[ ${ZSH_DISABLE_COMPFIX-} = true ]]; then
+    compinit -u
+  else
+    compinit
+  fi
 fi
 
 complete -o default -F __nvm nvm
