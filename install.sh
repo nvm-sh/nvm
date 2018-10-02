@@ -329,6 +329,9 @@ nvm_do_install() {
       exit 1
     fi
     install_nvm_as_script
+  else
+    echo >&2 "The environment variable \$METHOD is set to \"${METHOD}\", which is not recognized as a valid installation method."
+    exit 1
   fi
 
   echo
