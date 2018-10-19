@@ -621,7 +621,7 @@ nvm-dev            latest              9ca4c57a97d8        7 days ago          6
 If you got no error message, now you can easily involve in:
 
 ```sh
-$ docker run -it nvm-dev -h nvm-dev
+$ docker run -h nvm-dev -it nvm-dev
 
 nvm@nvm-dev:~/.nvm$
 ```
