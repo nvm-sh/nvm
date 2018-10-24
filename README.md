@@ -152,7 +152,7 @@ export NVM_DIR="$HOME/.nvm"
 
 ### Manual Install
 
-For a fully manual install, create a folder somewhere in your filesystem with the `nvm.sh` file inside it. I put mine in `~/.nvm` and added the following to the `nvm.sh` file.
+For a fully manual install, execute the following lines to first clone the nvm repository into `$HOME/.nvm`, and then load nvm:
 
 ```sh
 export NVM_DIR="$HOME/.nvm" && (
