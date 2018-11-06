@@ -1,0 +1,80 @@
+#!/bin/sh
+
+die () { printf "$@" ; exit 1; }
+
+\. ../../nvm.sh
+\. ../generated_semvers.sh
+
+# Verify that all generated valid normalized semvers produce some result
+test_cases="$VALID_SEMVERS"
+while [ -n "$test_cases" ]; do
+  semver=$(echo "$test_cases" | head -n1)
+  test_cases=$(echo "$test_cases" | tail -n +2)
+
+  output=$(nvm_interpret_node_semver "$semver")
+  if [ -z "$semver" ] || [ -z "$output" ] || ! nvm_string_contains_regexp "$output" '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+    die "nvm_interpret_node_semver generated positive test case failed expecting a version to be outputted: semver: '$semver' output: '$output'"
+  fi
+done
+
+# Verify that all generated invalid normalized semvers do not produce a result
+test_cases="$INVALID_SEMVERS"
+while [ -n "$test_cases" ]; do
+  semver=$(echo "$test_cases" | head -n1)
+  test_cases=$(echo "$test_cases" | tail -n +2)
+
+  output=$(nvm_interpret_node_semver "$semver")
+  if [ -z "$semver" ] || [ -n "$output" ]; then
+    die "nvm_interpret_node_semver generated negative test case failed: semver: '$semver' output: '$output'"
+  fi
+done
+
+# Verify actual outputs given some inputs
+# input:expected_output
+test_cases="*:$NEWEST_NODE_VERSION
+^5:$NEWEST_NODE_VERSION_5
+^5.0:$NEWEST_NODE_VERSION_5
+^5.x:$NEWEST_NODE_VERSION_5
+^5.X:$NEWEST_NODE_VERSION_5
+^5.*:$NEWEST_NODE_VERSION_5
+~5:$NEWEST_NODE_VERSION_5
+~5.0:$NEWEST_NODE_VERSION_5
+~5.x:$NEWEST_NODE_VERSION_5
+~5.X:$NEWEST_NODE_VERSION_5
+~5.*:$NEWEST_NODE_VERSION_5
+5:$NEWEST_NODE_VERSION_5
+x:$NEWEST_NODE_VERSION
+X:$NEWEST_NODE_VERSION
+x.x.x:$NEWEST_NODE_VERSION
+0.12.18:0.12.18
+0.11.16:0.11.16
+7.0.0||7.2.1:7.2.1
+7-8:8.0.0
+7.0:7.0.0
+^7.0.0:7.10.1
+~8.1.0:8.1.4
+^7.0.0||6.8.1:7.10.1
+>0.12.18:$NEWEST_NODE_VERSION
+>=0.11.16:$NEWEST_NODE_VERSION
+7.1.0 || 7.3.0 || 7.2.0:7.3.0
+7.1.0 7.3.0 7.2.0:
+5:$NEWEST_NODE_VERSION_5
+5.x:$NEWEST_NODE_VERSION_5
+5.x.x:$NEWEST_NODE_VERSION_5
+5.X:$NEWEST_NODE_VERSION_5
+5.X.X:$NEWEST_NODE_VERSION_5
+7.5.0:7.5.0"
+
+while [ -n "$test_cases" ]; do
+  line=$(echo "$test_cases" | head -n1)
+  input=$(echo "$line" | awk -F: '{ print $1 }')
+  expected_output=$(echo "$line" | awk -F: '{ print $2 }')
+  test_cases=$(echo "$test_cases" | tail -n +2)
+
+  actualOutput=$(nvm_interpret_node_semver "$input")
+  if [ "$actualOutput" != "$expected_output" ] || [ -z "$input" ]; then
+    die "nvm_interpret_node_semver input/output test case failed. Expected output: '$expected_output'. Actual output: '$actualOutput'. Input: '$input'.\n"
+  fi
+done
+exit 0
+

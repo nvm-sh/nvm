@@ -1,0 +1,118 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+\. ../../generated_semvers.sh
+
+# This test suite validates the behavior of extracting the semver from a package.json's engine.node value given valid/invalid semvers and valid/invalid json structures.
+
+# (TEST 1 POSITIVE TEST CASES)
+# SEMVERS: valid
+# PACKAGE.JSON TEMPLATES: invalid
+test_cases="$VALID_SEMVERS_FOR_PKG_JSON"
+if [ -z "$test_cases" ]; then
+  die 'TEST 1 for nvm_get_node_from_pkg_json given an empty set of test cases'
+fi
+prev_semver=''
+for template_file_name in package_json_templates/_valid_*; do
+  while [ -n "$test_cases" ]; do
+    semver=$(echo "$test_cases" | head -n1)
+    test_cases=$(echo "$test_cases" | tail -n +2)
+    [ -n "$semver" ] || continue
+    expectedOutput=$(nvm_trim_and_reduce_whitespace_to_one_space "$semver")
+
+    if [ "$prev_semver" = "$semver" ]; then
+      die "Problem iterating through test_cases (TEST 1). Encountered the same value twice in a row. prev_semver='$prev_semver' semver='$semver'.\n"
+    fi
+    prev_semver="$semver"
+
+    pkg_json_contents=$(sed "s/NODE_SEMVER/$semver/g" "$template_file_name" | tail -n +3)
+    actual_output=$(nvm_get_node_from_pkg_json "$pkg_json_contents")
+    if [ "$actual_output" != "$expectedOutput" ] || [ -z "$actual_output" ] || [ -z "$pkg_json_contents" ]; then
+      die "'nvm_get_node_from_pkg_json' POSITIVE test case failed (TEST 1). Expected '$expectedOutput' but got '$actual_output' when given input '$semver' and template '$template_file_name':\n$pkg_json_contents"
+    fi
+  done
+done
+
+# (TEST 2 NEGATIVE TEST CASES)
+# SEMVERS: valid
+# PACKAGE.JSON TEMPLATES: invalid
+test_cases="$VALID_SEMVERS_FOR_PKG_JSON"
+if [ -z "$test_cases" ]; then
+  die 'TEST 2 for nvm_get_node_from_pkg_json given an empty set of test cases'
+fi
+prev_semver=''
+for template_file_name in package_json_templates/_invalid_*; do
+  while [ -n "$test_cases" ]; do
+    semver=$(echo "$test_cases" | head -n1)
+    test_cases=$(echo "$test_cases" | tail -n +2)
+    [ -n "$semver" ] || continue
+
+    if [ "$prev_semver" = "$semver" ]; then
+      die "Problem iterating through test_cases (TEST 2). Encountered the same value twice in a row. prev_semver='$prev_semver' semver='$semver'.\n"
+    fi
+    prev_semver="$semver"
+
+    pkg_json_contents=$(sed "s/NODE_SEMVER/$semver/g" "$template_file_name" | tail -n +3)
+    actual_output=$(nvm_get_node_from_pkg_json "$pkg_json_contents")
+    if [ "$actual_output" != "" ] || [ -z "$semver" ] || [ -z "$pkg_json_contents" ]; then
+      die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST 2). Expected to get empty string but got '$actual_output' when given input template '$template_file_name':\n$pkg_json_contents"
+    fi
+  done
+done
+
+
+# (TEST 3 NEGATIVE TEST CASES)
+# SEMVERS: invalid
+# PACKAGE.JSON TEMPLATES: valid
+test_cases="$INVALID_SEMVERS_FOR_PKG_JSON"
+if [ -z "$test_cases" ]; then
+  die 'TEST 3 for nvm_get_node_from_pkg_json given an empty set of test cases'
+fi
+prev_semver=''
+for template_file_name in package_json_templates/_valid_*; do
+  while [ -n "$test_cases" ]; do
+    semver=$(echo "$test_cases" | head -n1)
+    [ -n "$semver" ] || continue
+    test_cases=$(echo "$test_cases" | tail -n +2)
+
+    if [ "$prev_semver" = "$semver" ]; then
+      die "Problem iterating through test_cases (TEST 3). Encountered the same value twice in a row. prev_semver='$prev_semver' semver='$semver'.\n"
+    fi
+    prev_semver="$semver"
+
+    pkg_json_contents=$(sed "s/NODE_SEMVER/$semver/g" "$template_file_name" | tail -n +3)
+    actual_output=$(nvm_get_node_from_pkg_json "$pkg_json_contents")
+    if [ "$actual_output" != "" ] || [ -z "$semver" ] || [ -z "$pkg_json_contents" ]; then
+      die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST 3). Expected to get empty string but got '$actual_output' when given input template '$template_file_name':\n$pkg_json_contents"
+    fi
+  done
+done
+
+# (TEST 4 NEGATIVE TEST CASES)
+# SEMVERS: invalid
+# PACKAGE.JSON TEMPLATES: invalid
+test_cases="$INVALID_SEMVERS_FOR_PKG_JSON"
+if [ -z "$test_cases" ]; then
+  die 'TEST 4 for nvm_get_node_from_pkg_json given an empty set of test cases'
+fi
+prev_semver=''
+for template_file_name in package_json_templates/_invalid_*; do
+  while [ -n "$test_cases" ]; do
+    semver=$(echo "$test_cases" | head -n1)
+    [ -n "$semver" ] || continue
+    test_cases=$(echo "$test_cases" | tail -n +2)
+
+    if [ "$prev_semver" = "$semver" ]; then
+      die "Problem iterating through test_cases (TEST 4). Encountered the same value twice in a row. prev_semver='$prev_semver' semver='$semver'.\n"
+    fi
+    prev_semver="$semver"
+
+    pkg_json_contents=$(sed "s/NODE_SEMVER/$semver/g" "$template_file_name" | tail -n +3)
+    actual_output=$(nvm_get_node_from_pkg_json "$pkg_json_contents")
+    if [ "$actual_output" != "" ] || [ -z "$semver" ] || [ -z "$pkg_json_contents" ]; then
+      die "'nvm_get_node_from_pkg_json' NEGATIVE test case failed (TEST 4). Expected to get empty string but got '$actual_output' when given input template '$template_file_name':\n$pkg_json_contents"
+    fi
+  done
+done
+exit 0
+

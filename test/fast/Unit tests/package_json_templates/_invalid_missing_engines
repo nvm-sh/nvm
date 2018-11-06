@@ -1,0 +1,6 @@
+verifies incompatibility with package.json that is missing 'engines' key
+
+{
+  "name": "fake",
+  "description": "fake"
+}

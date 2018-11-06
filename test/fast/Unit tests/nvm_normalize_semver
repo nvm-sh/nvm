@@ -1,0 +1,102 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+\. ../../generated_semvers.sh
+
+# This test suite validates the behavior of normalizing a semver from its raw form to a specific grammar. See the grammar defined with nvm_is_normalized_semver() in nvm.sh.
+
+# TEST 1: Validate that for already normalized semvers, nvm_normalize_semver outputs the same semver.
+test_cases="$VALID_NORMALIZED_SEMVERS"
+if [ -z "$test_cases" ]; then
+  die 'nvm_normalize_semver (TEST 1) was given an empty set of test cases'
+fi
+while [ -n "$test_cases" ]; do
+  semver=$(echo "$test_cases" | head -n1)
+  actual_output=$(nvm_normalize_semver "$semver")
+  if [ -z "$semver" ] || [ "$semver" != "$actual_output" ]; then
+    die "nvm_normalize_semver (TEST 1) test case failed. Expected output: '$semver'. Actual output: '$actual_output'. Input: '$semver'.\n"
+  fi
+  test_cases=$(echo "$test_cases" | tail -n +2)
+done
+
+
+# TEST 2: Validate that non normalized valid semvers produce a normalized result
+test_cases="$VALID_NON_NORMALIZED_SEMVERS"
+if [ -z "$test_cases" ]; then
+  die 'nvm_normalize_semver (TEST 2) was given an empty set of test cases'
+fi
+while [ -n "$test_cases" ]; do
+  semver=$(echo "$test_cases" | head -n1)
+  actual_output=$(nvm_normalize_semver "$semver")
+  if [ -z "$semver" ] || [ -z "$actual_output" ] || [ "$semver" = "$actual_output" ]; then
+    die "nvm_normalize_semver (TEST 2) test case failed. Expected output: '$semver'. Actual output: '$actual_output'. Input: '$semver'.\n"
+  fi
+  test_cases=$(echo "$test_cases" | tail -n +2)
+done
+
+# TEST 3: Validate specific outputs for some specific inputs to nvm_normalize_semver.
+# input:expected_output
+test_cases="1.2.3:1.2.3
+1.2.3 - 1.2.4:>=1.2.3 <=1.2.4
+1.2.3-1.2.4:>=1.2.3 <=1.2.4
+11.22.33 - 11.22.44:>=11.22.33 <=11.22.44
+1.2.x - 1.2.4:>=1.2.0 <=1.2.4
+1.2.xx - 1.2.4:
+1.2.3 || 1.2.4:1.2.3 || 1.2.4
+*:>0.0.0
+x:>0.0.0
+X:>0.0.0
+1:>=1.0.0 <2.0.0
+1.2:>=1.2.0 <1.3.0
+< 1.2.3:<1.2.3
+> 1.2.3:>1.2.3
+<= 1.2.3:<=1.2.3
+>= 1.2.3:>=1.2.3
+= 1.2.3:1.2.3
+^0.0.1 ^0.1.2 ^1.2.3:>=0.0.1 <0.0.2 >=0.1.2 <0.2.0 >=1.2.3 <2.0.0
+~0.0.1 ~0.1.2 ~1.2.3:>=0.0.1 <0.1.0 >=0.1.2 <0.2.0 >=1.2.3 <1.3.0
+~ 1.2.3:>=1.2.3 <1.3.0
+^ 1.2.3:>=1.2.3 <2.0.0
+1.2.3 || 1.2.4 1.2.5:1.2.3 || 1.2.4 1.2.5
+a:
+1 || 2 a:
+1 || a:
+a || 1.2.3:
+1.2.?:
+^0.0.1:>=0.0.1 <0.0.2
+<x.x.x:
+>=x.1.1:>0.0.0
+>x.1.1:>0.0.0
+~x.1.1:>0.0.0
+^x.1.1:>0.0.0
+11.22.33:11.22.33"
+
+if [ -z "$test_cases" ]; then
+  die 'nvm_normalize_semver (TEST 3) was given an empty set of test cases'
+fi
+while [ -n "$test_cases" ]; do
+  line=$(echo "$test_cases" | head -n1)
+  input=$(echo "$line" | awk -F: '{ print $1 }')
+  expected_output=$(echo "$line" | awk -F: '{ print $2 }')
+  actual_output=$(nvm_normalize_semver "$input")
+  if [ -z "$input" ] || [ "$actual_output" != "$expected_output" ]; then
+    die "nvm_normalize_semver (TEST 3) test case failed. Expected output: '$expected_output'. Actual output: '$actual_output'. Input: '$input'.\n"
+  fi
+  test_cases=$(echo "$test_cases" | tail -n +2)
+done
+
+# TEST 4: Validate that invalid semvers with invalid characters that shouldn't be retrieved from the package.json produce no result from nvm_normalize_semver
+test_cases="$INVALID_SEMVERS_FOR_PKG_JSON"
+if [ -z "$test_cases" ]; then
+  die 'nvm_normalize_semver (TEST 4) was given an empty set of test cases'
+fi
+while [ -n "$test_cases" ]; do
+  semver=$(echo "$test_cases" | head -n1)
+  actual_output=$(nvm_normalize_semver "$semver")
+  if [ -z "$semver" ] || [ -n "$actual_output" ]; then
+    die "nvm_normalize_semver (TEST 4) test case failed. Expected no output but got: '$actual_output'. Input: '$semver'.\n"
+  fi
+  test_cases=$(echo "$test_cases" | tail -n +2)
+done
+exit 0
+

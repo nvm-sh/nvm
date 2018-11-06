@@ -1,0 +1,9 @@
+verifies incompatibility with package.json that is missing quotes around the 'engines'node' value
+
+{
+  "name": "fake",
+  "engines": {
+    "node": NODE_SEMVER
+  },
+  "description": "fake"
+}

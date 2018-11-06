@@ -1,0 +1,9 @@
+verifies incompatibility with package.json that is missing 'engines.node' key
+
+{
+  "name": "fake",
+  "engines": {
+    "npm": "fake"
+  },
+  "description": "fake"
+}
