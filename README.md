@@ -20,6 +20,8 @@
   - [Listing versions](#listing-versions)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
+    - [bash](#bash)
+      - [Automatically call `nvm use`](#automatically-call-nvm-use)
     - [zsh](#zsh)
       - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
 - [License](#license)
@@ -376,6 +378,67 @@ The contents of a `.nvmrc` file **must** be the `<version>` (as described by `nv
 You can use [`avn`](https://github.com/wbyoung/avn) to deeply integrate into your shell and automatically invoke `nvm` when changing directories. `avn` is **not** supported by the `nvm` development team. Please [report issues to the `avn` team](https://github.com/wbyoung/avn/issues/new).
 
 If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` development team. We are, however, accepting pull requests for more examples.
+
+#### bash
+
+##### Automatically call `nvm use`
+
+Put the following at the end of your `$HOME/.bashrc`:
+
+```bash
+find-up () {
+    path=$(pwd)
+    while [[ "$path" != "" && ! -e "$path/$1" ]]; do
+        path=${path%/*}
+    done
+    echo "$path"
+}
+
+cdnvm(){
+    cd $@;
+    nvm_path=$(find-up .nvmrc | tr -d '[:space:]')
+
+    # If there are no .nvmrc file, use the default nvm version
+    if [[ ! $nvm_path = *[^[:space:]]* ]]; then
+
+        declare default_version;
+        default_version=$(nvm version default);
+
+        # If there is no default version, set it to `node`
+        # This will use the latest version on your machine
+        if [[ $default_version == "N/A" ]]; then
+            nvm alias default node;
+            default_version=$(nvm version default);
+        fi
+
+        # If the current version is not the default version, set it to use the default version
+        if [[ $(nvm current) != "$default_version" ]]; then
+            nvm use default;
+        fi
+
+        elif [[ -s $nvm_path/.nvmrc && -r $nvm_path/.nvmrc ]]; then
+        declare nvm_version
+        nvm_version=$(<"$nvm_path"/.nvmrc)
+
+        # Add the `v` suffix if it does not exists in the .nvmrc file
+        if [[ $nvm_version != v* ]]; then
+            nvm_version="v""$nvm_version"
+        fi
+
+        # If it is not already installed, install it
+        if [[ $(nvm ls "$nvm_version" | tr -d '[:space:]') == "N/A" ]]; then
+            nvm install "$nvm_version";
+        fi
+
+        if [[ $(nvm current) != "$nvm_version" ]]; then
+            nvm use "$nvm_version";
+        fi
+    fi
+}
+alias cd='cdnvm'
+```
+
+This alias would search 'up' from your current directory in order to detect a `.nvmrc` file. If it finds it, it will switch to that version; if not, it will use the default version.
 
 #### zsh
 
