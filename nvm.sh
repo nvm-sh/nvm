@@ -12,6 +12,10 @@
 
 NVM_SCRIPT_SOURCE="$_"
 
+nvm_is_zsh() {
+  [ -n "${ZSH_VERSION-}" ]
+}
+
 nvm_echo() {
   command printf %s\\n "$*" 2>/dev/null
 }
@@ -243,8 +247,7 @@ nvm_install_latest_npm() {
 if [ -z "${NVM_CD_FLAGS-}" ]; then
   export NVM_CD_FLAGS=''
 fi
-if nvm_has "unsetopt"; then
-  unsetopt nomatch 2>/dev/null
+if nvm_is_zsh; then
   NVM_CD_FLAGS="-q"
 fi
 
@@ -1017,12 +1020,7 @@ nvm_ls() {
       ;;
     esac
 
-    local ZSH_HAS_SHWORDSPLIT_UNSET
-    ZSH_HAS_SHWORDSPLIT_UNSET=1
-    if nvm_has "setopt"; then
-      ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-      setopt shwordsplit
-    fi
+    nvm_is_zsh && setopt local_options shwordsplit
 
     local NVM_DIRS_TO_SEARCH1
     NVM_DIRS_TO_SEARCH1=''
@@ -1087,10 +1085,6 @@ nvm_ls() {
         | command sed -e 's#\(.*\)\.\([^\.]\{1,\}\)$#\2-\1#;' \
                       -e "s#^${NVM_NODE_PREFIX}-##;" \
       )"
-    fi
-
-    if [ "${ZSH_HAS_SHWORDSPLIT_UNSET}" -eq 1 ] && nvm_has "unsetopt"; then
-      unsetopt shwordsplit
     fi
   fi
 
@@ -1188,11 +1182,7 @@ nvm_ls_remote_index_tab() {
     unset PATTERN
   fi
 
-  ZSH_HAS_SHWORDSPLIT_UNSET=1
-  if nvm_has "setopt"; then
-    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-    setopt shwordsplit
-  fi
+  nvm_is_zsh && setopt local_options shwordsplit
   local VERSION_LIST
   VERSION_LIST="$(nvm_download -L -s "${MIRROR}/index.tab" -o - \
     | command sed "
@@ -1237,9 +1227,6 @@ nvm_ls_remote_index_tab() {
 $VERSION_LIST
 EOF
 )"
-  if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-    unsetopt shwordsplit
-  fi
   if [ -z "${VERSIONS}" ]; then
     nvm_echo 'N/A'
     return 3
@@ -1509,8 +1496,6 @@ nvm_print_implicit_alias() {
     return 2
   fi
 
-  local ZSH_HAS_SHWORDSPLIT_UNSET
-
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
   local NVM_NODE_PREFIX
@@ -1526,11 +1511,7 @@ nvm_print_implicit_alias() {
         NVM_COMMAND="nvm_ls $NVM_IMPLICIT"
       fi
 
-      ZSH_HAS_SHWORDSPLIT_UNSET=1
-      if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-        setopt shwordsplit
-      fi
+      nvm_is_zsh && setopt local_options shwordsplit
 
       local NVM_IOJS_VERSION
       local EXIT_CODE
@@ -1538,10 +1519,6 @@ nvm_print_implicit_alias() {
       EXIT_CODE="$?"
       if [ "_$EXIT_CODE" = "_0" ]; then
         NVM_IOJS_VERSION="$(nvm_echo "$NVM_IOJS_VERSION" | command sed "s/^$NVM_IMPLICIT-//" | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq | command tail -1)"
-      fi
-
-      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-        unsetopt shwordsplit
       fi
 
       if [ "_$NVM_IOJS_VERSION" = "_N/A" ]; then
@@ -1561,17 +1538,9 @@ nvm_print_implicit_alias() {
         NVM_COMMAND="nvm_ls node"
       fi
 
-      ZSH_HAS_SHWORDSPLIT_UNSET=1
-      if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-        setopt shwordsplit
-      fi
+      nvm_is_zsh && setopt local_options shwordsplit
 
       LAST_TWO=$($NVM_COMMAND | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2 | uniq)
-
-      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-        unsetopt shwordsplit
-      fi
     ;;
   esac
   local MINOR
@@ -1580,11 +1549,7 @@ nvm_print_implicit_alias() {
   local MOD
   local NORMALIZED_VERSION
 
-  ZSH_HAS_SHWORDSPLIT_UNSET=1
-  if nvm_has "setopt"; then
-    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-    setopt shwordsplit
-  fi
+  nvm_is_zsh && setopt local_options shwordsplit
   for MINOR in $LAST_TWO; do
     NORMALIZED_VERSION="$(nvm_normalize_version "$MINOR")"
     if [ "_0${NORMALIZED_VERSION#?}" != "_$NORMALIZED_VERSION" ]; then
@@ -1598,9 +1563,6 @@ nvm_print_implicit_alias() {
       fi
     fi
   done
-  if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-    unsetopt shwordsplit
-  fi
 
   if [ "_$2" = '_stable' ]; then
     nvm_echo "${STABLE}"
@@ -2077,12 +2039,7 @@ nvm_install_source() {
     PROGRESS_BAR="--progress-bar"
   fi
 
-  local ZSH_HAS_SHWORDSPLIT_UNSET
-  ZSH_HAS_SHWORDSPLIT_UNSET=1
-  if nvm_has "setopt"; then
-    ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-    setopt shwordsplit
-  fi
+  nvm_is_zsh && setopt local_options shwordsplit
 
   TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
   [ -f "${TARBALL}" ] && \
@@ -2099,15 +2056,9 @@ nvm_install_source() {
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install
   ); then
-    if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-      unsetopt shwordsplit
-    fi
     nvm_err "nvm: install ${VERSION} failed!"
     command rm -rf "${TMPDIR-}"
     return 1
-  fi
-  if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-    unsetopt shwordsplit
   fi
 }
 
@@ -2317,31 +2268,17 @@ nvm_is_natural_num() {
 
 # Check version dir permissions
 nvm_check_file_permissions() {
-  local ZSH_HAS_NONOMATCH_UNSET
-  ZSH_HAS_NONOMATCH_UNSET=1
-  if nvm_has "setopt"; then
-    ZSH_HAS_NONOMATCH_UNSET="$(set +e ; setopt | nvm_grep -q nonomatch ; nvm_echo $?)"
-    setopt nonomatch
-  fi
+  nvm_is_zsh && setopt local_options nonomatch
   for FILE in "$1"/* "$1"/.[!.]* "$1"/..?* ; do
     if [ -d "$FILE" ]; then
       if ! nvm_check_file_permissions "$FILE"; then
-        if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
-          setopt nomatch
-        fi
         return 2
       fi
     elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
       nvm_err "file is not writable or self-owned: $(nvm_sanitize_path "$FILE")"
-      if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
-        setopt nomatch
-      fi
       return 1
     fi
   done
-  if [ "${ZSH_HAS_NONOMATCH_UNSET}" -eq 1 ] && nvm_has "setopt"; then
-    setopt nomatch
-  fi
   return 0
 }
 
@@ -2466,13 +2403,8 @@ nvm() {
     ;;
 
     "debug" )
-      local ZSH_HAS_SHWORDSPLIT_UNSET
       local OS_VERSION
-      ZSH_HAS_SHWORDSPLIT_UNSET=1
-      if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-        setopt shwordsplit
-      fi
+      nvm_is_zsh && setopt local_options shwordsplit
       nvm_err "nvm --version: v$(nvm --version)"
       if [ -n "${TERM_PROGRAM-}" ]; then
         nvm_err "\$TERM_PROGRAM: $TERM_PROGRAM"
@@ -2526,9 +2458,6 @@ nvm() {
         NVM_DEBUG_OUTPUT="$($NVM_DEBUG_COMMAND 2>&1)"
         nvm_err "$NVM_DEBUG_COMMAND: $(nvm_sanitize_path "$NVM_DEBUG_OUTPUT")"
       done
-      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-        unsetopt shwordsplit
-      fi
       return 42
     ;;
 
@@ -3115,12 +3044,7 @@ nvm() {
 
       local EXIT_CODE
 
-      local ZSH_HAS_SHWORDSPLIT_UNSET
-      ZSH_HAS_SHWORDSPLIT_UNSET=1
-      if nvm_has "setopt"; then
-        ZSH_HAS_SHWORDSPLIT_UNSET="$(set +e ; setopt | nvm_grep -q shwordsplit ; nvm_echo $?)"
-        setopt shwordsplit
-      fi
+      nvm_is_zsh && setopt local_options shwordsplit
       local LTS_ARG
       if [ -n "${NVM_LTS-}" ]; then
         LTS_ARG="--lts=${NVM_LTS-}"
@@ -3134,9 +3058,6 @@ nvm() {
         nvm exec "${NVM_SILENT-}" "${LTS_ARG-}" "$VERSION" node "$@"
       fi
       EXIT_CODE="$?"
-      if [ "$ZSH_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
-        unsetopt shwordsplit
-      fi
       return $EXIT_CODE
     ;;
     "exec" )
@@ -3549,7 +3470,7 @@ nvm() {
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
-        nvm_curl_libz_support nvm_command_info \
+        nvm_curl_libz_support nvm_command_info nvm_is_zsh \
         > /dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \
