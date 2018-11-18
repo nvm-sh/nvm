@@ -10,6 +10,7 @@ addons:
     #  - g++-4.8
 
 cache:
+  ccache: true
   directories:
     - $HOME/.npm
     - $TRAVIS_BUILD_DIR/.cache
@@ -37,6 +38,7 @@ env:
     - CXX=g++-4.8
     - CC=gcc-4.8
     - PATH="$(echo $PATH | sed 's/::/:/')"
+    - PATH="/usr/lib/ccache/:$PATH"
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
   matrix:
     - MAKE_RELEASE=true
