@@ -3419,7 +3419,7 @@ nvm() {
         esac
         shift
       done
-      case "${PATTERN}" in
+      case "${PATTERN-}" in
         'lts/*')
           NVM_LTS='*'
           unset PATTERN
