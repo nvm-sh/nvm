@@ -19,8 +19,14 @@ WGET_EXPECTED_INFO="$(which wget)"
 cleanup
 
 # 2. test aliased wget
-shopt -s expand_aliases
-# enable expand_aliases to make alias working in interactive shell
+
+# enable expand_aliases/aliases to make alias work in interactive shell
+if nvm_has shopt; then
+  shopt -s expand_aliases
+elif nvm_has setopt; then
+  setopt aliases
+fi
+
 alias wget="wget -V"
 WGET_COMMAND_INFO="$(nvm_command_info wget)"
 WGET_EXPECTED_INFO="$(which wget) (wget -V)"
