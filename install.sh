@@ -7,9 +7,9 @@ nvm_has() {
 }
 
 nvm_install_dir() {
-  if [ ! -z "$NVM_DIR" ]; then
+  if [ -n "$NVM_DIR" ]; then
     printf %s "${NVM_DIR}"
-  elif [ ! -z "$XDG_CONFIG_HOME" ]; then
+  elif [ -n "$XDG_CONFIG_HOME" ]; then
     printf %s "${XDG_CONFIG_HOME/nvm}"
   else
     printf %s "$HOME/.nvm"
@@ -123,7 +123,7 @@ install_nvm_from_git() {
     fi
   fi
   command git -c advice.detachedHead=false --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout -f --quiet "$(nvm_latest_version)"
-  if [ ! -z "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
+  if [ -n "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
     if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
       command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
     else
@@ -250,7 +250,7 @@ nvm_detect_profile() {
     done
   fi
 
-  if [ ! -z "$DETECTED_PROFILE" ]; then
+  if [ -n "$DETECTED_PROFILE" ]; then
     echo "$DETECTED_PROFILE"
   fi
 }
