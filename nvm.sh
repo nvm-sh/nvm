@@ -2552,14 +2552,8 @@ nvm() {
       if [ -z "$provided_version" ]; then
         if [ "_${LTS-}" = '_*' ]; then
           nvm_echo 'Installing latest LTS version.'
-          if [ $# -gt 0 ]; then
-            shift
-          fi
         elif [ "_${LTS-}" != '_' ]; then
           nvm_echo "Installing with latest version of LTS line: $LTS"
-          if [ $# -gt 0 ]; then
-            shift
-          fi
         else
           nvm_rc_version
           if [ $version_not_provided -eq 1 ] && [ -z "$NVM_RC_VERSION" ]; then
@@ -2570,8 +2564,6 @@ nvm() {
           provided_version="$NVM_RC_VERSION"
           unset NVM_RC_VERSION
         fi
-      elif [ $# -gt 0 ]; then
-        shift
       fi
 
       case "${provided_version}" in
