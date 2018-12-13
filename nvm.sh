@@ -2485,49 +2485,36 @@ nvm() {
       local LTS
       local NVM_UPGRADE_NPM
       NVM_UPGRADE_NPM=0
-      while [ $# -ne 0 ]
-      do
-        case "$1" in
-          -s)
-            shift # consume "-s"
-            nobinary=1
-          ;;
-          -j)
-            shift # consume "-j"
-            nvm_get_make_jobs "$1"
-            shift # consume job count
-          ;;
-          --no-progress)
-            noprogress=1
-            shift
-          ;;
-          --lts)
-            LTS='*'
-            shift
-          ;;
-          --lts=*)
-            LTS="${1##--lts=}"
-            shift
-          ;;
-          --latest-npm)
-            NVM_UPGRADE_NPM=1
-            shift
-          ;;
-          *)
-            break # stop parsing args
-          ;;
-        esac
-      done
-
-      ADDITIONAL_PARAMETERS=''
       local PROVIDED_REINSTALL_PACKAGES_FROM
       local REINSTALL_PACKAGES_FROM
       local SKIP_DEFAULT_PACKAGES
       local DEFAULT_PACKAGES
 
+      local provided_version=''
+      ADDITIONAL_PARAMETERS=''
+
       while [ $# -ne 0 ]
       do
         case "$1" in
+          -s)
+            nobinary=1
+          ;;
+          -j)
+            shift # 2 part parameter, comsume first part now
+            nvm_get_make_jobs "$1" # $1 is now second parameter piece
+          ;;
+          --no-progress)
+            noprogress=1
+          ;;
+          --lts)
+            LTS='*'
+          ;;
+          --lts=*)
+            LTS="${1##--lts=}"
+          ;;
+          --latest-npm)
+            NVM_UPGRADE_NPM=1
+          ;;
           --reinstall-packages-from=*)
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 27-)"
             if [ -z "${PROVIDED_REINSTALL_PACKAGES_FROM}" ]; then
@@ -2548,14 +2535,15 @@ nvm() {
             SKIP_DEFAULT_PACKAGES=true
           ;;
           *)
-            ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1"
+            if [ -z "$provided_version" ]; then
+              provided_version="$1"
+            else
+              ADDITIONAL_PARAMETERS="$ADDITIONAL_PARAMETERS $1" # gather all other parameters
+            fi
           ;;
         esac
-        shift
+        shift # consume parameter
       done
-
-      local provided_version
-      provided_version="${1-}"
 
       if [ -z "$provided_version" ]; then
         if [ "_${LTS-}" = '_*' ]; then
