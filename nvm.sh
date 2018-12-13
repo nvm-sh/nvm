@@ -2516,7 +2516,7 @@ nvm() {
             NVM_UPGRADE_NPM=1
           ;;
           --reinstall-packages-from=*)
-            PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 27-)"
+            PROVIDED_REINSTALL_PACKAGES_FROM="${1##--reinstall-packages-from=}"
             if [ -z "${PROVIDED_REINSTALL_PACKAGES_FROM}" ]; then
               nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node.'
               return 6
@@ -2528,8 +2528,12 @@ nvm() {
             return 6
           ;;
           --copy-packages-from=*)
-            PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 22-)"
+            PROVIDED_REINSTALL_PACKAGES_FROM="${1##--copy-packages-from=}"
             REINSTALL_PACKAGES_FROM="$(nvm_version "$PROVIDED_REINSTALL_PACKAGES_FROM")" ||:
+          ;;
+          --copy-packages-from)
+            nvm_err 'If --copy-packages-from is provided, it must point to an installed version of node using `=`.'
+            return 6
           ;;
           --skip-default-packages)
             SKIP_DEFAULT_PACKAGES=true
