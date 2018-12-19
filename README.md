@@ -6,6 +6,7 @@
 
 - [Installation](#installation)
   - [Install script](#install-script)
+    - [Ansible](#ansible)
   - [Verify installation](#verify-installation)
   - [Important Notes](#important-notes)
   - [Git install](#git-install)
@@ -90,6 +91,17 @@ If the above doesn't fix the problem, open your `.bash_profile` and add the foll
 `source ~/.bashrc`
 
 - For more information about this issue and possible workarounds, please [refer here](https://github.com/creationix/nvm/issues/576)
+
+#### Ansible
+ You can use a task:
+
+```
+- name: nvm
+  shell: >
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+```
 
 ### Verify installation
 
