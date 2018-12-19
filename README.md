@@ -93,7 +93,7 @@ If the above doesn't fix the problem, open your `.bash_profile` and add the foll
 - For more information about this issue and possible workarounds, please [refer here](https://github.com/creationix/nvm/issues/576)
 
 #### Ansible
- You can use a task:
+  You can use a task:
 
 ```
 - name: nvm
