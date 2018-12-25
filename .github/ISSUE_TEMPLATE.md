@@ -4,22 +4,22 @@
 - Operating system and version:
 
 - `nvm debug` output:
-<details>
-<!-- do not delete the following blank line -->
+  <details>
+  <!-- do not delete the following blank line -->
 
-```sh
+  ```sh
 
-```
-</details>
+  ```
+  </details>
 
 - `nvm ls` output:
-<details>
-<!-- do not delete the following blank line -->
+  <details>
+  <!-- do not delete the following blank line -->
 
-```sh
+  ```sh
 
-```
-</details>
+  ```
+  </details>
 
 - How did you install `nvm`? (e.g. install script in readme, Homebrew):
 
@@ -33,9 +33,10 @@
 
 <!-- if this does not apply, please delete this section -->
 - If you are having installation issues, or getting "N/A", what does `curl -I --compressed -v https://nodejs.org/dist/` print out?
-<details>
-<!-- do not delete the following blank line -->
+  <details>
+  <!-- do not delete the following blank line -->
 
-```sh
-```
-</details>
+  ```sh
+
+  ```
+  </details>
