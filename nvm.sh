@@ -1606,6 +1606,7 @@ nvm_get_os() {
     Darwin\ *) NVM_OS=darwin ;;
     SunOS\ *) NVM_OS=sunos ;;
     FreeBSD\ *) NVM_OS=freebsd ;;
+    OpenBSD\ *) NVM_OS=openbsd ;;
     AIX\ *) NVM_OS=aix ;;
   esac
   nvm_echo "${NVM_OS-}"
@@ -1933,6 +1934,69 @@ nvm_download_artifact() {
   nvm_echo "${TARBALL}"
 }
 
+nvm_tar_knows_J() {
+  ERR_MSG=$(tar -J 2>&1 | head -1)
+  [ "_$ERR_MSG" != "_tar: unknown option -- J" ]
+}
+
+
+# args: tarball path, NVM_OS var
+# returns: a string with the path of the extracted compressed file
+nvm_extract_tar_artifact() {
+  local tar_compression_flag
+  local TARBALL
+  local TAR_COMMAND_SUFFIX
+  local TMPDIR
+  local NVM_OS
+  local tar
+
+  TARBALL="${1}"
+  NVM_OS="${2}"
+
+  tar='tar'
+  if [ "${NVM_OS}" = 'aix' ]; then
+    tar='gtar'
+  fi
+
+  tar_compression_flag='z'
+
+  if ! nvm_tar_knows_J && nvm_has xz && nvm_supports_xz "${VERSION}"; then
+
+    if [ -f "${TARBALL}" ]; then
+      command xz -dk "${TARBALL}"
+    fi
+
+    TARBALL=${TARBALL%.xz}
+    tar_compression_flag=
+    TAR_COMMAND_SUFFIX=
+    TMPDIR="$(dirname "${TARBALL}")"
+
+  else
+
+    if nvm_tar_knows_J; then
+      tar_compression_flag='J'
+    fi
+
+    TAR_COMMAND_SUFFIX="--strip-components 1"
+    TMPDIR="$(dirname "${TARBALL}")/files"
+  fi
+
+  if [ -f "${TARBALL}" ] && [ -d "${TMPDIR}" ]; then
+    # shellcheck disable=SC2086
+    command ${tar} "-x${tar_compression_flag}f" "${TARBALL}" -C "${TMPDIR}" ${TAR_COMMAND_SUFFIX}
+  fi
+
+  # The `-C` option for `tar` on Openbsd takes its parameter and extracts files
+  # from the tarball into a new directory named after it. That's why this update
+  # in the `$TMPDIR` is necessary
+  if [ "_$NVM_OS" = "_openbsd" ]; then
+    BASE=$(basename "${TMPDIR}")
+    TMPDIR="${TMPDIR}/${BASE}"
+  fi
+
+  nvm_echo "$TMPDIR"
+}
+
 nvm_get_make_jobs() {
   if nvm_is_natural_num "${1-}"; then
     NVM_MAKE_JOBS="$1"
@@ -2030,7 +2094,7 @@ nvm_install_source() {
       make='gmake'
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     ;;
-    'darwin')
+    'openbsd' | 'darwin')
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     ;;
     'aix')
@@ -2042,18 +2106,6 @@ nvm_install_source() {
       nvm_echo "Clang v3.5+ detected! CC or CXX not specified, will use Clang as C/C++ compiler!"
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     fi
-  fi
-
-  local tar_compression_flag
-  tar_compression_flag='z'
-  if nvm_supports_xz "${VERSION}"; then
-    tar_compression_flag='J'
-  fi
-
-  local tar
-  tar='tar'
-  if [ "${NVM_OS}" = 'aix' ]; then
-    tar='gtar'
   fi
 
   local TARBALL
@@ -2071,11 +2123,8 @@ nvm_install_source() {
 
   TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
   [ -f "${TARBALL}" ] && \
-  TMPDIR="$(dirname "${TARBALL}")/files" && \
+  TMPDIR="$(nvm_extract_tar_artifact "${TARBALL}" "${NVM_OS}" | command tail -1)" && \
   if ! (
-    # shellcheck disable=SC2086
-    command mkdir -p "${TMPDIR}" && \
-    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
     VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
     nvm_cd "${TMPDIR}" && \
     nvm_echo '$>'./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS'<' && \
