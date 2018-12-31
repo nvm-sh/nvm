@@ -291,6 +291,22 @@ nvm install 6 --reinstall-packages-from=5
 nvm install v4.2 --reinstall-packages-from=iojs
 ```
 
+Note that reinstalling packages _explicitly does not update the npm version_ — this is to ensure that npm isn't accidentally upgraded to a broken version for the new node version.
+
+To update npm at the same time add the `--latest-npm` flag, like this:
+
+```sh
+nvm install lts/* --reinstall-packages-from=default --latest-npm
+```
+
+or, you can at any time run the following command to get the latest supported npm version on the current node version:
+```sh
+nvm install-latest-npm
+```
+
+If you've already gotten an error to the effect of "npm does not support Node.js", you'll need to (1) revert to a previous node version (`nvm ls` & `nvm use <your latest _working_ version from the ls>`, (2) delete the newly created node version (`nvm uninstall <your _broken_ version of node from the ls>`), then (3) rerun your `nvm install` with the `--latest-npm` flag.
+
+
 ### Default global packages from file while installing
 
 If you have a list of default packages you want installed every time you install a new version, we support that too -- just add the package names, one per line, to the file `$NVM_DIR/default-packages`. You can add anything npm would accept as a package argument on the command line.
