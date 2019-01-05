@@ -2348,7 +2348,7 @@ nvm() {
       nvm_echo '  nvm run [--silent] <version> [<args>]     Run `node` on <version> with <args> as arguments. Uses .nvmrc if available'
       nvm_echo '    --lts                                   Uses automatic LTS (long-term support) alias `lts/*`, if available.'
       nvm_echo '    --lts=<LTS name>                        Uses automatic alias for provided LTS line, if available.'
-      nvm_echo '  nvm current                               Display currently activated version'
+      nvm_echo '  nvm current                               Display currently activated version of Node'
       nvm_echo '  nvm ls                                    List installed versions'
       nvm_echo '  nvm ls <version>                          List versions matching a given <version>'
       nvm_echo '  nvm ls-remote                             List remote versions available for install'
