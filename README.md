@@ -290,7 +290,7 @@ nvm install v4.2 --reinstall-packages-from=iojs
 
 ### Default global packages from file while installing
 
-If you have a list of default packages you want installed every time you install a new version we support that too. You can add anything npm would accept as a package argument on the command line.
+If you have a list of default packages you want installed every time you install a new version, we support that too -- just add the package names, one per line, to the file `$NVM_DIR/default-packages`. You can add anything npm would accept as a package argument on the command line.
 
 ```sh
 # $NVM_DIR/default-packages
