@@ -1578,7 +1578,13 @@ nvm_get_os() {
   NVM_UNAME="$(command uname -a)"
   local NVM_OS
   case "$NVM_UNAME" in
-    Linux\ *) NVM_OS=linux ;;
+    Linux\ *)
+      if [ -f "/etc/alpine-release" ]; then
+        NVM_OS=alpine_linux
+      else
+        NVM_OS=linux
+      fi
+    ;;
     Darwin\ *) NVM_OS=darwin ;;
     SunOS\ *) NVM_OS=sunos ;;
     FreeBSD\ *) NVM_OS=freebsd ;;
@@ -1920,7 +1926,7 @@ nvm_get_make_jobs() {
   NVM_OS="$(nvm_get_os)"
   local NVM_CPU_CORES
   case "_$NVM_OS" in
-    "_linux")
+    '_linux' | '_alpine_linux')
       NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
     ;;
     "_freebsd" | "_darwin")
@@ -2717,8 +2723,8 @@ nvm() {
         EXIT_CODE=0
       else
 
-        if [ "_$NVM_OS" = "_freebsd" ]; then
-          # node.js and io.js do not have a FreeBSD binary
+        if [ "_$NVM_OS" = "_freebsd" ] || [ "_$NVM_OS" = "_alpine_linux" ]; then
+          # node.js and io.js do not have a FreeBSD / Alpine linux binary
           nobinary=1
           nvm_err "Currently, there is no binary for FreeBSD"
         elif [ "_$NVM_OS" = "_sunos" ]; then
