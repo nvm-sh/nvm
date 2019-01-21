@@ -304,8 +304,17 @@ nvm_check_global_modules() {
 
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
-    echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
-    exit 1
+    if [ "${NVM_DIR}" == "$HOME/.nvm" ]; then
+      if [ -e "${NVM_DIR}" ]; then
+        echo >&2 "File \"${NVM_DIR}\" has the same name as installation directory."
+        exit 1
+      else
+        mkdir "${NVM_DIR}"
+      fi
+    else
+      echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
+      exit 1
+    fi
   fi
   if [ -z "${METHOD}" ]; then
     # Autodetect install method
