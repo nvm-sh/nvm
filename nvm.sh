@@ -1721,6 +1721,8 @@ nvm_install_binary() {
   local NODE_OR_IOJS
   if [ "${FLAVOR}" = 'node' ]; then
     NODE_OR_IOJS="${FLAVOR}"
+  elif [ "${FLAVOR}" = 'iojs' ]; then
+    NODE_OR_IOJS="io.js"
   fi
   if [ "${NVM_NO_PROGRESS-}" = "1" ]; then
     # --silent, --show-error, use short option as @samrocketman mentions the compatibility issue.
