@@ -6,13 +6,19 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
-nvm_install_dir() {
-  if [ -n "$NVM_DIR" ]; then
-    printf %s "${NVM_DIR}"
-  elif [ -n "$XDG_CONFIG_HOME" ]; then
+nvm_default_install_dir() {
+  if [ -n "$XDG_CONFIG_HOME" ]; then
     printf %s "${XDG_CONFIG_HOME/nvm}"
   else
     printf %s "$HOME/.nvm"
+  fi
+}
+
+nvm_install_dir() {
+  if [ -n "$NVM_DIR" ]; then
+    printf %s "${NVM_DIR}"
+  else
+    nvm_default_install_dir
   fi
 }
 
@@ -304,8 +310,17 @@ nvm_check_global_modules() {
 
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
-    echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
-    exit 1
+    if [ -e "${NVM_DIR}" ]; then
+      echo >&2 "File \"${NVM_DIR}\" has the same name as installation directory."
+      exit 1
+    fi
+
+    if [ "${NVM_DIR}" = "$(nvm_default_install_dir)" ]; then
+      mkdir "${NVM_DIR}"
+    else
+      echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
+      exit 1
+    fi
   fi
   if [ -z "${METHOD}" ]; then
     # Autodetect install method
@@ -406,7 +421,7 @@ nvm_reset() {
   unset -f nvm_has nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
     install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_check_global_modules \
-    nvm_do_install nvm_reset
+    nvm_do_install nvm_reset nvm_default_install_dir
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
