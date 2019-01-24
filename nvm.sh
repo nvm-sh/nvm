@@ -3335,6 +3335,18 @@ nvm() {
         nvm_err 'Aliases in subdirectories are not supported.'
         return 1
       fi
+
+      local NVM_IOJS_PREFIX
+      local NVM_NODE_PREFIX
+      NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+      NVM_NODE_PREFIX="$(nvm_node_prefix)"
+      case "$1" in
+        "stable" | "unstable" | "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}" | "system")
+          nvm_err "${1-} is a default (built-in) alias and cannot be deleted."
+          return 1
+        ;;
+      esac
+
       [ ! -f "${NVM_ALIAS_DIR}/${1-}" ] && nvm_err "Alias ${1-} doesn't exist!" && return
       local NVM_ALIAS_ORIGINAL
       NVM_ALIAS_ORIGINAL="$(nvm_alias "${1}")"
