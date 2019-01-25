@@ -4,8 +4,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
 
-- [Installation](#installation)
-  - [Install script](#install-script)
+- [Installation and Update](#installation-and-update)
+  - [Install & Update script](#install--update-script)
     - [Ansible](#ansible)
   - [Verify installation](#verify-installation)
   - [Important Notes](#important-notes)
@@ -39,11 +39,11 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Installation
+## Installation and Update
 
-### Install script
+### Install & Update script
 
-To install or update nvm, you can use the [install script][2] using cURL:
+To **install** or **update** nvm, you can use the [install script][2] using cURL:
 
 ```sh
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
