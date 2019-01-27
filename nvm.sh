@@ -2326,8 +2326,9 @@ nvm() {
       NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
       local NVM_NODE_PREFIX
       NVM_NODE_PREFIX="$(nvm_node_prefix)"
+      NVM_VERSION="$(nvm --version)"
       nvm_echo
-      nvm_echo "Node Version Manager"
+      nvm_echo "Node Version Manager (v${NVM_VERSION})"
       nvm_echo
       nvm_echo 'Note: <version> refers to any version-like string nvm understands. This includes:'
       nvm_echo '  - full or partial version numbers, starting with an optional "v" (0.10, v0.1.2, v1)'
