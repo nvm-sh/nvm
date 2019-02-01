@@ -21,7 +21,7 @@ cleanup () {
 
 setup
 
-\. ../../../nvm.sh
+\. ../../nvm.sh
 
 cat > $FILE << EOF
 rimraf
@@ -45,7 +45,7 @@ cleanup
 
 setup
 
-\. ../../../nvm.sh
+\. ../../nvm.sh
 
 cat > $FILE << EOF
 rimraf

@@ -2631,28 +2631,12 @@ nvm() {
         shift
       done
 
-      if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -f "${NVM_DIR}/default-packages" ]; then
-        DEFAULT_PACKAGES=""
-
-        # Read lines from $NVM_DIR/default-packages
-        local line
-        while IFS=" " read -r line; do
-          # Skip empty lines.
-          [ -n "${line}" ] || continue
-
-          # Skip comment lines that begin with `#`.
-          [ "$(nvm_echo "${line}" | command cut -c1)" != "#" ] || continue
-
-          # Fail on lines that have multiple space-separated words
-          case $line in
-            *\ *)
-              nvm_err "Only one package per line is allowed in the ${NVM_DIR}/default-packages file. Please remove any lines with multiple space-separated values."
-              return 1
-            ;;
-          esac
-
-          DEFAULT_PACKAGES="${DEFAULT_PACKAGES}${line} "
-        done < "${NVM_DIR}/default-packages"
+      if [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
+        DEFAULT_PACKAGES="$(nvm_get_default_packages)"
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -ne 0 ]; then
+          return $EXIT_CODE
+        fi
       fi
 
       if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ] && [ "$(nvm_ensure_version_prefix "${PROVIDED_REINSTALL_PACKAGES_FROM}")" = "${VERSION}" ]; then
@@ -3486,7 +3470,8 @@ nvm() {
         nvm_version_greater nvm_version_greater_than_or_equal_to \
         nvm_print_npm_version nvm_install_latest_npm nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
-        nvm_download nvm_get_latest nvm_has nvm_install_default_packages nvm_curl_use_compression nvm_curl_version \
+        nvm_download nvm_get_latest nvm_has nvm_install_default_packages nvm_get_default_packages \
+        nvm_curl_use_compression nvm_curl_version \
         nvm_supports_source_options nvm_auto nvm_supports_xz \
         nvm_echo nvm_err nvm_grep nvm_cd \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
@@ -3509,8 +3494,37 @@ nvm() {
   esac
 }
 
+nvm_get_default_packages() {
+  if [ -f "${NVM_DIR}/default-packages" ]; then
+    local DEFAULT_PACKAGES
+    DEFAULT_PACKAGES=''
+
+    # Read lines from $NVM_DIR/default-packages
+    local line
+    while IFS=' ' read -r line; do
+      # Skip empty lines.
+      [ -n "${line-}" ] || continue
+
+      # Skip comment lines that begin with `#`.
+      [ "$(nvm_echo "${line}" | command cut -c1)" != "#" ] || continue
+
+      # Fail on lines that have multiple space-separated words
+      case $line in
+        *\ *)
+          nvm_err "Only one package per line is allowed in the ${NVM_DIR}/default-packages file. Please remove any lines with multiple space-separated values."
+          return 1
+        ;;
+      esac
+
+      DEFAULT_PACKAGES="${DEFAULT_PACKAGES}${line} "
+    done < "${NVM_DIR}/default-packages"
+    echo "${DEFAULT_PACKAGES}" | xargs
+  fi
+}
+
 nvm_install_default_packages() {
   nvm_echo "Installing default global packages from ${NVM_DIR}/default-packages..."
+  nvm_echo "npm install -g --quiet $1"
 
   if ! nvm_echo "$1" | command xargs npm install -g --quiet; then
     nvm_err "Failed installing default packages. Please check if your default-packages file or a package in it has problems!"
