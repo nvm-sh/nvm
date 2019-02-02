@@ -30,7 +30,10 @@ object-inspect@1.0.2
 # commented-package
 
 stevemao/left-pad
+daytime
 EOF
+
+printf %s "$(cat "${FILE}")" > $FILE # strip trailing newline
 
 nvm install v6.10.1 2>&1
 EXIT_CODE=$?
@@ -39,6 +42,11 @@ EXIT_CODE=$?
 nvm exec v6.10.1 npm ls -g --depth=0 | grep -q 'rimraf'
 if [ -z "$?" ]; then
   die "expected 'nvm exec v6.10.1 npm ls -g --depth=0 | grep -q 'rimraf'' to exit with 0, got $?"
+fi
+
+nvm exec v6.10.1 npm ls -g --depth=0 | grep -q 'daytime'
+if [ -z "$?" ]; then
+  die "expected 'nvm exec v6.10.1 npm ls -g --depth=0 | grep -q 'daytime'' to exit with 0, got $?"
 fi
 
 cleanup

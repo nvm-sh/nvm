@@ -3495,12 +3495,18 @@ nvm() {
 }
 
 nvm_get_default_packages() {
-  if [ -f "${NVM_DIR}/default-packages" ]; then
+  local NVM_DEFAULT_PACKAGE_FILE="${NVM_DIR}/default-packages"
+  if [ -f "${NVM_DEFAULT_PACKAGE_FILE}" ]; then
     local DEFAULT_PACKAGES
     DEFAULT_PACKAGES=''
 
     # Read lines from $NVM_DIR/default-packages
     local line
+    # ensure a trailing newline
+    WORK=$(mktemp -d) || exit $?
+    trap "rm -rf '$WORK'" EXIT
+    # shellcheck disable=SC1003
+    sed -e '$a\' "${NVM_DEFAULT_PACKAGE_FILE}" > "${WORK}/default-packages"
     while IFS=' ' read -r line; do
       # Skip empty lines.
       [ -n "${line-}" ] || continue
@@ -3517,7 +3523,7 @@ nvm_get_default_packages() {
       esac
 
       DEFAULT_PACKAGES="${DEFAULT_PACKAGES}${line} "
-    done < "${NVM_DIR}/default-packages"
+    done < "${WORK}/default-packages"
     echo "${DEFAULT_PACKAGES}" | xargs
   fi
 }
