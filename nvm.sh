@@ -3504,6 +3504,7 @@ nvm_get_default_packages() {
     local line
     # ensure a trailing newline
     WORK=$(mktemp -d) || exit $?
+    # shellcheck disable=SC2064
     trap "rm -rf '$WORK'" EXIT
     # shellcheck disable=SC1003
     sed -e '$a\' "${NVM_DEFAULT_PACKAGE_FILE}" > "${WORK}/default-packages"
@@ -3539,7 +3540,7 @@ nvm_install_default_packages() {
 }
 
 nvm_supports_source_options() {
-  # shellcheck disable=SC1091
+  # shellcheck disable=SC1091,SC2240
   [ "_$(nvm_echo '[ $# -gt 0 ] && nvm_echo $1' | . /dev/stdin yes 2>/dev/null)" = "_yes" ]
 }
 
