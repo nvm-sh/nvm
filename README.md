@@ -221,6 +221,8 @@ To install a specific version of node:
 nvm install 6.14.4 # or 10.10.0, 8.9.1, etc
 ```
 
+The first version installed becomes the default. New shells will start with the default version of node (e.g., `nvm alias default`).
+
 You can list available versions using ls-remote:
 
 ```sh
