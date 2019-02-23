@@ -19,6 +19,7 @@
   - [io.js](#iojs)
   - [System version of node](#system-version-of-node)
   - [Listing versions](#listing-versions)
+    - [Suppressing colorized output](#suppressing-colorized-output)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [bash](#bash)
@@ -337,6 +338,15 @@ If you want to see what versions are available to install:
 
 ```sh
 nvm ls-remote
+```
+
+#### Suppressing colorized output
+
+`nvm ls`, `nvm ls-remote` and `nvm alias` usually produce colorized output. You can disable colors with the `--no-colors` option (or by setting the environment variable `TERM=dumb`):
+
+```sh
+nvm ls --no-colors
+TERM=dumb nvm ls
 ```
 
 To restore your PATH, you can deactivate it:
