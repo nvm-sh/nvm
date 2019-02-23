@@ -1433,6 +1433,8 @@ nvm_print_versions() {
     elif [ "${VERSION}" = "system" ]; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
         FORMAT='\033[0;33m%15s\033[0m'
+      else
+        FORMAT='%15s *'
       fi
     elif nvm_is_version_installed "${VERSION}"; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
