@@ -30,7 +30,7 @@ make_fake_node() {
   [ -n "${VERSION}" ] || return 1
 
   local BIN_PATH
-  BIN_PATH="$(nvm_version_path "${VERSION}")/bin"
+  BIN_PATH="$(nvm_version_path "$(nvm_format_version "${VERSION}")")/bin"
   mkdir -p "${BIN_PATH}" || {
     echo >&2 'unable to make bin dir'
     return 2
@@ -48,7 +48,7 @@ make_fake_iojs() {
   [ -n "${VERSION}" ] || return 1
 
   local BIN_PATH
-  BIN_PATH="$(nvm_version_path "iojs-${VERSION}")/bin"
+  BIN_PATH="$(nvm_version_path "$(nvm_format_version "iojs-${VERSION}")")/bin"
   mkdir -p "${BIN_PATH}" || {
     echo >&2 'unable to make bin dir'
     return 2
