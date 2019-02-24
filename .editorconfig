@@ -15,5 +15,8 @@ indent_size = false
 [test/fast/Listing versions/Running "nvm ls" calls into nvm_alias]
 indent_size = false
 
+[test/fast/Listing versions/Running "nvm ls --no-alias" does not call into nvm_alias]
+indent_size = false
+
 [Makefile]
 indent_style = tab
