@@ -2300,7 +2300,14 @@ nvm() {
   local DEFAULT_IFS
   DEFAULT_IFS=" $(nvm_echo t | command tr t \\t)
 "
-  if [ "${IFS}" != "${DEFAULT_IFS}" ]; then
+  if [ "${-#*e}" != "$-" ]; then
+    set +e
+    local EXIT_CODE
+    IFS="${DEFAULT_IFS}" nvm "$@"
+    EXIT_CODE=$?
+    set -e
+    return $EXIT_CODE
+  elif [ "${IFS}" != "${DEFAULT_IFS}" ]; then
     IFS="${DEFAULT_IFS}" nvm "$@"
     return $?
   fi
