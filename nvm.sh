@@ -21,7 +21,6 @@ nvm_echo() {
 }
 
 nvm_cd() {
-  # shellcheck disable=SC1001,SC2164
   \cd "$@"
 }
 
@@ -43,7 +42,6 @@ nvm_has_non_aliased() {
 
 nvm_is_alias() {
   # this is intentionally not "command alias" so it works in zsh.
-  # shellcheck disable=SC1001
   \alias "${1-}" >/dev/null 2>&1
 }
 
@@ -260,7 +258,6 @@ if [ -z "${NVM_DIR-}" ]; then
     # shellcheck disable=SC2169
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
-  # shellcheck disable=SC1001
   NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" >/dev/null && \pwd)"
   export NVM_DIR
 else
