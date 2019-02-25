@@ -1,5 +1,5 @@
 language: generic
-dist: trusty
+dist: xenial
 sudo: required
 addons:
   apt:
@@ -36,8 +36,8 @@ before_cache:
   - if [ -n "${NODE-}" ]; then . nvm.sh && set -ex && nvm install --latest-npm "${NODE}" && npm --version; fi
 env:
   global:
-    - CXX=g++-4.8
-    - CC=gcc-4.8
+    - CXX=g++
+    - CC=gcc
     - PATH="$(echo $PATH | sed 's/::/:/')"
     - PATH="/usr/lib/ccache/:$PATH"
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
