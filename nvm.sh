@@ -2520,6 +2520,10 @@ nvm() {
       NVM_UPGRADE_NPM=0
       while [ $# -ne 0 ]; do
         case "$1" in
+          ---*)
+            nvm_err 'arguments with `---` are not supported - this is likely a typo'
+            return 55;
+          ;;
           -s)
             shift # consume "-s"
             nobinary=1
