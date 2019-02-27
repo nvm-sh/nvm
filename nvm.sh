@@ -3559,7 +3559,10 @@ nvm_install_default_packages() {
 
 nvm_supports_source_options() {
   # shellcheck disable=SC1091,SC2240
-  [ "_$(nvm_echo '[ $# -gt 0 ] && nvm_echo $1' | . /dev/stdin yes 2>/dev/null)" = "_yes" ]
+    [ "_$( . /dev/stdin yes 2> /dev/null <<'EOF'
+[ $# -gt 0 ] && nvm_echo $1
+EOF
+  )" = "_yes" ]
 }
 
 nvm_supports_xz() {
