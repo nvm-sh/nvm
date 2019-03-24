@@ -61,8 +61,9 @@ wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | 
 <sub>**Note:** If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.</sub>
 
 ```sh
-export NVM_DIR="${XDG_CONFIG_HOME/:-$HOME/.}nvm"
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # this loads nvm bash_completion
 ```
 
 **Note:** You can add `--no-use` to the end of the above script (...`nvm.sh --no-use`) to postpone using `nvm` until you manually [`use`](#usage) it.
