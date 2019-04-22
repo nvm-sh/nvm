@@ -72,20 +72,17 @@ Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not conta
 
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
-**Note:** On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type:
+**Note:** On Linux, if you get `nvm: command not found` after running the install script, or nothing is returned on command line for `command -v nvm`, one of the following might be the reason:
 
-```sh
-command -v nvm
-```
-
-simply close your current terminal, open a new terminal, and try verifying again.
+  - your system may not have a [`.profile file`] where the command is set up. Simply create one with `touch ~/.profile` and run the install script again
+  - you might need to reload your bash profile `. ~/.profile` or simply close your current terminal, open a new terminal, and try verifying again
 
 **Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/creationix/nvm/issues/1782))
 
-**Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:-
+**Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:
 
   - your system may not have a [`.bash_profile file`] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again
-  - you might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
+  - you might need to reload your bash profile `. ~/.bash_profile` or try opening a new tab/window in your terminal and retry
 
 If the above doesn't fix the problem, open your `.bash_profile` and add the following line of code:
 
