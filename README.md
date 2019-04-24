@@ -1,4 +1,4 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.34.0-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
+# Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.34.0-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -47,13 +47,13 @@
 To **install** or **update** nvm, you can use the [install script][2] using cURL:
 
 ```sh
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 ```
 
 or Wget:
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 ```
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
@@ -80,7 +80,7 @@ command -v nvm
 
 simply close your current terminal, open a new terminal, and try verifying again.
 
-**Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/creationix/nvm/issues/1782))
+**Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
 
 **Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:-
 
@@ -91,7 +91,7 @@ If the above doesn't fix the problem, open your `.bash_profile` and add the foll
 
 `source ~/.bashrc`
 
-- For more information about this issue and possible workarounds, please [refer here](https://github.com/creationix/nvm/issues/576)
+- For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
 
 #### Ansible
   You can use a task:
@@ -99,7 +99,7 @@ If the above doesn't fix the problem, open your `.bash_profile` and add the foll
 ```
 - name: nvm
   shell: >
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 ```
@@ -118,12 +118,12 @@ which should output 'nvm' if the installation was successful. Please note that `
 
 If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
-**Note:** `nvm` does not support Windows (see [#284](https://github.com/creationix/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` does not support Windows (see [#284](https://github.com/nvm-sh/nvm/issues/284)). Two alternatives exist, which are neither supported nor developed by us:
 
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
 
-**Note:** `nvm` does not support [Fish] either (see [#303](https://github.com/creationix/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` does not support [Fish] either (see [#303](https://github.com/nvm-sh/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
 
   - [bass](https://github.com/edc/bass) allows you to use utilities written for Bash in fish shell
   - [fast-nvm-fish](https://github.com/brigand/fast-nvm-fish) only works with version numbers (not aliases) but doesn't significantly slow your shell startup
@@ -133,7 +133,7 @@ If you're running a system without prepackaged binary available, which means you
 
 **Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
 
-  - [[#900] [Bug] nodejs on FreeBSD may need to be patched](https://github.com/creationix/nvm/issues/900)
+  - [[#900] [Bug] nodejs on FreeBSD may need to be patched](https://github.com/nvm-sh/nvm/issues/900)
   - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
 
 **Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
@@ -157,7 +157,7 @@ Homebrew installation is not supported. If you have issues with homebrew-install
 If you have `git` installed (requires git v1.7.10+):
 
 1. clone this repo in the root of your user profile
-  - `cd ~/` from anywhere then `git clone https://github.com/creationix/nvm.git .nvm`
+  - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
 1. `cd ~/.nvm` and check out the latest version with `git checkout v0.34.0`
 1. activate nvm by sourcing it from your shell: `. nvm.sh`
 
@@ -176,7 +176,7 @@ For a fully manual install, execute the following lines to first clone the nvm r
 
 ```sh
 export NVM_DIR="$HOME/.nvm" && (
-  git clone https://github.com/creationix/nvm.git "$NVM_DIR"
+  git clone https://github.com/nvm-sh/nvm.git "$NVM_DIR"
   cd "$NVM_DIR"
   git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
 ) && \. "$NVM_DIR/nvm.sh"
@@ -629,7 +629,7 @@ If installing nvm on Alpine Linux *is* still what you want or need to do, you sh
 
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc g++ libgcc linux-headers grep util-linux binutils findutils
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 ```
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
@@ -692,7 +692,7 @@ For more information and documentation about docker, please refer to its officia
 
     curl: (33) HTTP server doesn't seem to support byte ranges. Cannot resume.
 
-  - Where's my `sudo node`? Check out [#43](https://github.com/creationix/nvm/issues/43)
+  - Where's my `sudo node`? Check out [#43](https://github.com/nvm-sh/nvm/issues/43)
 
   - After the v0.8.6 release of node, nvm tries to install from binary packages. But in some systems, the official binary packages don't work due to incompatibility of shared libs. In such cases, use `-s` option to force install from source:
 
@@ -700,7 +700,7 @@ For more information and documentation about docker, please refer to its officia
 nvm install -s 0.8.6
 ```
 
-  - If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node `PATH` is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/creationix/nvm/issues/658))
+  - If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node `PATH` is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/nvm-sh/nvm/issues/658))
 
 ## Mac OS "troubleshooting"
 
@@ -714,9 +714,9 @@ sudo chmod ugo-x /usr/libexec/path_helper
 
 More on this issue in [dotphiles/dotzsh](https://github.com/dotphiles/dotzsh#mac-os-x).
 
-[1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.34.0/install.sh
-[3]: https://travis-ci.org/creationix/nvm
-[4]: https://github.com/creationix/nvm/releases/tag/v0.34.0
+[1]: https://github.com/nvm-sh/nvm.git
+[2]: https://github.com/nvm-sh/nvm/blob/v0.34.0/install.sh
+[3]: https://travis-ci.org/nvm-sh/nvm
+[4]: https://github.com/nvm-sh/nvm/releases/tag/v0.34.0
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com

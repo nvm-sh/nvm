@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/creationix/nvm.git"
+    "url": "git://github.com/nvm-sh/nvm.git"
   },
   "keywords": [
     "nvm",
@@ -32,9 +32,9 @@
   "author": "Tim Caswell <tim@creationix.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/creationix/nvm/issues"
+    "url": "https://github.com/nvm-sh/nvm/issues"
   },
-  "homepage": "https://github.com/creationix/nvm",
+  "homepage": "https://github.com/nvm-sh/nvm",
   "devDependencies": {
     "dockerfile_lint": "^0.3.2",
     "eclint": "^2.6.0",
