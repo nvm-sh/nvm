@@ -7,11 +7,7 @@ nvm_has() {
 }
 
 nvm_default_install_dir() {
-  if [ -n "${XDG_CONFIG_HOME-}" ]; then
-    printf %s "${XDG_CONFIG_HOME}/nvm"
-  else
-    printf %s "${HOME}/.nvm"
-  fi
+  [ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm"
 }
 
 nvm_install_dir() {
