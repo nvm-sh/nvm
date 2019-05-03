@@ -84,7 +84,7 @@ simply close your current terminal, open a new terminal, and try verifying again
 
 **Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:-
 
-  - your system may not have a [`.bash_profile file`] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again
+  - your system may not have a `.bash_profile` file where the command is set up. Create one with `touch ~/.bash_profile` and run the install script again
   - you might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
 
 If the above doesn't fix the problem, open your `.bash_profile` and add the following line of code:
@@ -112,7 +112,7 @@ To verify that nvm has been installed, do:
 command -v nvm
 ```
 
-which should output 'nvm' if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
+which should output `nvm` if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
 
 ### Important Notes
 
@@ -142,15 +142,15 @@ If you're running a system without prepackaged binary available, which means you
 
 **Note:** On OS X, if you have/had a "system" node installed and want to install modules globally, keep in mind that:
 
-  - When using nvm you do not need `sudo` to globally install a module with `npm -g`, so instead of doing `sudo npm install -g grunt`, do instead `npm install -g grunt`
-  - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with nvm)
-  - You can (but should not?) keep your previous "system" node install, but nvm will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
+  - When using `nvm` you do not need `sudo` to globally install a module with `npm -g`, so instead of doing `sudo npm install -g grunt`, do instead `npm install -g grunt`
+  - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with `nvm`)
+  - You can (but should not?) keep your previous "system" node install, but `nvm` will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
 
 Homebrew installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
 
 **Note:** If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm upgrade` to upgrade.
 
-**Note:** Git versions before v1.7 may face a problem of cloning nvm source from GitHub via https protocol, and there is also different behavior of git before v1.6, and git prior to [v1.17.10](https://github.com/git/git/commit/5a7d5b683f869d3e3884a89775241afa515da9e7) can not clone tags, so the minimum required git version is v1.7.10. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
+**Note:** Git versions before v1.7 may face a problem of cloning `nvm` source from GitHub via https protocol, and there is also different behavior of git before v1.6, and git prior to [v1.17.10](https://github.com/git/git/commit/5a7d5b683f869d3e3884a89775241afa515da9e7) can not clone tags, so the minimum required git version is v1.7.10. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
 
 ### Git install
 
@@ -159,7 +159,7 @@ If you have `git` installed (requires git v1.7.10+):
 1. clone this repo in the root of your user profile
   - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
 1. `cd ~/.nvm` and check out the latest version with `git checkout v0.34.0`
-1. activate nvm by sourcing it from your shell: `. nvm.sh`
+1. activate `nvm` by sourcing it from your shell: `. nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
 (you may have to add to more than one of the above files)
@@ -172,7 +172,7 @@ export NVM_DIR="$HOME/.nvm"
 
 ### Manual Install
 
-For a fully manual install, execute the following lines to first clone the nvm repository into `$HOME/.nvm`, and then load nvm:
+For a fully manual install, execute the following lines to first clone the `nvm` repository into `$HOME/.nvm`, and then load `nvm`:
 
 ```sh
 export NVM_DIR="$HOME/.nvm" && (
@@ -223,7 +223,7 @@ nvm install 6.14.4 # or 10.10.0, 8.9.1, etc
 
 The first version installed becomes the default. New shells will start with the default version of node (e.g., `nvm alias default`).
 
-You can list available versions using ls-remote:
+You can list available versions using `ls-remote`:
 
 ```sh
 nvm ls-remote
@@ -656,13 +656,13 @@ As a potential alternative, @mhart (a Node contributor) has some [Docker images 
 
 ### Manual Uninstall
 
-To remove nvm manually, execute the following:
+To remove `nvm` manually, execute the following:
 
 ```sh
 $ rm -rf "$NVM_DIR"
 ```
 
-Edit ~/.bashrc (or other shell resource config) and remove the lines below:
+Edit `~/.bashrc` (or other shell resource config) and remove the lines below:
 
 ```sh
 export NVM_DIR="$HOME/.nvm"
