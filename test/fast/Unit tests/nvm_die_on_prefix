@@ -186,4 +186,18 @@ Run \`foo\` to unset it."
   [ "_$EXIT_CODE" = "_10" ] || die "'nvm_die_on_prefix 0 foo' with user .npmrc that has globalconfig did not exit with 10; got '$EXIT_CODE'"
 )
 
+npm() {
+  local args
+  args="$@"
+  if [ "_$args" = "_config --loglevel=warn get prefix" ]; then
+    echo "/home/foo/.nvm/path/to/version"
+  fi
+}
+NON_NORMALIZED_NVM_DIR="//home//foo//.nvm/"
+OUTPUT="$(export NVM_DIR="$NON_NORMALIZED_NVM_DIR" ; nvm_die_on_prefix 0 foo 2>&1)"
+EXPECTED_OUTPUT=''
+EXIT_CODE="$(export NVM_DIR="$NON_NORMALIZED_NVM_DIR" ; nvm_die_on_prefix 0 foo >/dev/null 2>&1; echo $?)"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT' with non-normalized NVM_DIR; got '$OUTPUT'"
+[ "_$EXIT_CODE" = "_0" ] || die "'nvm_die_on_prefix 0 foo' did not exit with 0 with non-normalized NVM_DIR; got '$EXIT_CODE'"
+
 cleanup

@@ -317,9 +317,9 @@ unset NVM_SCRIPT_SOURCE 2>/dev/null
 
 nvm_tree_contains_path() {
   local tree
-  tree="${1-}"
+  tree=$(realpath --canonicalize-missing "${1-}")
   local node_path
-  node_path="${2-}"
+  node_path=$(realpath --canonicalize-missing "${2-}")
 
   if [ "@${tree}@" = "@@" ] || [ "@${node_path}@" = "@@" ]; then
     nvm_err "both the tree and the node path are required"
