@@ -3161,7 +3161,7 @@ nvm() {
         esac
         shift
       done
-      if [ -n "${PATTERN-}" ] && [ -n "${NVM_NO_ALIAS}" ]; then
+      if [ -n "${PATTERN-}" ] && [ -n "${NVM_NO_ALIAS-}" ]; then
         nvm_err '`--no-alias` is not supported when a pattern is provided.'
         return 55
       fi
