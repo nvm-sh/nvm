@@ -95,13 +95,60 @@ If the above doesn't fix the problem, open your `.bash_profile` and add the foll
 
 #### Ansible
   You can use a task:
-
+  
+```yml
+- hosts: webservers
+user: ec2-user
+roles:
+  - role: ansible-nvm
+    nvm:
+      version: v0.34.0
+      node_version: '6.9.0'
+      user: ec2-user
+```        
+main.yml
 ```
-- name: nvm
-  shell: >
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
-  args:
-    creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+- name: Install dependencies
+  apt: pkg={{ item }} update_cache=yes cache_valid_time=3600
+  with_items:
+    - git
+    - curl
+    - build-essential
+    - libssl-dev
+  tags: nvm
+  
+- name: Install nvm
+  sudo: yes
+  sudo_user: "{{ nvm.user }}"
+  git: repo=https://github.com/creationix/nvm.git dest=~/.nvm version={{ nvm.version }}
+  tags: nvm
+
+- name: Source nvm in ~/.profile
+  sudo: yes
+  sudo_user: "{{ nvm.user }}"
+  lineinfile: >
+    dest=~/.profile
+    line="source ~/.nvm/nvm.sh"
+    create=yes
+  tags: nvm
+
+- name: Install {{ nvm.node_version }}
+  command: sudo -iu {{ nvm.user }} nvm install {{ nvm.node_version }}
+  register: nvm_install_result
+  changed_when: "'is already installed.' not in nvm_install_result.stdout"
+  tags: nvm
+
+- name: Check if {{ nvm.node_version }} is the default node version
+  shell: sudo -iu {{ nvm.user }} nvm ls | grep -e 'default -> {{ nvm.node_version }}'
+  register: nvm_check_default
+  changed_when: False
+  ignore_errors: True
+  tags: nvm
+
+- name: Set default node version to {{ nvm.node_version }}
+  command: sudo -iu {{ nvm.user }} nvm alias default {{ nvm.node_version }}
+  when: nvm_check_default|failed
+  tags: nvm
 ```
 
 ### Verify installation
