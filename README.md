@@ -78,7 +78,7 @@ Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not conta
 command -v nvm
 ```
 
-simply close your current terminal, open a new terminal, and try verifying again.
+simply close your current terminal, open a new terminal, and try verifying again, or type and run the command `. ~/.bashrc`.
 
 **Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
 
