@@ -2861,7 +2861,7 @@ nvm() {
         if [ "_${MANPATH}" = "_${NEWPATH}" ]; then
           nvm_err "Could not find ${NVM_DIR}/*/share/man in \${MANPATH}"
         else
-          export MANPATH="${NEWPATH}"
+          export MANPATH=":${NEWPATH}"
           nvm_echo "${NVM_DIR}/*/share/man removed from \${MANPATH}"
         fi
       fi
@@ -2961,7 +2961,7 @@ nvm() {
           MANPATH=$(manpath)
         fi
         # Change current version
-        MANPATH="$(nvm_change_path "${MANPATH}" "/share/man" "${NVM_VERSION_DIR}")"
+        MANPATH=":$(nvm_change_path "${MANPATH}" "/share/man" "${NVM_VERSION_DIR}")"
         export MANPATH
       fi
       export PATH
