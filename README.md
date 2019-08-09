@@ -462,7 +462,7 @@ cdnvm(){
         # If there are multiple matching versions, take the latest one
         # Remove the `->` and `*` characters and spaces
         # `locally_resolved_nvm_version` will be `N/A` if no local versions are found
-        locally_resolved_nvm_version=$(nvm ls --no-colors $(<"./.nvmrc") | tail -1 | tr -d '\->*' | tr -d '[:space:]')
+        locally_resolved_nvm_version=$(nvm ls --no-colors "$nvm_version" | tail -1 | tr -d '\->*' | tr -d '[:space:]')
 
         # If it is not already installed, install it
         # `nvm install` will implicitly use the newly-installed version
