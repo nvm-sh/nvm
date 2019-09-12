@@ -16,7 +16,6 @@
   - [Long-term support](#long-term-support)
   - [Migrating global packages while installing](#migrating-global-packages-while-installing)
   - [Default global packages from file while installing](#default-global-packages-from-file-while-installing)
-  - [io.js](#iojs)
   - [System version of node](#system-version-of-node)
   - [Listing versions](#listing-versions)
     - [Suppressing colorized output](#suppressing-colorized-output)
