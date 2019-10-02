@@ -11,7 +11,6 @@ addons:
 cache:
   ccache: true
   directories:
-    - $HOME/.npm
     - $TRAVIS_BUILD_DIR/.cache
     - $TRAVIS_BUILD_DIR/node_modules
 before_install:
