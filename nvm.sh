@@ -2909,6 +2909,10 @@ nvm() {
           VERSION="$(nvm_version "${PROVIDED_VERSION}")"
         fi
         unset NVM_RC_VERSION
+        if [ -z "${VERSION}" ]; then
+          nvm_err 'Please see `nvm --help` or https://github.com/nvm-sh/nvm#nvmrc for more information.'
+          return 127
+        fi
       else
         VERSION="$(nvm_match_version "${PROVIDED_VERSION}")"
       fi
