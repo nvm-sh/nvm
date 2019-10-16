@@ -47,13 +47,13 @@
 To **install** or **update** nvm, you can use the [install script][2] using cURL:
 
 ```sh
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh | bash
+bash -c "$(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh)"
 ```
 
 or Wget:
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh | bash
+bash -c "$(wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh)"
 ```
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
@@ -98,7 +98,7 @@ If the above doesn't fix the problem, open your `.bash_profile` and add the foll
 
 ```
 - name: nvm
-  shell: bash -c "$(https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh)"
+  shell: bash -c "$(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh)"
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 ```
@@ -644,7 +644,7 @@ If installing nvm on Alpine Linux *is* still what you want or need to do, you sh
 
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc g++ libgcc linux-headers grep util-linux binutils findutils
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh | bash
+bash -c "$(curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh)"
 ```
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
