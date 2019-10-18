@@ -717,6 +717,12 @@ nvm install -s 0.8.6
 ```
 
   - If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node `PATH` is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/nvm-sh/nvm/issues/658))
+  
+  - If you want to make packages in the global `node_modules` requirable, you can add `NODE_PATH` to path environment which makes it a possible path to resolve packages.
+  
+```sh
+export NODE_PATH="$(npm config get prefix)/lib/node_modules"
+```
 
 ## Mac OS "troubleshooting"
 
