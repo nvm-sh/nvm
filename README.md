@@ -44,26 +44,23 @@
 
 ### Install & Update script
 
-To **install** or **update** nvm, you can use the [install script][2] using cURL:
-
+To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
 ```sh
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh | bash
 ```
-
-or Wget:
-
 ```sh
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh | bash
 ```
 
-<sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
+Running either of the above commands downloads a script and runs it. The script clones the nvm repository to `~/.nvm`, and adds the source lines from the snippet below to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
 
-<sub>**Note:** If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.</sub>
-
+<a id="profile_snippet"></a>
 ```sh
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 ```
+
+<sub>**Note:** If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.</sub>
 
 **Note:** You can add `--no-use` to the end of the above script (...`nvm.sh --no-use`) to postpone using `nvm` until you manually [`use`](#usage) it.
 
@@ -72,24 +69,18 @@ Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not conta
 
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
-**Note:** On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type:
-
-```sh
-command -v nvm
-```
-
-simply close your current terminal, open a new terminal, and try verifying again.
+**Note:** On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
 
 **Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
 
-**Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:-
+**Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:
 
-  - your system may not have a `.bash_profile` file where the command is set up. Create one with `touch ~/.bash_profile` and run the install script again
-  - you might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
+  - Your system may not have a `.bash_profile` file where the command is set up. Create one with `touch ~/.bash_profile` and run the install script again
+  - You might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
 
-If the above doesn't fix the problem, open your `.bash_profile` and add the following line of code:
-
-`source ~/.bashrc`
+If the above doesn't fix the problem, you may try the following:
+  - Open your `.bash_profile` (or `~/.zshrc`, `~/.profile`, or `~/.bashrc`) and add the following line of code: `source ~/<your_profile_file>`. E.g. `source ~/.bashrc` or `source ~/.zshrc`.
+  - If the above don't work, try adding the [snippet from the install section](#profile_snippet) that finds the correct nvm directory and loads nvm, to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
 
 - For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
 
