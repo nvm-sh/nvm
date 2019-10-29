@@ -1,5 +1,10 @@
 # Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.35.0-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
+<br />
+<img alt="OpenJS Foundation" src="https://raw.githubusercontent.com/openjs-foundation/cross-project-council/master/logos/openjsf-color.png" width="150" align="left" />
+`nvm` is an OpenJS Foundation project, and we follow our <a href="https://github.com/nvm-sh/nvm/blob/master/CODE_OF_CONDUCT.md">Code of Conduct</a>.
+<br /><br />
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
