@@ -2368,6 +2368,7 @@ nvm() {
       nvm_echo '    --lts                                   When installing, only select from LTS (long-term support) versions'
       nvm_echo '    --lts=<LTS name>                        When installing, only select from versions for a specific LTS line'
       nvm_echo '    --skip-default-packages                 When installing, skip the default-packages file if it exists'
+      nvm_echo '    --skip-system-certs                     When installing, skip copying certificate configuration from system npm'
       nvm_echo '    --latest-npm                            After installing, attempt to upgrade to the latest working npm on the given node version'
       nvm_echo '    --no-progress                           Disable the progress bar on any downloads'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
@@ -2640,6 +2641,8 @@ nvm() {
       local REINSTALL_PACKAGES_FROM
       local SKIP_DEFAULT_PACKAGES
       local DEFAULT_PACKAGES
+      local SKIP_CERTS
+      local CERT_CONFIGS
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -2662,6 +2665,9 @@ nvm() {
           --skip-default-packages)
             SKIP_DEFAULT_PACKAGES=true
           ;;
+          --skip-system-certs)
+            SKIP_CERTS=true
+          ;;
           *)
             ADDITIONAL_PARAMETERS="${ADDITIONAL_PARAMETERS} $1"
           ;;
@@ -2675,6 +2681,10 @@ nvm() {
         if [ $EXIT_CODE -ne 0 ]; then
           return $EXIT_CODE
         fi
+      fi
+
+      if [ -z "${SKIP_CERTS-}" ]; then
+        CERT_CONFIGS="$(nvm exec system npm config ls | sed -n 's/^\(ca\|cafile\|cert\)[ \t]*=[ \t]*\(.*\)$/\1 \2/p')"
       fi
 
       if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ] && [ "$(nvm_ensure_version_prefix "${PROVIDED_REINSTALL_PACKAGES_FROM}")" = "${VERSION}" ]; then
@@ -2703,6 +2713,9 @@ nvm() {
           fi
           if [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
             nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
+          fi
+          if [ -n "${CERT_CONFIGS}" ]; then
+            nvm_copy_cert_configs "${CERT_CONFIGS}"
           fi
         fi
         if [ -n "${LTS-}" ]; then
@@ -2781,6 +2794,9 @@ nvm() {
         if [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
           nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
           EXIT_CODE=$?
+        fi
+        if [ -n "${CERT_CONFIGS}" ]; then
+          nvm_copy_cert_configs "${CERT_CONFIGS}"
         fi
       else
         EXIT_CODE=$?
@@ -3530,6 +3546,7 @@ nvm() {
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         node_version_has_solaris_binary iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
+        nvm_copy_cert_configs \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \
@@ -3583,6 +3600,14 @@ nvm_install_default_packages() {
 
   if ! nvm_echo "$1" | command xargs npm install -g --quiet; then
     nvm_err "Failed installing default packages. Please check if your default-packages file or a package in it has problems!"
+    return 1
+  fi
+}
+
+nvm_copy_cert_configs() {
+  nvm_echo "Copying certificate information from system npm (if present)..."
+  if ! nvm_echo "$1" | command xargs -L1 npm config set -g; then
+    nvm_err "Failed to copy certificate configuration from system npm."
     return 1
   fi
 }

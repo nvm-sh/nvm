@@ -16,6 +16,7 @@
   - [Long-term support](#long-term-support)
   - [Migrating global packages while installing](#migrating-global-packages-while-installing)
   - [Default global packages from file while installing](#default-global-packages-from-file-while-installing)
+  - [Copy system certificate preferences when installing](#copy-system-certificate-preferences-when-installing)
   - [io.js](#iojs)
   - [System version of node](#system-version-of-node)
   - [Listing versions](#listing-versions)
@@ -309,6 +310,10 @@ rimraf
 object-inspect@1.0.2
 stevemao/left-pad
 ```
+
+### Copy system certificate preferences when installing
+
+If you have any of `ca`, `cafile`, or `cert` present in your npm config when installing a new version, those keys will be copied into the newly-installed version's global config file. If you don't want this behavior, pass the `--skip-system-certs` flag when installing a new version
 
 ### io.js
 
