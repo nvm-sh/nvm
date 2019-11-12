@@ -3372,14 +3372,24 @@ nvm() {
       local NVM_NODE_PREFIX
       NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
       NVM_NODE_PREFIX="$(nvm_node_prefix)"
-      case "$1" in
-        "stable" | "unstable" | "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}" | "system")
-          nvm_err "${1-} is a default (built-in) alias and cannot be deleted."
-          return 1
-        ;;
-      esac
+      local NVM_ALIAS_EXISTS
+      NVM_ALIAS_EXISTS=0
+      if [ -f "${NVM_ALIAS_DIR}/${1-}" ]; then
+        NVM_ALIAS_EXISTS=1
+      fi
 
-      [ ! -f "${NVM_ALIAS_DIR}/${1-}" ] && nvm_err "Alias ${1-} doesn't exist!" && return
+      if [ $NVM_ALIAS_EXISTS -eq 0 ]; then
+        case "$1" in
+          "stable" | "unstable" | "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}" | "system")
+            nvm_err "${1-} is a default (built-in) alias and cannot be deleted."
+            return 1
+          ;;
+        esac
+
+        nvm_err "Alias ${1-} doesn't exist!"
+        return
+      fi
+
       local NVM_ALIAS_ORIGINAL
       NVM_ALIAS_ORIGINAL="$(nvm_alias "${1}")"
       command rm -f "${NVM_ALIAS_DIR}/${1}"
