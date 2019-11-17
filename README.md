@@ -1,24 +1,28 @@
 # Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.35.2-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
+<!-- To update this table of contents, ensure you have run `npm install` then `npm run doctoc` -->
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
 
-- [Installation and Update](#installation-and-update)
-  - [Install & Update script](#install--update-script)
+- [Installing and Updating](#installing-and-updating)
+  - [Install & Update Script](#install--update-script)
+    - [Additional Notes](#additional-notes)
+    - [Troubleshooting on Linux](#troubleshooting-on-linux)
+    - [Troubleshooting on macOS](#troubleshooting-on-macos)
     - [Ansible](#ansible)
-  - [Verify installation](#verify-installation)
+  - [Verify Installation](#verify-installation)
   - [Important Notes](#important-notes)
-  - [Git install](#git-install)
+  - [Git Install](#git-install)
   - [Manual Install](#manual-install)
-  - [Manual upgrade](#manual-upgrade)
+  - [Manual Upgrade](#manual-upgrade)
 - [Usage](#usage)
-  - [Long-term support](#long-term-support)
-  - [Migrating global packages while installing](#migrating-global-packages-while-installing)
-  - [Default global packages from file while installing](#default-global-packages-from-file-while-installing)
+  - [Long-term Support](#long-term-support)
+  - [Migrating Global Packages While Installing](#migrating-global-packages-while-installing)
+  - [Default Global Packages From File While Installing](#default-global-packages-from-file-while-installing)
   - [io.js](#iojs)
-  - [System version of node](#system-version-of-node)
-  - [Listing versions](#listing-versions)
+  - [System Version of Node](#system-version-of-node)
+  - [Listing Versions](#listing-versions)
     - [Suppressing colorized output](#suppressing-colorized-output)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
@@ -27,22 +31,23 @@
     - [zsh](#zsh)
       - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
 - [License](#license)
-- [Running tests](#running-tests)
-- [Bash completion](#bash-completion)
+- [Running Tests](#running-tests)
+- [Bash Completion](#bash-completion)
   - [Usage](#usage-1)
 - [Compatibility Issues](#compatibility-issues)
 - [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
-- [Removal](#removal)
+- [Uninstalling / Removal](#uninstalling--removal)
   - [Manual Uninstall](#manual-uninstall)
-- [Docker for development environment](#docker-for-development-environment)
+- [Docker For Development Environment](#docker-for-development-environment)
 - [Problems](#problems)
-- [Mac OS "troubleshooting"](#mac-os-troubleshooting)
+- [macOS Troubleshooting](#macos-troubleshooting)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Installation and Update
+<a id="installation-and-update"></a>
+## Installing and Updating
 
-### Install & Update script
+### Install & Update Script
 
 To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
 ```sh
@@ -52,7 +57,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
 ```
 
-Running either of the above commands downloads a script and runs it. The script clones the nvm repository to `~/.nvm`, and adds the source lines from the snippet below to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
+Running either of the above commands downloads a script and runs it. The script clones the nvm repository to `~/.nvm`, and attempts to add the source lines from the snippet below to the correct profile file (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
 
 <a id="profile_snippet"></a>
 ```sh
@@ -60,32 +65,42 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 ```
 
-<sub>**Note:** If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.</sub>
+#### Additional Notes
 
-**Note:** You can add `--no-use` to the end of the above script (...`nvm.sh --no-use`) to postpone using `nvm` until you manually [`use`](#usage) it.
+- If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.</sub>
 
-You can customize the install source, directory, profile, and version using the `NVM_SOURCE`, `NVM_DIR`, `PROFILE`, and `NODE_VERSION` variables.
+- You can add `--no-use` to the end of the above script (...`nvm.sh --no-use`) to postpone using `nvm` until you manually [`use`](#usage) it.
+
+- You can customize the install source, directory, profile, and version using the `NVM_SOURCE`, `NVM_DIR`, `PROFILE`, and `NODE_VERSION` variables.
 Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not contain a trailing slash.
 
-<sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
+- The installer can use `git`, `curl`, or `wget` to download `nvm`, whichever is available.
 
-**Note:** On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
+#### Troubleshooting on Linux
 
-**Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
+On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
 
-**Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:
+#### Troubleshooting on macOS
+
+Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
+
+If you get `nvm: command not found` after running the install script, one of the following might be the reason:
 
   - Your system may not have a `.bash_profile` file where the command is set up. Create one with `touch ~/.bash_profile` and run the install script again
+
   - You might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
 
 If the above doesn't fix the problem, you may try the following:
-  - Open your `.bash_profile` (or `~/.zshrc`, `~/.profile`, or `~/.bashrc`) and add the following line of code: `source ~/<your_profile_file>`. E.g. `source ~/.bashrc` or `source ~/.zshrc`.
-  - If the above doesn't work, try adding the [snippet from the install section](#profile_snippet) that finds the correct nvm directory and loads nvm, to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
 
-- For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
+  - If you use bash, it may be that your `.bash_profile` (or `~/.profile`) does not source your `~/.bashrc` properly. You could fix this by adding `source ~/<your_profile_file>` to it or follow the next step below.
+
+  - Try adding [the snippet from the install section](#profile_snippet), that finds the correct nvm directory and loads nvm, to your usual profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
+
+  - For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
 
 #### Ansible
-  You can use a task:
+
+You can use a task:
 
 ```
 - name: nvm
@@ -95,7 +110,7 @@ If the above doesn't fix the problem, you may try the following:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 ```
 
-### Verify installation
+### Verify Installation
 
 To verify that nvm has been installed, do:
 
@@ -143,7 +158,7 @@ Homebrew installation is not supported. If you have issues with homebrew-install
 
 **Note:** Git versions before v1.7 may face a problem of cloning `nvm` source from GitHub via https protocol, and there is also different behavior of git before v1.6, and git prior to [v1.17.10](https://github.com/git/git/commit/5a7d5b683f869d3e3884a89775241afa515da9e7) can not clone tags, so the minimum required git version is v1.7.10. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
 
-### Git install
+### Git Install
 
 If you have `git` installed (requires git v1.7.10+):
 
@@ -181,7 +196,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 ```
 
-### Manual upgrade
+### Manual Upgrade
 
 For manual upgrade with `git` (requires git v1.7.10+):
 
@@ -251,7 +266,7 @@ In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the f
   - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
   - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in SemVer, versions communicate breakage, not stability).
 
-### Long-term support
+### Long-term Support
 
 Node has a [schedule](https://github.com/nodejs/Release#release-schedule) for long-term support (LTS) You can reference LTS versions in aliases and `.nvmrc` files with the notation `lts/*` for the latest LTS, and `lts/argon` for LTS releases from the "argon" line, for example. In addition, the following commands support LTS arguments:
 
@@ -265,7 +280,7 @@ Node has a [schedule](https://github.com/nodejs/Release#release-schedule) for lo
 
 Any time your local copy of `nvm` connects to https://nodejs.org, it will re-create the appropriate local aliases for all available LTS lines. These aliases (stored under `$NVM_DIR/alias/lts`), are managed by `nvm`, and you should not modify, remove, or create these files - expect your changes to be undone, and expect meddling with these files to cause bugs that will likely not be supported.
 
-### Migrating global packages while installing
+### Migrating Global Packages While Installing
 
 If you want to install a new version of Node.js and migrate npm packages from a previous version:
 
@@ -298,7 +313,7 @@ nvm install-latest-npm
 If you've already gotten an error to the effect of "npm does not support Node.js", you'll need to (1) revert to a previous node version (`nvm ls` & `nvm use <your latest _working_ version from the ls>`, (2) delete the newly created node version (`nvm uninstall <your _broken_ version of node from the ls>`), then (3) rerun your `nvm install` with the `--latest-npm` flag.
 
 
-### Default global packages from file while installing
+### Default Global Packages From File While Installing
 
 If you have a list of default packages you want installed every time you install a new version, we support that too -- just add the package names, one per line, to the file `$NVM_DIR/default-packages`. You can add anything npm would accept as a package argument on the command line.
 
@@ -326,7 +341,7 @@ nvm install iojs --reinstall-packages-from=iojs
 
 The same guidelines mentioned for migrating npm packages in node are applicable to io.js.
 
-### System version of node
+### System Version of Node
 
 If you want to use the system-installed version of node, you can use the special default alias "system":
 
@@ -335,7 +350,7 @@ nvm use system
 nvm run system --version
 ```
 
-### Listing versions
+### Listing Versions
 
 If you want to see what versions are installed:
 
@@ -529,7 +544,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## Running tests
+## Running Tests
 
 Tests are written in [Urchin]. Install Urchin (and other dependencies) like so:
 
@@ -552,7 +567,7 @@ Run all of the tests like this:
 
 Nota bene: Avoid running nvm while the tests are running.
 
-## Bash completion
+## Bash Completion
 
 To activate, you need to source `bash_completion`:
 
@@ -643,7 +658,8 @@ The Node project has some desire but no concrete plans (due to the overheads of 
 
 As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
 
-## Removal
+<a id="removal"></a>
+## Uninstalling / Removal
 
 ### Manual Uninstall
 
@@ -661,7 +677,7 @@ export NVM_DIR="$HOME/.nvm"
 [[ -r $NVM_DIR/bash_completion ]] && \. $NVM_DIR/bash_completion
 ```
 
-## Docker for development environment
+## Docker For Development Environment
 
 To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 14.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
 
@@ -709,7 +725,7 @@ nvm install -s 0.8.6
 
   - If setting the `default` alias does not establish the node version in new shells (i.e. `nvm current` yields `system`), ensure that the system's node `PATH` is set before the `nvm.sh` source line in your shell profile (see [#658](https://github.com/nvm-sh/nvm/issues/658))
 
-## Mac OS "troubleshooting"
+## macOS Troubleshooting
 
 **nvm node version not found in vim shell**
 
