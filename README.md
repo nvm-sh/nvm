@@ -80,7 +80,7 @@ Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not conta
 
 If the above doesn't fix the problem, you may try the following:
   - Open your `.bash_profile` (or `~/.zshrc`, `~/.profile`, or `~/.bashrc`) and add the following line of code: `source ~/<your_profile_file>`. E.g. `source ~/.bashrc` or `source ~/.zshrc`.
-  - If the above don't work, try adding the [snippet from the install section](#profile_snippet) that finds the correct nvm directory and loads nvm, to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
+  - If the above doesn't work, try adding the [snippet from the install section](#profile_snippet) that finds the correct nvm directory and loads nvm, to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
 
 - For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
 
