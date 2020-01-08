@@ -407,6 +407,12 @@ nvm_tree_contains_path() {
   previous_pathdir="${node_path}"
   local pathdir
   pathdir=$(dirname "${previous_pathdir}")
+
+  # get real directory in case of symbolic links
+  if [ -d "${pathdir-}" ]; then
+    pathdir="$(nvm_cd -P "${pathdir}" && pwd)"
+  fi
+
   while [ "${pathdir}" != '' ] && [ "${pathdir}" != '.' ] && [ "${pathdir}" != '/' ] &&
       [ "${pathdir}" != "${tree}" ] && [ "${pathdir}" != "${previous_pathdir}" ]; do
     previous_pathdir="${pathdir}"
