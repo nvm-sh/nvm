@@ -2415,7 +2415,8 @@ nvm() {
       nvm_echo '  nvm alias default node                Always default to the latest available node version on a shell'
       nvm_echo
       nvm_echo 'Note:'
-      nvm_echo '  to remove, delete, or uninstall nvm - just remove the `$NVM_DIR` folder (usually `~/.nvm`)'
+      nvm_echo '  To remove, delete, or uninstall nvm - just remove the `$NVM_DIR` folder (usually `~/.nvm`)'
+      nvm_echo '  and the nvm related source lines from your shell profile file (such as `~/.bashrc`).'
       nvm_echo
     ;;
 
