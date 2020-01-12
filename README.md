@@ -45,6 +45,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 <a id="installation-and-update"></a>
+<a id="install-script"></a>
 ## Installing and Updating
 
 ### Install & Update Script
