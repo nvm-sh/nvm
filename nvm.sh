@@ -3687,8 +3687,30 @@ EOF
 }
 
 nvm_supports_xz() {
-  if [ -z "${1-}" ] || ! command which xz >/dev/null 2>&1; then
+  if [ -z "${1-}" ]; then
     return 1
+  fi
+
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+  if [ "_${NVM_OS}" = '_darwin' ]; then
+    local MACOS_VERSION
+    MACOS_VERSION="$(sw_vers -productVersion)"
+    if nvm_version_greater "10.9.0" "${MACOS_VERSION}"; then
+      # macOS 10.8 and earlier doesn't support extracting xz-compressed tarballs with tar
+      return 1
+    fi
+  elif [ "_${NVM_OS}" = '_freebsd' ]; then
+    if ! [ -e '/usr/lib/liblzma.so' ]; then
+      # FreeBSD without /usr/lib/liblzma.so doesn't support extracting xz-compressed tarballs with tar
+      return 1
+    fi
+  else
+    if ! command which xz >/dev/null 2>&1; then
+      # Most OSes without xz on the PATH don't support extracting xz-compressed tarballs with tar
+      # (Should correctly handle Linux, SmartOS, maybe more)
+      return 1
+    fi
   fi
 
   # all node versions v4.0.0 and later have xz
@@ -3706,8 +3728,6 @@ nvm_supports_xz() {
     return 0
   fi
 
-  local NVM_OS
-  NVM_OS="$(nvm_get_os)"
   case "${NVM_OS}" in
     darwin)
       # darwin only has xz for io.js v2.3.2 and later
