@@ -9,6 +9,7 @@ cleanup () { rm -f "${BEFORE}" "${AFTER}"; }
 die () { echo "$@" ; cleanup ; exit 1; }
 
 typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' > "${BEFORE}"
+env | grep -v PATH= | grep -v NVM_ >> "${BEFORE}"
 
 set +e # TODO: fix
 \. ../../nvm.sh
@@ -19,6 +20,7 @@ type nvm > /dev/null 2>&1 || die "nvm not loaded"
 nvm unload
 
 typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' > "${AFTER}"
+env | grep -v PATH= >> "${AFTER}"
 
 ! type nvm > /dev/null 2>&1 || die "nvm not unloaded"
 
