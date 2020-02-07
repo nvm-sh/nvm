@@ -2896,6 +2896,7 @@ nvm() {
         fi
       fi
       unset NVM_BIN
+      unset NVM_INC
     ;;
     "use")
       local PROVIDED_VERSION
@@ -2993,6 +2994,7 @@ nvm() {
       export PATH
       hash -r
       export NVM_BIN="${NVM_VERSION_DIR}/bin"
+      export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
         command rm -f "${NVM_DIR}/current" && ln -s "${NVM_VERSION_DIR}" "${NVM_DIR}/current"
       fi
@@ -3542,7 +3544,7 @@ nvm() {
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
-        NVM_CD_FLAGS NVM_BIN NVM_MAKE_JOBS \
+        NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
         >/dev/null 2>&1
     ;;
     *)
