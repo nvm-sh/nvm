@@ -35,6 +35,7 @@
       - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file-1)
 - [License](#license)
 - [Running Tests](#running-tests)
+- [Environment variables](#environment-variables)
 - [Bash Completion](#bash-completion)
   - [Usage](#usage-1)
 - [Compatibility Issues](#compatibility-issues)
@@ -612,6 +613,19 @@ Run all of the tests like this:
     npm test
 
 Nota bene: Avoid running nvm while the tests are running.
+
+## Environment variables
+
+nvm exposes the following environment variables:
+
+- `NVM_DIR` - nvm's installation directory.
+- `NVM_BIN` - where node, npm, and global packages for the active version of node are installed.
+- `NVM_INC` - node's include file directory (useful for building C/C++ addons for node).
+- `NVM_CD_FLAGS` - used to maintain compatibility with zsh.
+- `NVM_RC_VERSION` - version from .nvmrc file if being used.
+
+Additionally, nvm modifies `PATH`, and, if present, `MANPATH` and `NODE_PATH` when changing versions.
+
 
 ## Bash Completion
 
