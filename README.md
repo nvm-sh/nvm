@@ -458,8 +458,12 @@ find-up () {
     echo "$path"
 }
 
-cdnvm(){
+cdnvm() {
     cd "$@";
+    nvmUse
+}
+
+nvmUse() {
     nvm_path=$(find-up .nvmrc | tr -d '[:space:]')
 
     # If there are no .nvmrc file, use the default nvm version
@@ -500,10 +504,14 @@ cdnvm(){
         fi
     fi
 }
+
 alias cd='cdnvm'
+nvmUse
 ```
 
 This alias would search 'up' from your current directory in order to detect a `.nvmrc` file. If it finds it, it will switch to that version; if not, it will use the default version.
+
+It will also call `nvm use` when a new terminal window is opened (e.g. opening a terminal in your IDE).
 
 #### zsh
 
