@@ -58,7 +58,14 @@
         v6.13.1  [0;37m (LTS: Boron)[0m
         v6.14.0  [0;37m (LTS: Boron)[0m
         v6.14.1  [0;37m (LTS: Boron)[0m
-        v6.14.2  [1;32m (Latest LTS: Boron)[0m
+        v6.14.2  [0;37m (LTS: Boron)[0m
+        v6.14.3  [0;37m (LTS: Boron)[0m
+        v6.14.4  [0;37m (LTS: Boron)[0m
+        v6.15.0  [0;37m (LTS: Boron)[0m
+        v6.15.1  [0;37m (LTS: Boron)[0m
+        v6.16.0  [0;37m (LTS: Boron)[0m
+        v6.17.0  [0;37m (LTS: Boron)[0m
+        v6.17.1  [1;32m (Latest LTS: Boron)[0m
          v8.9.0  [0;37m (LTS: Carbon)[0m
          v8.9.1  [0;37m (LTS: Carbon)[0m
          v8.9.2  [0;37m (LTS: Carbon)[0m
@@ -67,4 +74,39 @@
         v8.10.0  [0;37m (LTS: Carbon)[0m
         v8.11.0  [0;37m (LTS: Carbon)[0m
         v8.11.1  [0;37m (LTS: Carbon)[0m
-        v8.11.2  [1;32m (Latest LTS: Carbon)[0m
+        v8.11.2  [0;37m (LTS: Carbon)[0m
+        v8.11.3  [0;37m (LTS: Carbon)[0m
+        v8.11.4  [0;37m (LTS: Carbon)[0m
+        v8.12.0  [0;37m (LTS: Carbon)[0m
+        v8.13.0  [0;37m (LTS: Carbon)[0m
+        v8.14.0  [0;37m (LTS: Carbon)[0m
+        v8.14.1  [0;37m (LTS: Carbon)[0m
+        v8.15.0  [0;37m (LTS: Carbon)[0m
+        v8.15.1  [0;37m (LTS: Carbon)[0m
+        v8.16.0  [0;37m (LTS: Carbon)[0m
+        v8.16.1  [0;37m (LTS: Carbon)[0m
+        v8.16.2  [0;37m (LTS: Carbon)[0m
+        v8.17.0  [1;32m (Latest LTS: Carbon)[0m
+       v10.13.0  [0;37m (LTS: Dubnium)[0m
+       v10.14.0  [0;37m (LTS: Dubnium)[0m
+       v10.14.1  [0;37m (LTS: Dubnium)[0m
+       v10.14.2  [0;37m (LTS: Dubnium)[0m
+       v10.15.0  [0;37m (LTS: Dubnium)[0m
+       v10.15.1  [0;37m (LTS: Dubnium)[0m
+       v10.15.2  [0;37m (LTS: Dubnium)[0m
+       v10.15.3  [0;37m (LTS: Dubnium)[0m
+       v10.16.0  [0;37m (LTS: Dubnium)[0m
+       v10.16.1  [0;37m (LTS: Dubnium)[0m
+       v10.16.2  [0;37m (LTS: Dubnium)[0m
+       v10.16.3  [0;37m (LTS: Dubnium)[0m
+       v10.17.0  [0;37m (LTS: Dubnium)[0m
+       v10.18.0  [0;37m (LTS: Dubnium)[0m
+       v10.18.1  [0;37m (LTS: Dubnium)[0m
+       v10.19.0  [1;32m (Latest LTS: Dubnium)[0m
+       v12.13.0  [0;37m (LTS: Erbium)[0m
+       v12.13.1  [0;37m (LTS: Erbium)[0m
+       v12.14.0  [0;37m (LTS: Erbium)[0m
+       v12.14.1  [0;37m (LTS: Erbium)[0m
+       v12.15.0  [0;37m (LTS: Erbium)[0m
+       v12.16.0  [0;37m (LTS: Erbium)[0m
+       v12.16.1  [1;32m (Latest LTS: Erbium)[0m
