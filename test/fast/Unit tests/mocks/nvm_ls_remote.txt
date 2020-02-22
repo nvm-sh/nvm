@@ -274,7 +274,7 @@ v4.8.5 Argon
 v4.8.6 Argon
 v4.8.7 Argon
 v4.9.0 Argon
-v4.9.1 Argon
+v4.9.1 Argon *
 v5.0.0
 v5.1.0
 v5.1.1
@@ -338,7 +338,7 @@ v6.15.0 Boron
 v6.15.1 Boron
 v6.16.0 Boron
 v6.17.0 Boron
-v6.17.1 Boron
+v6.17.1 Boron *
 v7.0.0
 v7.1.0
 v7.2.0
@@ -391,7 +391,7 @@ v8.15.1 Carbon
 v8.16.0 Carbon
 v8.16.1 Carbon
 v8.16.2 Carbon
-v8.17.0 Carbon
+v8.17.0 Carbon *
 v9.0.0
 v9.1.0
 v9.2.0
@@ -440,7 +440,7 @@ v10.16.3 Dubnium
 v10.17.0 Dubnium
 v10.18.0 Dubnium
 v10.18.1 Dubnium
-v10.19.0 Dubnium
+v10.19.0 Dubnium *
 v11.0.0
 v11.1.0
 v11.2.0
@@ -481,7 +481,7 @@ v12.14.0 Erbium
 v12.14.1 Erbium
 v12.15.0 Erbium
 v12.16.0 Erbium
-v12.16.1 Erbium
+v12.16.1 Erbium *
 v13.0.0
 v13.0.1
 v13.1.0
