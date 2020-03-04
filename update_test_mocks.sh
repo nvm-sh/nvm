@@ -33,12 +33,14 @@ nvm ls-remote iojs > "$MOCKS_DIR/nvm ls-remote iojs.txt"
 nvm_print_implicit_alias remote stable > "$MOCKS_DIR/nvm_print_implicit_alias remote stable.txt"
 nvm_ls_remote stable > "$MOCKS_DIR/nvm_ls_remote stable.txt"
 
+set +e
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote nightly.txt"
 nvm_download -L -s "$(nvm_get_mirror node std)/index.tab" -o - > "$MOCKS_DIR/nodejs.org-dist-index.tab"
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ nvm_print_implicit_alias remote stable > "$MOCKS_DIR/nvm_print_implicit_alias remote stable nightly.txt"
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ nvm_ls_remote stable > "$MOCKS_DIR/nvm_ls_remote stable nightly.txt"
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ NVM_LTS=* nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote LTS nightly.txt"
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ NVM_LTS=argon nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote LTS nightly argon.txt"
+set -e
 
 ALIAS_PATH="$MOCKS_DIR/nvm_make_alias LTS alias calls.txt"
 : > "$ALIAS_PATH"
