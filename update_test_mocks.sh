@@ -44,9 +44,14 @@ set -e
 
 ALIAS_PATH="$MOCKS_DIR/nvm_make_alias LTS alias calls.txt"
 : > "$ALIAS_PATH"
+LTS_NAMES_PATH="$MOCKS_DIR/LTS_names.txt"
+: > "$LTS_NAMES_PATH"
 nvm_make_alias() {
   # prevent local alias creation, and store arguments
   echo "${1}|${2}" >> "$ALIAS_PATH"
+  if [ "${1}" != 'lts/*' ]; then
+    echo "${1#lts/}" >> "$LTS_NAMES_PATH"
+  fi
 }
 nvm ls-remote --lts > /dev/null
 

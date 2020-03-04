@@ -855,8 +855,25 @@ nvm_alias() {
     return 1
   fi
 
+  local NVM_ALIAS_DIR
+  NVM_ALIAS_DIR="$(nvm_alias_path)"
+
+  if [ "$(expr "${ALIAS}" : '^lts/-[1-9][0-9]*$')" -gt 0 ]; then
+    local N
+    N="$(echo "${ALIAS}" | cut -d '-' -f 2)"
+    local RESULT
+    RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
+    if [ "${RESULT}" != '*' ]; then
+      nvm_alias "lts/${RESULT}"
+      return $?
+    else
+      nvm_err 'That many LTS releases do not exist yet.'
+      return 2
+    fi
+  fi
+
   local NVM_ALIAS_PATH
-  NVM_ALIAS_PATH="$(nvm_alias_path)/${ALIAS}"
+  NVM_ALIAS_PATH="${NVM_ALIAS_DIR}/${ALIAS}"
   if [ ! -f "${NVM_ALIAS_PATH}" ]; then
     nvm_err 'Alias does not exist.'
     return 2
