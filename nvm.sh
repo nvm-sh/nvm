@@ -2327,7 +2327,10 @@ nvm_check_file_permissions() {
   nvm_is_zsh && setopt local_options nonomatch
   for FILE in "$1"/* "$1"/.[!.]* "$1"/..?* ; do
     if [ -d "$FILE" ]; then
-      if ! nvm_check_file_permissions "$FILE"; then
+      if [ -n "${NVM_DEBUG-}" ]; then
+        nvm_err "${FILE}"
+      fi
+      if ! nvm_check_file_permissions "${FILE}"; then
         return 2
       fi
     elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
