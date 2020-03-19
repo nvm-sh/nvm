@@ -1,7 +1,8 @@
 #!/bin/sh
 
-FILE="$NVM_DIR/default-packages"
 \. ../../../nvm.sh
+
+FILE="$NVM_DIR/default-packages"
 
 die () { echo "$@" ; cleanup ; exit 1; }
 setup () {
