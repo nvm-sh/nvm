@@ -8,7 +8,7 @@
 
 # Use Ubuntu Trusty Tahr as base image as we're using on Travis CI
 # I also tested with Ubuntu 16.04, should be good with it!
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 LABEL name="nvm-dev-env"
 LABEL version="latest"
@@ -20,7 +20,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 
 # ShellCheck version
-ENV SHELLCHECK_VERSION=0.6.0
+ENV SHELLCHECK_VERSION=0.7.0
 
 # Pick a Ubuntu apt mirror site for better speed
 # ref: https://launchpad.net/ubuntu/+archivemirrors
