@@ -536,6 +536,14 @@ add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
 
+## Usage with Docker 
+
+The following should be sufficient to install Node.js / NPM to a Docker image
+
+RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.2/install.sh | bash
+RUN . /root/.nvm/nvm.sh && nvm --version
+
+
 ## License
 
 nvm is released under the MIT license.
