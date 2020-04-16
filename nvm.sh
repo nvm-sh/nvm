@@ -2724,7 +2724,7 @@ nvm() {
       fi
 
       if nvm_is_version_installed "${VERSION}"; then
-        nvm_err "${VERSION} is already installed."
+        nvm_echo "${VERSION} is already installed."
         if nvm use "${VERSION}"; then
           if [ "${NVM_UPGRADE_NPM}" = 1 ]; then
             nvm install-latest-npm
