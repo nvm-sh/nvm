@@ -177,7 +177,7 @@ If you have `git` installed (requires git v1.7.10+):
 1. clone this repo in the root of your user profile
   - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
 1. `cd ~/.nvm` and check out the latest version with `git checkout v0.37.2`
-1. activate `nvm` by sourcing it from your shell: `. nvm.sh`
+1. activate `nvm` by sourcing it from your shell: `. ./nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
 (you may have to add to more than one of the above files)
