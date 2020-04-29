@@ -1,0 +1,25 @@
+name: update readme TOC
+
+on: [push]
+
+jobs:
+  _:
+    name: "update readme TOC"
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+    - run: npm install
+    - run: npm run doctoc
+    - name: commit changes
+      uses: ljharb/actions-js-build/commit@v3+amendpush
+      with:
+        amend: true
+        force: true
+    - uses: ljharb/rebase@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
