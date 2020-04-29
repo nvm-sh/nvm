@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs
+}
+
+\. ../../../nvm.sh
+
+nvm deactivate 2>/dev/null || die 'unable to deactivate'
+
+\. ../../common.sh
+
+REMOTE="$PWD/mocks/nvm_ls_remote.txt"
+nvm_ls_remote() {
+  cat "$REMOTE"
+}
+REMOTE_IOJS="$PWD/mocks/nvm_ls_remote_iojs.txt"
+nvm_ls_remote_iojs() {
+  cat "$REMOTE_IOJS"
+}
+
+EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm ls-remote.txt"
+
+OUTPUT="$(nvm ls-remote | sed 's/[ \t]*$//')"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm ls-remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+
+cleanup

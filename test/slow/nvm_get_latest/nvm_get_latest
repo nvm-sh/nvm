@@ -1,0 +1,101 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f curl wget nvm_has
+}
+
+\. ../../../nvm.sh
+
+EXPECTED_VERSION="v12.3.456"
+URL="https://github.com/nvm-sh/nvm/releases/tag/$EXPECTED_VERSION"
+EXPECTED_CURL_ARGS="--compressed -q -w %{url_effective}\n -L -s -S http://latest.nvm.sh -o /dev/null"
+EXPECTED_WGET_ARGS="-q http://latest.nvm.sh --server-response -O /dev/null"
+
+curl() {
+  if [ $# -eq 1 ] && [ "$1" = "-V" ]; then
+    echo "
+curl 7.47.0 (x86_64-pc-linux-gnu) libcurl/7.47.0 GnuTLS/3.4.10 zlib/1.2.8 libidn/1.32 librtmp/2.3
+Protocols: dict file ftp ftps gopher http https imap imaps ldap ldaps pop3 pop3s rtmp rtsp smb smbs smtp smtps telnet tftp
+Features: AsynchDNS IDN IPv6 Largefile GSS-API Kerberos SPNEGO NTLM NTLM_WB SSL libz TLS-SRP UnixSockets"
+  elif [ "_$*" != "_$EXPECTED_CURL_ARGS" ]; then
+    echo >&2 "expected args ($EXPECTED_CURL_ARGS), got ($*)"
+    return 1
+  else
+    echo $URL
+  fi
+}
+wget() {
+  if [ "_$*" != "_$EXPECTED_WGET_ARGS" ]; then
+    echo >&2 "expected args ($EXPECTED_WGET_ARGS), got ($*)"
+    return 1
+  else
+    local WGET_CONTENTS
+    WGET_CONTENTS="
+  HTTP/1.1 301 Moved Permanently
+  Location: https://github.com/nvm-sh/nvm/releases/latest
+  Content-Type: text/html; charset=utf-8
+  Content-Length: 84
+  Date: Mon, 22 Dec 2014 02:11:15 GMT
+  HTTP/1.1 302 Found
+  Server: GitHub.com
+  Date: Mon, 22 Dec 2014 02:11:15 GMT
+  Content-Type: text/html; charset=utf-8
+  Transfer-Encoding: chunked
+  Status: 302 Found
+  X-XSS-Protection: 1; mode=block
+  X-Frame-Options: deny
+  Content-Security-Policy: default-src *; script-src assets-cdn.github.com collector-cdn.github.com; object-src assets-cdn.github.com; style-src 'self' 'unsafe-inline' 'unsafe-eval' assets-cdn.github.com; img-src 'self' data: assets-cdn.github.com identicons.github.com www.google-analytics.com collector.githubapp.com *.githubusercontent.com *.gravatar.com *.wp.com; media-src 'none'; frame-src 'self' render.githubusercontent.com gist.github.com www.youtube.com player.vimeo.com checkout.paypal.com; font-src assets-cdn.github.com; connect-src 'self' ghconduit.com:25035 live.github.com uploads.github.com www.google-analytics.com s3.amazonaws.com
+  Cache-Control: no-cache
+  Vary: X-PJAX
+  Location: $URL
+  X-UA-Compatible: IE=Edge,chrome=1
+  Set-Cookie: logged_in=no; domain=.github.com; path=/; expires=Fri, 22-Dec-2034 02:11:15 GMT; secure; HttpOnly
+  Set-Cookie: _gh_sess=eyJzZXNzaW9uX2lkIjoiNTMzNGNjZWUxM2VhZjNhN2M3MzIwZWUxNGYwNzhmNDkiLCJzcHlfcmVwbyI6ImNyZWF0aW9uaXgvbnZtIiwic3B5X3JlcG9fYXQiOjE0MTkyMTQyNzV9--e2fa4cf5305d61aa58c0e0bf21fdb335a9660dcf; path=/; secure; HttpOnly
+  X-Request-Id: 4b99bf200157dd845f76ab83e4093acc
+  X-Runtime: 0.030872
+  X-Rack-Cache: miss
+  X-GitHub-Request-Id: 45B56780:3913:880EF6:54977DC3
+  Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+  X-Content-Type-Options: nosniff
+  Vary: Accept-Encoding
+  X-Served-By: ef97014f01ea59c1ef337fe51a4d0331
+  HTTP/1.1 200 OK
+  Server: GitHub.com
+  Date: Mon, 22 Dec 2014 02:11:15 GMT
+  Content-Type: text/html; charset=utf-8
+  Transfer-Encoding: chunked
+  Status: 200 OK
+  X-XSS-Protection: 1; mode=block
+  X-Frame-Options: deny
+  Content-Security-Policy: default-src *; script-src assets-cdn.github.com collector-cdn.github.com; object-src assets-cdn.github.com; style-src 'self' 'unsafe-inline' 'unsafe-eval' assets-cdn.github.com; img-src 'self' data: assets-cdn.github.com identicons.github.com www.google-analytics.com collector.githubapp.com *.githubusercontent.com *.gravatar.com *.wp.com; media-src 'none'; frame-src 'self' render.githubusercontent.com gist.github.com www.youtube.com player.vimeo.com checkout.paypal.com; font-src assets-cdn.github.com; connect-src 'self' ghconduit.com:25035 live.github.com uploads.github.com www.google-analytics.com s3.amazonaws.com
+  Cache-Control: no-cache, private
+  Vary: X-PJAX
+  X-UA-Compatible: IE=Edge,chrome=1
+  Set-Cookie: _gh_sess=eyJzZXNzaW9uX2lkIjoiNTMzNGNjZWUxM2VhZjNhN2M3MzIwZWUxNGYwNzhmNDkiLCJzcHlfcmVwbyI6ImNyZWF0aW9uaXgvbnZtIiwic3B5X3JlcG9fYXQiOjE0MTkyMTQyNzUsIl9jc3JmX3Rva2VuIjoiemZTVDNIRGo0QzF0dzkyNXp6NFBRdGJVbTl4NSsxTGo1cngwVFQ3NDVwdz0ifQ%3D%3D--b72bfd5241907dcf557b226e74351ff39f0e9ede; path=/; secure; HttpOnly
+  X-Request-Id: 305b0d158bf8c0b3fa488a33d7687091
+  X-Runtime: 0.038544
+  X-Rack-Cache: miss
+  X-GitHub-Request-Id: 45B56780:3913:880F19:54977DC3
+  Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+  X-Content-Type-Options: nosniff
+  Vary: Accept-Encoding
+  X-Served-By: 926b734ea1992f8ee1f88ab967a93dac
+"
+    "$WGET_CONTENTS" | while read line
+    do
+      >&2 echo "$line"
+    done
+  fi
+}
+
+OUTPUT="$(nvm_get_latest)"
+EXIT_CODE="$(nvm_get_latest >/dev/null 2>&1 ; echo $?)"
+[ "_$OUTPUT" = "_$EXPECTED_VERSION" ] \
+  || die "success path did not return version '$EXPECTED_VERSION', got '$OUTPUT'"
+[ "_$EXIT_CODE" = "_0" ] \
+  || die "success path did not exit with code 0, got $EXIT_CODE"
+
+
+cleanup

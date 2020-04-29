@@ -1,0 +1,33 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+# Remove the stuff we're clobbering.
+[ -e "${NVM_DIR}/versions/node/v9.7.0" ] && rm -R "${NVM_DIR}/versions/node/v9.7.0"
+[ -e "${NVM_DIR}/versions/node/v9.10.0" ] && rm -R "${NVM_DIR}/versions/node/v9.10.0"
+
+# Install from binary
+nvm install 9.7.0
+
+# Check
+[ -d "${NVM_DIR}/versions/node/v9.7.0" ] || die "nvm install 9.7.0 didn't install"
+
+nvm use 9.7.0
+
+node --version | grep v9.7.0 > /dev/null || die "nvm use 9.7.0 failed"
+
+npm install -g object-is@0.0.0 || die "npm install -g object-is failed"
+npm list --global | grep object-is > /dev/null || die "object-is isn't installed"
+
+nvm ls 9 | grep v9.7.0 > /dev/null || die "nvm ls 9 didn't show v9.7.0"
+
+nvm install 9.10.0 --reinstall-packages-from=9 || die "nvm install 9.10.0 --reinstall-packages-from=9 failed"
+
+[ -d "${NVM_DIR}/versions/node/v9.10.0" ] || die "nvm install 9.10.0 didn't install"
+
+nvm use 9
+node --version | grep v9.10.0 > /dev/null || die "nvm ls 9 didn't use v9.10.0"
+
+npm list --global | grep object-is > /dev/null || die "object-is isn't installed"

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+EXPECTED_OUTPUT='N/A: version "v0.2" is not yet installed.
+
+You need to run "nvm install 0.2" to install it before using it.'
+[ "_$(nvm run 0.2 --version 2>&1)" = "_$EXPECTED_OUTPUT" ] || die "\`nvm run\` with an uninstalled node version failed to error out correctly"
+
+EXPECTED_OUTPUT='N/A: version "iojs-v0.2" is not yet installed.
+
+You need to run "nvm install iojs-0.2" to install it before using it.'
+[ "_$(nvm run iojs-0.2 --version 2>&1)" = "_$EXPECTED_OUTPUT" ] || die "\`nvm run\` with an uninstalled iojs version failed to error out correctly"

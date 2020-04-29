@@ -1,0 +1,13 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+#nvm_profile_is_bash_or_zsh is available
+type nvm_profile_is_bash_or_zsh > /dev/null 2>&1 || die 'nvm_profile_is_bash_or_zsh is not available'
+nvm_profile_is_bash_or_zsh "/home/nvm/.bashrc"   || die '/home/nvm/.bashrc is bash profile'
+nvm_profile_is_bash_or_zsh "/home/nvm/.bash_profile"   || die '/home/nvm/.bash_profile is bash profile'
+nvm_profile_is_bash_or_zsh "/home/nvm/.zshrc"    || die '/home/nvm/.zshrc is zsh profile'
+if nvm_profile_is_bash_or_zsh "/home/nvm/.bash"; then die '/home/nvm/.bash is not bash nor zsh profile'; fi
+if nvm_profile_is_bash_or_zsh "/home/nvm/.zsh" ; then die '/home/nvm/.zsh is not bash nor zsh profile'; fi

@@ -1,0 +1,106 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup() {
+  rm -rf "${NVM_DIR}/v0.2.3"
+  rm -rf "${NVM_DIR}/v0.3.4"
+  rm -rf "${NVM_DIR}/v0.4.6"
+  rm -rf "${NVM_DIR}/v0.5.7"
+  rm -rf "${NVM_DIR}/v0.7.7"
+  rm -rf "${NVM_DIR}/versions/io.js/v0.98.0"
+  rm -rf "${NVM_DIR}/versions/node/v1.0.0"
+  rm -rf "${NVM_DIR}/versions/node/v1.1.0"
+  unset -f nvm_ls_remote nvm_ls_remote_iojs
+}
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+make_fake_node v0.2.3
+make_fake_node v0.3.4
+make_fake_node v0.4.6
+make_fake_node v0.5.7
+make_fake_node v0.7.7
+make_fake_iojs v0.98.0
+
+LATEST_STABLE="$(nvm_print_implicit_alias local stable)"
+[ "_$LATEST_STABLE" = "_0.4" ] || die "local stable is not latest even minor: expected 0.4, got $LATEST_STABLE"
+
+LATEST_NODE="$(nvm_print_implicit_alias local node)"
+[ "_$LATEST_NODE" = "_stable" ] || die "local node is not stable: expected stable, got $LATEST_NODE"
+
+LATEST_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
+[ "_$LATEST_UNSTABLE" = "_0.7" ] || die "local unstable is not latest odd minor: expected 0.7, got $LATEST_UNSTABLE"
+
+LATEST_IOJS="$(nvm_print_implicit_alias local iojs)"
+[ "_$LATEST_IOJS" = "_iojs-v0.98" ] || die "local iojs is not latest iojs: expected iojs-v0.98, got $LATEST_IOJS"
+
+## node post v1.0/io.js merger ##
+make_fake_node v1.0.0
+make_fake_node v1.1.0
+
+
+LATEST_STABLE="$(nvm_print_implicit_alias local stable)"
+[ "_$LATEST_STABLE" = "_1.1" ] || die "local stable when post-v1.0 exists is not latest: expected 1.1, got $LATEST_STABLE"
+
+LATEST_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
+[ "_$LATEST_UNSTABLE" = "_0.7" ] || die "local unstable is not latest pre-v1.0 odd minor: expected 0.7, got $LATEST_UNSTABLE"
+## ** ##
+
+nvm_ls_remote() {
+  echo "v0.4.3"
+  echo "v0.5.4"
+  echo "v0.6.6"
+  echo "v0.7.7"
+  echo "v0.9.7"
+  echo "v0.4.3"
+  echo "v0.5.4"
+  echo "v0.6.6"
+  echo "v0.7.7"
+  echo "v0.9.7"
+}
+
+nvm_ls_remote_iojs() {
+  echo "iojs-v0.1.0"
+  echo "iojs-v0.1.1"
+  echo "iojs-v0.7.8"
+  echo "iojs-v0.98.5"
+  echo "iojs-v0.99.0"
+}
+
+LATEST_STABLE="$(nvm_print_implicit_alias remote stable)"
+[ "_$LATEST_STABLE" = "_0.6" ] || die "remote stable is not latest even minor: expected 0.6, got $LATEST_STABLE"
+
+LATEST_NODE="$(nvm_print_implicit_alias remote node)"
+[ "_$LATEST_NODE" = "_stable" ] || die "remote node is not stable: expected stable, got $LATEST_NODE"
+
+LATEST_UNSTABLE="$(nvm_print_implicit_alias remote unstable)"
+[ "_$LATEST_UNSTABLE" = "_0.9" ] || die "remote unstable is not latest odd minor: expected 0.9, got $LATEST_UNSTABLE"
+
+LATEST_IOJS="$(nvm_print_implicit_alias remote iojs)"
+[ "_$LATEST_IOJS" = "_iojs-v0.99" ] || die "remote iojs is not latest: expected iojs-v0.99, got $LATEST_IOJS"
+
+## node post v1.0/io.js merger ##
+nvm_ls_remote() {
+  echo "v0.4.3"
+  echo "v0.5.4"
+  echo "v0.6.6"
+  echo "v0.7.7"
+  echo "v0.9.7"
+  echo "v0.4.3"
+  echo "v0.5.4"
+  echo "v0.6.6"
+  echo "v0.7.7"
+  echo "v0.9.7"
+  echo "v1.0.0"
+  echo "v1.1.0"
+}
+
+LATEST_STABLE="$(nvm_print_implicit_alias remote stable)"
+[ "_$LATEST_STABLE" = "_1.1" ] || die "remote stable when post-v1.0 exists is not latest: expected 1.1, got $LATEST_STABLE"
+
+LATEST_UNSTABLE="$(nvm_print_implicit_alias remote unstable)"
+[ "_$LATEST_UNSTABLE" = "_0.9" ] || die "remote unstable is not latest odd pre-v1.0 minor: expected 0.9, got $LATEST_UNSTABLE"
+## ** ##
+
+cleanup

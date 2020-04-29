@@ -1,0 +1,18 @@
+#!/bin/sh
+
+cleanup () {
+  rm tmp/emptyfile tmp/testfile
+  rmdir tmp
+}
+die () { echo "$@" ; cleanup; exit 1; }
+
+\. ../../../nvm.sh
+
+mkdir -p tmp
+touch tmp/emptyfile
+echo -n "test" > tmp/testfile
+
+nvm_checksum tmp/emptyfile "da39a3ee5e6b4b0d3255bfef95601890afd80709" || die "nvm_checksum on an empty file did not match the SHA1 digest of the empty string"
+nvm_checksum tmp/testfile "da39a3ee5e6b4b0d3255bfef95601890afd80709" && die "nvm_checksum allowed a bad checksum"
+
+cleanup

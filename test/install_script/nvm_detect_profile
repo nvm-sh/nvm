@@ -1,0 +1,119 @@
+#!/bin/sh
+
+setup () {
+  HOME="."
+  NVM_ENV=testing \. ../../install.sh
+  touch ".bashrc"
+  touch ".bash_profile"
+  touch ".zshrc"
+  touch ".profile"
+  touch "test_profile"
+}
+
+cleanup () {
+  unset HOME
+  unset NVM_ENV
+  unset NVM_DETECT_PROFILE
+  unset BASH_VERSION
+  unset ZSH_VERSION
+  unset -f setup cleanup die
+  rm -f ".bashrc" ".bash_profile" ".zshrc" ".profile" "test_profile" > "/dev/null" 2>&1
+}
+
+die () { echo "$@" '$NVM_DETECT_PROFILE:' "$NVM_DETECT_PROFILE"; cleanup; exit 1; }
+
+setup
+
+#
+# Confirm profile detection via $SHELL works and that $PROFILE overrides profile detection
+#
+
+# setting $PROFILE to /dev/null should return no detected profile
+NVM_DETECT_PROFILE="$(PROFILE='/dev/null'; nvm_detect_profile)"
+if [ -n "$NVM_DETECT_PROFILE" ]; then
+  die "nvm_detect_profile still detected a profile even though PROFILE=/dev/null"
+fi
+
+# .bashrc should be detected for bash
+NVM_DETECT_PROFILE="$(BASH_VERSION="1"; unset PROFILE; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
+  die "nvm_detect_profile didn't pick \$HOME/.bashrc for bash"
+fi
+
+# $PROFILE should override .bashrc profile detection
+NVM_DETECT_PROFILE="$(SHELL="/bin/bash"; PROFILE="test_profile"; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
+  die "nvm_detect_profile ignored \$PROFILE"
+fi
+
+# .zshrc should be detected for zsh
+NVM_DETECT_PROFILE="$(ZSH_VERSION="1"; unset PROFILE; unset BASH_VERSION; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/.zshrc" ]; then
+  die "nvm_detect_profile didn't pick \$HOME/.zshrc for zsh"
+fi
+
+# $PROFILE should override .zshrc profile detection
+NVM_DETECT_PROFILE="$(SHELL="/usr/bin/zsh"; PROFILE="test_profile"; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
+  die "nvm_detect_profile ignored \$PROFILE"
+fi
+
+
+#
+# Confirm $PROFILE is only returned when it points to a valid file
+#
+
+# $PROFILE is a valid file
+NVM_DETECT_PROFILE="$(PROFILE="test_profile"; unset ZSH_VERSION; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
+  die "nvm_detect_profile didn't pick \$PROFILE when it was a valid file"
+fi
+
+# $PROFILE is not a valid file
+rm "test_profile"
+NVM_DETECT_PROFILE="$(PROFILE="test_profile"; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" = "test_profile" ]; then
+  die "nvm_detect_profile picked \$PROFILE when it was an invalid file"
+fi
+
+#
+# When profile detection fails via both $PROFILE and $SHELL, profile detection should select based on the existence of
+# one of the following files is the following order: .profile, .bashrc, .bash_profile, .zshrc and
+# return an empty value if everything fails
+#
+
+# It should favor .profile if file exists
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/.profile" ]; then
+  die "nvm_detect_profile should have selected .profile"
+fi
+
+# Otherwise, it should favor .bashrc if file exists
+rm ".profile"
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
+  die "nvm_detect_profile should have selected .bashrc"
+fi
+
+# Otherwise, it should favor .bash_profile if file exists
+rm ".bashrc"
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/.bash_profile" ]; then
+  die "nvm_detect_profile should have selected .bash_profile"
+fi
+
+# Otherwise, it should favor .zshrc if file exists
+rm ".bash_profile"
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/.zshrc" ]; then
+  die "nvm_detect_profile should have selected .zshrc"
+fi
+
+# It should be empty if none is found
+rm ".zshrc"
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
+if [ ! -z "$NVM_DETECT_PROFILE" ]; then
+  die "nvm_detect_profile should have returned an empty value"
+fi
+
+cleanup

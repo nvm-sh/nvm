@@ -1,0 +1,14 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+OUTPUT="$(nvm_version_path foo)"
+EXPECTED_OUTPUT="$NVM_DIR/foo"
+[ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "'nvm_version_path foo' did not return correct location; expected '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+[ "$(nvm_version_path 2>&1)" = "version is required" ] || die '"nvm_version_path" did not error out'
+[ "$(nvm_version_path v0.11.0)" = "$NVM_DIR/v0.11.0" ] || die 'old version has the wrong path'
+[ "$(nvm_version_path v0.12.0)" = "$NVM_DIR/versions/node/v0.12.0" ] || die 'new version has the wrong path'
+[ "$(nvm_version_path iojs-v0.12.0)" = "$NVM_DIR/versions/io.js/v0.12.0" ] || die 'iojs version has the wrong path'

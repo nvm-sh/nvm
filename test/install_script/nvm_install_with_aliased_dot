@@ -1,0 +1,22 @@
+#!/bin/sh
+
+setup () {
+  shopt -s expand_aliases
+  alias .=':'
+  NVM_ENV=testing \. ../../install.sh > /dev/null
+}
+
+cleanup () {
+  unset -f setup cleanup die
+  unalias .
+  shopt -u expand_aliases
+}
+
+die () { echo "$@"; exit 1; }
+
+setup
+
+nvm_do_install > /dev/null 2>&1
+command -v nvm || die 'nvm could not be loaded'
+
+cleanup

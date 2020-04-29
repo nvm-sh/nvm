@@ -1,0 +1,82 @@
+#!/bin/sh
+
+# Save the PATH as it was when the test started to restore it when it
+# finishes
+ORIG_PATH=$PATH
+
+cleanup() {
+  # Restore the PATH as it was when the test started
+  export PATH=ORIG_PATH
+}
+
+die () { cleanup; echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+# Directory where mocked binaries used by nvm_get_arch for each OS/arch are
+# located
+MOCKS_DIR=`pwd`/../../mocks
+# Sets the PATH for these tests to include the symlinks to the mocked
+# binaries
+export PATH=.:${PATH}
+
+# Setups mock binaries for a given OS and arch that mimic
+# the output of the real binaries used by nvm_get_arch to guess
+# the architecture of a given system.
+setup_mock_arch() {
+  local OS=$1
+  local ARCH=$2
+  local OPT=$3
+
+  if [ "_$OS" = "_solaris" ] || [ "_$OS" = "_smartos" ]; then
+    ln -sf "${MOCKS_DIR}/isainfo_${ARCH}" ./isainfo
+    if [ "_$OPT" != "_no_pkg_info" ]; then
+      ln -sf "${MOCKS_DIR}/pkg_info_${ARCH}" ./pkg_info
+    else
+      ln -sf "${MOCKS_DIR}/pkg_info_fail" ./pkg_info
+    fi
+  fi
+
+  ln -sf "${MOCKS_DIR}/uname_${OS}_${ARCH}" ./uname
+}
+
+# Cleans up the setup done by setup_mock_arch.
+cleanup_mock_arch() {
+  local OS=$1
+  local ARCH=$2
+
+  if [ "_$OS" = "_solaris" ] || [ "_$OS" = "_smartos" ]; then
+    rm -f ./isainfo
+    rm -f ./pkg_info
+  fi
+
+  rm -f ./uname
+}
+
+# Runs nvm_get_arch for architecture $ARCH and OS $OS, and compares the
+# expected output $EXPECTED_OUTPUT with the actual output. Does nothing
+# and exits cleanly if they match, dies otherwise.
+run_test() {
+  local ARCH=$1
+  local OS=$2
+  local EXPECTED_OUTPUT=$3
+  local OPT=$4
+
+  setup_mock_arch $OS $ARCH $OPT
+  local OUTPUT="$(nvm_get_arch)"
+  cleanup_mock_arch $OS $ARCH
+  [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] ||
+    die "nvm_get_arch for OS \"$OS\" and arch \"$ARCH\" with OPT \"$OPT\" did
+    not return \"$EXPECTED_OUTPUT\"; got \"$OUTPUT\""
+}
+
+run_test x86 smartos x86
+run_test x86 smartos x86 no_pkg_info
+
+run_test amd64 smartos x64
+run_test amd64 smartos x64 no_pkg_info
+
+run_test x86 osx x86
+run_test amd64 osx x64
+
+cleanup

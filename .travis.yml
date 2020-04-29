@@ -1,0 +1,97 @@
+language: generic
+dist: xenial
+sudo: required
+addons:
+  apt:
+    packages:
+      - zsh
+    #  - ksh
+    #  - gcc-4.8
+    #  - g++-4.8
+
+cache:
+  ccache: true
+  directories:
+    - $HOME/.npm
+    - $TRAVIS_BUILD_DIR/.cache
+    - $TRAVIS_BUILD_DIR/node_modules
+before_install:
+  - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
+  - curl --version
+  - wget --version
+  - shellcheck --version
+install:
+  - if [ -z "${SHELLCHECK-}" ]; then nvm install node && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
+  - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
+script:
+  - if [ -n "${MAKE_RELEASE-}" ]; then export GIT_EDITOR="sed -i '1 s/^/99.99.99 make release test/'" && git fetch --unshallow --tags && echo proceed | make TAG=99.99.99 release ; fi
+  - if [ -n "${DOCTOCCHECK-}" ]; then cp README.md README.md.orig && npm run doctoc && diff -q README.md README.md.orig ; fi
+  - if [ -n "${ECLINT-}" ]; then npm run eclint ; fi
+  - if [ -n "${DOCKERFILE_LINT-}" ]; then npm run dockerfile_lint ; fi
+  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh ; fi
+  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash install.sh bash_completion nvm-exec ; fi
+  - if [ -n "${SHELL-}" ] && [ -n "${TEST_SUITE}" ]; then if [ "${TEST_SUITE}" = 'installation_iojs' ]; then travis_retry make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL ; else make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL; fi; fi
+before_cache:
+  - if [ -n "$WITHOUT_CURL" ]; then sudo apt-get install curl -y ; fi
+  - if [ -n "${NODE-}" ]; then . nvm.sh && set -ex && nvm install --latest-npm "${NODE}" && npm --version; fi
+env:
+  global:
+    - CXX=g++
+    - CC=gcc
+    - PATH="$(echo $PATH | sed 's/::/:/')"
+    - PATH="/usr/lib/ccache/:$PATH"
+    - NVM_DIR="${TRAVIS_BUILD_DIR}"
+  matrix:
+    - MAKE_RELEASE=true
+    - DOCTOCCHECK=true
+    - SHELLCHECK=true
+    - ECLINT=true
+    - DOCKERFILE_LINT=true
+    - SHELL=bash TEST_SUITE=install_script
+    - SHELL=sh TEST_SUITE=fast
+    - SHELL=dash TEST_SUITE=fast
+    - SHELL=bash TEST_SUITE=fast
+    - SHELL=zsh TEST_SUITE=fast
+  #  - SHELL=ksh TEST_SUITE=fast
+    - SHELL=sh TEST_SUITE=sourcing
+    - SHELL=dash TEST_SUITE=sourcing
+    - SHELL=bash TEST_SUITE=sourcing
+    - SHELL=zsh TEST_SUITE=sourcing
+  #  - SHELL=ksh TEST_SUITE=sourcing
+    - SHELL=sh TEST_SUITE=slow
+    - SHELL=dash TEST_SUITE=slow
+    - SHELL=bash TEST_SUITE=slow
+    - SHELL=zsh TEST_SUITE=slow
+  #  - SHELL=ksh TEST_SUITE=slow
+    - SHELL=sh TEST_SUITE=installation_node
+    - SHELL=sh TEST_SUITE=installation_node WITHOUT_CURL=1
+    - SHELL=dash TEST_SUITE=installation_node
+    - SHELL=dash TEST_SUITE=installation_node WITHOUT_CURL=1
+    - SHELL=bash TEST_SUITE=installation_node
+    - SHELL=bash TEST_SUITE=installation_node WITHOUT_CURL=1
+    - SHELL=zsh TEST_SUITE=installation_node
+    - SHELL=zsh TEST_SUITE=installation_node WITHOUT_CURL=1
+  #  - SHELL=ksh TEST_SUITE=installation_node
+  #  - SHELL=ksh TEST_SUITE=installation_node WITHOUT_CURL=1
+    - SHELL=sh TEST_SUITE=installation_iojs
+    - SHELL=sh TEST_SUITE=installation_iojs WITHOUT_CURL=1
+    - SHELL=dash TEST_SUITE=installation_iojs
+    - SHELL=dash TEST_SUITE=installation_iojs WITHOUT_CURL=1
+    - SHELL=bash TEST_SUITE=installation_iojs
+    - SHELL=bash TEST_SUITE=installation_iojs WITHOUT_CURL=1
+    - SHELL=zsh TEST_SUITE=installation_iojs
+    - SHELL=zsh TEST_SUITE=installation_iojs WITHOUT_CURL=1
+  #  - SHELL=ksh TEST_SUITE=installation_iojs
+  #  - SHELL=ksh TEST_SUITE=installation_iojs WITHOUT_CURL=1
+    - NODE=10 TEST="nvm install-latest-npm"
+    - NODE=9 TEST="nvm install-latest-npm"
+    - NODE=8 TEST="nvm install-latest-npm"
+    - NODE=7 TEST="nvm install-latest-npm"
+    - NODE=6 TEST="nvm install-latest-npm"
+    - NODE=5 TEST="nvm install-latest-npm"
+    - NODE=5.9 TEST="nvm install-latest-npm"
+    - NODE=4 TEST="nvm install-latest-npm"
+    - NODE=4.6 TEST="nvm install-latest-npm"
+    - NODE=4.5 TEST="nvm install-latest-npm"
+    - NODE=4.4 TEST="nvm install-latest-npm"
+    - NODE=2 TEST="nvm install-latest-npm"

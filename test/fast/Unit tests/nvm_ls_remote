@@ -1,0 +1,73 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_download
+}
+
+\. ../../../nvm.sh
+
+MOCKS_DIR="$PWD/mocks"
+
+# sample output at the time the test was written
+TAB_PATH="$MOCKS_DIR/nodejs.org-dist-index.tab"
+nvm_download() {
+  cat "$TAB_PATH"
+}
+
+EXPECTED_OUTPUT_PATH="$MOCKS_DIR/nvm_ls_remote.txt"
+
+OUTPUT="$(nvm_ls_remote foo)"
+EXIT_CODE="$(nvm_ls_remote foo >/dev/null 2>&1 ; echo $?)"
+[ "_$OUTPUT" = "_N/A" ] || die "nonexistent version did not report N/A"
+[ "_$EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $EXIT_CODE"
+
+OUTPUT="$(nvm_ls_remote)"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm_ls_remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+
+OUTPUT="$(nvm_ls_remote 0.3)"
+EXPECTED_OUTPUT="v0.3.0
+v0.3.1
+v0.3.2
+v0.3.3
+v0.3.4
+v0.3.5
+v0.3.6
+v0.3.7
+v0.3.8"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote 0.3 did not output 0.3.x versions; got $OUTPUT"
+
+# Sanity checks
+OUTPUT="$(nvm_print_implicit_alias remote stable)"
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm_print_implicit_alias remote stable.txt"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}")"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
+OUTPUT="$(nvm_print_implicit_alias remote unstable)"
+EXPECTED_OUTPUT="0.11"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_implicit_alias remote unstable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
+OUTPUT="$(nvm_ls_remote stable)"
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm_ls_remote stable.txt"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}")"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote stable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
+OUTPUT="$(nvm_ls_remote unstable)"
+EXPECTED_OUTPUT="v0.11.16"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote unstable did not output $EXPECTED_OUTPUT; got $OUTPUT"
+
+EXPECTED_OUTPUT_PATH="$MOCKS_DIR/nvm_ls_remote LTS.txt"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
+OUTPUT="$(NVM_LTS='*' nvm_ls_remote)"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "\`NVM_LTS='*' nvm_ls_remote\` did not output >$EXPECTED_OUTPUT<; got >$OUTPUT<"
+
+EXPECTED_OUTPUT_PATH="$MOCKS_DIR/nvm_ls_remote LTS argon.txt"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
+OUTPUT="$(NVM_LTS=argon nvm_ls_remote)"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "\`NVM_LTS=argon nvm_ls_remote\` did not output >$EXPECTED_OUTPUT<; got >$OUTPUT<"
+
+cleanup

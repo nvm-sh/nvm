@@ -1,0 +1,7 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+[ "_$(nvm_alias_path)" = "_$NVM_DIR/alias" ] || die "nvm_alias_path did not return correct location"

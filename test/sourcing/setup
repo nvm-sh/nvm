@@ -1,0 +1,14 @@
+#!/bin/sh
+
+mkdir -p ../../alias
+rm -rf ../../alias/default
+rm -f ../../.nvmrc
+rm -rf ../../v0.10.7
+rm -rf ../../v0.9.7
+rm -rf ../../v0.9.12
+
+\. ../../nvm.sh
+nvm install 0.10.1 || echo >&2 'nvm install 0.10.1 failed'
+nvm install 0.10.3 || echo >&2 'nvm install 0.10.3 failed'
+nvm unalias default || 'removing default alias failed'
+nvm unload || echo >&2 'nvm unload failed'

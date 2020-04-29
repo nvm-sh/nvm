@@ -1,0 +1,39 @@
+#!/bin/sh
+
+cleanup () {
+  unset -f die cleanup
+  unset NVM_SOURCE out
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+# nvm_source with no parameter returns the git endpoint
+echo $(nvm_source) | grep "nvm.git$" > /dev/null || die "nvm_source without arguments should return the location of the git repo"
+
+# nvm_source with git parameter returns the location of the nvm repo
+echo $(nvm_source "git") | grep "nvm.git$" > /dev/null || die "nvm_source without arguments should return the location of the git repo"
+
+# nvm_source with script parameter returns the location of nvm.sh
+echo $(nvm_source "script") | grep "nvm.sh$" > /dev/null || die "nvm_source \"script\" should return the location of nvm.sh"
+
+# nvm_source with script-nvm-exec parameter returns the location of nvm-exec
+echo $(nvm_source "script-nvm-exec") | grep "nvm-exec$" > /dev/null || die "nvm_source \"script-nvm-exec\" should return the location of nvm.sh"
+
+# nvm_source with any other parameter errors out and exits
+nvm_source "anything" 2> /dev/null && die "nvm_source with invalid parameter should exit"
+out=$(nvm_source "anything" 2>&1 >/dev/null) || : #Saving the process here
+[ -z "$out" ] && die "nvm_source with invalid parameter should error out"
+
+#nvm_source should always return NVM_SOURCE no matter the parameters
+NVM_SOURCE="my_location"
+out=$(nvm_source)
+[ "_$out" = "_my_location" ] || die "nvm_source without arguments should have returned \$NVM_SOURCE. Got \"$out\""
+out=$(nvm_source "git")
+[ "_$out" = "_my_location" ] || die "nvm_source git should have returned \$NVM_SOURCE. Got \"$out\""
+out=$(nvm_source "script")
+[ "_$out" = "_my_location" ] || die "nvm_source script should have returned \$NVM_SOURCE. Got \"$out\""
+out=$(nvm_source "anything")
+[ "_$out" = "_my_location" ] || die "nvm_source script should have returned \$NVM_SOURCE. Got \"$out\""
+
+cleanup

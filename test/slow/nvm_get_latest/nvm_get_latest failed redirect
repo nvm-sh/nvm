@@ -1,0 +1,25 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f curl wget
+}
+
+\. ../../../nvm.sh
+
+curl() {
+  return 1
+}
+wget() {
+  return 1
+}
+
+OUTPUT="$(nvm_get_latest 2>&1)"
+EXIT_CODE="$(nvm_get_latest >/dev/null 2>&1 ; echo $?)"
+[ "_$OUTPUT" = "_http://latest.nvm.sh did not redirect to the latest release on GitHub" ] \
+  || die "failed redirect did not report correct error message, got '$OUTPUT'"
+[ "_$EXIT_CODE" = "_2" ] \
+  || die "failed redirect did not exit with code 2, got $EXIT_CODE"
+
+cleanup

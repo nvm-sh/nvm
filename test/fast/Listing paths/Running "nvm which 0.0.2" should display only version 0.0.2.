@@ -1,0 +1,27 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+make_fake_node v0.0.2
+make_fake_node v0.0.20
+make_fake_node v0.12.0
+
+die () { echo "$@" ; exit 1; }
+
+# The result should contain only the appropriate version numbers.
+
+nvm which 0.0.2 || die "v0.0.2 not found"
+NVM_BIN="$(nvm which 0.0.2)"
+[ "_$NVM_BIN" = "_$(nvm_version_path v0.0.2)/bin/node" ] \
+  || die "'nvm which 0.0.2' did not contain the correct path: got '$NVM_BIN'"
+
+nvm which 0.0.20 || die "v0.0.20 not found"
+NVM_BIN="$(nvm which 0.0.20)"
+[ "_$NVM_BIN" = "_$(nvm_version_path v0.0.20)/bin/node" ] \
+  || die "'nvm which 0.20.0' did not contain the correct path: got '$NVM_BIN'"
+
+nvm which 0.12.0 || die "v0.0.20 not found"
+NVM_BIN="$(nvm which 0.12.0)"
+[ "_$NVM_BIN" = "_$(nvm_version_path v0.12.0)/bin/node" ] \
+  || die "'nvm which 0.12.0' did not contain the correct path: got '$NVM_BIN'"

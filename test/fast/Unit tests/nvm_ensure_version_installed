@@ -1,0 +1,63 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  rm -rf "$(nvm_version_path v0.1.2)"
+  unset -f nvm_has_system_node nvm_has_system_iojs
+}
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+make_fake_node v0.1.2
+
+OUTPUT="$(nvm_ensure_version_installed foo 2>&1)"
+EXIT_CODE=$?
+EXPECTED_OUTPUT='N/A: version "foo" is not yet installed.
+
+You need to run "nvm install foo" to install it before using it.'
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed foo' to give $EXPECTED_OUTPUT, got $OUTPUT"
+[ "_$EXIT_CODE" = "_1" ] || die "expected 'nvm_ensure_version_installed foo' to exit with 1, got $EXIT_CODE"
+
+OUTPUT="$(nvm_ensure_version_installed 0.1)"
+EXIT_CODE=$?
+[ "_$OUTPUT" = "_" ] || die "expected 'nvm_ensure_version_installed 0.1' to have no output, got $OUTPUT"
+[ "_$EXIT_CODE" = "_0" ] || die "expected 'nvm_ensure_version_installed 0.1' to exit with 0, got $EXIT_CODE"
+
+# Special case for "iojs"
+OUTPUT="$(nvm_ensure_version_installed iojs 2>&1)"
+EXIT_CODE=$?
+EXPECTED_OUTPUT='N/A: version "iojs" is not yet installed.
+
+You need to run "nvm install iojs" to install it before using it.'
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed iojs' to give $EXPECTED_OUTPUT, got $OUTPUT"
+[ "_$EXIT_CODE" = "_1" ] || die "expected 'nvm_ensure_version_installed iojs' to exit with 1, got $EXIT_CODE"
+
+nvm_has_system_node() { return 1; }
+nvm_has_system_iojs() { return 1; }
+
+OUTPUT="$(nvm_ensure_version_installed system 2>&1)"
+EXIT_CODE=$?
+EXPECTED_OUTPUT='N/A: no system version of node/io.js is installed.'
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed system' with neither installed to give $EXPECTED_OUTPUT, got $OUTPUT"
+[ "_$EXIT_CODE" = "_1" ] || die "expected 'nvm_ensure_version_installed system' with neither installed to exit with 1, got $EXIT_CODE"
+
+nvm_has_system_node() { return 0; }
+nvm_has_system_iojs() { return 1; }
+
+OUTPUT="$(nvm_ensure_version_installed system 2>&1)"
+EXIT_CODE=$?
+EXPECTED_OUTPUT=''
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed system' with node installed to give $EXPECTED_OUTPUT, got $OUTPUT"
+[ "_$EXIT_CODE" = "_0" ] || die "expected 'nvm_ensure_version_installed system' with node installed to exit with 0, got $EXIT_CODE"
+
+nvm_has_system_node() { return 1; }
+nvm_has_system_iojs() { return 0; }
+
+OUTPUT="$(nvm_ensure_version_installed system 2>&1)"
+EXIT_CODE=$?
+EXPECTED_OUTPUT=''
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed system' with iojs installed to give $EXPECTED_OUTPUT, got $OUTPUT"
+[ "_$EXIT_CODE" = "_0" ] || die "expected 'nvm_ensure_version_installed system' with iojs installed to exit with 0, got $EXIT_CODE"
+
+cleanup

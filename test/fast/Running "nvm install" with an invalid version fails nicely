@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+set +ex # needed for stderr
+OUTPUT="$(nvm install invalid.invalid 2>&1)"
+set -ex
+EXPECTED_OUTPUT="Version 'invalid.invalid' not found - try \`nvm ls-remote\` to browse available versions."
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "nvm installing an invalid version did not print a nice error message"

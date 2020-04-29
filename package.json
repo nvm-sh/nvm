@@ -1,0 +1,46 @@
+{
+  "name": "nvm",
+  "version": "0.35.3",
+  "description": "Node Version Manager - Simple bash script to manage multiple active node.js versions",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make test-$shell",
+    "test/fast": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=fast test-$shell",
+    "test/slow": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=slow test-$shell",
+    "test/install_script": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=install_script test-$shell",
+    "test/installation": "npm run --silent test/installation/node && npm run --silent test/installation/iojs",
+    "test/installation/node": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_node test-$shell",
+    "test/installation/iojs": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_iojs test-$shell",
+    "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell",
+    "doctoc": "doctoc --title='## Table of Contents' --github README.md",
+    "eclint": "eclint check $(git ls-tree --name-only HEAD | xargs)",
+    "dockerfile_lint": "dockerfile_lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nvm-sh/nvm.git"
+  },
+  "keywords": [
+    "nvm",
+    "node",
+    "iojs",
+    "version",
+    "manager"
+  ],
+  "author": "Tim Caswell <tim@creationix.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nvm-sh/nvm/issues"
+  },
+  "homepage": "https://github.com/nvm-sh/nvm",
+  "devDependencies": {
+    "dockerfile_lint": "^0.3.2",
+    "eclint": "^2.6.0",
+    "replace": "^0.3.0",
+    "semver": "^5.0.1",
+    "urchin": "^0.0.5",
+    "doctoc": "^1.2.0"
+  }
+}

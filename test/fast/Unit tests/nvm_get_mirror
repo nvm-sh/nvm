@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+unset NVM_NODEJS_ORG_MIRROR
+unset NVM_IOJS_ORG_MIRROR
+
+set +e # TODO: fix
+\. ../../../nvm.sh
+set -e
+
+! nvm_get_mirror || die 'unknown release type did not error'
+! nvm_get_mirror node || die 'unknown release type did not error'
+! nvm_get_mirror iojs || die 'unknown release type did not error'
+! nvm_get_mirror node foo || die 'unknown release type did not error'
+! nvm_get_mirror iojs foo || die 'unknown release type did not error'
+
+[ -z "$NVM_NODEJS_ORG_MIRROR" ] || die "MIRROR environment variables should not be exported"
+[ -z "$NVM_IOJS_ORG_MIRROR" ] || die "MIRROR environment variables should not be exported"
+
+[ "$(nvm_get_mirror node std)" = "https://nodejs.org/dist" ] || die "incorrect default node-std mirror"
+[ "$(nvm_get_mirror iojs std)" = "https://iojs.org/dist" ] || die "incorrect default iojs-std mirror"
+
+NVM_NODEJS_ORG_MIRROR="test://domain"
+[ "$(nvm_get_mirror node std)" = "test://domain" ] || die "node-std mirror should respect NVM_NODEJS_ORG_MIRROR"
+unset NVM_NODEJS_ORG_MIRROR
+
+NVM_IOJS_ORG_MIRROR="test://domain"
+[ "$(nvm_get_mirror iojs std)" = "test://domain" ] || die "iojs-std mirror should respect NVM_IOJS_ORG_MIRROR"
+unset NVM_IOJS_ORG_MIRROR

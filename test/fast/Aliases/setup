@@ -1,0 +1,14 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+for i in $(seq 1 10)
+  do
+  echo 0.0.$i > ../../../alias/test-stable-$i
+  make_fake_node v0.0.$i
+  echo 0.1.$i > ../../../alias/test-unstable-$i
+  make_fake_node v0.1.$i
+  echo 0.2.$i > ../../../alias/test-iojs-$i
+  make_fake_iojs v0.2.$i
+done

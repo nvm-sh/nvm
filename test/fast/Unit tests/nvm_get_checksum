@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -ex
+
+cleanup () {
+  unset -f nvm_download nvm_get_checksum_alg nvm_get_mirror
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+set +e # TODO: fix
+\. ../../../nvm.sh
+set -e
+
+nvm_get_mirror() {
+  echo "mirror-${1}-${2}"
+}
+
+set +ex # needed to capture error output
+OUTPUT="$(nvm_get_checksum 2>&1 >/dev/null)"
+EXPECTED_OUTPUT='supported flavors: node, iojs'
+EXIT_CODE="$(nvm_get_checksum >/dev/null 2>&1 ; echo $?)"
+set -ex
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected error output >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+[ "${EXIT_CODE}" = 2 ] || die "expected exit code 2, got ${EXIT_CODE}"
+
+nvm_download() {
+  echo "ERROR_FAILED_MATCH no_match more fields"
+  echo "${3} bar.tar.baz more fields"
+}
+
+nvm_get_checksum_alg() {
+  echo 'sha-256'
+}
+OUTPUT="$(nvm_get_checksum node std foo bar baz)"
+EXPECTED_OUTPUT="mirror-node-std/foo/SHASUMS256.txt"
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+nvm_get_checksum_alg() {
+  echo 'sha-1'
+}
+OUTPUT="$(nvm_get_checksum iojs std foo bar baz)"
+EXPECTED_OUTPUT="mirror-iojs-std/foo/SHASUMS.txt"
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+cleanup

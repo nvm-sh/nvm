@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+\. ../common.sh
+
+make_fake_node v0.2.3
+
+[ `expr $PATH : ".*v0.2.3/.*/bin.*"` = 0 ] || echo "WARNING: Unexpectedly found v0.2.3 already active" >&2
+
+nvm use --delete-prefix v0.2.3 || die "Failed to activate v0.2.3"
+[ `expr "$PATH" : ".*v0.2.3/.*/bin.*"` != 0 ] || die "PATH not set up properly"
+[ `expr "$NODE_PATH" : ".*v0.2.3/.*/lib/node_modules.*"` = 0 ] || die "NODE_PATH should not contain (npm root -g)"
+# ^ note: NODE_PATH should not contain `npm root -g` since globals should not be requireable
+[ `expr "$NVM_BIN" : ".*v0.2.3/bin"` != 0 ] || die "NODE_BIN should contain bin directory path"
+
+nvm deactivate || die "Failed to deactivate v0.2.3"
+[ `expr "$PATH" : ".*v0.2.3/.*/bin.*"` = 0 ] || die "PATH not cleaned properly"
+[ `expr "$NODE_PATH" : ".*v0.2.3/.*/lib/node_modules.*"` = 0 ] || die "NODE_PATH not cleaned properly"
+[ "_$NVM_BIN" = "_" ] || die "NVM_BIN should be unset: got '$NVM_BIN'"
