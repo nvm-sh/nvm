@@ -2250,7 +2250,7 @@ nvm_die_on_prefix() {
 # Currently, only io.js 3.3.1 has a Solaris binary available, and it's the
 # latest io.js version available. The expectation is that any potential io.js
 # version later than v3.3.1 will also have Solaris binaries.
-iojs_version_has_solaris_binary() {
+nvm_iojs_version_has_solaris_binary() {
   local IOJS_VERSION
   IOJS_VERSION="$1"
   local STRIPPED_IOJS_VERSION
@@ -2267,7 +2267,7 @@ iojs_version_has_solaris_binary() {
 # Solaris binary, fails otherwise.
 # Currently, node versions starting from v0.8.6 have a Solaris binary
 # available.
-node_version_has_solaris_binary() {
+nvm_node_version_has_solaris_binary() {
   local NODE_VERSION
   NODE_VERSION="$1"
   # Error out if $NODE_VERSION is actually an io.js version
@@ -2291,9 +2291,9 @@ nvm_has_solaris_binary() {
   if nvm_is_merged_node_version "${VERSION}"; then
     return 0 # All merged node versions have a Solaris binary
   elif nvm_is_iojs_version "${VERSION}"; then
-    iojs_version_has_solaris_binary "${VERSION}"
+    nvm_iojs_version_has_solaris_binary "${VERSION}"
   else
-    node_version_has_solaris_binary "${VERSION}"
+    nvm_node_version_has_solaris_binary "${VERSION}"
   fi
 }
 
@@ -3571,7 +3571,7 @@ nvm() {
         nvm_list_aliases nvm_make_alias nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
-        node_version_has_solaris_binary iojs_version_has_solaris_binary \
+        nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
