@@ -96,7 +96,7 @@ If you get `nvm: command not found` after running the install script, one of the
 
   - Your system may not have a `.bash_profile` file where the command is set up. Create one with `touch ~/.bash_profile` and run the install script again
 
-  - You might need to restart your terminal instance. Try opening a new tab/window in your terminal and retry.
+  - You might need to restart your terminal instance or run `. ~/.nvm/nvm.sh`. Restarting your terminal/opening a new tab/window, or running the source command will load the command and the new configuration.
 
 If the above doesn't fix the problem, you may try the following:
 
