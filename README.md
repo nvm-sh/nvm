@@ -110,7 +110,7 @@ If the above doesn't fix the problem, you may try the following:
 
 You can use a task:
 
-```
+```yaml
 - name: nvm
   shell: >
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
