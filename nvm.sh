@@ -2572,6 +2572,12 @@ nvm() {
       local LTS
       local NVM_UPGRADE_NPM
       NVM_UPGRADE_NPM=0
+
+      local PROVIDED_REINSTALL_PACKAGES_FROM
+      local REINSTALL_PACKAGES_FROM
+      local SKIP_DEFAULT_PACKAGES
+      local DEFAULT_PACKAGES
+
       while [ $# -ne 0 ]; do
         case "$1" in
           ---*)
@@ -2601,6 +2607,40 @@ nvm() {
           ;;
           --latest-npm)
             NVM_UPGRADE_NPM=1
+            shift
+          ;;
+          --reinstall-packages-from=*)
+            if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ]; then
+              nvm_err '--reinstall-packages-from may not be provided more than once'
+              return 6
+            fi
+            PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 27-)"
+            if [ -z "${PROVIDED_REINSTALL_PACKAGES_FROM}" ]; then
+              nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node.'
+              return 6
+            fi
+            REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
+            shift
+          ;;
+          --copy-packages-from=*)
+            if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ]; then
+              nvm_err '--reinstall-packages-from may not be provided more than once, or combined with `--copy-packages-from`'
+              return 6
+            fi
+            PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 22-)"
+            if [ -z "${PROVIDED_REINSTALL_PACKAGES_FROM}" ]; then
+              nvm_err 'If --copy-packages-from is provided, it must point to an installed version of node.'
+              return 6
+            fi
+            REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
+            shift
+          ;;
+          --reinstall-packages-from | --copy-packages-from)
+            nvm_err "If ${1} is provided, it must point to an installed version of node using \`=\`."
+            return 6
+          ;;
+          --skip-default-packages)
+            SKIP_DEFAULT_PACKAGES=true
             shift
           ;;
           *)
@@ -2667,14 +2707,14 @@ nvm() {
       fi
 
       ADDITIONAL_PARAMETERS=''
-      local PROVIDED_REINSTALL_PACKAGES_FROM
-      local REINSTALL_PACKAGES_FROM
-      local SKIP_DEFAULT_PACKAGES
-      local DEFAULT_PACKAGES
 
       while [ $# -ne 0 ]; do
         case "$1" in
           --reinstall-packages-from=*)
+            if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ]; then
+              nvm_err '--reinstall-packages-from may not be provided more than once'
+              return 6
+            fi
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 27-)"
             if [ -z "${PROVIDED_REINSTALL_PACKAGES_FROM}" ]; then
               nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node.'
@@ -2682,13 +2722,21 @@ nvm() {
             fi
             REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
           ;;
-          --reinstall-packages-from)
-            nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node using `=`.'
-            return 6
-          ;;
           --copy-packages-from=*)
+            if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ]; then
+              nvm_err '--reinstall-packages-from may not be provided more than once, or combined with `--copy-packages-from`'
+              return 6
+            fi
             PROVIDED_REINSTALL_PACKAGES_FROM="$(nvm_echo "$1" | command cut -c 22-)"
+            if [ -z "${PROVIDED_REINSTALL_PACKAGES_FROM}" ]; then
+              nvm_err 'If --copy-packages-from is provided, it must point to an installed version of node.'
+              return 6
+            fi
             REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
+          ;;
+          --reinstall-packages-from | --copy-packages-from)
+            nvm_err "If ${1} is provided, it must point to an installed version of node using \`=\`."
+            return 6
           ;;
           --skip-default-packages)
             SKIP_DEFAULT_PACKAGES=true
