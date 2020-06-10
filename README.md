@@ -463,7 +463,7 @@ find-up () {
 
 cdnvm(){
     cd "$@";
-    nvm_path=$(find-up .nvmrc | tr -d '[:space:]')
+    nvm_path=$(find-up .nvmrc | tr -d '\n')
 
     # If there are no .nvmrc file, use the default nvm version
     if [[ ! $nvm_path = *[^[:space:]]* ]]; then
