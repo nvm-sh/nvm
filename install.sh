@@ -233,7 +233,18 @@ nvm_detect_profile() {
   local DETECTED_PROFILE
   DETECTED_PROFILE=''
 
-  if [ -n "${BASH_VERSION-}" ]; then
+  # Detect the user's login shell
+  local DETECTED_SHELL
+  local SHELLRC
+
+  DETECTED_SHELL="${SHELL##*/}"
+  SHELLRC="$HOME/.${DETECTED_SHELL}rc"
+
+  if [ -n "${DETECTED_SHELL}" ]; then
+    if [ -f "$SHELLRC" ]; then
+      DETECTED_PROFILE="$SHELLRC"
+    fi
+  elif [ -n "${BASH_VERSION-}" ]; then
     if [ -f "$HOME/.bashrc" ]; then
       DETECTED_PROFILE="$HOME/.bashrc"
     elif [ -f "$HOME/.bash_profile" ]; then
