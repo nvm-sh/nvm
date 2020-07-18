@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 setup () {
   shopt -s expand_aliases
