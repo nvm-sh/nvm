@@ -805,6 +805,16 @@ sudo chmod ugo-x /usr/libexec/path_helper
 
 More on this issue in [dotphiles/dotzsh](https://github.com/dotphiles/dotzsh#mac-os-x).
 
+**nvm is not compatible with the npm config "prefix" option**
+
+Some solutions for this issue can be found [here](https://github.com/nvm-sh/nvm/issues/1245)
+
+There is one more edge case causing this issue, and that's a **mismatch between the `$HOME` path and the user's home directory's actual name**.
+
+You have to make sure that the user directory name in `$HOME` and the user directory name you'd see from running `ls /Users/` **are capitalized the same way** ([See this issue](https://github.com/nvm-sh/nvm/issues/2261)).
+
+To change the user directory and/or account name follow the instructions [here](https://support.apple.com/en-us/HT201548)
+
 [1]: https://github.com/nvm-sh/nvm.git
 [2]: https://github.com/nvm-sh/nvm/blob/v0.35.3/install.sh
 [3]: https://travis-ci.org/nvm-sh/nvm

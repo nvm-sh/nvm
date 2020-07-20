@@ -2201,6 +2201,8 @@ nvm_die_on_prefix() {
   fi
 
   local NVM_NPM_PREFIX
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
   NVM_NPM_PREFIX="$(npm config --loglevel=warn get prefix)"
   if ! (nvm_tree_contains_path "${NVM_DIR}" "${NVM_NPM_PREFIX}" >/dev/null 2>&1); then
     if [ "_${NVM_DELETE_PREFIX}" = "_1" ]; then
@@ -2212,6 +2214,10 @@ nvm_die_on_prefix() {
         nvm_err "Run \`npm config delete prefix\` or \`${NVM_COMMAND}\` to unset it."
       else
         nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      fi
+      if [ "${NVM_OS}" = 'darwin' ]; then
+        nvm_err "Make sure your username ($(whoami)) matches the one in your \$HOME path."
+        nvm_err "See the \"macOS Troubleshooting\" section in the docs for more information."
       fi
       return 10
     fi
