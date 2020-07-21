@@ -240,10 +240,8 @@ nvm_detect_profile() {
   DETECTED_SHELL="${SHELL##*/}"
   SHELLRC="$HOME/.${DETECTED_SHELL}rc"
 
-  if [ -n "${DETECTED_SHELL}" ]; then
-    if [ -f "$SHELLRC" ]; then
-      DETECTED_PROFILE="$SHELLRC"
-    fi
+  if [ -n "${DETECTED_SHELL}" ] && [ -f "$SHELLRC" ]; then
+    DETECTED_PROFILE="$SHELLRC"
   elif [ -n "${BASH_VERSION-}" ]; then
     if [ -f "$HOME/.bashrc" ]; then
       DETECTED_PROFILE="$HOME/.bashrc"
