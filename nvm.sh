@@ -2480,6 +2480,7 @@ nvm() {
       nvm_err "\$SHELL: ${SHELL}"
       # shellcheck disable=SC2169
       nvm_err "\$SHLVL: ${SHLVL-}"
+      nvm_err "whoami: '$(whoami)'"
       nvm_err "\${HOME}: ${HOME}"
       nvm_err "\${NVM_DIR}: '$(nvm_sanitize_path "${NVM_DIR}")'"
       nvm_err "\${PATH}: $(nvm_sanitize_path "${PATH}")"
