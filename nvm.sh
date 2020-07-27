@@ -3580,7 +3580,7 @@ nvm() {
       esac
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
-    "--version")
+    "--version" | "-v")
       nvm_echo '0.35.3'
     ;;
     "unload")
