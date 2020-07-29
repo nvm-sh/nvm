@@ -2445,6 +2445,11 @@ nvm() {
       nvm_echo '  nvm alias default 8.1.0               Set default node version on a shell'
       nvm_echo '  nvm alias default node                Always default to the latest available node version on a shell'
       nvm_echo
+      nvm_echo '  nvm install node                      Install the latest available version'
+      nvm_echo '  nvm use node                          Use the latest version'
+      nvm_echo '  nvm install --lts                     Install the latest LTS version'
+      nvm_echo '  nvm use --lts                         Use the latest LTS version'
+      nvm_echo
       nvm_echo 'Note:'
       nvm_echo '  to remove, delete, or uninstall nvm - just remove the `$NVM_DIR` folder (usually `~/.nvm`)'
       nvm_echo
