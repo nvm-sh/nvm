@@ -1412,49 +1412,6 @@ nvm_get_checksum() {
   nvm_download -L -s "${SHASUMS_URL}" -o - | command awk "{ if (\"${4}.tar.${5}\" == \$2) print \$1}"
 }
 
-nvm_checksum() {
-  local NVM_CHECKSUM
-  if [ -z "${3-}" ] || [ "${3-}" = 'sha1' ]; then
-    if nvm_has_non_aliased "sha1sum"; then
-      NVM_CHECKSUM="$(command sha1sum "${1-}" | command awk '{print $1}')"
-    elif nvm_has_non_aliased "sha1"; then
-      NVM_CHECKSUM="$(command sha1 -q "${1-}")"
-    elif nvm_has_non_aliased "shasum"; then
-      NVM_CHECKSUM="$(command shasum "${1-}" | command awk '{print $1}')"
-    else
-      nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
-      return 2
-    fi
-  else
-    if nvm_has_non_aliased "sha256sum"; then
-      NVM_CHECKSUM="$(command sha256sum "${1-}" | command awk '{print $1}')"
-    elif nvm_has_non_aliased "shasum"; then
-      NVM_CHECKSUM="$(command shasum -a 256 "${1-}" | command awk '{print $1}')"
-    elif nvm_has_non_aliased "sha256"; then
-      NVM_CHECKSUM="$(command sha256 -q "${1-}" | command awk '{print $1}')"
-    elif nvm_has_non_aliased "gsha256sum"; then
-      NVM_CHECKSUM="$(command gsha256sum "${1-}" | command awk '{print $1}')"
-    elif nvm_has_non_aliased "openssl"; then
-      NVM_CHECKSUM="$(command openssl dgst -sha256 "${1-}" | command awk '{print $NF}')"
-    elif nvm_has_non_aliased "bssl"; then
-      NVM_CHECKSUM="$(command bssl sha256sum "${1-}" | command awk '{print $1}')"
-    else
-      nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
-      nvm_err 'WARNING: Continuing *without checksum verification*'
-      return
-    fi
-  fi
-
-  if [ "_${NVM_CHECKSUM}" = "_${2-}" ]; then
-    return
-  elif [ -z "${2-}" ]; then
-    nvm_echo 'Checksums empty' #missing in raspberry pi binary
-    return
-  fi
-  nvm_err 'Checksums do not match.'
-  return 1
-}
-
 nvm_print_versions() {
   local VERSION
   local LTS
@@ -3600,7 +3557,7 @@ nvm() {
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
-        nvm_print_versions nvm_compute_checksum nvm_checksum \
+        nvm_print_versions nvm_compute_checksum \
         nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \
         nvm_version nvm_rc_version nvm_match_version \
         nvm_ensure_default_set nvm_get_arch nvm_get_os \
