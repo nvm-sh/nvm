@@ -1286,30 +1286,45 @@ EOF
   nvm_echo "${VERSIONS}"
 }
 
-nvm_get_checksum_alg() {
-  if nvm_has_non_aliased "sha256sum"; then
-    nvm_echo 'sha-256'
-  elif nvm_has_non_aliased "shasum"; then
-    nvm_echo 'sha-256'
-  elif nvm_has_non_aliased "sha256"; then
-    nvm_echo 'sha-256'
-  elif nvm_has_non_aliased "gsha256sum"; then
-    nvm_echo 'sha-256'
-  elif nvm_has_non_aliased "openssl"; then
-    nvm_echo 'sha-256'
-  elif nvm_has_non_aliased "bssl"; then
-    nvm_echo 'sha-256'
-  elif nvm_has_non_aliased "sha1sum"; then
-    nvm_echo 'sha-1'
-  elif nvm_has_non_aliased "sha1"; then
-    nvm_echo 'sha-1'
-  elif nvm_has_non_aliased "shasum"; then
-    nvm_echo 'sha-1'
+nvm_get_checksum_binary() {
+  if nvm_has_non_aliased 'sha256sum'; then
+    nvm_echo 'sha256sum'
+  elif nvm_has_non_aliased 'shasum'; then
+    nvm_echo 'shasum'
+  elif nvm_has_non_aliased 'sha256'; then
+    nvm_echo 'sha256'
+  elif nvm_has_non_aliased 'gsha256sum'; then
+    nvm_echo 'gsha256sum'
+  elif nvm_has_non_aliased 'openssl'; then
+    nvm_echo 'openssl'
+  elif nvm_has_non_aliased 'bssl'; then
+    nvm_echo 'bssl'
+  elif nvm_has_non_aliased 'sha1sum'; then
+    nvm_echo 'sha1sum'
+  elif nvm_has_non_aliased 'sha1'; then
+    nvm_echo 'sha1'
   else
     nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
-    nvm_err 'Unaliased sha1sum, sha1, or shasum not found.'
+    nvm_err 'Unaliased sha1sum or sha1 not found.'
     return 1
   fi
+}
+
+nvm_get_checksum_alg() {
+  local NVM_CHECKSUM_BIN
+  NVM_CHECKSUM_BIN="$(nvm_get_checksum_binary 2>/dev/null)"
+  case "${NVM_CHECKSUM_BIN-}" in
+    sha256sum | shasum | sha256 | gsha256sum | openssl | bssl)
+      nvm_echo 'sha-256'
+    ;;
+    sha1sum | sha1)
+      nvm_echo 'sha-1'
+    ;;
+    *)
+      nvm_get_checksum_binary
+      return $?
+    ;;
+  esac
 }
 
 nvm_compute_checksum() {
@@ -1347,9 +1362,6 @@ nvm_compute_checksum() {
   elif nvm_has_non_aliased "sha1"; then
     nvm_err 'Computing checksum with sha1 -q'
     command sha1 -q "${FILE}"
-  elif nvm_has_non_aliased "shasum"; then
-    nvm_err 'Computing checksum with shasum'
-    command shasum "${FILE}" | command awk '{print $1}'
   fi
 }
 
@@ -2452,6 +2464,7 @@ nvm() {
       nvm_err "\$NVM_IOJS_ORG_MIRROR: '${NVM_IOJS_ORG_MIRROR}'"
       nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
       nvm_err "uname -a: '$(command uname -a | command awk '{$2=""; print}' | command xargs)'"
+      nvm_err "checksum binary: '$(nvm_get_checksum_binary 2>/dev/null)'"
       if [ "$(nvm_get_os)" = "darwin" ] && nvm_has sw_vers; then
         OS_VERSION="$(sw_vers | command awk '{print $2}' | command xargs)"
       elif [ -r "/etc/issue" ]; then
@@ -3558,6 +3571,7 @@ nvm() {
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
         nvm_print_versions nvm_compute_checksum \
+        nvm_get_checksum_binary \
         nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \
         nvm_version nvm_rc_version nvm_match_version \
         nvm_ensure_default_set nvm_get_arch nvm_get_os \
