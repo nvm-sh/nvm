@@ -341,15 +341,21 @@ nvm_rc_version() {
   local NVMRC_PATH
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ ! -e "${NVMRC_PATH}" ]; then
-    nvm_err "No .nvmrc file found"
+    if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+      nvm_err "No .nvmrc file found"
+    fi
     return 1
   fi
   NVM_RC_VERSION="$(command head -n 1 "${NVMRC_PATH}" | command tr -d '\r')" || command printf ''
   if [ -z "${NVM_RC_VERSION}" ]; then
-    nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
+    if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+      nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
+    fi
     return 2
   fi
-  nvm_echo "Found '${NVMRC_PATH}' with version <${NVM_RC_VERSION}>"
+  if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+    nvm_echo "Found '${NVMRC_PATH}' with version <${NVM_RC_VERSION}>"
+  fi
 }
 
 nvm_clang_version() {
@@ -2995,15 +3001,18 @@ nvm() {
     ;;
     "use")
       local PROVIDED_VERSION
-      local NVM_USE_SILENT
-      NVM_USE_SILENT=0
+      local NVM_SILENT
+      local NVM_SILENT_ARG
       local NVM_DELETE_PREFIX
       NVM_DELETE_PREFIX=0
       local NVM_LTS
 
       while [ $# -ne 0 ]; do
         case "$1" in
-          --silent) NVM_USE_SILENT=1 ;;
+          --silent)
+            NVM_SILENT=1
+            NVM_SILENT_ARG='--silent'
+          ;;
           --delete-prefix) NVM_DELETE_PREFIX=1 ;;
           --) ;;
           --lts) NVM_LTS='*' ;;
@@ -3021,7 +3030,7 @@ nvm() {
       if [ -n "${NVM_LTS-}" ]; then
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
       elif [ -z "${PROVIDED_VERSION-}" ]; then
-        nvm_rc_version
+        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version
         if [ -n "${NVM_RC_VERSION-}" ]; then
           PROVIDED_VERSION="${NVM_RC_VERSION}"
           VERSION="$(nvm_version "${PROVIDED_VERSION}")"
@@ -3041,30 +3050,32 @@ nvm() {
       fi
 
       if [ "_${VERSION}" = '_system' ]; then
-        if nvm_has_system_node && nvm deactivate >/dev/null 2>&1; then
-          if [ $NVM_USE_SILENT -ne 1 ]; then
+        if nvm_has_system_node && nvm deactivate "${NVM_SILENT_ARG-}" >/dev/null 2>&1; then
+          if [ "${NVM_SILENT:-0}" -ne 1 ]; then
             nvm_echo "Now using system version of node: $(node -v 2>/dev/null)$(nvm_print_npm_version)"
           fi
           return
-        elif nvm_has_system_iojs && nvm deactivate >/dev/null 2>&1; then
-          if [ $NVM_USE_SILENT -ne 1 ]; then
+        elif nvm_has_system_iojs && nvm deactivate "${NVM_SILENT_ARG-}" >/dev/null 2>&1; then
+          if [ "${NVM_SILENT:-0}" -ne 1 ]; then
             nvm_echo "Now using system version of io.js: $(iojs --version 2>/dev/null)$(nvm_print_npm_version)"
           fi
           return
-        elif [ $NVM_USE_SILENT -ne 1 ]; then
+        elif [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_err 'System version of node not found.'
         fi
         return 127
       elif [ "_${VERSION}" = "_∞" ]; then
-        if [ $NVM_USE_SILENT -ne 1 ]; then
+        if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_err "The alias \"${PROVIDED_VERSION}\" leads to an infinite loop. Aborting."
         fi
         return 8
       fi
       if [ "${VERSION}" = 'N/A' ]; then
-        nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
-        nvm_err ""
-        nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
+        if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+          nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
+          nvm_err ""
+          nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
+        fi
         return 3
       # This nvm_ensure_version_installed call can be a performance bottleneck
       # on shell startup. Perhaps we can optimize it away or make it faster.
@@ -3095,7 +3106,7 @@ nvm() {
       fi
       local NVM_USE_OUTPUT
       NVM_USE_OUTPUT=''
-      if [ $NVM_USE_SILENT -ne 1 ]; then
+      if [ "${NVM_SILENT:-0}" -ne 1 ]; then
         if nvm_is_iojs_version "${VERSION}"; then
           NVM_USE_OUTPUT="Now using io.js $(nvm_strip_iojs_prefix "${VERSION}")$(nvm_print_npm_version)"
         else
@@ -3108,14 +3119,14 @@ nvm() {
         if [ -n "${PROVIDED_VERSION}" ]; then
           NVM_USE_CMD="${NVM_USE_CMD} ${VERSION}"
         fi
-        if [ $NVM_USE_SILENT -eq 1 ]; then
+        if [ "${NVM_SILENT:-0}" -eq 1 ]; then
           NVM_USE_CMD="${NVM_USE_CMD} --silent"
         fi
         if ! nvm_die_on_prefix "${NVM_DELETE_PREFIX}" "${NVM_USE_CMD}"; then
           return 11
         fi
       fi
-      if [ -n "${NVM_USE_OUTPUT-}" ]; then
+      if [ -n "${NVM_USE_OUTPUT-}" ] && [ "${NVM_SILENT:-0}" -ne 1 ]; then
         nvm_echo "${NVM_USE_OUTPUT}"
       fi
     ;;
