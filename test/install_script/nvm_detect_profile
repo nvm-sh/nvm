@@ -4,6 +4,7 @@ setup () {
   HOME="."
   SHELL='/bin/bash'
   NVM_ENV=testing \. ../../install.sh
+  NVM_TESTING='yes'
   touch ".bashrc"
   touch ".bash_profile"
   touch ".zshrc"
@@ -96,22 +97,23 @@ fi
 # return an empty value if everything fails
 #
 
-# It should favor .profile if other detection methods fail and file exists and 
-NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; unset SHELL; nvm_detect_profile)"
+# It should favor .profile if other detection methods fail and file exists and
+SHELL="nonsense"
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.profile" ]; then
   die "nvm_detect_profile should have selected .profile"
 fi
 
 # Otherwise, it should favor .bashrc if file exists
 rm ".profile"
-NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
   die "nvm_detect_profile should have selected .bashrc"
 fi
 
 # Otherwise, it should favor .bash_profile if file exists
 rm ".bashrc"
-NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(unset BASH_VERSION; unset ZSH_VERSION; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bash_profile" ]; then
   die "nvm_detect_profile should have selected .bash_profile"
 fi

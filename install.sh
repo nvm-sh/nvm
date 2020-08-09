@@ -234,24 +234,55 @@ nvm_detect_profile() {
   DETECTED_PROFILE=''
 
   # Detect the user's login shell
-  local DETECTED_SHELL
-  local SHELLRC
+  local USER_SHELL
+  local USER_SHELL_NAME
+  USER_SHELL=''
 
-  DETECTED_SHELL="${SHELL##*/}"
-  SHELLRC="$HOME/.${DETECTED_SHELL}rc"
-
-  if [ -n "${DETECTED_SHELL}" ] && [ -f "$SHELLRC" ]; then
-    DETECTED_PROFILE="$SHELLRC"
-  elif [ -n "${BASH_VERSION-}" ]; then
-    if [ -f "$HOME/.bashrc" ]; then
-      DETECTED_PROFILE="$HOME/.bashrc"
-    elif [ -f "$HOME/.bash_profile" ]; then
-      DETECTED_PROFILE="$HOME/.bash_profile"
-    fi
-  elif [ -n "${ZSH_VERSION-}" ]; then
-    DETECTED_PROFILE="$HOME/.zshrc"
+  # If we're not testing, try to get shell from passwd
+  # Otherwise, try the SHELL variable
+  if [ "$NVM_TESTING" != 'yes' ]; then
+    USER_SHELL=$(getent passwd $(whoami) | cut -d: -f7)
+  elif [ -n "$SHELL" ]; then
+    USER_SHELL="$SHELL"
   fi
 
+  if [ -n "$SHELL" ]; then
+    USER_SHELL_NAME="${USER_SHELL##*/}"
+  fi
+
+  # First try to find the config file based on the shell name
+  if [ -n "${USER_SHELL_NAME}" ]; then
+    case "${USER_SHELL_NAME}" in
+      bash)
+        if [ -f "$HOME/.bashrc" ]; then
+          DETECTED_PROFILE="$HOME/.bashrc"
+        elif [ -f "$HOME/.bash_profile" ]; then
+          DETECTED_PROFILE="$HOME/.bash_profile"
+        fi
+        ;;
+      zsh)
+        if [ -f "$HOME/.zshrc" ]; then
+          DETECTED_PROFILE="$HOME/.zshrc"
+        elif [ -f "$HOME/.zprofile" ]; then
+          DETECTED_PROFILE="$HOME/.zprofile"
+        fi
+        ;;
+      ksh*)
+        if [ -f "$HOME/.kshrc" ]; then
+          DETECTED_PROFILE="$HOME/.kshrc"
+        fi
+        ;;
+      mksh)
+        if [ -f "$HOME/.mkshrc" ]; then
+          DETECTED_PROFILE="$HOME/.mkshrc"
+        fi
+        ;;
+      *)
+        ;;
+    esac
+  fi
+
+  # Now brute force
   if [ -z "$DETECTED_PROFILE" ]; then
     for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zshrc"
     do
