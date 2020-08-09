@@ -246,9 +246,7 @@ nvm_detect_profile() {
     USER_SHELL="$SHELL"
   fi
 
-  if [ -n "$SHELL" ]; then
-    USER_SHELL_NAME="${USER_SHELL##*/}"
-  fi
+  USER_SHELL_NAME="${USER_SHELL##*/}"
 
   # First try to find the config file based on the shell name
   if [ -n "${USER_SHELL_NAME}" ]; then
