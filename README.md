@@ -436,6 +436,8 @@ $ echo "lts/*" > .nvmrc # to default to the latest LTS version
 $ echo "node" > .nvmrc # to default to the latest version
 ```
 
+[NB these examples assume a POSIX-compliant shell version of `echo`. If you use a Windows `cmd` development environment, eg the `.nvmrc` file is used to configure a remote Linux deployment, then keep in mind the `"`s will be copied leading to an invalid file. Remove them.]
+
 Then when you run nvm:
 
 ```sh
