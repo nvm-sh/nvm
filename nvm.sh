@@ -3661,7 +3661,7 @@ nvm_get_default_packages() {
     # ensure a trailing newline
     WORK=$(mktemp -d) || exit $?
     # shellcheck disable=SC2064
-    trap "rm -rf '$WORK'" EXIT
+    trap "command rm -rf '$WORK'" EXIT
     # shellcheck disable=SC1003
     sed -e '$a\' "${NVM_DEFAULT_PACKAGE_FILE}" > "${WORK}/default-packages"
     while IFS=' ' read -r line; do
@@ -3681,7 +3681,7 @@ nvm_get_default_packages() {
 
       DEFAULT_PACKAGES="${DEFAULT_PACKAGES}${line} "
     done < "${WORK}/default-packages"
-    echo "${DEFAULT_PACKAGES}" | xargs
+    echo "${DEFAULT_PACKAGES}" | command xargs
   fi
 }
 
