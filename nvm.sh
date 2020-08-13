@@ -2406,7 +2406,7 @@ nvm() {
         nvm_echo '  nvm version-remote <version>                Resolve the given description to a single remote version'
         nvm_echo '    --lts                                     When listing, only select from LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only select from versions for a specific LTS line'
-        nvm_echo '  nvm deactivate                              Undo effects of `nvm` on current shell'
+        nvm_echo '  nvm deactivate [--silent]                   Undo effects of `nvm` on current shell'
         nvm_echo '  nvm alias [<pattern>]                       Show all aliases beginning with <pattern>'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm alias <name> <version>                  Set an alias named <name> pointing to <version>'
@@ -2414,7 +2414,7 @@ nvm() {
         nvm_echo '  nvm install-latest-npm                      Attempt to upgrade to the latest working `npm` on the current node version'
         nvm_echo '  nvm reinstall-packages <version>            Reinstall global `npm` packages contained in <version> to current version'
         nvm_echo '  nvm unload                                  Unload `nvm` from shell'
-        nvm_echo '  nvm which [current | <version>]             Display path to installed node version. Uses .nvmrc if available'
+        nvm_echo '  nvm which [--silent] [current | <version>]  Display path to installed node version. Uses .nvmrc if available'
         nvm_echo '  nvm cache dir                               Display path to the cache directory for nvm'
         nvm_echo '  nvm cache clear                             Empty cache directory for nvm'
         nvm_echo
@@ -2969,23 +2969,39 @@ nvm() {
       done
     ;;
     "deactivate")
+      local NVM_SILENT
+      while [ $# -ne 0 ]; do
+        case "${1}" in
+          --silent) NVM_SILENT=1 ;;
+          --) ;;
+        esac
+        shift
+      done
       local NEWPATH
       NEWPATH="$(nvm_strip_path "${PATH}" "/bin")"
       if [ "_${PATH}" = "_${NEWPATH}" ]; then
-        nvm_err "Could not find ${NVM_DIR}/*/bin in \${PATH}"
+        if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+          nvm_err "Could not find ${NVM_DIR}/*/bin in \${PATH}"
+        fi
       else
         export PATH="${NEWPATH}"
         hash -r
-        nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
+        if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+          nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
+        fi
       fi
 
       if [ -n "${MANPATH-}" ]; then
         NEWPATH="$(nvm_strip_path "${MANPATH}" "/share/man")"
         if [ "_${MANPATH}" = "_${NEWPATH}" ]; then
-          nvm_err "Could not find ${NVM_DIR}/*/share/man in \${MANPATH}"
+          if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+            nvm_err "Could not find ${NVM_DIR}/*/share/man in \${MANPATH}"
+          fi
         else
           export MANPATH="${NEWPATH}"
-          nvm_echo "${NVM_DIR}/*/share/man removed from \${MANPATH}"
+          if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+            nvm_echo "${NVM_DIR}/*/share/man removed from \${MANPATH}"
+          fi
         fi
       fi
 
@@ -2993,7 +3009,9 @@ nvm() {
         NEWPATH="$(nvm_strip_path "${NODE_PATH}" "/lib/node_modules")"
         if [ "_${NODE_PATH}" != "_${NEWPATH}" ]; then
           export NODE_PATH="${NEWPATH}"
-          nvm_echo "${NVM_DIR}/*/lib/node_modules removed from \${NODE_PATH}"
+          if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+            nvm_echo "${NVM_DIR}/*/lib/node_modules removed from \${NODE_PATH}"
+          fi
         fi
       fi
       unset NVM_BIN
@@ -3361,19 +3379,27 @@ nvm() {
       nvm_version current
     ;;
     "which")
+      local NVM_SILENT
       local provided_version
-      provided_version="${1-}"
-      if [ $# -eq 0 ]; then
-        nvm_rc_version
+      while [ $# -ne 0 ]; do
+        case "${1}" in
+          --silent) NVM_SILENT=1 ;;
+          --) ;;
+          *) provided_version="${1-}" ;;
+        esac
+        shift
+      done
+      if [ -z "${provided_version-}" ]; then
+        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version
         if [ -n "${NVM_RC_VERSION}" ]; then
           provided_version="${NVM_RC_VERSION}"
           VERSION=$(nvm_version "${NVM_RC_VERSION}") ||:
         fi
         unset NVM_RC_VERSION
-      elif [ "_${1}" != '_system' ]; then
+      elif [ "${provided_version}" != 'system' ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
       else
-        VERSION="${1-}"
+        VERSION="${provided_version-}"
       fi
       if [ -z "${VERSION}" ]; then
         >&2 nvm --help
@@ -3392,8 +3418,8 @@ nvm() {
         fi
         nvm_err 'System version of node not found.'
         return 127
-      elif [ "_${VERSION}" = "_∞" ]; then
-        nvm_err "The alias \"$2\" leads to an infinite loop. Aborting."
+      elif [ "${VERSION}" = '∞' ]; then
+        nvm_err "The alias \"${2}\" leads to an infinite loop. Aborting."
         return 8
       fi
 
