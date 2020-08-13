@@ -3155,10 +3155,15 @@ nvm() {
       # run given version of node
 
       local NVM_SILENT
+      local NVM_SILENT_ARG
       local NVM_LTS
       while [ $# -gt 0 ]; do
         case "$1" in
-          --silent) NVM_SILENT='--silent' ; shift ;;
+          --silent)
+            NVM_SILENT=1
+            NVM_SILENT_ARG='--silent'
+            shift
+          ;;
           --lts) NVM_LTS='*' ; shift ;;
           --lts=*) NVM_LTS="${1##--lts=}" ; shift ;;
           *)
@@ -3172,11 +3177,7 @@ nvm() {
       done
 
       if [ $# -lt 1 ] && [ -z "${NVM_LTS-}" ]; then
-        if [ -n "${NVM_SILENT-}" ]; then
-          nvm_rc_version >/dev/null 2>&1 && has_checked_nvmrc=1
-        else
-          nvm_rc_version && has_checked_nvmrc=1
-        fi
+        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
         if [ -n "${NVM_RC_VERSION-}" ]; then
           VERSION="$(nvm_version "${NVM_RC_VERSION-}")" ||:
         fi
@@ -3194,11 +3195,7 @@ nvm() {
           if [ "_${VERSION:-N/A}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
             provided_version=''
             if [ $has_checked_nvmrc -ne 1 ]; then
-              if [ -n "${NVM_SILENT-}" ]; then
-                nvm_rc_version >/dev/null 2>&1 && has_checked_nvmrc=1
-              else
-                nvm_rc_version && has_checked_nvmrc=1
-              fi
+              NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
             fi
             VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
             unset NVM_RC_VERSION
@@ -3224,9 +3221,9 @@ nvm() {
       if [ "_${VERSION}" = "_N/A" ]; then
         nvm_ensure_version_installed "${provided_version}"
       elif [ "${NVM_IOJS}" = true ]; then
-        nvm exec "${NVM_SILENT-}" "${LTS_ARG-}" "${VERSION}" iojs "$@"
+        nvm exec "${NVM_SILENT_ARG-}" "${LTS_ARG-}" "${VERSION}" iojs "$@"
       else
-        nvm exec "${NVM_SILENT-}" "${LTS_ARG-}" "${VERSION}" node "$@"
+        nvm exec "${NVM_SILENT_ARG-}" "${LTS_ARG-}" "${VERSION}" node "$@"
       fi
       EXIT_CODE="$?"
       return $EXIT_CODE
@@ -3236,7 +3233,7 @@ nvm() {
       local NVM_LTS
       while [ $# -gt 0 ]; do
         case "$1" in
-          --silent) NVM_SILENT='--silent' ; shift ;;
+          --silent) NVM_SILENT=1 ; shift ;;
           --lts) NVM_LTS='*' ; shift ;;
           --lts=*) NVM_LTS="${1##--lts=}" ; shift ;;
           --) break ;;
@@ -3262,11 +3259,7 @@ nvm() {
       elif [ -n "${provided_version}" ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
         if [ "_${VERSION}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
-          if [ -n "${NVM_SILENT-}" ]; then
-            nvm_rc_version >/dev/null 2>&1
-          else
-            nvm_rc_version
-          fi
+          NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
           provided_version="${NVM_RC_VERSION}"
           unset NVM_RC_VERSION
           VERSION="$(nvm_version "${provided_version}")" ||:
@@ -3281,7 +3274,7 @@ nvm() {
         return $EXIT_CODE
       fi
 
-      if [ -z "${NVM_SILENT-}" ]; then
+      if [ "${NVM_SILENT:-0}" -ne 1 ]; then
         if [ "${NVM_LTS-}" = '*' ]; then
           nvm_echo "Running node latest LTS -> $(nvm_version "${VERSION}")$(nvm use --silent "${VERSION}" && nvm_print_npm_version)"
         elif [ -n "${NVM_LTS-}" ]; then
