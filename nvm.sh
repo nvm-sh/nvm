@@ -24,12 +24,20 @@ nvm_echo() {
   command printf %s\\n "$*" 2>/dev/null
 }
 
+nvm_echo_with_colors() {
+  command printf %b\\n "$*" 2>/dev/null
+}
+
 nvm_cd() {
   \cd "$@"
 }
 
 nvm_err() {
   >&2 nvm_echo "$@"
+}
+
+nvm_err_with_colors() {
+  >&2 nvm_echo_with_colors "$@"
 }
 
 nvm_grep() {
@@ -70,11 +78,11 @@ nvm_command_info() {
 }
 
 nvm_has_colors() {
-  local NVM_COLORS
+  local NVM_NUM_COLORS
   if nvm_has tput; then
-    NVM_COLORS="$(tput -T "${TERM:-vt100}" colors)"
+    NVM_NUM_COLORS="$(tput -T "${TERM:-vt100}" colors)"
   fi
-  [ "${NVM_COLORS:--1}" -ge 8 ]
+  [ "${NVM_NUM_COLORS:--1}" -ge 8 ]
 }
 
 nvm_curl_libz_support() {
@@ -713,6 +721,92 @@ nvm_binary_available() {
   nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix "${1-}")" v0.8.6
 }
 
+nvm_set_colors() {
+  if [ "${#1}" -eq 5 ] && nvm_echo "$1" | nvm_grep -E "^[rRgGbBcCyYmMkKeW]{1,}$" 1>/dev/null; then
+    local INSTALLED_COLOR
+    local LTS_AND_SYSTEM_COLOR
+    local CURRENT_COLOR
+    local NOT_INSTALLED_COLOR
+    local DEFAULT_COLOR
+
+    INSTALLED_COLOR="$(echo "$1" | awk '{ print substr($0, 1, 1); }')"
+    LTS_AND_SYSTEM_COLOR="$(echo "$1" | awk '{ print substr($0, 2, 1); }')"
+    CURRENT_COLOR="$(echo "$1" | awk '{ print substr($0, 3, 1); }')"
+    NOT_INSTALLED_COLOR="$(echo "$1" | awk '{ print substr($0, 4, 1); }')"
+    DEFAULT_COLOR="$(echo "$1" | awk '{ print substr($0, 5, 1); }')"
+    if ! nvm_has_colors; then
+      nvm_echo "Setting colors to: ${INSTALLED_COLOR} ${LTS_AND_SYSTEM_COLOR} ${CURRENT_COLOR} ${NOT_INSTALLED_COLOR} ${DEFAULT_COLOR}"
+      nvm_echo "WARNING: Colors may not display because they are not supported in this shell."
+    else
+      nvm_echo_with_colors "Setting colors to: \033[$(nvm_print_color_code "${INSTALLED_COLOR}") ${INSTALLED_COLOR}\033[$(nvm_print_color_code "${LTS_AND_SYSTEM_COLOR}") ${LTS_AND_SYSTEM_COLOR}\033[$(nvm_print_color_code "${CURRENT_COLOR}") ${CURRENT_COLOR}\033[$(nvm_print_color_code "${NOT_INSTALLED_COLOR}") ${NOT_INSTALLED_COLOR}\033[$(nvm_print_color_code "${DEFAULT_COLOR}") ${DEFAULT_COLOR}\033[0m"
+    fi
+    export NVM_COLORS="$1"
+  else
+    return 17
+  fi
+}
+
+nvm_get_colors() {
+  local COLOR
+  local SYS_COLOR
+  if [ -n "${NVM_COLORS-}" ]; then
+    case $1 in
+      1) COLOR=$(nvm_print_color_code "$(echo "$NVM_COLORS" | awk '{ print substr($0, 1, 1); }')");;
+      2) COLOR=$(nvm_print_color_code "$(echo "$NVM_COLORS" | awk '{ print substr($0, 2, 1); }')");;
+      3) COLOR=$(nvm_print_color_code "$(echo "$NVM_COLORS" | awk '{ print substr($0, 3, 1); }')");;
+      4) COLOR=$(nvm_print_color_code "$(echo "$NVM_COLORS" | awk '{ print substr($0, 4, 1); }')");;
+      5) COLOR=$(nvm_print_color_code "$(echo "$NVM_COLORS" | awk '{ print substr($0, 5, 1); }')");;
+      6)
+        SYS_COLOR=$(nvm_print_color_code "$(echo "$NVM_COLORS" | awk '{ print substr($0, 2, 1); }')")
+        COLOR=$(nvm_echo "$SYS_COLOR" | command tr '0;' '1;')
+        ;;
+      *)
+        nvm_err "Invalid color index, ${1-}"
+        return 1
+      ;;
+    esac
+  else
+    case $1 in
+      1) COLOR='0;34m';;
+      2) COLOR='0;33m';;
+      3) COLOR='0;32m';;
+      4) COLOR='0;31m';;
+      5) COLOR='0;37m';;
+      6) COLOR='1;33m';;
+      *)
+        nvm_err "Invalid color index, ${1-}"
+        return 1
+      ;;
+    esac
+  fi
+
+  echo "$COLOR"
+}
+
+nvm_print_color_code() {
+  case "${1-}" in
+    r) nvm_echo '0;31m';;
+    R) nvm_echo '1;31m';;
+    g) nvm_echo '0;32m';;
+    G) nvm_echo '1;32m';;
+    b) nvm_echo '0;34m';;
+    B) nvm_echo '1;34m';;
+    c) nvm_echo '0;36m';;
+    C) nvm_echo '1;36m';;
+    m) nvm_echo '0;35m';;
+    M) nvm_echo '1;35m';;
+    y) nvm_echo '0;33m';;
+    Y) nvm_echo '1;33m';;
+    k) nvm_echo '0;30m';;
+    K) nvm_echo '1;30m';;
+    e) nvm_echo '0;37m';;
+    W) nvm_echo '1;37m';;
+    *) nvm_err 'Invalid color code';
+        return 1
+    ;;
+  esac
+}
+
 nvm_print_formatted_alias() {
   local ALIAS
   ALIAS="${1-}"
@@ -726,6 +820,21 @@ nvm_print_formatted_alias() {
   local VERSION_FORMAT
   local ALIAS_FORMAT
   local DEST_FORMAT
+
+  local INSTALLED_COLOR
+  local SYSTEM_COLOR
+  local CURRENT_COLOR
+  local NOT_INSTALLED_COLOR
+  local DEFAULT_COLOR
+  local LTS_COLOR
+
+  INSTALLED_COLOR=$(nvm_get_colors 1)
+  SYSTEM_COLOR=$(nvm_get_colors 2)
+  CURRENT_COLOR=$(nvm_get_colors 3)
+  NOT_INSTALLED_COLOR=$(nvm_get_colors 4)
+  DEFAULT_COLOR=$(nvm_get_colors 5)
+  LTS_COLOR=$(nvm_get_colors 6)
+
   ALIAS_FORMAT='%s'
   DEST_FORMAT='%s'
   VERSION_FORMAT='%s'
@@ -739,26 +848,26 @@ nvm_print_formatted_alias() {
   if [ -z "${NVM_NO_COLORS}" ] && nvm_has_colors; then
     ARROW='\033[0;90m->\033[0m'
     if [ "_${DEFAULT}" = '_true' ]; then
-      NEWLINE=' \033[0;37m(default)\033[0m\n'
+      NEWLINE=" \033[${DEFAULT_COLOR}(default)\033[0m\n"
     fi
     if [ "_${VERSION}" = "_${NVM_CURRENT-}" ]; then
-      ALIAS_FORMAT='\033[0;32m%s\033[0m'
-      DEST_FORMAT='\033[0;32m%s\033[0m'
-      VERSION_FORMAT='\033[0;32m%s\033[0m'
+      ALIAS_FORMAT="\033[${CURRENT_COLOR}%s\033[0m"
+      DEST_FORMAT="\033[${CURRENT_COLOR}%s\033[0m"
+      VERSION_FORMAT="\033[${CURRENT_COLOR}%s\033[0m"
     elif nvm_is_version_installed "${VERSION}"; then
-      ALIAS_FORMAT='\033[0;34m%s\033[0m'
-      DEST_FORMAT='\033[0;34m%s\033[0m'
-      VERSION_FORMAT='\033[0;34m%s\033[0m'
+      ALIAS_FORMAT="\033[${INSTALLED_COLOR}%s\033[0m"
+      DEST_FORMAT="\033[${INSTALLED_COLOR}%s\033[0m"
+      VERSION_FORMAT="\033[${INSTALLED_COLOR}%s\033[0m"
     elif [ "${VERSION}" = '∞' ] || [ "${VERSION}" = 'N/A' ]; then
-      ALIAS_FORMAT='\033[1;31m%s\033[0m'
-      DEST_FORMAT='\033[1;31m%s\033[0m'
-      VERSION_FORMAT='\033[1;31m%s\033[0m'
+      ALIAS_FORMAT="\033[${NOT_INSTALLED_COLOR}%s\033[0m"
+      DEST_FORMAT="\033[${NOT_INSTALLED_COLOR}%s\033[0m"
+      VERSION_FORMAT="\033[${NOT_INSTALLED_COLOR}%s\033[0m"
     fi
     if [ "_${NVM_LTS-}" = '_true' ]; then
-      ALIAS_FORMAT='\033[1;33m%s\033[0m'
+      ALIAS_FORMAT="\033[${LTS_COLOR}%s\033[0m"
     fi
     if [ "_${DEST%/*}" = "_lts" ]; then
-      DEST_FORMAT='\033[1;33m%s\033[0m'
+      DEST_FORMAT="\033[${LTS_COLOR}%s\033[0m"
     fi
   elif [ "_${VERSION}" != '_∞' ] && [ "_${VERSION}" != '_N/A' ]; then
     VERSION_FORMAT='%s *'
@@ -1458,7 +1567,26 @@ nvm_print_versions() {
   local LTS
   local FORMAT
   local NVM_CURRENT
+  local NVM_LATEST_LTS_COLOR
+  local NVM_OLD_LTS_COLOR
+
+  local INSTALLED_COLOR
+  local SYSTEM_COLOR
+  local CURRENT_COLOR
+  local NOT_INSTALLED_COLOR
+  local DEFAULT_COLOR
+  local LTS_COLOR
+
+  INSTALLED_COLOR=$(nvm_get_colors 1)
+  SYSTEM_COLOR=$(nvm_get_colors 2)
+  CURRENT_COLOR=$(nvm_get_colors 3)
+  NOT_INSTALLED_COLOR=$(nvm_get_colors 4)
+  DEFAULT_COLOR=$(nvm_get_colors 5)
+  LTS_COLOR=$(nvm_get_colors 6)
+
   NVM_CURRENT=$(nvm_ls_current)
+  NVM_LATEST_LTS_COLOR=$(nvm_echo "${CURRENT_COLOR}" | command tr '0;' '1;')
+  NVM_OLD_LTS_COLOR="${DEFAULT_COLOR}"
   local NVM_HAS_COLORS
   if [ -z "${NVM_NO_COLORS-}" ] && nvm_has_colors; then
     NVM_HAS_COLORS=1
@@ -1475,19 +1603,19 @@ nvm_print_versions() {
     FORMAT='%15s'
     if [ "_${VERSION}" = "_${NVM_CURRENT}" ]; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-        FORMAT='\033[0;32m-> %12s\033[0m'
+        FORMAT="\033[${CURRENT_COLOR}-> %12s\033[0m"
       else
         FORMAT='-> %12s *'
       fi
     elif [ "${VERSION}" = "system" ]; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-        FORMAT='\033[0;33m%15s\033[0m'
+        FORMAT="\033[${SYSTEM_COLOR}%15s\033[0m"
       else
         FORMAT='%15s *'
       fi
     elif nvm_is_version_installed "${VERSION}"; then
       if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-        FORMAT='\033[0;34m%15s\033[0m'
+        FORMAT="\033[${INSTALLED_COLOR}%15s\033[0m"
       else
         FORMAT='%15s *'
       fi
@@ -1498,7 +1626,7 @@ nvm_print_versions() {
           LTS="${LTS##Latest }"
           LTS_LENGTH="${#LTS}"
           if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-            LTS_FORMAT="  \\033[1;32m%${LTS_LENGTH}s\\033[0m"
+            LTS_FORMAT="  \\033[${NVM_LATEST_LTS_COLOR}%${LTS_LENGTH}s\\033[0m"
           else
             LTS_FORMAT="  %${LTS_LENGTH}s"
           fi
@@ -1506,7 +1634,7 @@ nvm_print_versions() {
         *)
           LTS_LENGTH="${#LTS}"
           if [ "${NVM_HAS_COLORS-}" = '1' ]; then
-            LTS_FORMAT="  \\033[0;37m%${LTS_LENGTH}s\\033[0m"
+            LTS_FORMAT="  \\033[${NVM_OLD_LTS_COLOR}%${LTS_LENGTH}s\\033[0m"
           else
             LTS_FORMAT="  %${LTS_LENGTH}s"
           fi
@@ -2430,6 +2558,46 @@ nvm() {
   do
     case $i in
       '-h'|'help'|'--help')
+        NVM_NO_COLORS=""
+        for j in "$@"; do
+          if [ "${j}" = '--no-colors' ]; then
+            NVM_NO_COLORS="${j}"
+            break
+          fi
+        done
+
+        local INITIAL_COLOR_INFO
+        local RED_INFO
+        local GREEN_INFO
+        local BLUE_INFO
+        local CYAN_INFO
+        local MAGENTA_INFO
+        local YELLOW_INFO
+        local BLACK_INFO
+        local GREY_WHITE_INFO
+
+        if [ -z "${NVM_NO_COLORS-}"  ] && nvm_has_colors; then
+          INITIAL_COLOR_INFO='\033[0;32m g\033[0m \033[0;34m b\033[0m \033[0;33m y\033[0m \033[0;31m r\033[0m \033[0;37m e\033[0m'
+          RED_INFO='\033[0;31m r\033[0m/\033[1;31mR\033[0m = \033[0;31mred\033[0m / \033[1;31mbold red\033[0m'
+          GREEN_INFO='\033[0;32m g\033[0m/\033[1;32mG\033[0m = \033[0;32mgreen\033[0m / \033[1;32mbold green\033[0m'
+          BLUE_INFO='\033[0;34m b\033[0m/\033[1;34mB\033[0m = \033[0;34mblue\033[0m / \033[1;34mbold blue\033[0m'
+          CYAN_INFO='\033[0;36m c\033[0m/\033[1;36mC\033[0m = \033[0;36mcyan\033[0m / \033[1;36mbold cyan\033[0m'
+          MAGENTA_INFO='\033[0;35m m\033[0m/\033[1;35mM\033[0m = \033[0;35mmagenta\033[0m / \033[1;35mbold magenta\033[0m'
+          YELLOW_INFO='\033[0;33m y\033[0m/\033[1;33mY\033[0m = \033[0;33myellow\033[0m / \033[1;33mbold yellow\033[0m'
+          BLACK_INFO='\033[0;30m k\033[0m/\033[1;30mK\033[0m = \033[0;30mblack\033[0m / \033[1;30mbold black\033[0m'
+          GREY_WHITE_INFO='\033[0;37m e\033[0m/\033[1;37mW\033[0m = \033[0;37mlight grey\033[0m / \033[1;37mwhite\033[0m'
+        else
+          INITIAL_COLOR_INFO='gbYre'
+          RED_INFO='r/R = red / bold red'
+          GREEN_INFO='g/G = green / bold green'
+          BLUE_INFO='b/B = blue / bold blue'
+          CYAN_INFO='c/C = cyan / bold cyan'
+          MAGENTA_INFO='m/M = magenta / bold magenta'
+          YELLOW_INFO='y/Y = yellow / bold yellow'
+          BLACK_INFO='k/K = black / bold black'
+          GREY_WHITE_INFO='e/W = light grey / white'
+        fi
+
         local NVM_IOJS_PREFIX
         NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
         local NVM_NODE_PREFIX
@@ -2447,6 +2615,7 @@ nvm() {
         nvm_echo
         nvm_echo 'Usage:'
         nvm_echo '  nvm --help                                  Show this message'
+        nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm --version                               Print out the installed version of nvm'
         nvm_echo '  nvm install [<version>]                     Download and install a <version>. Uses .nvmrc if available and version is omitted.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm install`:'
@@ -2502,6 +2671,18 @@ nvm() {
         nvm_echo '    --silent                                  Silences stdout/stderr output when a version is omitted'
         nvm_echo '  nvm cache dir                               Display path to the cache directory for nvm'
         nvm_echo '  nvm cache clear                             Empty cache directory for nvm'
+        nvm_echo '  nvm set-colors [<color codes>]              Set five text colors using format "yMeBg". Available when supported.'
+        nvm_echo '                                               Initial colors are:'
+        nvm_echo_with_colors "                                                  ${INITIAL_COLOR_INFO}"
+        nvm_echo '                                               Color codes:'
+        nvm_echo_with_colors "                                                ${RED_INFO}"
+        nvm_echo_with_colors "                                                ${GREEN_INFO}"
+        nvm_echo_with_colors "                                                ${BLUE_INFO}"
+        nvm_echo_with_colors "                                                ${CYAN_INFO}"
+        nvm_echo_with_colors "                                                ${MAGENTA_INFO}"
+        nvm_echo_with_colors "                                                ${YELLOW_INFO}"
+        nvm_echo_with_colors "                                                ${BLACK_INFO}"
+        nvm_echo_with_colors "                                                ${GREY_WHITE_INFO}"
         nvm_echo
         nvm_echo 'Example:'
         nvm_echo '  nvm install 8.0.0                     Install a specific version number'
@@ -2515,6 +2696,8 @@ nvm() {
         nvm_echo '  nvm use node                          Use the latest version'
         nvm_echo '  nvm install --lts                     Install the latest LTS version'
         nvm_echo '  nvm use --lts                         Use the latest LTS version'
+        nvm_echo
+        nvm_echo '  nvm set-colors cgYmW                  Set text colors to cyan, green, bold yellow, magenta, and white'
         nvm_echo
         nvm_echo 'Note:'
         nvm_echo '  to remove, delete, or uninstall nvm - just remove the `$NVM_DIR` folder (usually `~/.nvm`)'
@@ -3376,6 +3559,7 @@ nvm() {
       local PATTERN
       local NVM_NO_COLORS
       local NVM_NO_ALIAS
+
       while [ $# -gt 0 ]; do
         case "${1}" in
           --) ;;
@@ -3413,6 +3597,7 @@ nvm() {
       local NVM_LTS
       local PATTERN
       local NVM_NO_COLORS
+
       while [ $# -gt 0 ]; do
         case "${1-}" in
           --) ;;
@@ -3523,6 +3708,7 @@ nvm() {
       local NVM_NO_COLORS
       ALIAS='--'
       TARGET='--'
+
       while [ $# -gt 0 ]; do
         case "${1-}" in
           --) ;;
@@ -3754,10 +3940,24 @@ nvm() {
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears \
+        nvm_get_colors nvm_set_colors nvm_print_color_code nvm_format_help_message_colors \
+        nvm_echo_with_colors nvm_err_with_colors \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
+        NVM_COLORS INSTALLED_COLOR SYSTEM_COLOR \
+        CURRENT_COLOR NOT_INSTALLED_COLOR DEFAULT_COLOR LTS_COLOR \
         >/dev/null 2>&1
+    ;;
+    "set-colors")
+      local EXIT_CODE
+      nvm_set_colors "${1-}"
+      EXIT_CODE=$?
+      if [ "$EXIT_CODE" -eq 17 ]; then
+        >&2 nvm --help
+        nvm_echo
+        nvm_err_with_colors "\033[1;37mPlease pass in five \033[1;31mvalid color codes\033[1;37m. Choose from: rRgGbBcCyYmMkKeW\033[0m"
+      fi
     ;;
     *)
       >&2 nvm --help

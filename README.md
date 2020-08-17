@@ -24,6 +24,8 @@
   - [io.js](#iojs)
   - [System Version of Node](#system-version-of-node)
   - [Listing Versions](#listing-versions)
+  - [Setting Custom Colors](#setting-custom-colors)
+    - [Persisting custom colors](#persisting-custom-colors)
     - [Suppressing colorized output](#suppressing-colorized-output)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
@@ -380,12 +382,48 @@ If you want to see what versions are available to install:
 nvm ls-remote
 ```
 
+### Setting Custom Colors
+
+You can set five colors that will be used to display version and alias information. These colors replace the default colors.
+  Initial colors are: g b y r e
+
+  Color codes:
+
+    r/R = red / bold red
+
+    g/G = green / bold green
+
+    b/B = blue / bold blue
+
+    c/C = cyan / bold cyan
+
+    m/M = magenta / bold magenta
+
+    y/Y = yellow / bold yellow
+
+    k/K = black / bold black
+
+    e/W = light grey / white
+
+```sh
+nvm set-colors rgBcm
+```
+
+#### Persisting custom colors
+
+If you want the custom colors to persist after terminating the shell, export the NVM_COLORS variable in your shell profile. For example, if you want to use cyan, magenta, green, bold red and bold yellow, add the following line:
+
+```sh
+export NVM_COLORS='cmgRY'
+```
+
 #### Suppressing colorized output
 
-`nvm ls`, `nvm ls-remote` and `nvm alias` usually produce colorized output. You can disable colors with the `--no-colors` option (or by setting the environment variable `TERM=dumb`):
+`nvm help (or -h or --help)`, `nvm ls`, `nvm ls-remote` and `nvm alias` usually produce colorized output. You can disable colors with the `--no-colors` option (or by setting the environment variable `TERM=dumb`):
 
 ```sh
 nvm ls --no-colors
+nvm help --no-colors
 TERM=dumb nvm ls
 ```
 

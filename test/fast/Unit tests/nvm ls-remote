@@ -6,9 +6,17 @@ die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
   unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs
+  if [ -n TEMP_NVM_COLORS ]; then
+    export NVM_COLORS=TEMP_NVM_COLORS
+  fi
+  unset TEMP_NVM_COLORS
 }
 
 \. ../../../nvm.sh
+if [ -n ${NVM_COLORS} ]; then
+  export TEMP_NVM_COLORS=NVM_COLORS
+  unset NVM_COLORS
+fi
 
 nvm deactivate 2>/dev/null || die 'unable to deactivate'
 
