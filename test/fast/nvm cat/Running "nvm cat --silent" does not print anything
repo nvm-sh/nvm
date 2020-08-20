@@ -1,0 +1,17 @@
+#!/bin/sh
+
+
+die () { echo "$@" ; rm -f .nvmrc; exit 1; }
+
+\. ../../../nvm.sh
+
+touch .nvmrc
+echo 'test' > .nvmrc
+
+OUTPUT=$(nvm cat --silent || die 'nvm cat --silent failed')
+EXPECTED_OUTPUT=""
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
+  || die "'nvm cat --silent' output was not silenced to '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+
+rm -f .nvmrc

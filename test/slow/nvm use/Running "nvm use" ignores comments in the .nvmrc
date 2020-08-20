@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; rm -f .nvmrc; exit 1; }
+
+\. ../../../nvm.sh
+
+nvm deactivate >/dev/null 2>&1 || die 'deactivate failed'
+touch .nvmrc
+echo '# Test' > .nvmrc
+echo 'node' >> .nvmrc
+OUTPUT="$(nvm_rc_version || die 'nvm_rc_version failed')"
+EXPECTED_OUTPUT="Found '$(nvm_find_up .nvmrc)/.nvmrc' with version <node>"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] \
+  || die "'nvm_rc_version' did not output '$EXPECTED_OUTPUT'; got '$OUTPUT'"
+
+rm -f .nvmrc
