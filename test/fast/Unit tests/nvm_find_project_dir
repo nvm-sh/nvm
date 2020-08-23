@@ -1,0 +1,33 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+set -ex
+
+TEST_DIR="$PWD/mocks/project_dirs"
+
+ACTUAL="$(PWD=$TEST_DIR/inside-n_m-nested/node_modules/foo/bar nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/inside-n_m-nested" ] || die "inside-n_m-nested: got ${ACTUAL}"
+
+ACTUAL="$(PWD=$TEST_DIR/inside-n_m-nested-pkg/node_modules/foo/bar nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/inside-n_m-nested-pkg/node_modules/foo" ] || die "inside-n_m-nested-pkg: got ${ACTUAL}"
+
+ACTUAL="$(PWD=$TEST_DIR/nested-both/a/b/c/d nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/nested-both" ] || die "nested-both: got ${ACTUAL}"
+
+ACTUAL="$(PWD=$TEST_DIR/nested-pkg/a/b/c/d nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/nested-pkg" ] || die "nested-pkg: got ${ACTUAL}"
+
+ACTUAL="$(PWD=$TEST_DIR/nested-n_m/a/b/c/d nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/nested-n_m" ] || die "nested-n_m: got ${ACTUAL}"
+
+ACTUAL="$(PWD=$TEST_DIR/no-nesting-both nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/no-nesting-both" ] || die "no-nesting-both: got ${ACTUAL}"
+
+ACTUAL="$(PWD=$TEST_DIR/no-nesting-n_m nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/no-nesting-n_m" ] || die "no-nesting-n_m: got ${ACTUAL}"
+
+ACTUAL="$(PWD=$TEST_DIR/no-nesting-pkg nvm_find_project_dir)"
+[ "${ACTUAL}" = "$TEST_DIR/no-nesting-pkg" ] || die "no-nesting-pkg: got ${ACTUAL}"

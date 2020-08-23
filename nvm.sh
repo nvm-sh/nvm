@@ -317,6 +317,15 @@ nvm_tree_contains_path() {
   [ "${pathdir}" = "${tree}" ]
 }
 
+nvm_find_project_dir() {
+  local path_
+  path_="${PWD}"
+  while [ "${path_}" != "" ] && [ ! -f "${path_}/package.json" ] && [ ! -d "${path_}/node_modules" ]; do
+    path_=${path_%/*}
+  done
+  nvm_echo "${path_}"
+}
+
 # Traverse up in directory tree to find containing folder
 nvm_find_up() {
   local path_
@@ -3654,7 +3663,7 @@ nvm() {
         nvm_normalize_version nvm_is_valid_version \
         nvm_ensure_version_installed nvm_cache_dir \
         nvm_version_path nvm_alias_path nvm_version_dir \
-        nvm_find_nvmrc nvm_find_up nvm_tree_contains_path \
+        nvm_find_nvmrc nvm_find_up nvm_find_project_dir nvm_tree_contains_path \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
         nvm_print_npm_version nvm_install_latest_npm nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
