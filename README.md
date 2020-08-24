@@ -653,36 +653,36 @@ nvm:
 > $ nvm <kbd>Tab</kbd>
 
 ```
-alias               deactivate          install             ls                  run                 unload
-clear-cache         exec                list                ls-remote           unalias             use
-current             help                list-remote         reinstall-packages  uninstall           version
+alias               deactivate          install             list-remote         reinstall-packages  uninstall           version
+cache               exec                install-latest-npm  ls                  run                 unload              version-remote
+current             help                list                ls-remote           unalias             use                 which
 ```
 
 nvm alias:
 > $ nvm alias <kbd>Tab</kbd>
 
 ```
-default
+default      iojs         lts/*        lts/argon    lts/boron    lts/carbon   lts/dubnium  lts/erbium   node         stable       unstable
 ```
 
 > $ nvm alias my_alias <kbd>Tab</kbd>
 
 ```
-v0.6.21        v0.8.26       v0.10.28
+v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm use:
 > $ nvm use <kbd>Tab</kbd>
 
 ```
-my_alias        default        v0.6.21        v0.8.26       v0.10.28
+my_alias        default        v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm uninstall:
 > $ nvm uninstall <kbd>Tab</kbd>
 
 ```
-my_alias        default        v0.6.21        v0.8.26       v0.10.28
+my_alias        default        v10.22.0       v12.18.3      v14.8.0
 ```
 
 ## Compatibility Issues
