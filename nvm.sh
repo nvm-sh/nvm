@@ -2159,7 +2159,7 @@ nvm_npm_global_modules() {
 
 nvm_die_on_prefix() {
   local NVM_DELETE_PREFIX
-  NVM_DELETE_PREFIX="$1"
+  NVM_DELETE_PREFIX="${1-}"
   case "${NVM_DELETE_PREFIX}" in
     0 | 1) ;;
     *)
@@ -2168,9 +2168,11 @@ nvm_die_on_prefix() {
     ;;
   esac
   local NVM_COMMAND
-  NVM_COMMAND="$2"
-  if [ -z "${NVM_COMMAND}" ]; then
-    nvm_err 'Second argument "nvm command" must be nonempty'
+  NVM_COMMAND="${2-}"
+  local NVM_VERSION_DIR
+  NVM_VERSION_DIR="${3-}"
+  if [ -z "${NVM_COMMAND}" ] || [ -z "${NVM_VERSION_DIR}" ]; then
+    nvm_err 'Second argument "nvm command", and third argument "nvm version dir", must both be nonempty'
     return 2
   fi
 
@@ -2210,7 +2212,7 @@ nvm_die_on_prefix() {
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
   NVM_NPM_PREFIX="$(npm config --loglevel=warn get prefix)"
-  if ! (nvm_tree_contains_path "${NVM_DIR}" "${NVM_NPM_PREFIX}" >/dev/null 2>&1); then
+  if [ "${NVM_VERSION_DIR}" != "${NVM_NPM_PREFIX}" ] && ! (nvm_tree_contains_path "${NVM_VERSION_DIR}" "${NVM_NPM_PREFIX}" >/dev/null 2>&1); then
     if [ "_${NVM_DELETE_PREFIX}" = "_1" ]; then
       npm config --loglevel=warn delete prefix
     else
@@ -3140,7 +3142,7 @@ nvm() {
         if [ "${NVM_SILENT:-0}" -eq 1 ]; then
           NVM_USE_CMD="${NVM_USE_CMD} --silent"
         fi
-        if ! nvm_die_on_prefix "${NVM_DELETE_PREFIX}" "${NVM_USE_CMD}"; then
+        if ! nvm_die_on_prefix "${NVM_DELETE_PREFIX}" "${NVM_USE_CMD}" "${NVM_VERSION_DIR}"; then
           return 11
         fi
       fi
