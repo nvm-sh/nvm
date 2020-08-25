@@ -2180,6 +2180,15 @@ nvm_npm_global_modules() {
   nvm_echo "${INSTALLS} //// ${LINKS}"
 }
 
+nvm_npmrc_bad_news_bears() {
+  local NVM_NPMRC
+  NVM_NPMRC="${1-}"
+  if [ -n "${NVM_NPMRC}" ] && [ -f "${NVM_NPMRC}" ] && nvm_grep -Ee '^(prefix|globalconfig) *=' <"${NVM_NPMRC}" >/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
 nvm_die_on_prefix() {
   local NVM_DELETE_PREFIX
   NVM_DELETE_PREFIX="${1-}"
@@ -2227,29 +2236,70 @@ nvm_die_on_prefix() {
     fi
   fi
 
-  if ! nvm_has 'npm'; then
-    return
+  # here, npm config checks npmrc files.
+  # the stack is: cli, env, project, user, global, builtin, defaults
+  # cli does not apply; env is covered above, defaults don't exist for prefix
+  # there are 4 npmrc locations to check: project, global, user, and builtin
+  # project: find the closest node_modules or package.json-containing dir, `.npmrc`
+  # global: default prefix + `/etc/npmrc`
+  # user: $HOME/.npmrc
+  # builtin: npm install location, `npmrc`
+  #
+  # if any of them have a `prefix`, fail.
+  # if any have `globalconfig`, fail also, just in case, to avoid spidering configs.
+
+  local NVM_NPM_BUILTIN_NPMRC
+  NVM_NPM_BUILTIN_NPMRC="${NVM_VERSION_DIR}/lib/node_modules/npm/npmrc"
+  if nvm_npmrc_bad_news_bears "${NVM_NPM_BUILTIN_NPMRC}"; then
+    if [ "_${NVM_DELETE_PREFIX}" = "_1" ]; then
+      npm config --loglevel=warn delete prefix --userconfig="${NVM_NPM_BUILTIN_NPMRC}"
+      npm config --loglevel=warn delete globalconfig --userconfig="${NVM_NPM_BUILTIN_NPMRC}"
+    else
+      nvm_err "Your builtin npmrc file ($(nvm_sanitize_path "${NVM_NPM_BUILTIN_NPMRC}"))"
+      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      return 10
+    fi
   fi
 
-  local NVM_NPM_PREFIX
-  local NVM_OS
-  NVM_OS="$(nvm_get_os)"
-  NVM_NPM_PREFIX="$(npm config --loglevel=warn get prefix)"
-  if [ ! "${NVM_VERSION_DIR}" -ef "${NVM_NPM_PREFIX}" ] && ! (nvm_tree_contains_path "${NVM_VERSION_DIR}" "${NVM_NPM_PREFIX}" >/dev/null 2>&1); then
+  local NVM_NPM_GLOBAL_NPMRC
+  NVM_NPM_GLOBAL_NPMRC="${NVM_VERSION_DIR}/etc/npmrc"
+  if nvm_npmrc_bad_news_bears "${NVM_NPM_GLOBAL_NPMRC}"; then
+    if [ "_${NVM_DELETE_PREFIX}" = "_1" ]; then
+      npm config --global --loglevel=warn delete prefix
+      npm config --global --loglevel=warn delete globalconfig
+    else
+      nvm_err "Your global npmrc file ($(nvm_sanitize_path "${NVM_NPM_GLOBAL_NPMRC}"))"
+      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      return 10
+    fi
+  fi
+
+  local NVM_NPM_USER_NPMRC
+  NVM_NPM_USER_NPMRC="${HOME}/.npmrc"
+  if nvm_npmrc_bad_news_bears "${NVM_NPM_USER_NPMRC}"; then
+    if [ "_${NVM_DELETE_PREFIX}" = "_1" ]; then
+      npm config --loglevel=warn delete prefix --userconfig="${NVM_NPM_USER_NPMRC}"
+      npm config --loglevel=warn delete globalconfig --userconfig="${NVM_NPM_USER_NPMRC}"
+    else
+      nvm_err "Your user’s .npmrc file ($(nvm_sanitize_path "${NVM_NPM_USER_NPMRC}"))"
+      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      return 10
+    fi
+  fi
+
+  local NVM_NPM_PROJECT_NPMRC
+  NVM_NPM_PROJECT_NPMRC="$(nvm_find_project_dir)/.npmrc"
+  if nvm_npmrc_bad_news_bears "${NVM_NPM_PROJECT_NPMRC}"; then
     if [ "_${NVM_DELETE_PREFIX}" = "_1" ]; then
       npm config --loglevel=warn delete prefix
+      npm config --loglevel=warn delete globalconfig
     else
-      nvm deactivate >/dev/null 2>&1
-      nvm_err "nvm is not compatible with the npm config \"prefix\" option: currently set to \"${NVM_NPM_PREFIX}\""
-      if nvm_has 'npm'; then
-        nvm_err "Run \`npm config delete prefix\` or \`${NVM_COMMAND}\` to unset it."
-      else
-        nvm_err "Run \`${NVM_COMMAND}\` to unset it."
-      fi
-      if [ "${NVM_OS}" = 'darwin' ]; then
-        nvm_err "Make sure your username ($(whoami)) matches the one in your \$HOME path."
-        nvm_err "See the \"macOS Troubleshooting\" section in the docs for more information."
-      fi
+      nvm_err "Your project npmrc file ($(nvm_sanitize_path "${NVM_NPM_PROJECT_NPMRC}"))"
+      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
       return 10
     fi
   fi
@@ -3703,6 +3753,7 @@ nvm() {
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
+        nvm_npmrc_bad_news_bears \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
