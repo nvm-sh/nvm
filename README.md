@@ -293,7 +293,7 @@ Any time your local copy of `nvm` connects to https://nodejs.org, it will re-cre
 To get the latest LTS version of node and migrate your existing installed packages, use
 
 ```sh
-nvm install --lts --reinstall-packages-from=current
+nvm install 'lts/*' --reinstall-packages-from=current
 ```
 
 ### Migrating Global Packages While Installing
