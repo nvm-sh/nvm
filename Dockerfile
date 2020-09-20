@@ -69,10 +69,8 @@ RUN apt update         && \
 RUN wget https://storage.googleapis.com/shellcheck/shellcheck-v$SHELLCHECK_VERSION.linux.x86_64.tar.xz -O- | \
     tar xJvf - shellcheck-v$SHELLCHECK_VERSION/shellcheck          && \
     mv shellcheck-v$SHELLCHECK_VERSION/shellcheck /bin             && \
-    rmdir shellcheck-v$SHELLCHECK_VERSION                          && \
-    touch /tmp/libc.so.6                                           && \
-    echo "alias shellcheck='LD_LIBRARY_PATH=/tmp /bin/shellcheck'" >> /etc/bash.bashrc
-RUN LD_LIBRARY_PATH=/tmp shellcheck -V
+    rmdir shellcheck-v$SHELLCHECK_VERSION
+RUN shellcheck -V
 
 # Set locale
 RUN locale-gen en_US.UTF-8
