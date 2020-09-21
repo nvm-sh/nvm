@@ -43,6 +43,7 @@ RUN apt update         && \
         file                  \
         openssl               \
         libssl-dev            \
+        locales               \
         ca-certificates       \
         ssh                   \
         wget                  \
