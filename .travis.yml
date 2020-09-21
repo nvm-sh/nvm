@@ -1,6 +1,5 @@
 language: generic
 dist: xenial
-sudo: required
 addons:
   apt:
     packages:
