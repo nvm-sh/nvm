@@ -1240,6 +1240,10 @@ nvm_ls_remote_index_tab() {
   local PATTERN
   PATTERN="${3-}"
 
+  if [ "${PATTERN#"${PATTERN%?}"}" = '.' ]; then
+    PATTERN="${PATTERN%.}"
+  fi
+
   local VERSIONS
   if [ -n "${PATTERN}" ] && [ "${PATTERN}" != '*' ]; then
     if [ "${FLAVOR}" = 'iojs' ]; then

@@ -40,6 +40,19 @@ v0.3.8"
 
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote 0.3 did not output 0.3.x versions; got $OUTPUT"
 
+OUTPUT="$(nvm_ls_remote 0.3.)"
+EXPECTED_OUTPUT="v0.3.0
+v0.3.1
+v0.3.2
+v0.3.3
+v0.3.4
+v0.3.5
+v0.3.6
+v0.3.7
+v0.3.8"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote 0.3. did not output 0.3.x versions; got $OUTPUT"
+
 # Sanity checks
 OUTPUT="$(nvm_print_implicit_alias remote stable)"
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm_print_implicit_alias remote stable.txt"
