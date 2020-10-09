@@ -1,11 +1,22 @@
 #!/bin/sh
 
+TEST_PWD=$(pwd)
+TEST_DIR="$TEST_PWD/nvm_die_on_prefix_tmp"
+
 cleanup () {
+  rm -rf "$TEST_DIR"
   alias nvm_has='\nvm_has'
   alias npm='\npm'
   unset -f nvm_has npm
 }
-die () { echo "$@" ; exit 1; }
+
+die () {
+  echo "$@";
+  cleanup;
+  exit 1;
+}
+
+[ ! -e "$TEST_DIR" ] && mkdir "$TEST_DIR"
 
 \. ../../../nvm.sh
 
@@ -40,8 +51,23 @@ npm() {
     echo "$(nvm_version_dir new)/good prefix"
   fi
 }
+
 OUTPUT="$(nvm_die_on_prefix 0 foo "$(nvm_version_dir new)" 2>&1)"
 [ -z "$OUTPUT" ] || die "'nvm_die_on_prefix' was not a noop when prefix is good; got '$OUTPUT'"
+
+mkdir -p "$(nvm_version_dir new)"
+ln -s "$(nvm_version_dir new)" "$TEST_DIR/node"
+
+npm() {
+  local args
+  args="$@"
+  if [ "_$args" = "_config --loglevel=warn get prefix" ]; then
+    echo "$TEST_DIR/node"
+  fi
+}
+
+OUTPUT="$(nvm_die_on_prefix 0 foo "$(nvm_version_dir new)" 2>&1)"
+[ -z "$OUTPUT" ] || die "'nvm_die_on_prefix' was not a noop when directory is equivalent; got '$OUTPUT'"
 
 OUTPUT="$(PREFIX=bar nvm_die_on_prefix 0 foo "$(nvm_version_dir new)" 2>&1)"
 EXPECTED_OUTPUT='nvm is not compatible with the "PREFIX" environment variable: currently set to "bar"

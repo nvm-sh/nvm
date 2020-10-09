@@ -2231,7 +2231,7 @@ nvm_die_on_prefix() {
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
   NVM_NPM_PREFIX="$(npm config --loglevel=warn get prefix)"
-  if [ "${NVM_VERSION_DIR}" != "${NVM_NPM_PREFIX}" ] && ! (nvm_tree_contains_path "${NVM_VERSION_DIR}" "${NVM_NPM_PREFIX}" >/dev/null 2>&1); then
+  if [ ! "${NVM_VERSION_DIR}" -ef "${NVM_NPM_PREFIX}" ] && ! (nvm_tree_contains_path "${NVM_VERSION_DIR}" "${NVM_NPM_PREFIX}" >/dev/null 2>&1); then
     if [ "_${NVM_DELETE_PREFIX}" = "_1" ]; then
       npm config --loglevel=warn delete prefix
     else
