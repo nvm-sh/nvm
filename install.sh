@@ -157,10 +157,11 @@ nvm_install_node() {
 
   echo "=> Installing Node.js version $NODE_VERSION_LOCAL"
   nvm install "$NODE_VERSION_LOCAL"
+  
   local CURRENT_NVM_NODE
-
   CURRENT_NVM_NODE="$(nvm_version current)"
-  if [ "$(nvm_version "$NODE_VERSION_LOCAL")" == "$CURRENT_NVM_NODE" ]; then
+
+  if [ "$(nvm_version "$NODE_VERSION_LOCAL")" = "$CURRENT_NVM_NODE" ]; then
     echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
   else
     echo >&2 "Failed to install Node.js $NODE_VERSION_LOCAL"
