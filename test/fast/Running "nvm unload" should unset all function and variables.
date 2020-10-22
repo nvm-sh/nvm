@@ -5,7 +5,7 @@ set -ex
 BEFORE="./before.tmp"
 AFTER="./after.tmp"
 
-cleanup () { echo rm -f "${BEFORE}" "${AFTER}"; }
+cleanup () { rm -f "${BEFORE}" "${AFTER}"; }
 die () { echo "$@" ; cleanup ; exit 1; }
 
 typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' > "${BEFORE}"
