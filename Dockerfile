@@ -6,8 +6,6 @@
 # Please note that it'll use about 1.2 GB disk space and about 15 minutes to
 # build this image, it depends on your hardware.
 
-# Use Ubuntu Trusty Tahr as base image as we're using on Travis CI
-# I also tested with Ubuntu 16.04, should be good with it!
 FROM ubuntu:16.04
 LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 LABEL name="nvm-dev-env"
@@ -66,7 +64,6 @@ RUN apt update         && \
         bash-completion       && \
     apt-get clean
 
-# ShellCheck with Ubuntu 14.04 container workaround
 RUN wget https://github.com/koalaman/shellcheck/releases/download/v$SHELLCHECK_VERSION/shellcheck-v$SHELLCHECK_VERSION.linux.x86_64.tar.xz -O- | \
     tar xJvf - shellcheck-v$SHELLCHECK_VERSION/shellcheck          && \
     mv shellcheck-v$SHELLCHECK_VERSION/shellcheck /bin             && \
