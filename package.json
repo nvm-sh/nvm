@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make test-$shell",
-    "test/fast": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=fast test-$shell",
+    "test/fast": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); env -i TERM=\"$TERM\" bash -lc \"make TEST_SUITE=fast test-$shell\"",
     "test/slow": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=slow test-$shell",
     "test/install_script": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=install_script test-$shell",
     "test/installation": "npm run --silent test/installation/node && npm run --silent test/installation/iojs",
