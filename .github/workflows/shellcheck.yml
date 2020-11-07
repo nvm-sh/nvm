@@ -1,4 +1,4 @@
-name: "Tests: shellcheck"
+name: 'Tests: shellcheck'
 
 on: [pull_request, push]
 

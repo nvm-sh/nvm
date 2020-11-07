@@ -1,0 +1,38 @@
+name: 'Tests: linting'
+
+on: [pull_request, push]
+
+jobs:
+  eclint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/run@main
+        name: 'npm install && npm run eclint'
+        with:
+          node-version: 'lts/*'
+          command: 'eclint'
+
+  dockerfile_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/run@main
+        name: 'npm install && npm run dockerfile_lint'
+        with:
+          node-version: 'lts/*'
+          command: 'dockerfile_lint'
+
+  doctoc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/run@main
+        name: 'npm install && npm run dockerfile_lint'
+        with:
+          node-version: 'lts/*'
+          shell-command: |
+            set -e
+            cp README.md README.md.orig
+            npm run doctoc
+            diff -q README.md README.md.orig

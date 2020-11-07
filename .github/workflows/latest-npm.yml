@@ -1,0 +1,50 @@
+name: 'Tests: `nvm install-latest-npm`'
+
+on: [pull_request, push]
+
+jobs:
+  nodes:
+    name: 'nvm install-latest-npm'
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version:
+          - "11"
+          - "10"
+          - "9"
+          - "9.2"
+          - "9.1"
+          - "9.0"
+          - "8"
+          - "7"
+          - "6"
+          - "6.1"
+          - "5"
+          - "5.9"
+          - "4"
+          - "4.6"
+          - "4.5"
+          - "4.4"
+          - "3"
+          - "2"
+          - "1"
+          - "0.12"
+          - "0.10"
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/run@main
+        name: 'nvm install-latest-npm'
+        with:
+          node-version: ${{ matrix.node-version }}
+          skip-ls-check: true
+          skip-install: true
+          shell-command: 'npm --version'
+
+  node:
+    name: 'nvm install-latest-npm'
+    needs: [nodes]
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo tests completed'

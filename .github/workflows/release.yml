@@ -1,4 +1,4 @@
-name: "Tests: release process"
+name: 'Tests: release process'
 
 on: [pull_request, push]
 
