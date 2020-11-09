@@ -1121,13 +1121,13 @@ nvm_ls() {
       fi
     fi
 
-    if ! [ -d "${NVM_DIRS_TO_SEARCH1}" ] || ! (command ls -1qA "${NVM_DIRS_TO_SEARCH1}" | nvm_grep -q .); then
+    if ! [ -d "${NVM_DIRS_TO_SEARCH1}" ] || ! (command ls -1A "${NVM_DIRS_TO_SEARCH1}" | nvm_grep -q .); then
       NVM_DIRS_TO_SEARCH1=''
     fi
-    if ! [ -d "${NVM_DIRS_TO_SEARCH2}" ] || ! (command ls -1qA "${NVM_DIRS_TO_SEARCH2}" | nvm_grep -q .); then
+    if ! [ -d "${NVM_DIRS_TO_SEARCH2}" ] || ! (command ls -1A "${NVM_DIRS_TO_SEARCH2}" | nvm_grep -q .); then
       NVM_DIRS_TO_SEARCH2="${NVM_DIRS_TO_SEARCH1}"
     fi
-    if ! [ -d "${NVM_DIRS_TO_SEARCH3}" ] || ! (command ls -1qA "${NVM_DIRS_TO_SEARCH3}" | nvm_grep -q .); then
+    if ! [ -d "${NVM_DIRS_TO_SEARCH3}" ] || ! (command ls -1A "${NVM_DIRS_TO_SEARCH3}" | nvm_grep -q .); then
       NVM_DIRS_TO_SEARCH3="${NVM_DIRS_TO_SEARCH2}"
     fi
 
