@@ -2224,7 +2224,7 @@ nvm_die_on_prefix() {
   # here, we avoid trying to replicate "which one wins" or testing the value; if any are defined, it errors
   # until none are left.
   local NVM_NPM_CONFIG_PREFIX_ENV
-  NVM_NPM_CONFIG_PREFIX_ENV="$(command env | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1 | command awk -F '=' '{print $1}')"
+  NVM_NPM_CONFIG_PREFIX_ENV="$(command env | nvm_grep -i ^NPM_CONFIG_PREFIX | command tail -1 | command awk -F '=' '{print $1}')"
   if [ -n "${NVM_NPM_CONFIG_PREFIX_ENV-}" ]; then
     local NVM_CONFIG_VALUE
     eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_PREFIX_ENV}\""
