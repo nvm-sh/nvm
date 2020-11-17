@@ -262,7 +262,9 @@ nvm_detect_profile() {
 # Node, and warn them if so.
 #
 nvm_check_global_modules() {
-  command -v npm >/dev/null 2>&1 || return 0
+  local NPM_COMMAND
+  NPM_COMMAND="$(command -v npm 2>/dev/null)" || return 0
+  [ -n "${NVM_DIR}" ] && [ -z "${NPM_COMMAND%%$NVM_DIR/*}" ] && return 0
 
   local NPM_VERSION
   NPM_VERSION="$(npm --version)"
