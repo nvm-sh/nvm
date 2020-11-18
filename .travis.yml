@@ -18,7 +18,6 @@ before_install:
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
-  - shellcheck --version
 install:
   - if [ -z "${SHELLCHECK-}" ]; then nvm install node && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
@@ -27,8 +26,6 @@ script:
   - if [ -n "${DOCTOCCHECK-}" ]; then cp README.md README.md.orig && npm run doctoc && diff -q README.md README.md.orig ; fi
   - if [ -n "${ECLINT-}" ]; then npm run eclint ; fi
   - if [ -n "${DOCKERFILE_LINT-}" ]; then npm run dockerfile_lint ; fi
-  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash nvm.sh && shellcheck -s sh nvm.sh && shellcheck -s dash nvm.sh && shellcheck -s ksh nvm.sh ; fi
-  - if [ -n "${SHELLCHECK-}" ]; then shellcheck -s bash install.sh bash_completion nvm-exec ; fi
   - if [ -n "${SHELL-}" ] && [ -n "${TEST_SUITE}" ]; then if [ "${TEST_SUITE}" = 'installation_iojs' ]; then travis_retry make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL ; else make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL; fi; fi
 before_cache:
   - if [ -n "$WITHOUT_CURL" ]; then sudo apt-get install curl -y ; fi
@@ -43,7 +40,6 @@ env:
   matrix:
     - MAKE_RELEASE=true
     - DOCTOCCHECK=true
-    - SHELLCHECK=true
     - ECLINT=true
     - DOCKERFILE_LINT=true
     - SHELL=bash TEST_SUITE=install_script

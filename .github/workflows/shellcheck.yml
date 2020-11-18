@@ -1,0 +1,31 @@
+name: "Tests: shellcheck"
+
+on: [pull_request, push]
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shell:
+          - bash
+          - sh
+          - dash
+          - ksh
+        file:
+          - nvm.sh
+        include:
+          - shell: bash
+            file: install.sh # only supported on bash
+          - shell: bash
+            file: bash_completion # only needed in bash/zsh
+          - shell: bash
+            file: nvm-exec # only runs in bash
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install shellcheck
+        run: brew install shellcheck
+      - run: "shellcheck --version"
+      - name: Run shellcheck on ${{ matrix.file }}
+        run: shellcheck -s ${{ matrix.shell }} ${{ matrix.file }}
