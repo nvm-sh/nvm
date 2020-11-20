@@ -2612,6 +2612,7 @@ nvm() {
   for i in "$@"
   do
     case $i in
+      --) break ;;
       '-h'|'help'|'--help')
         NVM_NO_COLORS=""
         for j in "$@"; do
