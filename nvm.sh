@@ -69,7 +69,18 @@ nvm_grep() {
 }
 
 nvm_has() {
-  type "${1-}" >/dev/null 2>&1
+  command -v "${1-}" >/dev/null 2>&1
+}
+
+# `type`, ignoring any `type` function or alias
+nvm_type() {
+  if nvm_is_zsh; then
+    # zsh's `command type` runs an external `type`, which cannot see shell functions or aliases
+    builtin type "$@"
+  else
+    # ksh's `command` alias would expand a `type` alias after it
+    \command type "$@"
+  fi
 }
 
 # resolves like `command "${1}"` does: only executables on the PATH,
@@ -97,18 +108,20 @@ nvm_command_info() {
   local COMMAND
   local INFO
   COMMAND="${1}"
-  if type "${COMMAND}" | nvm_grep -q hashed; then
-    INFO="$(type "${COMMAND}" | command sed -E 's/\(|\)//g' | command awk '{print $4}')"
-  elif type "${COMMAND}" | nvm_grep -q aliased; then
+  if nvm_type "${COMMAND}" | nvm_grep -q hashed; then
+    INFO="$(nvm_type "${COMMAND}" | command sed -E 's/\(|\)//g' | command awk '{print $4}')"
+  elif nvm_type "${COMMAND}" | nvm_grep -q aliased; then
     # shellcheck disable=SC2230
-    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | command sed -e 's/^\ *//g' -Ee "s/\`|'//g"))"
-  elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is an alias for"; then
+    INFO="$(which "${COMMAND}") ($(nvm_type "${COMMAND}" | command awk '{ $1=$2=$3=$4="" ;print }' | command sed -e 's/^\ *//g' -Ee "s/\`|'//g"))"
+  elif nvm_type "${COMMAND}" | nvm_grep -q "^${COMMAND} is an alias for"; then
     # shellcheck disable=SC2230
-    INFO="$(which "${COMMAND}") ($(type "${COMMAND}" | command awk '{ $1=$2=$3=$4=$5="" ;print }' | command sed 's/^\ *//g'))"
-  elif type "${COMMAND}" | nvm_grep -q "^${COMMAND} is /"; then
-    INFO="$(type "${COMMAND}" | command awk '{print $3}')"
+    INFO="$(which "${COMMAND}") ($(nvm_type "${COMMAND}" | command awk '{ $1=$2=$3=$4=$5="" ;print }' | command sed 's/^\ *//g'))"
+  elif nvm_type "${COMMAND}" | nvm_grep -q "^${COMMAND} is a tracked alias for /"; then
+    INFO="$(nvm_type "${COMMAND}" | command awk '{print $NF}')"
+  elif nvm_type "${COMMAND}" | nvm_grep -q "^${COMMAND} is /"; then
+    INFO="$(nvm_type "${COMMAND}" | command awk '{print $3}')"
   else
-    INFO="$(type "${COMMAND}")"
+    INFO="$(nvm_type "${COMMAND}")"
   fi
   nvm_echo "${INFO}"
 }
@@ -7179,7 +7192,7 @@ nvm() {
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_replace_literal nvm_sanitize_path nvm_sanitize_url nvm_has_colors nvm_has_italics nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
-        nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
+        nvm_curl_libz_support nvm_command_info nvm_type nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears nvm_sanitize_auth_header nvm_auth_header_applies_to \
         nvm_wget_is_gnu nvm_url_origin nvm_wget_same_origin nvm_wget_with_auth_header \
         nvm_url_has_credentials nvm_wget_with_url_credentials \

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+# defined before nvm.sh is sourced, as in a user's profile (#2352)
+type() { echo 'hijacked'; return 0; }
+
+if [ -n "${BASH_VERSION-}" ]; then
+  shopt -s expand_aliases
+elif [ -n "${ZSH_VERSION-}" ]; then
+  setopt aliases
+fi
+alias type="echo hijacked"
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_has cat || die 'nvm_has does not locate "cat" when `type` is overridden'
+
+! nvm_has foobarbaz || die 'nvm_has finds "foobarbaz" when `type` is overridden'
+
+[ "~$(nvm_has cat 2>&1)" = "~" ] || die 'nvm_has has output when `type` is overridden'
+
+INFO="$(nvm_command_info cat)"
+EXPECTED="$(command -v cat)"
+[ "${INFO}" = "${EXPECTED}" ] || die "nvm_command_info cat with an overridden \`type\`: expected >${EXPECTED}<, got >${INFO}<"
