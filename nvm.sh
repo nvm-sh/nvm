@@ -785,22 +785,22 @@ nvm_get_colors() {
 
 nvm_print_color_code() {
   case "${1-}" in
-    r) nvm_echo '0;31m';;
-    R) nvm_echo '1;31m';;
-    g) nvm_echo '0;32m';;
-    G) nvm_echo '1;32m';;
-    b) nvm_echo '0;34m';;
-    B) nvm_echo '1;34m';;
-    c) nvm_echo '0;36m';;
-    C) nvm_echo '1;36m';;
-    m) nvm_echo '0;35m';;
-    M) nvm_echo '1;35m';;
-    y) nvm_echo '0;33m';;
-    Y) nvm_echo '1;33m';;
-    k) nvm_echo '0;30m';;
-    K) nvm_echo '1;30m';;
-    e) nvm_echo '0;37m';;
-    W) nvm_echo '1;37m';;
+    'r') nvm_echo '0;31m';;
+    'R') nvm_echo '1;31m';;
+    'g') nvm_echo '0;32m';;
+    'G') nvm_echo '1;32m';;
+    'b') nvm_echo '0;34m';;
+    'B') nvm_echo '1;34m';;
+    'c') nvm_echo '0;36m';;
+    'C') nvm_echo '1;36m';;
+    'm') nvm_echo '0;35m';;
+    'M') nvm_echo '1;35m';;
+    'y') nvm_echo '0;33m';;
+    'Y') nvm_echo '1;33m';;
+    'k') nvm_echo '0;30m';;
+    'K') nvm_echo '1;30m';;
+    'e') nvm_echo '0;37m';;
+    'W') nvm_echo '1;37m';;
     *) nvm_err 'Invalid color code';
         return 1
     ;;
