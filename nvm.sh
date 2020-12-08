@@ -2554,6 +2554,7 @@ nvm() {
     return $?
   fi
 
+  local i
   for i in "$@"
   do
     case $i in
