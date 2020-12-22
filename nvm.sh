@@ -2338,7 +2338,8 @@ nvm_die_on_prefix() {
 
   # npm first looks at $PREFIX (case-sensitive)
   # we do not bother to test the value here; if this env var is set, unset it to continue.
-  if [ -n "${PREFIX-}" ]; then
+  # however, `npm exec` in npm v7.2+ sets $PREFIX; if set, inherit it
+  if [ -n "${PREFIX-}" ] && [ "$(nvm_version_path $(node -v))" != "${PREFIX}" ]; then
     nvm deactivate >/dev/null 2>&1
     nvm_err "nvm is not compatible with the \"PREFIX\" environment variable: currently set to \"${PREFIX}\""
     nvm_err 'Run `unset PREFIX` to unset it.'
