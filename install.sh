@@ -42,19 +42,23 @@ nvm_profile_is_bash_or_zsh() {
 # NVM_SOURCE always takes precedence unless the method is "script-nvm-exec"
 #
 nvm_source() {
+  local NVM_GITHUB_REPO
+  NVM_GITHUB_REPO="${NVM_INSTALL_GITHUB_REPO:-nvm-sh/nvm}"
+  local NVM_VERSION
+  NVM_VERSION="${NVM_INSTALL_VERSION:-$(nvm_latest_version)}"
   local NVM_METHOD
   NVM_METHOD="$1"
   local NVM_SOURCE_URL
   NVM_SOURCE_URL="$NVM_SOURCE"
   if [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
-    NVM_SOURCE_URL="https://raw.githubusercontent.com/nvm-sh/nvm/$(nvm_latest_version)/nvm-exec"
+    NVM_SOURCE_URL="https://raw.githubusercontent.com/${NVM_GITHUB_REPO}/${NVM_VERSION}/nvm-exec"
   elif [ "_$NVM_METHOD" = "_script-nvm-bash-completion" ]; then
-    NVM_SOURCE_URL="https://raw.githubusercontent.com/nvm-sh/nvm/$(nvm_latest_version)/bash_completion"
+    NVM_SOURCE_URL="https://raw.githubusercontent.com/${NVM_GITHUB_REPO}/${NVM_VERSION}/bash_completion"
   elif [ -z "$NVM_SOURCE_URL" ]; then
     if [ "_$NVM_METHOD" = "_script" ]; then
-      NVM_SOURCE_URL="https://raw.githubusercontent.com/nvm-sh/nvm/$(nvm_latest_version)/nvm.sh"
+      NVM_SOURCE_URL="https://raw.githubusercontent.com/${NVM_GITHUB_REPO}/${NVM_VERSION}/nvm.sh"
     elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
-      NVM_SOURCE_URL="https://github.com/nvm-sh/nvm.git"
+      NVM_SOURCE_URL="https://github.com/${NVM_GITHUB_REPO}.git"
     else
       echo >&2 "Unexpected value \"$NVM_METHOD\" for \$NVM_METHOD"
       return 1

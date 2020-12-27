@@ -2,6 +2,8 @@
 
 die () { echo "$@" ; exit 1; }
 
+# Needed to avoid to checkout the repo to the latest nvm version, losing the commits of the current PR
+unset NVM_DIR
 NODE_VERSION=8 \. ../../install.sh
 
 # nvm installed node 8
