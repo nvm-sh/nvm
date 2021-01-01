@@ -43,6 +43,9 @@ if [ -z "$NVM_DIR" ] || [ -z "$tmp_dir" ]; then
   die 'Unable to create temporary folder'
 fi
 
+# Test windows zip
+test_archi 'win' 'v15.6.0' 'x64' 'node' 'zip' 'zip' '-qr'
+
 # Test linux tar.xz
 test_archi 'linux' 'v14.15.4' 'x64' 'bin/node' 'tar.xz' 'tar' '-cJf'
 

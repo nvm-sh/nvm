@@ -2,7 +2,7 @@
 
 cleanup () {
   rm -rf "$NVM_DIR"
-  unset -f die cleanup check_version
+  unset -f die cleanup nvm_get_os check_version
   unset NVM_DIR NODE_PATH
 }
 die () { echo "$@" ; cleanup ; exit 1; }
@@ -43,5 +43,12 @@ type nvm_is_version_installed > /dev/null 2>&1 || die 'nvm_is_version_installed 
 ! nvm_is_version_installed || die 'nvm_is_version_installed without parameter should fail'
 
 check_version '12.0.0' 'node'
+
+# Checking for Windows
+nvm_get_os() {
+  echo "win"
+}
+check_version '13.0.0' 'node.exe'
+
 
 cleanup
