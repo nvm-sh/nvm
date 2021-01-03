@@ -36,3 +36,10 @@ jobs:
             cp README.md README.md.orig
             npm run doctoc
             diff -q README.md README.md.orig
+
+  test_naming:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: check tests filenames
+        run: ./rename_test.sh --check

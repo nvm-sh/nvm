@@ -12,10 +12,10 @@ trim_trailing_whitespace = true
 [*.txt]
 indent_size = false
 
-[test/fast/Listing versions/Running "nvm ls" calls into nvm_alias]
+[test/fast/Listing versions/Running 'nvm ls' calls into nvm_alias]
 indent_size = false
 
-[test/fast/Listing versions/Running "nvm ls --no-alias" does not call into nvm_alias]
+[test/fast/Listing versions/Running 'nvm ls --no-alias' does not call into nvm_alias]
 indent_size = false
 
 [test/fast/Unit tests/mocks/**]
