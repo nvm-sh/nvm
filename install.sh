@@ -100,20 +100,32 @@ nvm_download() {
 install_nvm_from_git() {
   local INSTALL_DIR
   INSTALL_DIR="$(nvm_install_dir)"
+  local NVM_VERSION
+  NVM_VERSION="${NVM_INSTALL_VERSION:-$(nvm_latest_version)}"
+  if [ -n "${NVM_INSTALL_VERSION:-}" ]; then
+    # Check if version is an existing ref
+    if command git ls-remote "$(nvm_source "git")" "$NVM_VERSION" | nvm_grep -q "$NVM_VERSION" ; then
+      :
+    # Check if version is an existing changeset
+    elif ! nvm_download -o /dev/null "$(nvm_source "script-nvm-exec")"; then
+      echo >&2 "Failed to find '$NVM_VERSION' version."
+      exit 1
+    fi
+  fi
 
+  local fetch_error
   if [ -d "$INSTALL_DIR/.git" ]; then
+    # Updating repo
     echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
     command printf '\r=> '
-    command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin tag "$(nvm_latest_version)" --depth=1 2> /dev/null || {
-      echo >&2 "Failed to update nvm, run 'git fetch' in $INSTALL_DIR yourself."
-      exit 1
-    }
+    fetch_error="Failed to update nvm with $NVM_VERSION, run 'git fetch' in $INSTALL_DIR yourself."
   else
-    # Cloning to $INSTALL_DIR
+    fetch_error="Failed to fetch origin with $NVM_VERSION. Please report this!"
     echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf '\r=> '
     mkdir -p "${INSTALL_DIR}"
     if [ "$(ls -A "${INSTALL_DIR}")" ]; then
+      # Initializing repo
       command git init "${INSTALL_DIR}" || {
         echo >&2 'Failed to initialize nvm repo. Please report this!'
         exit 2
@@ -123,18 +135,26 @@ install_nvm_from_git() {
         echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
         exit 2
       }
-      command git --git-dir="${INSTALL_DIR}/.git" fetch origin tag "$(nvm_latest_version)" --depth=1 || {
-        echo >&2 'Failed to fetch origin with tags. Please report this!'
-        exit 2
-      }
     else
-      command git -c advice.detachedHead=false clone "$(nvm_source)" -b "$(nvm_latest_version)" --depth=1 "${INSTALL_DIR}" || {
+      # Cloning repo
+      command git clone "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
         echo >&2 'Failed to clone nvm repo. Please report this!'
         exit 2
       }
     fi
   fi
-  command git -c advice.detachedHead=false --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout -f --quiet "$(nvm_latest_version)"
+  # Try to fetch tag
+  if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin tag "$NVM_VERSION" --depth=1 2>/dev/null; then
+    :
+  # Fetch given version
+  elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin "$NVM_VERSION" --depth=1; then
+    echo >&2 "$fetch_error"
+    exit 1
+  fi
+  command git -c advice.detachedHead=false --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout -f --quiet FETCH_HEAD || {
+    echo >&2 "Failed to checkout the given version $NVM_VERSION. Please report this!"
+    exit 2
+  }
   if [ -n "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
     if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
       command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
