@@ -6,6 +6,10 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
+nvm_grep() {
+  GREP_OPTIONS='' command grep "$@"
+}
+
 nvm_default_install_dir() {
   [ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm"
 }
@@ -423,7 +427,7 @@ nvm_reset() {
   unset -f nvm_has nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
     install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_check_global_modules \
-    nvm_do_install nvm_reset nvm_default_install_dir
+    nvm_do_install nvm_reset nvm_default_install_dir nvm_grep
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
