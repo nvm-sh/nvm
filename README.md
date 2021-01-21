@@ -871,3 +871,55 @@ Ignore insecure directories and continue [y] or abort compinit [n]? y
 ```
 
 Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` and `/usr/local/share/zsh`. This is **not** an `nvm` problem - it is a homebrew problem. Refer [here](https://github.com/zsh-users/zsh-completions/issues/680) for some solutions related to the issue.
+
+**Macs with M1 chip**
+
+_January 2021:_ there are no pre-compiled NodeJS binaries for versions prior to 15.x for Apple's new M1 chip (arm64 architecture).
+
+Some issues you may encounter:
+
+- using `nvm` to install, say, `v14.15.4`:
+  - the C code compiles successfully
+  - but crashes with an out of memory error when used
+  - increasing the memory available to node still produces the out of memory errors:
+    ```sh
+    $ NODE_OPTIONS="--max-old-space-size=4096" ./node_modules/.bin/your_node_package
+    ```
+- when using `nvm` to install some versions, the compilation fails
+
+One solution to this issue is to change the architecture of your shell from arm64 to x86.
+
+Let's assume that:
+- you already have versions `12.20.1` and `14.15.4` installed using `nvm`
+- the current version in use is `14.15.4`
+- you are using the `zsh` shell
+
+```sh
+# Check what version you're running:
+$ node --version
+v14.15.4
+# Check architecture of the `node` binary:
+$ node -p process.arch
+arm64
+# This confirms that the arch is for the M1 chip, which is causing the problems.
+# So we need to uninstall it.
+# We can't uninstall the version we are currently using, so switch to another version:
+$ nvm install v12.20.1
+# Now uninstall the version we want to replace:
+$ nvm uninstall v14.15.4
+# Set the architecture for our shell to 64-bit X86:
+$ arch -x86_64 zsh
+```
+
+At this point in time, we are still in the shell that is running using the M1 architecture.
+
+So we now need to open a new terminal window in order to run our shell in the 64-bit X86 architecture.
+
+```sh
+# `node` will not be on the path in this new terminal window.
+# So install it:
+$ nvm install v14.15.4
+# Now check that the architecture is correct:
+$ node -p process.arch
+x64
+```
