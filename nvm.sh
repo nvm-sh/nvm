@@ -3078,7 +3078,7 @@ nvm() {
           nvm_ensure_default_set "${provided_version}"
         fi
 
-        if [ -n "${ALIAS}" ]; then
+        if [ -n "${ALIAS-}" ]; then
           nvm alias "${ALIAS}" "${provided_version}"
         fi
 
