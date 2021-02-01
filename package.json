@@ -37,10 +37,10 @@
   "homepage": "https://github.com/nvm-sh/nvm",
   "devDependencies": {
     "dockerfile_lint": "^0.3.2",
-    "doctoc": "^1.2.0",
+    "doctoc": "^2.0.0",
     "eclint": "^2.6.0",
-    "replace": "^0.3.0",
-    "semver": "^5.0.1",
+    "replace": "^1.2.0",
+    "semver": "^7.3.4",
     "urchin": "^0.0.5"
   }
 }
