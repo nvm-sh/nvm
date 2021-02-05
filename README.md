@@ -320,7 +320,7 @@ Note that reinstalling packages _explicitly does not update the npm version_ —
 To update npm at the same time add the `--latest-npm` flag, like this:
 
 ```sh
-nvm install lts/* --reinstall-packages-from=default --latest-npm
+nvm install 'lts/*' --reinstall-packages-from=default --latest-npm
 ```
 
 or, you can at any time run the following command to get the latest supported npm version on the current node version:
