@@ -320,7 +320,7 @@ Note that reinstalling packages _explicitly does not update the npm version_ —
 To update npm at the same time add the `--latest-npm` flag, like this:
 
 ```sh
-nvm install lts/* --reinstall-packages-from=default --latest-npm
+nvm install 'lts/*' --reinstall-packages-from=default --latest-npm
 ```
 
 or, you can at any time run the following command to get the latest supported npm version on the current node version:
@@ -871,3 +871,49 @@ Ignore insecure directories and continue [y] or abort compinit [n]? y
 ```
 
 Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` and `/usr/local/share/zsh`. This is **not** an `nvm` problem - it is a homebrew problem. Refer [here](https://github.com/zsh-users/zsh-completions/issues/680) for some solutions related to the issue.
+
+**Macs with M1 chip**
+
+_January 2021:_ there are no pre-compiled NodeJS binaries for versions prior to 15.x for Apple's new M1 chip (arm64 architecture).
+
+Some issues you may encounter:
+
+- using `nvm` to install, say, `v14.15.4`:
+  - the C code compiles successfully
+  - but crashes with an out of memory error when used
+  - increasing the memory available to node still produces the out of memory errors:
+    ```sh
+    $ NODE_OPTIONS="--max-old-space-size=4096" ./node_modules/.bin/your_node_package
+    ```
+- when using `nvm` to install some versions, the compilation fails
+
+One solution to this issue is to change the architecture of your shell from arm64 to x86.
+
+Let's assume that:
+- you already have versions `12.20.1` and `14.15.4` installed using `nvm`
+- the current version in use is `14.15.4`
+- you are using the `zsh` shell
+
+```sh
+# Check what version you're running:
+$ node --version
+v14.15.4
+# Check architecture of the `node` binary:
+$ node -p process.arch
+arm64
+# This confirms that the arch is for the M1 chip, which is causing the problems.
+# So we need to uninstall it.
+# We can't uninstall the version we are currently using, so switch to another version:
+$ nvm install v12.20.1
+# Now uninstall the version we want to replace:
+$ nvm uninstall v14.15.4
+# Set the architecture for our shell to 64-bit X86:
+$ arch -x86_64 zsh
+# Install node using nvm. This should download the precompiled x64 binary:
+$ nvm install v14.15.4
+# Now check that the architecture is correct:
+$ node -p process.arch
+x64
+# It is now safe to revert zsh back to the native architecture:
+$ arch -arm64 zsh
+```
