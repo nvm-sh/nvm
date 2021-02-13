@@ -909,17 +909,11 @@ $ nvm install v12.20.1
 $ nvm uninstall v14.15.4
 # Set the architecture for our shell to 64-bit X86:
 $ arch -x86_64 zsh
-```
-
-At this point in time, we are still in the shell that is running using the M1 architecture.
-
-So we now need to open a new terminal window in order to run our shell in the 64-bit X86 architecture.
-
-```sh
-# `node` will not be on the path in this new terminal window.
-# So install it:
+# Install node using nvm. This should download the precompiled x64 binary:
 $ nvm install v14.15.4
 # Now check that the architecture is correct:
 $ node -p process.arch
 x64
+# It is now safe to revert zsh back to the native architecture:
+$ arch -arm64 zsh
 ```
