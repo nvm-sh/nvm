@@ -1926,6 +1926,9 @@ nvm_install_binary() {
     return 3
   fi
 
+  local nosource
+  nosource="${4-}"
+
   local VERSION
   VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
 
@@ -1963,6 +1966,13 @@ nvm_install_binary() {
       nvm alias "${ALIAS}" "${provided_version}"
     fi
     return 0
+  fi
+
+
+  # Read nosource from arguments
+  if [ "${nosource-}" = '1' ]; then
+      nvm_err 'Binary download failed. Download from source aborted.'
+      return 0
   fi
 
   nvm_err 'Binary download failed, trying source.'
@@ -2665,6 +2675,7 @@ nvm() {
         nvm_echo '  nvm install [<version>]                     Download and install a <version>. Uses .nvmrc if available and version is omitted.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm install`:'
         nvm_echo '    -s                                        Skip binary download, install from source only.'
+        nvm_echo '    -b                                        Skip source download, install from binary only.'
         nvm_echo '    --reinstall-packages-from=<version>       When installing, reinstall packages installed in <node|iojs|node version number>'
         nvm_echo '    --lts                                     When installing, only select from LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When installing, only select from versions for a specific LTS line'
@@ -2879,9 +2890,11 @@ nvm() {
       fi
 
       local nobinary
+      local nosource
       local noprogress
       nobinary=0
       noprogress=0
+      nosource=0
       local LTS
       local ALIAS
       local NVM_UPGRADE_NPM
@@ -2901,6 +2914,18 @@ nvm() {
           -s)
             shift # consume "-s"
             nobinary=1
+            if [ $nosource -eq 1 ]; then
+                nvm err '-s and -b cannot be set together since they would skip install from both binary and source'
+                return 6
+            fi
+          ;;
+          -b)
+            shift # consume "-b"
+            nosource=1
+            if [ $nobinary -eq 1 ]; then
+                nvm err '-s and -b cannot be set together since they would skip install from both binary and source'
+                return 6
+            fi
           ;;
           -j)
             shift # consume "-j"
@@ -3165,7 +3190,7 @@ nvm() {
 
         # skip binary install if "nobinary" option specified.
         if [ $nobinary -ne 1 ] && nvm_binary_available "${VERSION}"; then
-          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_binary "${FLAVOR}" std "${VERSION}"
+          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_binary "${FLAVOR}" std "${VERSION}" "${nosource}"
           EXIT_CODE=$?
         fi
         if [ $EXIT_CODE -ne 0 ]; then
