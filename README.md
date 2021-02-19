@@ -503,17 +503,9 @@ If you prefer a lighter-weight solution, the recipes below have been contributed
 Put the following at the end of your `$HOME/.bashrc`:
 
 ```bash
-find-up() {
-    path=$(pwd)
-    while [[ "$path" != "" && ! -e "$path/$1" ]]; do
-        path=${path%/*}
-    done
-    echo "$path"
-}
-
 cdnvm() {
     cd "$@";
-    nvm_path=$(find-up .nvmrc | tr -d '\n')
+    nvm_path=$(nvm_find_up .nvmrc | tr -d '\n')
 
     # If there are no .nvmrc file, use the default nvm version
     if [[ ! $nvm_path = *[^[:space:]]* ]]; then
