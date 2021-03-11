@@ -994,6 +994,7 @@ nvm_alias() {
   if [ "$(expr "${ALIAS}" : '^lts/-[1-9][0-9]*$')" -gt 0 ]; then
     local N
     N="$(echo "${ALIAS}" | cut -d '-' -f 2)"
+    N=$((N+1))
     local RESULT
     RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
     if [ "${RESULT}" != '*' ]; then

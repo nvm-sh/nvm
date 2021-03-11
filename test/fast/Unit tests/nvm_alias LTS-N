@@ -25,10 +25,12 @@ LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
 
 N=0
 while IFS= read -r LTS; do
+  if [ $N -gt 0 ]; then
+    EXPECTED="$(nvm_alias "lts/${LTS}")"
+    ACTUAL="$(nvm_alias "lts/-${N}")"
+    [ "${EXPECTED}" = "${ACTUAL}" ] || die "\`nvm_alias lts/-${N}\` was \`${ACTUAL}\`; expected \`${EXPECTED}\`"
+  fi
   N=$(($N+1))
-  EXPECTED="$(nvm_alias "lts/${LTS}")"
-  ACTUAL="$(nvm_alias "lts/-${N}")"
-  [ "${EXPECTED}" = "${ACTUAL}" ] || die "\`nvm_alias lts/-${N}\` was \`${ACTUAL}\`; expected \`${EXPECTED}\`"
 done < "${LTS_NAMES_PATH}"
 
 cleanup
