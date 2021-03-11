@@ -37,7 +37,8 @@ nvm_ls_remote >/dev/null || die "nvm_ls_remote_failed?!"
 
 CALL_COUNT="$(cat "$CALL_COUNT_PATH")"
 
-EXPECTED_COUNT=6
+LTS_LINES="$(cat "${MOCKS_DIR}/LTS_names.txt" | wc -l)"
+EXPECTED_COUNT="$((LTS_LINES + 1))"
 [ "$CALL_COUNT" = "$EXPECTED_COUNT" ] || die "nvm_make_alias called $CALL_COUNT times; expected $EXPECTED_COUNT"
 
 ARGS="$(cat "$ALIAS_ARGS_PATH")"

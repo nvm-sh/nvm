@@ -1,6 +1,7 @@
-lts/*|lts/erbium
-lts/erbium|v12.16.1
-lts/dubnium|v10.19.0
+lts/*|lts/fermium
+lts/fermium|v14.16.0
+lts/erbium|v12.21.0
+lts/dubnium|v10.24.0
 lts/carbon|v8.17.0
 lts/boron|v6.17.1
 lts/argon|v4.9.1
