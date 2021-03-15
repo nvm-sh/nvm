@@ -1,0 +1,13 @@
+#!/bin/sh
+
+shift
+
+if [ "$1" = "get" ]; then
+  cat "$TEMPFILE"
+elif [ "$1" = "set" ]; then
+  shift
+  name="$1"
+  shift
+  val="$*"
+  echo "${name} = ${val}" >> "$TEMPFILE"
+fi
