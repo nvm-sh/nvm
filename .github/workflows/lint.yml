@@ -28,14 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ljharb/actions/node/run@main
-        name: 'npm install && npm run dockerfile_lint'
+        name: 'npm install && npm run doctoc'
         with:
           node-version: 'lts/*'
-          shell-command: |
-            set -e
-            cp README.md README.md.orig
-            npm run doctoc
-            diff -q README.md README.md.orig
+          command: "doctoc:check"
 
   test_naming:
     runs-on: ubuntu-latest
