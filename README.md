@@ -96,7 +96,7 @@ Alternatively, you can run run the following commands for the different shells o
 
 *bash*: `source ~/.bashrc`
 
-*zsh*: `source ~/.zhrc`
+*zsh*: `source ~/.zshrc`
 
 *ksh*: `. ~/.profile`
 
