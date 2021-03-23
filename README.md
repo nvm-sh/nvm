@@ -919,13 +919,13 @@ arm64
 $ nvm install v12.20.1
 # Now uninstall the version we want to replace:
 $ nvm uninstall v14.15.4
-# Set the architecture for our shell to 64-bit X86:
+# Launch a new zsh process under the 64-bit X86 architecture:
 $ arch -x86_64 zsh
 # Install node using nvm. This should download the precompiled x64 binary:
 $ nvm install v14.15.4
 # Now check that the architecture is correct:
 $ node -p process.arch
 x64
-# It is now safe to revert zsh back to the native architecture:
-$ arch -arm64 zsh
+# It is now safe to return to the arm64 zsh process:
+$ exit
 ```
