@@ -928,4 +928,10 @@ $ node -p process.arch
 x64
 # It is now safe to return to the arm64 zsh process:
 $ exit
+# We're back to a native shell:
+$ arch
+arm64
+# And the new version is now available to use:
+$ nvm use v14.15.4
+Now using node v14.15.4 (npm v6.14.10)
 ```
