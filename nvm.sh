@@ -2412,7 +2412,7 @@ nvm_die_on_prefix() {
   if [ -n "${NVM_NPM_CONFIG_PREFIX_ENV-}" ]; then
     local NVM_CONFIG_VALUE
     eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_PREFIX_ENV}\""
-    if [ -n "${NVM_CONFIG_VALUE-}" ] && ! nvm_tree_contains_path "${NVM_DIR}" "${NVM_CONFIG_VALUE}"; then
+    if [ -n "${NVM_CONFIG_VALUE-}" ] && ! nvm_tree_contains_path "$(cd -P "${NVM_DIR}" && pwd)" "${NVM_CONFIG_VALUE}"; then
       nvm deactivate >/dev/null 2>&1
       nvm_err "nvm is not compatible with the \"${NVM_NPM_CONFIG_PREFIX_ENV}\" environment variable: currently set to \"${NVM_CONFIG_VALUE}\""
       nvm_err "Run \`unset ${NVM_NPM_CONFIG_PREFIX_ENV}\` to unset it."
