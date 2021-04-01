@@ -1,0 +1,178 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+### The OpenShift Starter workflow will:
+# - Checkout your repository
+# - Perform a Docker build
+# - Push the built image to an image registry
+# - Log in to your OpenShift cluster
+# - Create an OpenShift app from the image and expose it to the internet.
+
+### Before you begin:
+# - Have write access to a container image registry such as quay.io or Dockerhub.
+# - Have access to an OpenShift cluster.
+#   - For instructions to get started with OpenShift see https://www.openshift.com/try
+# - The project you wish to add this workflow to should have a Dockerfile.
+#   - If you don't have a Dockerfile at the repository root, see the buildah-build step.
+#   - Builds from scratch are also available, but require more configuration.
+
+### To get the workflow running:
+# 1. Add this workflow to your repository.
+# 2. Edit the top-level 'env' section, which contains a list of environment variables that must be configured.
+# 3. Create the secrets referenced in the 'env' section under your repository Settings.
+# 4. Edit the 'branches' in the 'on' section to trigger the workflow on a push to your branch.
+# 5. Commit and push your changes.
+
+# For a more sophisticated example, see https://github.com/redhat-actions/spring-petclinic/blob/main/.github/workflows/petclinic-sample.yaml
+# Also see our GitHub organization, https://github.com/redhat-actions/
+# ▶️ See a video of how to set up this workflow at https://www.youtube.com/watch?v=6hgBO-1pKho
+
+name: OpenShift
+
+# ⬇️  Modify the fields marked with ⬇️ to fit your project, and create any secrets that are referenced.
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets
+env:
+  # ⬇️ EDIT with your registry and registry path.
+  REGISTRY: quay.io/<username>
+  # ⬇️ EDIT with your registry username.
+  REGISTRY_USER: <username>
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+
+  # ⬇️ EDIT to log into your OpenShift cluster and set up the context.
+  # See https://github.com/redhat-actions/oc-login#readme for how to retrieve these values.
+  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+
+  # ⬇️ EDIT with the port your application should be accessible on.
+  APP_PORT: 8080
+
+  # ⬇️ EDIT if you wish to set the kube context's namespace after login. Leave blank to use the default namespace.
+  OPENSHIFT_NAMESPACE: ""
+
+  # If you wish to manually provide the APP_NAME and TAG, set them here, otherwise they will be auto-detected.
+  APP_NAME: ""
+  TAG: ""
+
+on:
+  # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows
+  push:
+    # Edit to the branch(es) you want to build and deploy on each push.
+    branches: [ master ]
+
+jobs:
+  openshift-ci-cd:
+    name: Build and deploy to OpenShift
+    runs-on: ubuntu-20.04
+    environment: production
+
+    outputs:
+        ROUTE: ${{ steps.deploy-and-expose.outputs.route }}
+        SELECTOR: ${{ steps.deploy-and-expose.outputs.selector }}
+
+    steps:
+    - name: Check if secrets exists
+      uses: actions/github-script@v3
+      with:
+        script: |
+          const secrets = {
+            REGISTRY_PASSWORD: `${{ secrets.REGISTRY_PASSWORD }}`,
+            OPENSHIFT_SERVER: `${{ secrets.OPENSHIFT_SERVER }}`,
+            OPENSHIFT_TOKEN: `${{ secrets.OPENSHIFT_TOKEN }}`,
+          };
+
+          const missingSecrets = Object.entries(secrets).filter(([ name, value ]) => {
+            if (value.length === 0) {
+              core.warning(`Secret "${name}" is not set`);
+              return true;
+            }
+            core.info(`✔️ Secret "${name}" is set`);
+            return false;
+
+          });
+
+          if (missingSecrets.length > 0) {
+            core.setFailed(`❌ At least one required secret is not set in the repository. \n` +
+              "You can add it using:\n" +
+              "GitHub UI: https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository \n" +
+              "GitHub CLI: https://cli.github.com/manual/gh_secret_set \n" +
+              "Also, refer to https://github.com/redhat-actions/oc-login#getting-started-with-the-action-or-see-example");
+          }
+          else {
+            core.info(`✅ All the required secrets are set`);
+          }
+
+    - uses: actions/checkout@v2
+
+    - name: Determine app name
+      if: env.APP_NAME == ''
+      run: |
+        echo "APP_NAME=$(basename $PWD)" | tee -a $GITHUB_ENV
+
+    - name: Determine tag
+      if: env.TAG == ''
+      run: |
+        echo "TAG=${GITHUB_SHA::7}" | tee -a $GITHUB_ENV
+
+    # https://github.com/redhat-actions/buildah-build#readme
+    - name: Build from Dockerfile
+      id: image-build
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ${{ env.APP_NAME }}
+        tags: ${{ env.TAG }}
+        # If you don't have a dockerfile, see:
+        # https://github.com/redhat-actions/buildah-build#scratch-build-inputs
+        # Otherwise, point this to your Dockerfile relative to the repository root.
+        dockerfiles: |
+          ./Dockerfile
+
+    # https://github.com/redhat-actions/push-to-registry#readme
+    - name: Push to registry
+      id: push-to-registry
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.image-build.outputs.image }}
+        tags: ${{ steps.image-build.outputs.tags }}
+        registry: ${{ env.REGISTRY }}
+        username: ${{ env.REGISTRY_USER }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+
+    # The path the image was pushed to is now stored in ${{ steps.push-to-registry.outputs.registry-path }}
+
+    # oc-login works on all platforms, but oc must be installed first.
+    # The GitHub Ubuntu runner already includes oc.
+    # Otherwise, https://github.com/redhat-actions/oc-installer#readme is available.
+
+    # https://github.com/redhat-actions/oc-login#readme
+    - name: Log in to OpenShift
+      uses: redhat-actions/oc-login@v1
+      with:
+        openshift_server_url: ${{ env.OPENSHIFT_SERVER }}
+        openshift_token: ${{ env.OPENSHIFT_TOKEN }}
+        insecure_skip_tls_verify: true
+        namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+
+    # This step should create a deployment, service, and route to run your app and expose it to the internet.
+    # https://github.com/redhat-actions/oc-new-app#readme
+    - name: Create and expose app
+      id: deploy-and-expose
+      uses: redhat-actions/oc-new-app@v1
+      with:
+        app_name: ${{ env.APP_NAME }}
+        image: ${{ steps.push-to-registry.outputs.registry-path }}
+        namespace: ${{ env.OPENSHIFT_NAMESPACE }}
+        port: ${{ env.APP_PORT }}
+
+    - name: View application route
+      run: |
+        [[ -n ${{ env.ROUTE }} ]] || (echo "Determining application route failed in previous step"; exit 1)
+        echo "======================== Your application is available at: ========================"
+        echo ${{ env.ROUTE }}
+        echo "==================================================================================="
+        echo
+        echo "Your app can be taken down with: \"oc delete all --selector='${{ env.SELECTOR }}'\""
+      env:
+        ROUTE: ${{ steps.deploy-and-expose.outputs.route }}
+        SELECTOR: ${{ steps.deploy-and-expose.outputs.selector }}
