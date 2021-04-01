@@ -6,6 +6,10 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
+nvm_echo() {
+  command printf %s\\n "$*" 2>/dev/null
+}
+
 nvm_grep() {
   GREP_OPTIONS='' command grep "$@"
 }
@@ -23,7 +27,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  echo "v0.37.2"
+  nvm_echo "v0.38.0"
 }
 
 nvm_profile_is_bash_or_zsh() {
@@ -64,18 +68,18 @@ nvm_source() {
     elif [ "_$NVM_METHOD" = "_git" ] || [ -z "$NVM_METHOD" ]; then
       NVM_SOURCE_URL="https://github.com/${NVM_GITHUB_REPO}.git"
     else
-      echo >&2 "Unexpected value \"$NVM_METHOD\" for \$NVM_METHOD"
+      nvm_echo >&2 "Unexpected value \"$NVM_METHOD\" for \$NVM_METHOD"
       return 1
     fi
   fi
-  echo "$NVM_SOURCE_URL"
+  nvm_echo "$NVM_SOURCE_URL"
 }
 
 #
 # Node.js version to install
 #
 nvm_node_version() {
-  echo "$NODE_VERSION"
+  nvm_echo "$NODE_VERSION"
 }
 
 nvm_download() {
@@ -108,7 +112,7 @@ install_nvm_from_git() {
       :
     # Check if version is an existing changeset
     elif ! nvm_download -o /dev/null "$(nvm_source "script-nvm-exec")"; then
-      echo >&2 "Failed to find '$NVM_VERSION' version."
+      nvm_echo >&2 "Failed to find '$NVM_VERSION' version."
       exit 1
     fi
   fi
@@ -116,29 +120,29 @@ install_nvm_from_git() {
   local fetch_error
   if [ -d "$INSTALL_DIR/.git" ]; then
     # Updating repo
-    echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
+    nvm_echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
     command printf '\r=> '
     fetch_error="Failed to update nvm with $NVM_VERSION, run 'git fetch' in $INSTALL_DIR yourself."
   else
     fetch_error="Failed to fetch origin with $NVM_VERSION. Please report this!"
-    echo "=> Downloading nvm from git to '$INSTALL_DIR'"
+    nvm_echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf '\r=> '
     mkdir -p "${INSTALL_DIR}"
     if [ "$(ls -A "${INSTALL_DIR}")" ]; then
       # Initializing repo
       command git init "${INSTALL_DIR}" || {
-        echo >&2 'Failed to initialize nvm repo. Please report this!'
+        nvm_echo >&2 'Failed to initialize nvm repo. Please report this!'
         exit 2
       }
       command git --git-dir="${INSTALL_DIR}/.git" remote add origin "$(nvm_source)" 2> /dev/null \
         || command git --git-dir="${INSTALL_DIR}/.git" remote set-url origin "$(nvm_source)" || {
-        echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
+        nvm_echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
         exit 2
       }
     else
       # Cloning repo
       command git clone "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
-        echo >&2 'Failed to clone nvm repo. Please report this!'
+        nvm_echo >&2 'Failed to clone nvm repo. Please report this!'
         exit 2
       }
     fi
@@ -148,28 +152,28 @@ install_nvm_from_git() {
     :
   # Fetch given version
   elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin "$NVM_VERSION" --depth=1; then
-    echo >&2 "$fetch_error"
+    nvm_echo >&2 "$fetch_error"
     exit 1
   fi
   command git -c advice.detachedHead=false --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout -f --quiet FETCH_HEAD || {
-    echo >&2 "Failed to checkout the given version $NVM_VERSION. Please report this!"
+    nvm_echo >&2 "Failed to checkout the given version $NVM_VERSION. Please report this!"
     exit 2
   }
   if [ -n "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
     if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
       command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
     else
-      echo >&2 "Your version of git is out of date. Please update it!"
+      nvm_echo >&2 "Your version of git is out of date. Please update it!"
       command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
     fi
   fi
 
-  echo "=> Compressing and cleaning up git repository"
+  nvm_echo "=> Compressing and cleaning up git repository"
   if ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" reflog expire --expire=now --all; then
-    echo >&2 "Your version of git is out of date. Please update it!"
+    nvm_echo >&2 "Your version of git is out of date. Please update it!"
   fi
   if ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" gc --auto --aggressive --prune=now ; then
-    echo >&2 "Your version of git is out of date. Please update it!"
+    nvm_echo >&2 "Your version of git is out of date. Please update it!"
   fi
   return
 }
@@ -185,15 +189,15 @@ nvm_install_node() {
     return 0
   fi
 
-  echo "=> Installing Node.js version $NODE_VERSION_LOCAL"
+  nvm_echo "=> Installing Node.js version $NODE_VERSION_LOCAL"
   nvm install "$NODE_VERSION_LOCAL"
   local CURRENT_NVM_NODE
 
   CURRENT_NVM_NODE="$(nvm_version current)"
   if [ "$(nvm_version "$NODE_VERSION_LOCAL")" == "$CURRENT_NVM_NODE" ]; then
-    echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
+    nvm_echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
   else
-    echo >&2 "Failed to install Node.js $NODE_VERSION_LOCAL"
+    nvm_echo >&2 "Failed to install Node.js $NODE_VERSION_LOCAL"
   fi
 }
 
@@ -210,20 +214,20 @@ install_nvm_as_script() {
   # Downloading to $INSTALL_DIR
   mkdir -p "$INSTALL_DIR"
   if [ -f "$INSTALL_DIR/nvm.sh" ]; then
-    echo "=> nvm is already installed in $INSTALL_DIR, trying to update the script"
+    nvm_echo "=> nvm is already installed in $INSTALL_DIR, trying to update the script"
   else
-    echo "=> Downloading nvm as script to '$INSTALL_DIR'"
+    nvm_echo "=> Downloading nvm as script to '$INSTALL_DIR'"
   fi
   nvm_download -s "$NVM_SOURCE_LOCAL" -o "$INSTALL_DIR/nvm.sh" || {
-    echo >&2 "Failed to download '$NVM_SOURCE_LOCAL'"
+    nvm_echo >&2 "Failed to download '$NVM_SOURCE_LOCAL'"
     return 1
   } &
   nvm_download -s "$NVM_EXEC_SOURCE" -o "$INSTALL_DIR/nvm-exec" || {
-    echo >&2 "Failed to download '$NVM_EXEC_SOURCE'"
+    nvm_echo >&2 "Failed to download '$NVM_EXEC_SOURCE'"
     return 2
   } &
   nvm_download -s "$NVM_BASH_COMPLETION_SOURCE" -o "$INSTALL_DIR/bash_completion" || {
-    echo >&2 "Failed to download '$NVM_BASH_COMPLETION_SOURCE'"
+    nvm_echo >&2 "Failed to download '$NVM_BASH_COMPLETION_SOURCE'"
     return 2
   } &
   for job in $(jobs -p | command sort)
@@ -231,7 +235,7 @@ install_nvm_as_script() {
     wait "$job" || return $?
   done
   chmod a+x "$INSTALL_DIR/nvm-exec" || {
-    echo >&2 "Failed to mark '$INSTALL_DIR/nvm-exec' as executable"
+    nvm_echo >&2 "Failed to mark '$INSTALL_DIR/nvm-exec' as executable"
     return 3
   }
 }
@@ -240,7 +244,7 @@ nvm_try_profile() {
   if [ -z "${1-}" ] || [ ! -f "${1}" ]; then
     return 1
   fi
-  echo "${1}"
+  nvm_echo "${1}"
 }
 
 #
@@ -256,7 +260,7 @@ nvm_detect_profile() {
   fi
 
   if [ -n "${PROFILE}" ] && [ -f "${PROFILE}" ]; then
-    echo "${PROFILE}"
+    nvm_echo "${PROFILE}"
     return
   fi
 
@@ -283,7 +287,7 @@ nvm_detect_profile() {
   fi
 
   if [ -n "$DETECTED_PROFILE" ]; then
-    echo "$DETECTED_PROFILE"
+    nvm_echo "$DETECTED_PROFILE"
   fi
 }
 
@@ -316,37 +320,37 @@ nvm_check_global_modules() {
 
   if [ "${MODULE_COUNT}" != '0' ]; then
     # shellcheck disable=SC2016
-    echo '=> You currently have modules installed globally with `npm`. These will no'
+    nvm_echo '=> You currently have modules installed globally with `npm`. These will no'
     # shellcheck disable=SC2016
-    echo '=> longer be linked to the active version of Node when you install a new node'
+    nvm_echo '=> longer be linked to the active version of Node when you install a new node'
     # shellcheck disable=SC2016
-    echo '=> with `nvm`; and they may (depending on how you construct your `$PATH`)'
+    nvm_echo '=> with `nvm`; and they may (depending on how you construct your `$PATH`)'
     # shellcheck disable=SC2016
-    echo '=> override the binaries of modules installed with `nvm`:'
-    echo
+    nvm_echo '=> override the binaries of modules installed with `nvm`:'
+    nvm_echo
 
     command printf %s\\n "$NPM_GLOBAL_MODULES"
-    echo '=> If you wish to uninstall them at a later point (or re-install them under your'
+    nvm_echo '=> If you wish to uninstall them at a later point (or re-install them under your'
     # shellcheck disable=SC2016
-    echo '=> `nvm` Nodes), you can remove them from the system Node as follows:'
-    echo
-    echo '     $ nvm use system'
-    echo '     $ npm uninstall -g a_module'
-    echo
+    nvm_echo '=> `nvm` Nodes), you can remove them from the system Node as follows:'
+    nvm_echo
+    nvm_echo '     $ nvm use system'
+    nvm_echo '     $ npm uninstall -g a_module'
+    nvm_echo
   fi
 }
 
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
     if [ -e "${NVM_DIR}" ]; then
-      echo >&2 "File \"${NVM_DIR}\" has the same name as installation directory."
+      nvm_echo >&2 "File \"${NVM_DIR}\" has the same name as installation directory."
       exit 1
     fi
 
     if [ "${NVM_DIR}" = "$(nvm_default_install_dir)" ]; then
       mkdir "${NVM_DIR}"
     else
-      echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
+      nvm_echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
       exit 1
     fi
   fi
@@ -357,27 +361,27 @@ nvm_do_install() {
     elif nvm_has nvm_download; then
       install_nvm_as_script
     else
-      echo >&2 'You need git, curl, or wget to install nvm'
+      nvm_echo >&2 'You need git, curl, or wget to install nvm'
       exit 1
     fi
   elif [ "${METHOD}" = 'git' ]; then
     if ! nvm_has git; then
-      echo >&2 "You need git to install nvm"
+      nvm_echo >&2 "You need git to install nvm"
       exit 1
     fi
     install_nvm_from_git
   elif [ "${METHOD}" = 'script' ]; then
     if ! nvm_has nvm_download; then
-      echo >&2 "You need curl or wget to install nvm"
+      nvm_echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
     install_nvm_as_script
   else
-    echo >&2 "The environment variable \$METHOD is set to \"${METHOD}\", which is not recognized as a valid installation method."
+    nvm_echo >&2 "The environment variable \$METHOD is set to \"${METHOD}\", which is not recognized as a valid installation method."
     exit 1
   fi
 
-  echo
+  nvm_echo
 
   local NVM_PROFILE
   NVM_PROFILE="$(nvm_detect_profile)"
@@ -395,32 +399,32 @@ nvm_do_install() {
     if [ -n "${PROFILE}" ]; then
       TRIED_PROFILE="${NVM_PROFILE} (as defined in \$PROFILE), "
     fi
-    echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
-    echo "=> Create one of them and run this script again"
-    echo "   OR"
-    echo "=> Append the following lines to the correct file yourself:"
+    nvm_echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
+    nvm_echo "=> Create one of them and run this script again"
+    nvm_echo "   OR"
+    nvm_echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
-    echo
+    nvm_echo
   else
     if nvm_profile_is_bash_or_zsh "${NVM_PROFILE-}"; then
       BASH_OR_ZSH=true
     fi
     if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
-      echo "=> Appending nvm source string to $NVM_PROFILE"
+      nvm_echo "=> Appending nvm source string to $NVM_PROFILE"
       command printf "${SOURCE_STR}" >> "$NVM_PROFILE"
     else
-      echo "=> nvm source string already in ${NVM_PROFILE}"
+      nvm_echo "=> nvm source string already in ${NVM_PROFILE}"
     fi
     # shellcheck disable=SC2016
     if ${BASH_OR_ZSH} && ! command grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
-      echo "=> Appending bash_completion source string to $NVM_PROFILE"
+      nvm_echo "=> Appending bash_completion source string to $NVM_PROFILE"
       command printf "$COMPLETION_STR" >> "$NVM_PROFILE"
     else
-      echo "=> bash_completion source string already in ${NVM_PROFILE}"
+      nvm_echo "=> bash_completion source string already in ${NVM_PROFILE}"
     fi
   fi
   if ${BASH_OR_ZSH} && [ -z "${NVM_PROFILE-}" ] ; then
-    echo "=> Please also append the following lines to the if you are using bash/zsh shell:"
+    nvm_echo "=> Please also append the following lines to the if you are using bash/zsh shell:"
     command printf "${COMPLETION_STR}"
   fi
 
@@ -434,7 +438,7 @@ nvm_do_install() {
 
   nvm_reset
 
-  echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
+  nvm_echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
   command printf "${SOURCE_STR}"
   if ${BASH_OR_ZSH} ; then
     command printf "${COMPLETION_STR}"

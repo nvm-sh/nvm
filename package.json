@@ -1,6 +1,6 @@
 {
   "name": "nvm",
-  "version": "0.37.2",
+  "version": "0.38.0",
   "description": "Node Version Manager - Simple bash script to manage multiple active node.js versions",
   "directories": {
     "test": "test"
@@ -15,6 +15,9 @@
     "test/installation/iojs": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_iojs test-$shell",
     "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell",
     "doctoc": "doctoc --title='## Table of Contents' --github README.md",
+    "predoctoc:check": "cp README.md v-README.md.orig && npm run doctoc",
+    "doctoc:check": "diff -q README.md v-README.md.orig",
+    "postdoctoc:check": "mv v-README.md.orig README.md",
     "eclint": "eclint check $(git ls-tree --name-only HEAD | xargs)",
     "dockerfile_lint": "dockerfile_lint"
   },
@@ -36,11 +39,11 @@
   },
   "homepage": "https://github.com/nvm-sh/nvm",
   "devDependencies": {
-    "dockerfile_lint": "^0.3.2",
+    "dockerfile_lint": "^0.3.4",
     "doctoc": "^2.0.0",
-    "eclint": "^2.6.0",
-    "replace": "^1.2.0",
-    "semver": "^7.3.4",
+    "eclint": "^2.8.1",
+    "replace": "^1.2.1",
+    "semver": "^7.3.5",
     "urchin": "^0.0.5"
   }
 }
