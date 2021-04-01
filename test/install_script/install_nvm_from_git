@@ -55,14 +55,18 @@ test_install_data() {
   local ref="$4"
   local changeset="$5"
   local avoid_ref="$6"
+
   if [ -n "$ref" ]; then
-    echo "$current_ref" | grep -q "$ref" || die "install_nvm_from_git $message did not clone with ref $ref"
+    echo "$current_ref" | grep -q "$ref" || die "install_nvm_from_git ${message} did not clone with ref ${ref}"
   fi
-  if [ -n "$avoid_ref" ]; then
-    echo "$current_ref" | grep -q "$avoid_ref" && die "install_nvm_from_git $message did clone with unwanted ref $avoid_ref"
+
+  local head_ref="$(git for-each-ref --points-at HEAD --format='%(refname:short)' 'refs/tags/')"
+  if [ -n "${avoid_ref}" ] && [ "${head_ref}" != "${avoid_ref}"]; then
+    echo "${current_ref}" | grep -q "$avoid_ref" && die "install_nvm_from_git ${message} did clone with unwanted ref ${avoid_ref}"
   fi
+
   if [ -n "$changeset" ]; then
-    echo "$current_changeset" | grep -q "$changeset" || die "install_nvm_from_git $message did not clone with changeset $changeset"
+    echo "${current_changeset}" | grep -q "${changeset}" || die "install_nvm_from_git ${message} did not clone with changeset ${changeset}"
   fi
 }
 
@@ -73,7 +77,11 @@ test_install_data() {
 #   - 4: changeset to check ("" if none)
 #   - 5: ref to avoid ("" if none)
 test_install() {
-  NVM_INSTALL_VERSION="$1"
+  if [ -n "${1-}" ]; then
+    export NVM_INSTALL_VERSION="$1"
+  else
+    unset NVM_INSTALL_VERSION
+  fi
   local message="$2"
   local ref="$3"
   local changeset="$4"
