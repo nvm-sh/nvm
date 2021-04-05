@@ -905,6 +905,7 @@ Let's assume that:
 - you already have versions `12.20.1` and `14.15.4` installed using `nvm`
 - the current version in use is `14.15.4`
 - you are using the `zsh` shell
+- you have Rosetta 2 installed (macOS prompts you to install Rosetta 2 the first time you open a Intel-only non-command-line application, or you may install Rosetta 2 from the command line with `softwareupdate --install-rosetta`)
 
 ```sh
 # Check what version you're running:
