@@ -11,7 +11,7 @@ nvm use 0.10.28
 (cd test-npmlink && npm link)
 
 EXPECTED_PACKAGES="autoprefixer bower david grunt-cli grunth-cli http-server jshint marked node-gyp npmlist postcss recursive-blame spawn-sync test-npmlink uglify-js yo"
-EXPECTED_PACKAGES_INSTALL="autoprefixer bower david@11 grunt-cli grunth-cli http-server jshint marked node-gyp npmlist postcss@7 recursive-blame spawn-sync test-npmlink uglify-js yo@1"
+EXPECTED_PACKAGES_INSTALL="autoprefixer bower david@11 grunt-cli grunth-cli http-server jshint marked node-gyp@7 npmlist postcss@7 recursive-blame spawn-sync test-npmlink uglify-js yo@1"
 
 echo "$EXPECTED_PACKAGES_INSTALL" | sed -e 's/test-npmlink //' | xargs npm install -g --quiet
 
