@@ -102,11 +102,42 @@ v10.16.3 Dubnium
 v10.17.0 Dubnium
 v10.18.0 Dubnium
 v10.18.1 Dubnium
-v10.19.0 Dubnium *
+v10.19.0 Dubnium
+v10.20.0 Dubnium
+v10.20.1 Dubnium
+v10.21.0 Dubnium
+v10.22.0 Dubnium
+v10.22.1 Dubnium
+v10.23.0 Dubnium
+v10.23.1 Dubnium
+v10.23.2 Dubnium
+v10.23.3 Dubnium
+v10.24.0 Dubnium *
 v12.13.0 Erbium
 v12.13.1 Erbium
 v12.14.0 Erbium
 v12.14.1 Erbium
 v12.15.0 Erbium
 v12.16.0 Erbium
-v12.16.1 Erbium *
+v12.16.1 Erbium
+v12.16.2 Erbium
+v12.16.3 Erbium
+v12.17.0 Erbium
+v12.18.0 Erbium
+v12.18.1 Erbium
+v12.18.2 Erbium
+v12.18.3 Erbium
+v12.18.4 Erbium
+v12.19.0 Erbium
+v12.19.1 Erbium
+v12.20.0 Erbium
+v12.20.1 Erbium
+v12.20.2 Erbium
+v12.21.0 Erbium *
+v14.15.0 Fermium
+v14.15.1 Fermium
+v14.15.2 Fermium
+v14.15.3 Fermium
+v14.15.4 Fermium
+v14.15.5 Fermium
+v14.16.0 Fermium *

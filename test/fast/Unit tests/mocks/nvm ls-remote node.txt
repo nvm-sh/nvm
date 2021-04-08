@@ -440,7 +440,17 @@
        v10.17.0  [0;37m (LTS: Dubnium)[0m
        v10.18.0  [0;37m (LTS: Dubnium)[0m
        v10.18.1  [0;37m (LTS: Dubnium)[0m
-       v10.19.0  [1;32m (Latest LTS: Dubnium)[0m
+       v10.19.0  [0;37m (LTS: Dubnium)[0m
+       v10.20.0  [0;37m (LTS: Dubnium)[0m
+       v10.20.1  [0;37m (LTS: Dubnium)[0m
+       v10.21.0  [0;37m (LTS: Dubnium)[0m
+       v10.22.0  [0;37m (LTS: Dubnium)[0m
+       v10.22.1  [0;37m (LTS: Dubnium)[0m
+       v10.23.0  [0;37m (LTS: Dubnium)[0m
+       v10.23.1  [0;37m (LTS: Dubnium)[0m
+       v10.23.2  [0;37m (LTS: Dubnium)[0m
+       v10.23.3  [0;37m (LTS: Dubnium)[0m
+       v10.24.0  [1;32m (Latest LTS: Dubnium)[0m
         v11.0.0
         v11.1.0
         v11.2.0
@@ -481,7 +491,21 @@
        v12.14.1  [0;37m (LTS: Erbium)[0m
        v12.15.0  [0;37m (LTS: Erbium)[0m
        v12.16.0  [0;37m (LTS: Erbium)[0m
-       v12.16.1  [1;32m (Latest LTS: Erbium)[0m
+       v12.16.1  [0;37m (LTS: Erbium)[0m
+       v12.16.2  [0;37m (LTS: Erbium)[0m
+       v12.16.3  [0;37m (LTS: Erbium)[0m
+       v12.17.0  [0;37m (LTS: Erbium)[0m
+       v12.18.0  [0;37m (LTS: Erbium)[0m
+       v12.18.1  [0;37m (LTS: Erbium)[0m
+       v12.18.2  [0;37m (LTS: Erbium)[0m
+       v12.18.3  [0;37m (LTS: Erbium)[0m
+       v12.18.4  [0;37m (LTS: Erbium)[0m
+       v12.19.0  [0;37m (LTS: Erbium)[0m
+       v12.19.1  [0;37m (LTS: Erbium)[0m
+       v12.20.0  [0;37m (LTS: Erbium)[0m
+       v12.20.1  [0;37m (LTS: Erbium)[0m
+       v12.20.2  [0;37m (LTS: Erbium)[0m
+       v12.21.0  [1;32m (Latest LTS: Erbium)[0m
         v13.0.0
         v13.0.1
         v13.1.0
@@ -494,3 +518,47 @@
         v13.8.0
         v13.9.0
        v13.10.0
+       v13.10.1
+       v13.11.0
+       v13.12.0
+       v13.13.0
+       v13.14.0
+        v14.0.0
+        v14.1.0
+        v14.2.0
+        v14.3.0
+        v14.4.0
+        v14.5.0
+        v14.6.0
+        v14.7.0
+        v14.8.0
+        v14.9.0
+       v14.10.0
+       v14.10.1
+       v14.11.0
+       v14.12.0
+       v14.13.0
+       v14.13.1
+       v14.14.0
+       v14.15.0  [0;37m (LTS: Fermium)[0m
+       v14.15.1  [0;37m (LTS: Fermium)[0m
+       v14.15.2  [0;37m (LTS: Fermium)[0m
+       v14.15.3  [0;37m (LTS: Fermium)[0m
+       v14.15.4  [0;37m (LTS: Fermium)[0m
+       v14.15.5  [0;37m (LTS: Fermium)[0m
+       v14.16.0  [1;32m (Latest LTS: Fermium)[0m
+        v15.0.0
+        v15.0.1
+        v15.1.0
+        v15.2.0
+        v15.2.1
+        v15.3.0
+        v15.4.0
+        v15.5.0
+        v15.5.1
+        v15.6.0
+        v15.7.0
+        v15.8.0
+        v15.9.0
+       v15.10.0
+       v15.11.0

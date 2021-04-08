@@ -31,14 +31,14 @@ nvm_download() {
 nvm_get_checksum_alg() {
   echo 'sha-256'
 }
-OUTPUT="$(nvm_get_checksum node std foo bar baz)"
+OUTPUT="$(nvm_get_checksum node std foo bar tar.baz)"
 EXPECTED_OUTPUT="mirror-node-std/foo/SHASUMS256.txt"
 [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
 
 nvm_get_checksum_alg() {
   echo 'sha-1'
 }
-OUTPUT="$(nvm_get_checksum iojs std foo bar baz)"
+OUTPUT="$(nvm_get_checksum iojs std foo bar tar.baz)"
 EXPECTED_OUTPUT="mirror-iojs-std/foo/SHASUMS.txt"
 [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
 
