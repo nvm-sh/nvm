@@ -7,7 +7,7 @@ env:
   NVM_INSTALL_VERSION: ${{ github.sha }}
 
 jobs:
-  node_fail_install:
+  msys_fail_install:
     # Default installation does not work due to npm_config_prefix set to C:\npm\prefix
     name: 'MSYS fail prefix nvm install'
     runs-on: windows-latest
@@ -18,7 +18,8 @@ jobs:
           curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | METHOD=script bash
           . "$HOME/.nvm/nvm.sh"
           ! nvm install --lts
-  nodes:
+
+  msys_matrix:
     name: 'MSYS nvm install'
     runs-on: windows-latest
     strategy:
@@ -39,7 +40,8 @@ jobs:
           fi
           . "$HOME/.nvm/nvm.sh"
           nvm install ${{ matrix.npm-node-version }}
-  node_cygwin:
+
+  cygwin_matrix:
     name: 'Cygwin nvm install'
     runs-on: windows-latest
     steps:
@@ -75,7 +77,8 @@ jobs:
         run: |
           cd %USERPROFILE%\cygwin\bin
           bash.exe "%USERPROFILE%\setup.sh"
-  wsl_nodes:
+
+  wsl_matrix:
     name: 'WSL nvm install'
     runs-on: windows-latest
     env:
@@ -104,3 +107,9 @@ jobs:
           fi
           . "$HOME/.nvm/nvm.sh"
           nvm install ${{ matrix.npm-node-version }}
+
+  nvm_windows:
+      needs: [wsl_matrix, cygwin_matrix, msys_matrix, msys_fail_install]
+      runs-on: ubuntu-latest
+      steps:
+        - run: 'echo tests completed'

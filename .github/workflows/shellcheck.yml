@@ -3,7 +3,7 @@ name: 'Tests: shellcheck'
 on: [pull_request, push]
 
 jobs:
-  shellcheck:
+  shellcheck_matrix:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,3 +29,9 @@ jobs:
       - run: "shellcheck --version"
       - name: Run shellcheck on ${{ matrix.file }}
         run: shellcheck -s ${{ matrix.shell }} ${{ matrix.file }}
+
+  shellcheck:
+      needs: [shellcheck_matrix]
+      runs-on: ubuntu-latest
+      steps:
+        - run: 'echo tests completed'
