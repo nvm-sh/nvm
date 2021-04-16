@@ -84,11 +84,14 @@ __nvm() {
 # called bashcompinit that will create a complete in ZSH. If the user is in
 # ZSH, load and run bashcompinit before calling the complete function.
 if [[ -n ${ZSH_VERSION-} ]]; then
-  # Calling compinit first and then bashcompinit as mentioned by zsh man page.
-  autoload -U +X compinit && if [[ ${ZSH_DISABLE_COMPFIX-} = true ]]; then
-    compinit -u
-  else
-    compinit
+  # First calling compinit (only if not called yet!)
+  # and then bashcompinit as mentioned by zsh man page.
+  if ! command -v compinit > /dev/null; then
+    autoload -U +X compinit && if [[ ${ZSH_DISABLE_COMPFIX-} = true ]]; then
+      compinit -u
+    else
+      compinit
+    fi
   fi
   autoload -U +X bashcompinit && bashcompinit
 fi
