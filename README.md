@@ -517,13 +517,13 @@ Now using node v5.9.1 (npm v3.7.3)
 ```bash
 # This is a comment
 
-	node # Another comment
+  node # Another comment
 ```
 When reading the `.nvmrc` file, nvm will:
 1. Remove all comments on their own line as shown in the first line of the example
 2. Remove all comments in middle of a line. Because of this, # is not allowed inside your `nvm` alias. Example on line 3
 3. Remove all newlines such as the one on line 2
-4. Remove all tabs, such as the one on line 3
+4. Remove all tabs
 5. Trim the lines
 
 ### Deeper Shell Integration
