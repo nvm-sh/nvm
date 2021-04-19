@@ -31,7 +31,6 @@
     - [Set default node version](#set-default-node-version)
     - [Use a mirror of node binaries](#use-a-mirror-of-node-binaries)
   - [.nvmrc](#nvmrc)
-    - [`nvm cat`](#nvm-cat)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [bash](#bash)
       - [Automatically call `nvm use`](#automatically-call-nvm-use)
@@ -518,27 +517,14 @@ Now using node v5.9.1 (npm v3.7.3)
 ```bash
 # This is a comment
 
-  node # Another comment
+	node # Another comment
 ```
 When reading the `.nvmrc` file, nvm will:
 1. Remove all comments on their own line as shown in the first line of the example
 2. Remove all comments in middle of a line. Because of this, # is not allowed inside your `nvm` alias. Example on line 3
 3. Remove all newlines such as the one on line 2
 4. Remove all tabs, such as the one on line 3
-5. Remove all spaces, such as the ones between `node` and `# This is another comment`, because of this, `nvm` aliases may not have a space
-
-For a preview of how your file looks without comments, check out the `nvm cat` command:
-
-##### nvm cat
-The following is the usage for `nvm cat`:
-```
-nvm cat [-pc] [--silent] -f [file] [header]
-```
-The `--path` or the `-p` boolean flag indicates whether the file provided is the absolute path to the file. If it is not true, then `nvm` will search for the file provided. The `-c` or the `--comments` boolean flag determines whether comments will be stripped or not by `nvm`. The `--silent` flag enables silent mode. The `-f` option allows you to provide the file that is being read by `nvm`. The default option for `-f` is `.nvmrc`. An alias for `-f` is `--file`. Any other argument that matches the wildcard * will be appended to the header. The header is printed out before the file's contents are. If the header is not provided then the `NVM_CAT_HEADER` enviormental variable. This variable is not set by default. You can set it to change your header. Any instance of `:FILE:` will be replaced by the file being read in the header.
-
-`nvm use` et. al. will traverse directory structure upwards from the current directory looking for the `.nvmrc` file. In other words, running `nvm use` et. al. in any subdirectory of a directory with an `.nvmrc` will result in that `.nvmrc` being utilized.
-
-The contents of a `.nvmrc` file **must** be the `<version>` (as described by `nvm --help`) followed by a newline. No trailing spaces are allowed, and the trailing newline is required.
+5. Trim the lines
 
 ### Deeper Shell Integration
 
@@ -702,10 +688,8 @@ nvm exposes the following environment variables:
 - `NVM_INC` - node's include file directory (useful for building C/C++ addons for node).
 - `NVM_CD_FLAGS` - used to maintain compatibility with zsh.
 - `NVM_RC_VERSION` - version from .nvmrc file if being used.
-- `NVM_CAT_HEADER` - this enviormental variable contains the default header the `cat` command uses
 
-Additionally, nvm modifies `PATH`, and, if present, `MANPATH` and `NODE_PATH` when changing versions. All instances of `:FILE:` will be replaced with the file being read in `NVM_CAT_HEADER`.
-
+Additionally, nvm modifies `PATH`, and, if present, `MANPATH` and `NODE_PATH` when changing versions.
 
 ## Bash Completion
 
@@ -753,13 +737,6 @@ nvm uninstall:
 
 ```
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
-```
-
-nvm cat:
-> $ nvm cat -f <kbd>Tab</kbd>
-
-```
-.nvmrc          example.txt    this.config    foo.sh       .barconfig
 ```
 
 ## Compatibility Issues

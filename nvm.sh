@@ -393,7 +393,7 @@ nvm_rc_version() {
     fi
     return 1
   fi
-  NVM_RC_VERSION="$(command cat "${NVMRC_PATH}" | command tr -d '\r' | sed -e 's/\s*#.*$//' | sed -e '/^\s*$/d' | command tr -d '\n' | command tr -d '\t' | command head -n 1 | sed -e 's/[[:space:]]//g')" || command printf ''
+  NVM_RC_VERSION="$(command cat "${NVMRC_PATH}" | command tr -d '\r' | sed -e 's/\s*#.*$// ; /^\s*$/d' | command tr -d '\n' | command tr -d '\t' | command head -n 1 | sed -e 's/ *$//g ; s/^ *//g')" || command printf ''
   if [ -z "${NVM_RC_VERSION}" ]; then
     if [ "${NVM_USE_SILENT}" != true ]; then
       nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
@@ -2893,12 +2893,6 @@ nvm() {
       nvm_echo '  nvm which [current | <version>]             Display path to installed node version. Uses .nvmrc if available'
       nvm_echo '  nvm cache dir                               Display path to the cache directory for nvm'
       nvm_echo '  nvm cache clear                             Empty cache directory for nvm'
-      nvm_echo '  nvm cat                                     Allows you to preview how nvm reads a file'
-      nvm_echo '    --silent                                  Turn on silent mode and do not print out anything'
-      nvm_echo '    --file, -f [file]                         Allows you to set the file read, default is .nvmrc'
-      nvm_echo '    -c, --comments                            This flag enables and disables whether comments will be stripped'
-      nvm_echo '    -p, --path                                If path mode is on, nvm will read the path given, not search for the file'
-      nvm_echo '    [header]                                  Any argument matching * will be appended to the header'
       nvm_echo
       nvm_echo 'Example:'
       nvm_echo '  nvm install 8.0.0                     Install a specific version number'
@@ -3377,78 +3371,6 @@ nvm() {
       fi
       return $EXIT_CODE
     ;;
-    "cat")
-      local NVM_USE_SILENT
-      local NVM_USE_COMMENTS
-      local NVM_METHOD
-      local NVM_FILE
-      local NVM_RC_VERSION
-      local NVM_HEADER
-      export NVM_RC_VERSION=''
-      local NVM_RC_LOCATION
-      NVM_FILE=".nvmrc"
-      local NVM_FINDING_FILE
-      while [ $# -ne 0 ]
-      do
-        if [ "$NVM_FINDING_FILE" == 1 ]; then
-          NVM_FILE=${1}
-          NVM_FINDING_FILE=0
-          shift;continue
-        fi
-        case $1 in
-          "--silent") NVM_USE_SILENT=1;shift;continue ;;
-          "--comments" | "-c") NVM_USE_COMMENTS=1;shift;continue ;;
-          "-f" | "--file") NVM_FINDING_FILE=1;shift;continue ;;
-          "-p" | "--path") NVM_METHOD=1;shift;continue ;;
-          "*")
-            if [ -z "$NVM_HEADER" ]; then
-              NVM_HEADER="${1}"
-            else
-              NVM_HEADER="${NVM_HEADER} ${1}"
-            fi
-        esac
-        shift
-      done
-      if [ -n "${NVM_CAT_HEADER}" ] && [ -z "${NVM_HEADER}" ]; then
-        NVM_HEADER="${NVM_HEADER}"
-      fi
-      NVM_HEADER="$(command echo ${NVM_HEADER} | sed s/:FILE:/${NVM_FILE}/g)"
-      if [ -z "${NVM_FILE}" ]; then
-        if [ "$NVM_USE_SILENT" -ne 1 ]; then
-          nvm_err "Empty file provided, aborting"
-        fi
-        exit 1
-      fi
-
-      if [ "${NVM_METHOD}" == 1 ] && [ ! -f "$NVM_FILE" ]; then
-        if [ "${NVM_USE_SILENT}" != 1 ]; then
-          nvm_err "The file ${NVM_FILE} does not exist."
-        fi
-        return 1
-      fi
-
-      if [ "$NVM_USE_COMMENTS" != 1 ]; then
-        if [ "$NVM_METHOD" != 1 ]; then
-          NVM_RC_LOCATION="$(nvm_find_up ${NVM_FILE})/${NVM_FILE}"
-          NVM_RC_VERSION="$(command cat "${NVM_RC_LOCATION}" | command tr -d '\r' | sed -e 's/\s*#.*$//' | sed -e '/^\s*$/d' | command tr -d '\n' | command tr -d '\t' | command head -n 1 | sed -e 's/[[:space:]]//g')" || command printf ''
-        else
-          NVM_RC_VERSION="$(command cat "${NVM_FILE}" | command tr -d '\r' | sed -e 's/\s*#.*$//' | sed -e '/^\s*$/d' | command tr -d '\n' | command tr -d '\t' | command head -n 1 | sed -e 's/[[:space:]]//g')" || command printf ''
-        fi
-      else
-        if [ "$NVM_METHOD" != 1 ]; then
-          NVM_RC_LOCATION="$(nvm_find_up ${NVM_FILE})/${NVM_FILE}"
-          NVM_RC_VERSION="$(command cat "${NVM_RC_LOCATION}")"
-        else
-          NVM_RC_VERSION="$(command cat ${NVM_FILE})"
-        fi
-      fi
-      if [ "$NVM_USE_SILENT" != 1 ]; then
-        if [ -n "${NVM_HEADER}" ]; then
-          nvm_echo "$NVM_HEADER"
-        fi
-        nvm_echo "$NVM_RC_VERSION"
-      fi
-    ;;
     "uninstall")
       if [ $# -ne 1 ]; then
         >&2 nvm --help
@@ -3581,7 +3503,7 @@ nvm() {
     ;;
     "use")
       local PROVIDED_VERSION
-      local NVM_SILENT
+      local NVM_USE_SILENT
       local NVM_SILENT_ARG
       local NVM_DELETE_PREFIX
       NVM_DELETE_PREFIX=0
@@ -3590,7 +3512,7 @@ nvm() {
       while [ $# -ne 0 ]; do
         case "$1" in
           --silent)
-            NVM_SILENT=1
+            NVM_USE_SILENT=1
             NVM_SILENT_ARG='--silent'
           ;;
           --delete-prefix) NVM_DELETE_PREFIX=1 ;;
@@ -3611,7 +3533,7 @@ nvm() {
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
       elif [ -z "${PROVIDED_VERSION-}" ]; then
         # Get the .nvmrc version depending if quiet mode is on or not
-        if [ $NVM_USE_SILENT -ne 1 ]; then
+        if [ "$NVM_USE_SILENT" -ne 1 ]; then
           nvm_rc_version
         else
           nvm_rc_version --silent
@@ -4048,14 +3970,9 @@ nvm() {
         # so, unalias it.
         nvm unalias "${ALIAS}"
         return $?
-      elif [ "${ALIAS}" == "*#*" ]; then
+      elif grep -q "#" <<< "${ALIAS}"; then
         nvm_err "Aliases may not have a # inside it"
         exit 1
-      elif [ "${ALIAS}" == "${TARGET}" ]; then
-        nvm_err "The alias may not equal the target"
-        exit 1
-      elif [ "${ALIAS}" == "* *" ]; then
-        nvm_err "The alias may not have a space inside it"
       elif [ "${TARGET}" != '--' ]; then
         # a target was passed: create an alias
         if [ "${ALIAS#*\/}" != "${ALIAS}" ]; then
