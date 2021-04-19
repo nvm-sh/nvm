@@ -3504,6 +3504,7 @@ nvm() {
     "use")
       local PROVIDED_VERSION
       local NVM_USE_SILENT
+      NVM_USE_SILENT=0
       local NVM_SILENT_ARG
       local NVM_DELETE_PREFIX
       NVM_DELETE_PREFIX=0
@@ -3588,7 +3589,7 @@ nvm() {
         fi
         return 127
       elif [ "_${VERSION}" = "_∞" ]; then
-        if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+        if [ "${NVM_USE_SILENT}" -ne 1 ]; then
           nvm_err "The alias \"${PROVIDED_VERSION}\" leads to an infinite loop. Aborting."
         fi
         return 8
@@ -3629,7 +3630,7 @@ nvm() {
       fi
       local NVM_USE_OUTPUT
       NVM_USE_OUTPUT=''
-      if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+      if [ "${NVM_USE_SILENT}" -ne 1 ]; then
         if nvm_is_iojs_version "${VERSION}"; then
           NVM_USE_OUTPUT="Now using io.js $(nvm_strip_iojs_prefix "${VERSION}")$(nvm_print_npm_version)"
         else
@@ -3642,7 +3643,7 @@ nvm() {
         if [ -n "${PROVIDED_VERSION}" ]; then
           NVM_USE_CMD="${NVM_USE_CMD} ${VERSION}"
         fi
-        if [ "${NVM_SILENT:-0}" -eq 1 ]; then
+        if [ "${NVM_USE_SILENT}" -eq 1 ]; then
           NVM_USE_CMD="${NVM_USE_CMD} --silent"
         fi
         if ! nvm_die_on_prefix "${NVM_DELETE_PREFIX}" "${NVM_USE_CMD}" "${NVM_VERSION_DIR}"; then
