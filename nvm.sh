@@ -6,10 +6,11 @@
 # Implemented by Tim Caswell <tim@creationix.com>
 # with much bash help from Matthew Ranney
 
-# "local" warning, quote expansion warning
-# shellcheck disable=SC2039,SC2016,SC2001
+# "local" warning, quote expansion warning, sed warning, `local` warning
+# shellcheck disable=SC2039,SC2016,SC2001,SC3043
 { # this ensures the entire script is downloaded #
 
+# shellcheck disable=SC3028
 NVM_SCRIPT_SOURCE="$_"
 
 nvm_is_zsh() {
@@ -309,7 +310,7 @@ fi
 if [ -z "${NVM_DIR-}" ]; then
   # shellcheck disable=SC2128
   if [ -n "${BASH_SOURCE-}" ]; then
-    # shellcheck disable=SC2169
+    # shellcheck disable=SC2169,SC3054
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
   NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" >/dev/null && \pwd)"
@@ -968,6 +969,7 @@ nvm_list_aliases() {
     local ALIAS_NAME
     for ALIAS_NAME in "$(nvm_node_prefix)" "stable" "unstable"; do
       {
+        # shellcheck disable=SC2030,SC2031 # (https://github.com/koalaman/shellcheck/issues/2217)
         if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && { [ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]; }; then
           NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
         fi
@@ -975,6 +977,7 @@ nvm_list_aliases() {
     done
     wait
     ALIAS_NAME="$(nvm_iojs_prefix)"
+    # shellcheck disable=SC2030,SC2031 # (https://github.com/koalaman/shellcheck/issues/2217)
     if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && { [ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]; }; then
       NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
     fi
@@ -982,6 +985,7 @@ nvm_list_aliases() {
 
   (
     local LTS_ALIAS
+    # shellcheck disable=SC2030,SC2031 # (https://github.com/koalaman/shellcheck/issues/2217)
     for ALIAS_PATH in "${NVM_ALIAS_DIR}/lts/${ALIAS}"*; do
       {
         LTS_ALIAS="$(NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_LTS=true nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}")"
@@ -2849,7 +2853,7 @@ nvm() {
         nvm_err "\$TERM_PROGRAM: ${TERM_PROGRAM}"
       fi
       nvm_err "\$SHELL: ${SHELL}"
-      # shellcheck disable=SC2169
+      # shellcheck disable=SC2169,SC3028
       nvm_err "\$SHLVL: ${SHLVL-}"
       nvm_err "whoami: '$(whoami)'"
       nvm_err "\${HOME}: ${HOME}"
