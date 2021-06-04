@@ -154,7 +154,7 @@ which should output `nvm` if the installation was successful. Please note that `
 
 If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
-**Note:** `nvm` also support Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [GitBash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, afew alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` also support Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [GitBash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
 
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
@@ -255,7 +255,7 @@ nvm install node # "node" is an alias for the latest version
 To install a specific version of node:
 
 ```sh
-nvm install 6.14.4 # or 10.10.0, 8.9.1, etc
+nvm install 14.7.0 # or 16.3.0, 12.22.1, etc
 ```
 
 The first version installed becomes the default. New shells will start with the default version of node (e.g., `nvm alias default`).
@@ -287,10 +287,10 @@ nvm exec 4.2 node --version
 You can also get the path to the executable to where it was installed:
 
 ```sh
-nvm which 5.0
+nvm which 12.22
 ```
 
-In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
+In place of a version pointer like "14.7" or "16.3" or "12.22.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
 
   - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
   - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
