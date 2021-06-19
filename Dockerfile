@@ -68,26 +68,26 @@ RUN wget https://github.com/koalaman/shellcheck/releases/download/v$SHELLCHECK_V
     tar xJvf - shellcheck-v$SHELLCHECK_VERSION/shellcheck          && \
     mv shellcheck-v$SHELLCHECK_VERSION/shellcheck /bin             && \
     rmdir shellcheck-v$SHELLCHECK_VERSION
-RUN shellcheck -V
-
-# Set locale
-RUN locale-gen en_US.UTF-8
 
 # Print tool versions
-RUN bash --version | head -n 1
-RUN zsh --version
-RUN ksh --version || true
-RUN dpkg -s dash | grep ^Version | awk '{print $2}'
-RUN git --version
-RUN curl --version
-RUN wget --version
+RUN bash --version | head -n 1 \
+    && zsh --version \
+    && ksh --version || true \
+    && dpkg -s dash | grep ^Version | awk '{print $2}' \
+    && git --version \
+    && curl --version \
+    && wget --version \
+    && shellcheck -V
 
 # Add user "nvm" as non-root user
 RUN useradd -ms /bin/bash nvm
 
+# Set NVM root dir
+ARG NVM_DIR=/home/nvm
+
 # Copy and set permission for nvm directory
-COPY . /home/nvm/.nvm/
-RUN chown nvm:nvm -R "home/nvm/.nvm"
+COPY . $NVM_DIR
+RUN chown nvm:nvm -R $NVM_DIR
 
 # Set sudoer for "nvm"
 RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
@@ -96,17 +96,17 @@ RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 USER nvm
 
 # nvm
-RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$HOME/.bashrc"
-RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
-RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
+RUN echo 'export NVM_DIR="${NVM_DIR}/.nvm"'                                       >> "$HOME/.bashrc"
+RUN echo '[ -s "${NVM_DIR}/nvm.sh" ] && . "${NVM_DIR}/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
+RUN echo '[ -s "${NVM_DIR}/bash_completion" ] && . "${NVM_DIR}/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
 
 # nodejs and tools
-RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
-    nvm install node                    && \
-    npm install -g doctoc urchin eclint dockerfile_lint && \
-    npm install --prefix "$HOME/.nvm/"'
+RUN source $NVM_DIR/nvm.sh \
+    && nvm install node \
+    && npm install -g doctoc urchin eclint dockerfile_lint \
+    && npm install --prefix $NVM_DIR
 
 # Set WORKDIR to nvm directory
-WORKDIR /home/nvm/.nvm
+WORKDIR $NVM_DIR
 
 ENTRYPOINT ["/bin/bash"]
