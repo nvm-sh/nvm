@@ -7,31 +7,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ljharb/actions/node/run@main
-        name: 'npm install && npm run eclint'
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
           node-version: 'lts/*'
-          command: 'eclint'
+      - run: npm run eclint
 
   dockerfile_lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ljharb/actions/node/run@main
-        name: 'npm install && npm run dockerfile_lint'
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
           node-version: 'lts/*'
-          command: 'dockerfile_lint'
+      - run: npm run dockerfile_lint'
 
   doctoc:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ljharb/actions/node/run@main
-        name: 'npm install && npm run doctoc'
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
           node-version: 'lts/*'
-          command: "doctoc:check"
+      - run: npm run doctoc:check
 
   test_naming:
     runs-on: ubuntu-latest

@@ -34,13 +34,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: ljharb/actions/node/run@main
+      - uses: ljharb/actions/node/install@main
         name: 'nvm install-latest-npm'
         with:
           node-version: ${{ matrix.node-version }}
           skip-ls-check: true
           skip-install: true
-          shell-command: 'npm --version'
+      - run: npm --version
 
   node:
     name: 'nvm install-latest-npm'
