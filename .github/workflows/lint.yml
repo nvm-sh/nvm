@@ -21,7 +21,7 @@ jobs:
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
           node-version: 'lts/*'
-      - run: npm run dockerfile_lint'
+      - run: npm run dockerfile_lint
 
   doctoc:
     runs-on: ubuntu-latest
