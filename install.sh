@@ -267,14 +267,16 @@ nvm_detect_profile() {
   local DETECTED_PROFILE
   DETECTED_PROFILE=''
 
-  if [ -n "${BASH_VERSION-}" ]; then
+  if [ "${SHELL#*bash}" != "$SHELL" ]; then
     if [ -f "$HOME/.bashrc" ]; then
       DETECTED_PROFILE="$HOME/.bashrc"
     elif [ -f "$HOME/.bash_profile" ]; then
       DETECTED_PROFILE="$HOME/.bash_profile"
     fi
-  elif [ -n "${ZSH_VERSION-}" ]; then
-    DETECTED_PROFILE="$HOME/.zshrc"
+  elif [ "${SHELL#*zsh}" != "$SHELL" ]; then
+    if [ -f "$HOME/.zshrc" ]; then
+      DETECTED_PROFILE="$HOME/.zshrc"
+    fi
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then
