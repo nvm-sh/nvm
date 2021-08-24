@@ -2640,7 +2640,7 @@ nvm_cache_dir() {
 }
 
 nvm() {
-  if [ $# -lt 1 ]; then
+  if [ "$#" -lt 1 ]; then
     nvm --help
     return
   fi
@@ -2652,12 +2652,12 @@ nvm() {
     set +e
     local EXIT_CODE
     IFS="${DEFAULT_IFS}" nvm "$@"
-    EXIT_CODE=$?
+    EXIT_CODE="$?"
     set -e
-    return $EXIT_CODE
+    return "$EXIT_CODE"
   elif [ "${IFS}" != "${DEFAULT_IFS}" ]; then
     IFS="${DEFAULT_IFS}" nvm "$@"
-    return $?
+    return "$?"
   fi
 
   local i
@@ -4227,7 +4227,7 @@ nvm_auto() {
 nvm_process_parameters() {
   local NVM_AUTO_MODE
   NVM_AUTO_MODE='use'
-  while [ $# -ne 0 ]; do
+  while [ "$#" -ne 0 ]; do
     case "$1" in
       --install) NVM_AUTO_MODE='install' ;;
       --no-use) NVM_AUTO_MODE='none' ;;
