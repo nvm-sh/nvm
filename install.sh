@@ -34,7 +34,7 @@ nvm_profile_is_bash_or_zsh() {
   local TEST_PROFILE
   TEST_PROFILE="${1-}"
   case "${TEST_PROFILE-}" in
-    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc")
+    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc" | "/etc/bashrc")
       return
     ;;
     *)
