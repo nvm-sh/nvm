@@ -23,6 +23,7 @@ jobs:
     name: 'MSYS nvm install'
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         npm-node-version:
           - '--lts'
@@ -84,6 +85,7 @@ jobs:
     env:
       WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
     strategy:
+      fail-fast: false
       matrix:
         wsl-distrib:
           - Debian

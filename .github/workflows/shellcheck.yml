@@ -6,6 +6,7 @@ jobs:
   shellcheck_matrix:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         shell:
           - bash
