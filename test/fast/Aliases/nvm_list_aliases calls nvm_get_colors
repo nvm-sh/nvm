@@ -2,10 +2,7 @@
 
 \. ../../../nvm.sh
 
-die () {
-  echo "nvm_list_aliases did not call nvm_get_colors. Expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
-  exit 1
-}
+die () { echo "$@" ; exit 1; }
 
 set -e
 
@@ -22,4 +19,4 @@ OUTPUT=$(command printf %b $(nvm_list_aliases test-stable-1) | awk '{ print subs
 EXPECTED_OUTPUT=$(command printf %b "\033[0;95mtest-stable-1" | awk '{ print substr($0, 1, 19); }')
 echo "\033[0m"
 
-[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "nvm_list_aliases did not call nvm_get_colors. Expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
