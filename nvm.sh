@@ -3978,7 +3978,10 @@ nvm() {
           for LINK in ${LINKS}; do
             set +f; unset IFS # restore variable expansion
             if [ -n "${LINK}" ]; then
-              (nvm_cd "${LINK}" && npm link)
+              case "${LINK}" in
+                '/'*) (nvm_cd "${LINK}" && npm link) ;;
+                *) (nvm_cd "$(npm root -g)/../${LINK}" && npm link)
+              esac
             fi
           done
         )
