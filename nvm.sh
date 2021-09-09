@@ -2456,18 +2456,22 @@ nvm_die_on_prefix() {
   #
   # here, we avoid trying to replicate "which one wins" or testing the value; if any are defined, it errors
   # until none are left.
-  local NVM_NPM_CONFIG_PREFIX_ENV
-  NVM_NPM_CONFIG_PREFIX_ENV="$(command env | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1 | command awk -F '=' '{print $1}')"
-  if [ -n "${NVM_NPM_CONFIG_PREFIX_ENV-}" ]; then
+  local NVM_NPM_CONFIG_x_PREFIX_ENV
+  if [ -n "${BASH_SOURCE-}" ]; then
+    NVM_NPM_CONFIG_x_PREFIX_ENV="$(command set | command awk -F '=' '! /^[0-9A-Z_a-z]+=/ {exit} {print $1}' | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1)"
+  else
+    NVM_NPM_CONFIG_x_PREFIX_ENV="$(command env | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1 | command awk -F '=' '{print $1}')"
+  fi
+  if [ -n "${NVM_NPM_CONFIG_x_PREFIX_ENV-}" ]; then
     local NVM_CONFIG_VALUE
-    eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_PREFIX_ENV}\""
+    eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_x_PREFIX_ENV}\""
     if [ -n "${NVM_CONFIG_VALUE-}" ] && [ "_${NVM_OS}" = "_win" ]; then
       NVM_CONFIG_VALUE="$(cd "$NVM_CONFIG_VALUE" 2>/dev/null && pwd)"
     fi
     if [ -n "${NVM_CONFIG_VALUE-}" ] && ! nvm_tree_contains_path "${NVM_DIR}" "${NVM_CONFIG_VALUE}"; then
       nvm deactivate >/dev/null 2>&1
-      nvm_err "nvm is not compatible with the \"${NVM_NPM_CONFIG_PREFIX_ENV}\" environment variable: currently set to \"${NVM_CONFIG_VALUE}\""
-      nvm_err "Run \`unset ${NVM_NPM_CONFIG_PREFIX_ENV}\` to unset it."
+      nvm_err "nvm is not compatible with the \"${NVM_NPM_CONFIG_x_PREFIX_ENV}\" environment variable: currently set to \"${NVM_CONFIG_VALUE}\""
+      nvm_err "Run \`unset ${NVM_NPM_CONFIG_x_PREFIX_ENV}\` to unset it."
       return 4
     fi
   fi
