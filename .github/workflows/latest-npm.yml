@@ -4,6 +4,8 @@ on: [pull_request, push]
 
 jobs:
   nodes:
+    permissions:
+      contents: read
     name: 'nvm install-latest-npm'
     runs-on: ubuntu-latest
 
@@ -44,6 +46,8 @@ jobs:
       - run: npm --version
 
   node:
+    permissions:
+      contents: none
     name: 'nvm install-latest-npm'
     needs: [nodes]
     runs-on: ubuntu-latest

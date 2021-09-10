@@ -4,6 +4,8 @@ on: [pull_request, push]
 
 jobs:
   shellcheck_matrix:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -32,6 +34,8 @@ jobs:
         run: shellcheck -s ${{ matrix.shell }} ${{ matrix.file }}
 
   shellcheck:
+      permissions:
+        contents: none
       needs: [shellcheck_matrix]
       runs-on: ubuntu-latest
       steps:

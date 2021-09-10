@@ -4,6 +4,8 @@ on: [pull_request, push]
 
 jobs:
   eclint:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -14,6 +16,8 @@ jobs:
       - run: npm run eclint
 
   dockerfile_lint:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -24,6 +28,8 @@ jobs:
       - run: npm run dockerfile_lint
 
   doctoc:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -34,6 +40,8 @@ jobs:
       - run: npm run doctoc:check
 
   test_naming:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
