@@ -1,4 +1,4 @@
-name: Automatic Rebase
+Loname: Automatic Rebase
 
 on: [pull_request_target]
 
