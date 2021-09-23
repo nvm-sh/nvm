@@ -2458,7 +2458,7 @@ nvm_die_on_prefix() {
   # until none are left.
   local NVM_NPM_CONFIG_x_PREFIX_ENV
   if [ -n "${BASH_SOURCE-}" ]; then
-    NVM_NPM_CONFIG_x_PREFIX_ENV="$(command set | command awk -F '=' '! /^[0-9A-Z_a-z]+=/ {exit} {print $1}' | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1)"
+    NVM_NPM_CONFIG_x_PREFIX_ENV="$(command set | command awk -F '=' '! /^[0-9A-Z_a-z]+=/ {skip=1} skip==0 {print $1}' | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1)"
   else
     NVM_NPM_CONFIG_x_PREFIX_ENV="$(command env | nvm_grep -i NPM_CONFIG_PREFIX | command tail -1 | command awk -F '=' '{print $1}')"
   fi
