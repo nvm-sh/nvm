@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 2010 Tim Caswell
+Copyright (c) 2021 guanlong huang
 
 Copyright (c) 2014 Jordan Harband
 
