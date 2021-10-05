@@ -13,6 +13,11 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
+          - "16"
+          - "15"
+          - "14"
+          - "13"
+          - "12"
           - "11"
           - "10"
           - "9"

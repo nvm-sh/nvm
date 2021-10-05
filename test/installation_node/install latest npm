@@ -9,6 +9,13 @@ set +e # todo: fix
 set -e
 
 nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 1'
+nvm install 12.12 >/dev/null 2>&1 || die 'install v12.12 failed'
+nvm install-latest-npm || die 'nvm install-latest-npm failed: 1'
+NPM_VERSION="$(npm --version)"
+nvm_version_greater_than_or_equal_to "${NPM_VERSION}" 7.0.0 \
+&& nvm_version_greater 8.0.0 "${NPM_VERSION}" || die "node v12.12 updates to ${NPM_VERSION}; expected v7"
+
+nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 1'
 nvm install 4 >/dev/null 2>&1 || die 'install v4 failed'
 nvm install-latest-npm || die 'nvm install-latest-npm failed: 1'
 NPM_VERSION="$(npm --version)"

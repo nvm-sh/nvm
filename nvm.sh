@@ -268,6 +268,31 @@ nvm_install_latest_npm() {
     if [ $NVM_IS_9_3_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 10.0.0; then
       NVM_IS_10_OR_ABOVE=1
     fi
+    local NVM_IS_12_LTS_OR_ABOVE
+    NVM_IS_12_LTS_OR_ABOVE=0
+    if [ $NVM_IS_10_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 12.13.0; then
+      NVM_IS_12_LTS_OR_ABOVE=1
+    fi
+    local NVM_IS_13_OR_ABOVE
+    NVM_IS_13_OR_ABOVE=0
+    if [ $NVM_IS_12_LTS_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 13.0.0; then
+      NVM_IS_13_OR_ABOVE=1
+    fi
+    local NVM_IS_14_LTS_OR_ABOVE
+    NVM_IS_14_LTS_OR_ABOVE=0
+    if [ $NVM_IS_13_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 14.15.0; then
+      NVM_IS_14_LTS_OR_ABOVE=1
+    fi
+    local NVM_IS_15_OR_ABOVE
+    NVM_IS_15_OR_ABOVE=0
+    if [ $NVM_IS_14_LTS_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 15.0.0; then
+      NVM_IS_15_OR_ABOVE=1
+    fi
+    local NVM_IS_16_OR_ABOVE
+    NVM_IS_16_OR_ABOVE=0
+    if [ $NVM_IS_15_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 16.0.0; then
+      NVM_IS_16_OR_ABOVE=1
+    fi
 
     if [ $NVM_IS_4_4_OR_BELOW -eq 1 ] || {
       [ $NVM_IS_5_OR_ABOVE -eq 1 ] && nvm_version_greater 5.10.0 "${NODE_VERSION}"; \
@@ -289,6 +314,13 @@ nvm_install_latest_npm() {
     elif [ $NVM_IS_10_OR_ABOVE -eq 0 ]; then
       nvm_echo '* `npm` `v6.x` is the last version that works on `node` below `v10.0.0`'
       $NVM_NPM_CMD install -g npm@6
+    elif \
+      [ $NVM_IS_12_LTS_OR_ABOVE -eq 0 ] \
+      || { [ $NVM_IS_13_OR_ABOVE -eq 1 ] && [ $NVM_IS_14_LTS_OR_ABOVE -eq 0 ]; } \
+      || { [ $NVM_IS_15_OR_ABOVE -eq 1 ] && [ $NVM_IS_16_OR_ABOVE -eq 0 ]; } \
+    ; then
+      nvm_echo '* `npm` `v7.x` is the last version that works on `node` `v13`, `v15`, below `v12.13`, or `v14.0` - `v14.15`'
+      $NVM_NPM_CMD install -g npm@7
     else
       nvm_echo '* Installing latest `npm`; if this does not work on your node version, please report a bug!'
       $NVM_NPM_CMD install -g npm
