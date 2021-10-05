@@ -3,7 +3,20 @@ name: 'Tests: `nvm install-latest-npm`'
 on: [pull_request, push]
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.set-matrix.outputs.requireds }}
+    steps:
+      - uses: ljharb/actions/node/matrix@main
+        id: set-matrix
+        with:
+          versionsAsRoot: true
+          type: majors
+          preset: '>=1'
+
   nodes:
+    needs: [matrix]
     permissions:
       contents: read
     name: 'nvm install-latest-npm'
@@ -12,33 +25,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version:
-          - "16"
-          - "15"
-          - "14"
-          - "13"
-          - "12"
-          - "11"
-          - "10"
-          - "9"
-          - "9.2"
-          - "9.1"
-          - "9.0"
-          - "8"
-          - "7"
-          - "6"
-          - "6.1"
-          - "5"
-          - "5.9"
-          - "4"
-          - "4.6"
-          - "4.5"
-          - "4.4"
-          - "3"
-          - "2"
-          - "1"
-          - "0.12"
-          - "0.10"
+        node-version: ${{ fromJson(needs.matrix.outputs.latest) }}
+        include:
+          - node-version: "9.2"
+          - node-version: "9.1"
+          - node-version: "9.0"
+          - node-version: "6.1"
+          - node-version: "5.9"
+          - node-version: "4.6"
+          - node-version: "4.5"
+          - node-version: "4.4"
+          - node-version: "0.12"
+          - node-version: "0.10"
 
     steps:
       - uses: actions/checkout@v2
