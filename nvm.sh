@@ -2714,6 +2714,10 @@ nvm() {
           fi
         done
 
+        if ! nvm_stdout_is_terminal; then
+          NVM_NO_COLORS="--no-colors"
+        fi
+
         local INITIAL_COLOR_INFO
         local RED_INFO
         local GREEN_INFO
@@ -3747,6 +3751,11 @@ nvm() {
         esac
         shift
       done
+
+      if ! nvm_stdout_is_terminal; then
+        NVM_NO_COLORS="--no-colors"
+      fi
+
       if [ -n "${PATTERN-}" ] && [ -n "${NVM_NO_ALIAS-}" ]; then
         nvm_err '`--no-alias` is not supported when a pattern is provided.'
         return 55
@@ -3798,6 +3807,10 @@ nvm() {
         esac
         shift
       done
+
+      if ! nvm_stdout_is_terminal; then
+        NVM_NO_COLORS="--no-colors"
+      fi
 
       local NVM_OUTPUT
       local EXIT_CODE
@@ -3899,6 +3912,10 @@ nvm() {
         esac
         shift
       done
+
+      if ! nvm_stdout_is_terminal; then
+        NVM_NO_COLORS="--no-colors"
+      fi
 
       if [ -z "${TARGET}" ]; then
         # for some reason the empty string was explicitly passed as the target
