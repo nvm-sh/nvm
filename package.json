@@ -1,24 +1,30 @@
 {
   "name": "nvm",
-  "version": "0.33.8",
+  "version": "0.39.0",
   "description": "Node Version Manager - Simple bash script to manage multiple active node.js versions",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make test-$shell",
-    "test/fast": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=fast test-$shell",
+    "test/fast": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); env -i TERM=\"$TERM\" bash -lc \"make TEST_SUITE=fast test-$shell\"",
     "test/slow": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=slow test-$shell",
     "test/install_script": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=install_script test-$shell",
     "test/installation": "npm run --silent test/installation/node && npm run --silent test/installation/iojs",
     "test/installation/node": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_node test-$shell",
     "test/installation/iojs": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_iojs test-$shell",
     "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell",
-    "doctoc": "doctoc --title='## Table of Contents' --github README.md"
+    "doctoc": "doctoc --title='## Table of Contents' --github README.md",
+    "predoctoc:check": "cp README.md v-README.md.orig && npm run doctoc",
+    "doctoc:check": "diff -q README.md v-README.md.orig",
+    "postdoctoc:check": "mv v-README.md.orig README.md",
+    "eclint": "eclint check $(git ls-tree --name-only HEAD | xargs)",
+    "dockerfile_lint": "dockerfile_lint",
+    "markdown-link-check": "git ls-files | command grep -E '\\.md$' | xargs -n 1 markdown-link-check -p"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/creationix/nvm.git"
+    "url": "git://github.com/nvm-sh/nvm.git"
   },
   "keywords": [
     "nvm",
@@ -30,13 +36,16 @@
   "author": "Tim Caswell <tim@creationix.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/creationix/nvm/issues"
+    "url": "https://github.com/nvm-sh/nvm/issues"
   },
-  "homepage": "https://github.com/creationix/nvm",
+  "homepage": "https://github.com/nvm-sh/nvm",
   "devDependencies": {
-    "replace": "^0.3.0",
-    "semver": "^5.0.1",
-    "urchin": "^0.0.5",
-    "doctoc": "^1.2.0"
+    "dockerfile_lint": "^0.3.4",
+    "doctoc": "^2.0.1",
+    "eclint": "^2.8.1",
+    "markdown-link-check": "^3.8.7",
+    "replace": "^1.2.1",
+    "semver": "^7.3.5",
+    "urchin": "^0.0.5"
   }
 }

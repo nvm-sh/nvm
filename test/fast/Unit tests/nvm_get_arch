@@ -79,4 +79,6 @@ run_test amd64 smartos x64 no_pkg_info
 run_test x86 osx x86
 run_test amd64 osx x64
 
+run_test arm64 smartos x64
+
 cleanup

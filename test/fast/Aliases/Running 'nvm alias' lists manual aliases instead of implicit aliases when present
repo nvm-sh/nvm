@@ -1,0 +1,49 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  rm -rf "$(nvm_alias_path)/stable"
+  rm -rf "$(nvm_alias_path)/unstable"
+  rm -rf "$(nvm_alias_path)/node"
+  rm -rf "$(nvm_alias_path)/iojs"
+  rm -rf "${NVM_DIR}/v0.8.1"
+  rm -rf "${NVM_DIR}/v0.9.1"
+  rm -rf "${NVM_DIR}/versions/io.js/v0.2.1"
+}
+
+make_fake_node v0.8.1
+make_fake_node v0.9.1
+make_fake_iojs v0.2.1
+
+EXPECTED_STABLE="$(nvm_print_implicit_alias local stable)"
+STABLE_VERSION="$(nvm_version "$EXPECTED_STABLE")"
+
+EXPECTED_UNSTABLE="$(nvm_print_implicit_alias local unstable)"
+UNSTABLE_VERSION="$(nvm_version "$EXPECTED_UNSTABLE")"
+
+[ "_$STABLE_VERSION" != "_$UNSTABLE_VERSION" ] \
+  || die "stable and unstable versions are the same!"
+
+nvm alias stable "$EXPECTED_UNSTABLE"
+nvm alias unstable "$EXPECTED_STABLE"
+nvm alias node stable
+nvm alias iojs unstable
+
+NVM_ALIAS_OUTPUT=$(nvm alias | strip_colors)
+
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "stable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION)" \
+  || die "nvm alias did not contain the overridden 'stable' alias; got '$NVM_ALIAS_OUTPUT'"
+
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "unstable -> $EXPECTED_STABLE (-> $STABLE_VERSION)" \
+  || die "nvm alias did not contain the overridden 'unstable' alias; got '$NVM_ALIAS_OUTPUT'"
+
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "node -> stable (-> $UNSTABLE_VERSION)" \
+  || die "nvm alias did not contain the overridden 'node' alias; got '$NVM_ALIAS_OUTPUT'"
+
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "iojs -> unstable (-> $STABLE_VERSION)" \
+  || die "nvm alias did not contain the overridden 'iojs' alias; got '$NVM_ALIAS_OUTPUT'"
+
+cleanup

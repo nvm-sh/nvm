@@ -19,6 +19,12 @@ fail() {
 
 ! nvm_is_version_installed "${VERSION}" || nvm uninstall "${VERSION}" || die 'uninstall failed'
 
+# an existing but empty VERSION_PATH directory should not be enough to satisfy nvm_is_version_installed
+rm -rf "${VERSION_PATH}"
+mkdir -p "${VERSION_PATH}"
+nvm_is_version_installed "${VERSION}" && die 'nvm_is_version_installed check not strict enough'
+rmdir "${VERSION_PATH}"
+
 OUTPUT="$(NVM_INSTALL_THIRD_PARTY_HOOK=succeed nvm install "${VERSION}")"
 USE_OUTPUT="$(nvm use "${VERSION}")"
 EXPECTED_OUTPUT="${VERSION} node std binary ${VERSION_PATH}

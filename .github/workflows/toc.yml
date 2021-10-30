@@ -1,0 +1,31 @@
+name: update readme TOC
+
+on: [push]
+
+jobs:
+  _:
+    permissions:
+      contents: write
+    name: "update readme TOC"
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # https://github.com/actions/checkout/issues/217#issue-599945005
+        # pulls all commits (needed for lerna / semantic release to correctly version)
+        fetch-depth: "0"
+
+    # pulls all tags (needed for lerna / semantic release to correctly version)
+    - run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '12.x'
+    - run: npm install
+    - run: npm run doctoc
+    - name: commit changes
+      uses: ljharb/actions-js-build/commit@v3+amendpush
+      with:
+        amend: true
+        force: true

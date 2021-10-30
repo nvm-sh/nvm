@@ -14,13 +14,14 @@ cleanup() {
 }
 
 \. ../../../nvm.sh
+\. ../../common.sh
 
-mkdir "${NVM_DIR}/v0.2.3"
-mkdir "${NVM_DIR}/v0.3.4"
-mkdir "${NVM_DIR}/v0.4.6"
-mkdir "${NVM_DIR}/v0.5.7"
-mkdir "${NVM_DIR}/v0.7.7"
-mkdir -p "${NVM_DIR}/versions/io.js/v0.98.0"
+make_fake_node v0.2.3
+make_fake_node v0.3.4
+make_fake_node v0.4.6
+make_fake_node v0.5.7
+make_fake_node v0.7.7
+make_fake_iojs v0.98.0
 
 LATEST_STABLE="$(nvm_print_implicit_alias local stable)"
 [ "_$LATEST_STABLE" = "_0.4" ] || die "local stable is not latest even minor: expected 0.4, got $LATEST_STABLE"
@@ -35,8 +36,9 @@ LATEST_IOJS="$(nvm_print_implicit_alias local iojs)"
 [ "_$LATEST_IOJS" = "_iojs-v0.98" ] || die "local iojs is not latest iojs: expected iojs-v0.98, got $LATEST_IOJS"
 
 ## node post v1.0/io.js merger ##
-mkdir -p "${NVM_DIR}/versions/node/v1.0.0"
-mkdir -p "${NVM_DIR}/versions/node/v1.1.0"
+make_fake_node v1.0.0
+make_fake_node v1.1.0
+
 
 LATEST_STABLE="$(nvm_print_implicit_alias local stable)"
 [ "_$LATEST_STABLE" = "_1.1" ] || die "local stable when post-v1.0 exists is not latest: expected 1.1, got $LATEST_STABLE"

@@ -1,0 +1,57 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  rm -rf "${NVM_DIR}/v0.10.4"
+}
+
+\. ../../nvm.sh
+\. ../common.sh
+
+make_fake_node v0.10.4
+
+nvm deactivate >/dev/null 2>&1
+
+set +ex # needed for stderr
+INSTALL_ERROR_MSG="$(nvm install v0.10.5 --reinstall-packages-from=0.11 2>&1)"
+set -ex
+EXPECTED_ERROR_MSG="If --reinstall-packages-from is provided, it must point to an installed version of node."
+[ "~$INSTALL_ERROR_MSG" = "~$EXPECTED_ERROR_MSG" ] \
+  || die ""nvm install --reinstall-packages-from" should fail when given an uninstalled version: expected '$EXPECTED_ERROR_MSG', got '$INSTALL_ERROR_MSG'"
+
+set +e # TODO: fix
+INSTALL_EXIT_CODE="$(nvm install v0.10.5 --reinstall-packages-from=0.11 >/dev/null 2>&1; echo $?)"
+set -e
+[ $INSTALL_EXIT_CODE -eq 5 ] \
+  || die ""nvm install --reinstall-packages-from" should exit with code 5 when given an uninstalled version, got ${INSTALL_EXIT_CODE}"
+
+set +ex # needed for stderr
+INSTALL_ERROR_MSG="$(nvm install v0.10.5 --reinstall-packages-from=0.10.5 2>&1)"
+set -ex
+EXPECTED_ERROR_MSG="You can't reinstall global packages from the same version of node you're installing."
+[ "~$INSTALL_ERROR_MSG" = "~$EXPECTED_ERROR_MSG" ] \
+  || die ""nvm install --reinstall-packages-from" should fail when given the same version: expected '$EXPECTED_ERROR_MSG', got '$INSTALL_ERROR_MSG'"
+
+set +e # TODO: fix
+INSTALL_EXIT_CODE="$(nvm install v0.10.5 --reinstall-packages-from=0.10.5 >/dev/null 2>&1; echo $?)"
+set -e
+[ $INSTALL_EXIT_CODE -eq 4 ] \
+  || die ""nvm install --reinstall-packages-from" should exit with code 4 when given the same version, got $INSTALL_EXIT_CODE"
+
+set +ex # needed for stderr
+INSTALL_ERROR_MSG="$(nvm install v0.10.5 --reinstall-packages-from 2>&1)"
+set -ex
+EXPECTED_ERROR_MSG='If --reinstall-packages-from is provided, it must point to an installed version of node using `=`.'
+[ "~$INSTALL_ERROR_MSG" = "~$EXPECTED_ERROR_MSG" ] \
+  || die ""nvm install --reinstall-packages-from" should fail when given an uninstalled version: expected '$EXPECTED_ERROR_MSG', got '$INSTALL_ERROR_MSG'"
+
+set +ex # needed for stderr
+INSTALL_ERROR_MSG="$(nvm install v0.10.5 --reinstall-packages-from= 2>&1)"
+set -ex
+EXPECTED_ERROR_MSG="If --reinstall-packages-from is provided, it must point to an installed version of node."
+[ "~$INSTALL_ERROR_MSG" = "~$EXPECTED_ERROR_MSG" ] \
+  || die ""nvm install --reinstall-packages-from" should fail when given an uninstalled version: expected '$EXPECTED_ERROR_MSG', got '$INSTALL_ERROR_MSG'"
+
+cleanup

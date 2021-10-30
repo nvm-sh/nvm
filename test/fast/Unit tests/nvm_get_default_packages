@@ -1,0 +1,92 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+
+FILE="$NVM_DIR/default-packages"
+
+die () { echo "$@" ; cleanup ; exit 1; }
+setup () {
+  if [ -f $FILE ]; then
+    ORIG_DEFAULT_PACKAGES=$(cat $FILE)
+    mkdir -p ./tmp/ ||:
+    mv $FILE ./tmp/default-packages ||:
+  fi
+  touch $FILE
+}
+cleanup () {
+  if [ "$ORIG_DEFAULT_PACKAGES" != "" ]; then
+    rm -rf ./tmp/
+    echo "$ORIG_DEFAULT_PACKAGES" > $FILE
+  fi
+}
+
+setup
+
+cat > $FILE << EOF
+rimraf
+object-inspect@1.0.2
+
+# commented-package
+
+stevemao/left-pad
+EOF
+
+DEFAULT_PKGS="$(nvm_get_default_packages)"
+EXPECTED_PKGS='rimraf object-inspect@1.0.2 stevemao/left-pad'
+[ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "1: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+
+cleanup
+
+setup
+
+cat > $FILE << EOF
+rimraf
+not~a~package~name
+mkdirp
+EOF
+
+DEFAULT_PKGS="$(nvm_get_default_packages)"
+EXPECTED_PKGS='rimraf not~a~package~name mkdirp'
+[ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "2: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+
+cleanup
+
+setup
+
+cat > $FILE << EOF
+rimraf
+not~a~package~name
+mkdirp
+EOF
+printf %s "$(cat "${FILE}")" > $FILE # strip trailing newline
+
+DEFAULT_PKGS="$(nvm_get_default_packages)"
+EXPECTED_PKGS='rimraf not~a~package~name mkdirp'
+[ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "3: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+
+cleanup
+
+setup
+
+cat > $FILE << EOF
+object-inspect @ 1.0.2
+rimraf
+EOF
+
+DEFAULT_PKGS="$(nvm_get_default_packages 2>&1 >/dev/null)"
+EXPECTED_PKGS="Only one package per line is allowed in the $FILE file. Please remove any lines with multiple space-separated values."
+[ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "4: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+
+cleanup
+
+setup
+
+rm -rf $FILE
+
+DEFAULT_PKGS="$(nvm_get_default_packages)"
+EXPECTED_PKGS=''
+[ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "5: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+
+touch $FILE
+
+cleanup

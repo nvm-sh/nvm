@@ -1,0 +1,49 @@
+name: 'Tests: linting'
+
+on: [pull_request, push]
+
+jobs:
+  eclint:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
+        with:
+          node-version: 'lts/*'
+      - run: npm run eclint
+
+  dockerfile_lint:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
+        with:
+          node-version: 'lts/*'
+      - run: npm run dockerfile_lint
+
+  doctoc:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
+        with:
+          node-version: 'lts/*'
+      - run: npm run doctoc:check
+
+  test_naming:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: check tests filenames
+        run: ./rename_test.sh --check

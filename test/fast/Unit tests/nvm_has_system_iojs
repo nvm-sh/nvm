@@ -1,17 +1,14 @@
 #!/bin/sh
 
 cleanup () {
-  rm "${NVM_DIR}/versions/io.js/v0.1.2/node"
-  rm "${NVM_DIR}/versions/io.js/v0.1.2/iojs"
-  rmdir "${NVM_DIR}/versions/io.js/v0.1.2"
+  rm -rf "${NVM_DIR}/versions/io.js/v0.1.2"
 }
 die () { echo "$@" ; exit 1; }
 
 \. ../../../nvm.sh
+\. ../../common.sh
 
-mkdir "${NVM_DIR}/versions/io.js/v0.1.2"
-touch "${NVM_DIR}/versions/io.js/v0.1.2/node"
-touch "${NVM_DIR}/versions/io.js/v0.1.2/iojs"
+make_fake_iojs v0.1.2
 
 nvm use iojs-v0.1.2
 

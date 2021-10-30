@@ -15,7 +15,7 @@ npm-debug.log
 
 .DS_Store
 current
-default-packages
+/default-packages
 
 # Only apps should have lockfiles
 npm-shrinkwrap.json

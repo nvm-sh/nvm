@@ -1,0 +1,20 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+echo '0.10.1' > ../../alias/default || die "couldn't create default alias"
+
+\. ../../nvm.sh || die 'sourcing returned nonzero exit code'
+
+NVM_TARGET=0.10.3
+NVM_DEFAULT="$(nvm_resolve_local_alias default)"
+
+[ "_$NVM_DEFAULT" != "_$NVM_TARGET" ] || die "default $NVM_DEFAULT is the same as target $NVM_TARGET"
+
+nvm use $NVM_TARGET || die "nvm use $NVM_TARGET failed"
+
+\. ../../nvm.sh || die 'sourcing returned nonzero exit code'
+
+NVM_CURRENT="$(nvm current)"
+
+[ "_${NVM_CURRENT#v}" = "_$NVM_TARGET" ] || die "node version not retained after sourcing"

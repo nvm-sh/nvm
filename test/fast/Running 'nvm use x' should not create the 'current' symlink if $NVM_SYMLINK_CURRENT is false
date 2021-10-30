@@ -1,0 +1,86 @@
+#!/bin/sh
+
+set -ex
+
+\. ../../nvm.sh
+\. ../common.sh
+
+TEST_NODE_VERSION="v0.10.29"
+
+TEST_COUNT=0
+TEST_PASSED=0
+TEST_FAILED=0
+
+registerExpectedSymlink() {
+  registerResult ${1}
+}
+
+registerExpectedNoSymlink() {
+  [ $1 -ne 0 ]
+  registerResult $?
+}
+
+registerResult() {
+  result="${1}"
+
+  TEST_COUNT=$(($TEST_COUNT + 1))
+
+  [ ${result} -eq 0 ] \
+    && TEST_PASSED=$(($TEST_PASSED + 1)) \
+    || TEST_FAILED=$(($TEST_FAILED + 1))
+}
+
+cleanup() {
+  rm -rf "${NVM_DIR}/${TEST_NODE_VERSION}"
+  rm -f "${NVM_DIR}/current"
+}
+
+runNvmUse() {
+  make_fake_node "$TEST_NODE_VERSION"
+  nvm use --delete-prefix "${TEST_NODE_VERSION}" > /dev/null 2>&1
+  rm -rf "${NVM_DIR}/${TEST_NODE_VERSION}"
+}
+
+isCurrentSymlinkPresent() {
+  [ -L "${NVM_DIR}/current" ]
+}
+
+NVM_SYMLINK_CURRENT=false
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=false!"
+registerExpectedNoSymlink $?
+
+NVM_SYMLINK_CURRENT=true
+cleanup
+runNvmUse
+isCurrentSymlinkPresent || echo >&2 "Expected 'current' symlink to be created when NVM_SYMLINK_CURRENT=true!"
+registerExpectedSymlink $?
+
+NVM_SYMLINK_CURRENT=garbagevalue
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT contains a string!"
+registerExpectedNoSymlink $?
+
+NVM_SYMLINK_CURRENT=0
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=0!"
+registerExpectedNoSymlink $?
+
+NVM_SYMLINK_CURRENT=1
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT=1!"
+registerExpectedNoSymlink $?
+
+unset NVM_SYMLINK_CURRENT
+cleanup
+runNvmUse
+isCurrentSymlinkPresent && echo >&2 "Expected 'current' symlink not to be created when NVM_SYMLINK_CURRENT has been unset (default behaviour)!"
+registerExpectedNoSymlink $?
+
+cleanup
+
+[ $TEST_FAILED -ne 0 ] && echo "${TEST_COUNT} tested, ${TEST_PASSED} passed, ${TEST_FAILED} failed" && exit 1 || true

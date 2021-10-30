@@ -6,9 +6,10 @@ cleanup () {
 
   rm -f npm
   PATH="$ORIGINAL_PATH"
+  NVM_DIR="$ORIGINAL_NVM_DIR"
 
   unset -f setup cleanup die
-  unset message ORIGINAL_PATH
+  unset message ORIGINAL_PATH ORIGINAL_NVM_DIR
 }
 die () { echo "$@" ; cleanup ; exit 1; }
 
@@ -16,6 +17,10 @@ NVM_ENV=testing \. ../../install.sh
 
 setup () {
   ORIGINAL_PATH="$PATH"
+  ORIGINAL_NVM_DIR="$NVM_DIR"
+
+  # Pretend we're not using NVM
+  unset NVM_DIR
 
   npm_config_prefix="$(pwd)"
   export npm_config_prefix
@@ -28,6 +33,10 @@ setup
 npm install -g nop >/dev/null || die 'nvm_check_global_modules cannot be tested because `npm` cannot install the `nop` package'
 message=$(nvm_check_global_modules)
 [ ! -z "$message" ] || die "nvm_check_global_modules should have printed a notice when npm had global modules installed"
+
+# Admit we're using NVM, just for this one test
+message=$(NVM_DIR=$ORIGINAL_NVM_DIR nvm_check_global_modules)
+[ -z "$message" ] || die "nvm_check_global_modules should not have printed a notice when npm is managed by nvm"
 
 npm uninstall -g nop >/dev/null
 message=$(nvm_check_global_modules)

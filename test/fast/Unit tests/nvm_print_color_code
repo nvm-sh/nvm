@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+# Testing valid input
+OUTPUT=$(nvm_print_color_code m)
+EXPECTED_OUTPUT='0;35m'
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_color_code returned wrong code; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+
+# Testing invalid input
+set +x # needed for stderr
+OUTPUT="$(nvm_print_color_code q 2>&1)" ||:
+set -x
+echo "OUTPUT WAS SET TO: $OUTPUT"
+EXPECTED_OUTPUT="Invalid color code"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_color_code did not recognize the invalid input; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"

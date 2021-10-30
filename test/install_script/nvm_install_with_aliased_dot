@@ -1,6 +1,8 @@
 #!/bin/sh
 
-setup () {
+setup() {
+  # Needed to avoid to checkout the repo to the latest nvm version, losing the commits of the current PR
+  unset NVM_DIR
   shopt -s expand_aliases
   alias .=':'
   NVM_ENV=testing \. ../../install.sh > /dev/null
@@ -12,7 +14,7 @@ cleanup () {
   shopt -u expand_aliases
 }
 
-die () { echo "$@"; exit 1; }
+die () { echo "$@"; cleanup; exit 1; }
 
 setup
 

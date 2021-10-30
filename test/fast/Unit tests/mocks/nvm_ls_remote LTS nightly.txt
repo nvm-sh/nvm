@@ -1,0 +1,25 @@
+v6.9.1-nightly201610183843b96e46 Boron
+v6.9.2-nightly201610208bb346d61a Boron
+v6.9.3-nightly20161206c350268432 Boron
+v6.9.4-nightly201701049844692719 Boron
+v6.9.5-nightly2017013187ac44974a Boron
+v6.9.6-nightly201702013f61aae59d Boron
+v6.10.1-nightly20170222ee10f21f3b Boron
+v6.10.2-nightly20170322426968ddd8 Boron
+v6.10.3-nightly2017040479546c0b5a Boron
+v6.10.4-nightly20170502312091a196 Boron
+v6.11.1-nightly20170607f7ca483d68 Boron *
+v8.9.1-nightly20171104a815e1b6a2 Carbon *
+v10.13.1-nightly20181127a66d8774ac Dubnium
+v10.14.1-nightly20181129bda1cc703a Dubnium
+v10.14.2-nightly20181206fb99a4e9fa Dubnium
+v10.14.3-nightly2018122617f4208a3b Dubnium
+v10.15.1-nightly201901292d6e145340 Dubnium
+v10.15.2-nightly201902215711238b4e Dubnium
+v10.15.3-nightly20190301156e4c8e89 Dubnium
+v10.15.4-nightly20190522cda0d16414 Dubnium
+v10.16.1-nightly201907310339fba1bb Dubnium
+v10.16.2-nightly20190801f025f8524b Dubnium
+v10.16.3-nightly20190807b743000a96 Dubnium
+v10.16.4-nightly20190923859d47593e9fd97e6a9eae6eeb8b6e910acfe434 Dubnium *
+v12.13.1-nightly20191022d9174b4cc5 Erbium *

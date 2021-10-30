@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+assert_not_ok nvm_iojs_version_has_solaris_binary ""
+assert_not_ok nvm_iojs_version_has_solaris_binary "foo"
+assert_not_ok nvm_iojs_version_has_solaris_binary "v1.1.0"
+
+assert_ok nvm_iojs_version_has_solaris_binary "v3.3.1"
+assert_ok nvm_iojs_version_has_solaris_binary "iojs-v3.3.1"
+assert_ok nvm_iojs_version_has_solaris_binary "v3.3.2"
+assert_ok nvm_iojs_version_has_solaris_binary "iojs-v3.3.2"
+assert_ok nvm_iojs_version_has_solaris_binary "v3.4.1"
+assert_ok nvm_iojs_version_has_solaris_binary "iojs-v3.4.1"

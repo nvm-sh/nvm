@@ -1,0 +1,33 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+# Invalid version numbers fail
+assert_not_ok nvm_node_version_has_solaris_binary ""
+assert_not_ok nvm_node_version_has_solaris_binary "foo"
+
+# "Invalid" node version numbers fail
+assert_not_ok nvm_node_version_has_solaris_binary "v1.0.0"
+assert_not_ok nvm_node_version_has_solaris_binary "v3.3.1"
+
+# Valid io.js version numbers that have a Solaris binary fail
+assert_not_ok nvm_node_version_has_solaris_binary "iojs-v3.3.1"
+
+# Invalid io.js version numbers fail
+assert_not_ok nvm_node_version_has_solaris_binary "iojs-v0.12.7"
+
+# Valid node version numbers that don't have a Solaris binary fail
+assert_not_ok nvm_node_version_has_solaris_binary "v0.8.5"
+
+# Valid node version numbers that have a Solaris binary succeed
+assert_ok nvm_node_version_has_solaris_binary "v0.8.6"
+assert_ok nvm_node_version_has_solaris_binary "v0.10.0"
+assert_ok nvm_node_version_has_solaris_binary "v0.12.7"
+
+# Valid "merged" version numbers fail, because they're not
+# considered node version numbers
+assert_not_ok nvm_node_version_has_solaris_binary "v4.0.0"
+assert_not_ok nvm_node_version_has_solaris_binary "v4.1.1"

@@ -1,0 +1,40 @@
+#!/bin/zsh
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+if type setopt >/dev/null 2>&1; then setopt local_options markdirs; fi
+
+die () {
+  if type unsetopt >/dev/null 2>&1; then unsetopt local_options markdirs; fi
+  echo "$@";
+  exit 1;
+}
+
+make_fake_node v0.0.1
+make_fake_node v0.0.3
+make_fake_node v0.0.9
+make_fake_node v0.3.1
+make_fake_node v0.3.3
+make_fake_node v0.3.9
+make_fake_node v0.12.87
+make_fake_node v0.12.9
+make_fake_iojs v0.1.2
+make_fake_iojs v0.10.2
+
+OUTPUT="$(nvm_ls)"
+EXPECTED_OUTPUT="v0.0.1
+v0.0.3
+v0.0.9
+iojs-v0.1.2
+v0.3.1
+v0.3.3
+v0.3.9
+iojs-v0.10.2
+v0.12.9
+v0.12.87"
+if nvm_has_system_node || nvm_has_system_iojs; then
+  EXPECTED_OUTPUT="${EXPECTED_OUTPUT}
+system"
+fi
+[ "${OUTPUT-}" = "${EXPECTED_OUTPUT-}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"

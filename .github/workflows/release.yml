@@ -1,0 +1,26 @@
+name: 'Tests: release process'
+
+on: [pull_request, push]
+
+jobs:
+  release:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - run: npm install
+      - name: Configure git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch --unshallow --tags -f || git fetch --tags -f
+      - name: Attempt `make release` process
+        run: echo proceed | make TAG=99.99.99 release
+        env:
+          GIT_EDITOR: "sed -i '1 s/^/99.99.99 make release test/'"
+      - name: Ensure tag is created
+        run: git tag | grep v99.99.99
