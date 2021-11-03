@@ -343,7 +343,7 @@ nvm_check_global_modules() {
 }
 
 nvm_install_manpage() {
-    ln -s $PWD/nvm.1 /usr/local/share/man/man1/nvm.1
+    ln -s "$PWD"/nvm.1 /usr/local/share/man/man1/nvm.1
 }
 
 nvm_do_install() {
