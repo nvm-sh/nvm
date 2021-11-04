@@ -27,7 +27,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  nvm_echo "v0.38.0"
+  nvm_echo "v0.39.0"
 }
 
 nvm_profile_is_bash_or_zsh() {
@@ -160,11 +160,11 @@ install_nvm_from_git() {
     exit 2
   }
   if [ -n "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
-    if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
-      command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
+    if command git --no-pager --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
+      command git --no-pager --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
     else
       nvm_echo >&2 "Your version of git is out of date. Please update it!"
-      command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
+      command git --no-pager --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
     fi
   fi
 
@@ -267,14 +267,16 @@ nvm_detect_profile() {
   local DETECTED_PROFILE
   DETECTED_PROFILE=''
 
-  if [ -n "${BASH_VERSION-}" ]; then
+  if [ "${SHELL#*bash}" != "$SHELL" ]; then
     if [ -f "$HOME/.bashrc" ]; then
       DETECTED_PROFILE="$HOME/.bashrc"
     elif [ -f "$HOME/.bash_profile" ]; then
       DETECTED_PROFILE="$HOME/.bash_profile"
     fi
-  elif [ -n "${ZSH_VERSION-}" ]; then
-    DETECTED_PROFILE="$HOME/.zshrc"
+  elif [ "${SHELL#*zsh}" != "$SHELL" ]; then
+    if [ -f "$HOME/.zshrc" ]; then
+      DETECTED_PROFILE="$HOME/.zshrc"
+    fi
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then

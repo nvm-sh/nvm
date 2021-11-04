@@ -6,7 +6,7 @@
 # Please note that it'll use about 1.2 GB disk space and about 15 minutes to
 # build this image, it depends on your hardware.
 
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 LABEL name="nvm-dev-env"
 LABEL version="latest"
@@ -54,7 +54,6 @@ RUN apt update         && \
         curl                  \
         git                   \
         jq                    \
-        realpath              \
         zsh                   \
         ksh                   \
         gcc-4.8               \

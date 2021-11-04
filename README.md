@@ -1,10 +1,11 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.38.0-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
+# Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.39.0-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
 <!-- To update this table of contents, ensure you have run `npm install` then `npm run doctoc` -->
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
 
+- [Intro](#intro)
 - [About](#about)
 - [Installing and Updating](#installing-and-updating)
   - [Install & Update Script](#install--update-script)
@@ -38,7 +39,6 @@
       - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
     - [fish](#fish)
       - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file-1)
-- [License](#license)
 - [Running Tests](#running-tests)
 - [Environment variables](#environment-variables)
 - [Bash Completion](#bash-completion)
@@ -50,11 +50,37 @@
 - [Docker For Development Environment](#docker-for-development-environment)
 - [Problems](#problems)
 - [macOS Troubleshooting](#macos-troubleshooting)
+- [Maintainers](#maintainers)
+- [License](#license)
+- [Copyright notice](#copyright-notice)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Intro
+
+`nvm` allows you to quickly install and use different versions of node via the command line.
+
+**Example:**
+```sh
+$ nvm use 16
+Now using node v16.9.1 (npm v7.21.1)
+$ node -v
+v16.9.1
+$ nvm use 14
+Now using node v14.18.0 (npm v6.14.15)
+$ node -v
+v14.18.0
+$ nvm install 12
+Now using node v12.22.6 (npm v6.14.5)
+$ node -v
+v12.22.6
+```
+
+Simple as that!
+
+
 ## About
-nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and windows WSL.
+nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [windows WSL](https://github.com/nvm-sh/nvm#important-notes).
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
@@ -64,10 +90,10 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 
 To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
 ```sh
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 ```
 ```sh
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 ```
 
 Running either of the above commands downloads a script and runs it. The script clones the nvm repository to `~/.nvm`, and attempts to add the source lines from the snippet below to the correct profile file (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
@@ -92,7 +118,7 @@ Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not conta
 #### Troubleshooting on Linux
 
 On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
-Alternatively, you can run run the following commands for the different shells on the command line:
+Alternatively, you can run the following commands for the different shells on the command line:
 
 *bash*: `source ~/.bashrc`
 
@@ -133,7 +159,7 @@ You can use a task:
 ```yaml
 - name: nvm
   shell: >
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 ```
@@ -148,11 +174,13 @@ command -v nvm
 
 which should output `nvm` if the installation was successful. Please note that `which nvm` will not work, since `nvm` is a sourced shell function, not an executable binary.
 
+**Note:** On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
+
 ### Important Notes
 
 If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
-**Note:** `nvm` does not support Windows (see [#284](https://github.com/nvm-sh/nvm/issues/284)), but may work in WSL (Windows Subsystem for Linux) depending on the version of WSL. For Windows, a few alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` also support Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [GitBash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
 
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
@@ -193,7 +221,7 @@ If you have `git` installed (requires git v1.7.10+):
 
 1. clone this repo in the root of your user profile
   - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
-1. `cd ~/.nvm` and check out the latest version with `git checkout v0.38.0`
+1. `cd ~/.nvm` and check out the latest version with `git checkout v0.39.0`
 1. activate `nvm` by sourcing it from your shell: `. ./nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
@@ -223,6 +251,7 @@ Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to hav
 ```sh
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 ```
 
 ### Manual Upgrade
@@ -253,7 +282,7 @@ nvm install node # "node" is an alias for the latest version
 To install a specific version of node:
 
 ```sh
-nvm install 6.14.4 # or 10.10.0, 8.9.1, etc
+nvm install 14.7.0 # or 16.3.0, 12.22.1, etc
 ```
 
 The first version installed becomes the default. New shells will start with the default version of node (e.g., `nvm alias default`).
@@ -285,10 +314,10 @@ nvm exec 4.2 node --version
 You can also get the path to the executable to where it was installed:
 
 ```sh
-nvm which 5.0
+nvm which 12.22
 ```
 
-In place of a version pointer like "0.10" or "5.0" or "4.2.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
+In place of a version pointer like "14.7" or "16.3" or "12.22.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
 
   - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
   - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
@@ -510,9 +539,9 @@ The contents of a `.nvmrc` file **must** be the `<version>` (as described by `nv
 
 ### Deeper Shell Integration
 
-You can use [`avn`](https://github.com/wbyoung/avn) to deeply integrate into your shell and automatically invoke `nvm` when changing directories. `avn` is **not** supported by the `nvm` development team. Please [report issues to the `avn` team](https://github.com/wbyoung/avn/issues/new).
+You can use [`avn`](https://github.com/wbyoung/avn) to deeply integrate into your shell and automatically invoke `nvm` when changing directories. `avn` is **not** supported by the `nvm` maintainers. Please [report issues to the `avn` team](https://github.com/wbyoung/avn/issues/new).
 
-If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` development team. We are, however, accepting pull requests for more examples.
+If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` maintainers. We are, however, accepting pull requests for more examples.
 
 #### bash
 
@@ -522,7 +551,7 @@ Put the following at the end of your `$HOME/.bashrc`:
 
 ```bash
 cdnvm() {
-    cd "$@";
+    command cd "$@";
     nvm_path=$(nvm_find_up .nvmrc | tr -d '\n')
 
     # If there are no .nvmrc file, use the default nvm version
@@ -564,7 +593,7 @@ cdnvm() {
     fi
 }
 alias cd='cdnvm'
-cd $PWD
+cd "$PWD"
 ```
 
 This alias would search 'up' from your current directory in order to detect a `.nvmrc` file. If it finds it, it will switch to that version; if not, it will use the default version.
@@ -637,20 +666,6 @@ end
 # You must call it on initialization or listening to directory switching won't work
 load_nvm
 ```
-
-
-## License
-
-nvm is released under the MIT license.
-
-
-Copyright (C) 2010 Tim Caswell and Jordan Harband
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Running Tests
 
@@ -738,7 +753,7 @@ my_alias        default        v10.22.0       v12.18.3      v14.8.0
 
 ## Compatibility Issues
 
-`nvm` will encounter some issues if you have some non-default settings set. (see [#606](/../../issues/606))
+`nvm` will encounter some issues if you have some non-default settings set. (see [#606](https://github.com/creationix/nvm/issues/606))
 The following are known to cause issues:
 
 Inside `~/.npmrc`:
@@ -772,7 +787,7 @@ If installing nvm on Alpine Linux *is* still what you want or need to do, you sh
 
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc g++ libgcc linux-headers grep util-linux binutils findutils
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 ```
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
@@ -800,7 +815,7 @@ export NVM_DIR="$HOME/.nvm"
 
 ## Docker For Development Environment
 
-To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 14.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
+To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 18.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
 
 ```sh
 $ docker build -t nvm-dev .
@@ -869,9 +884,9 @@ You have to make sure that the user directory name in `$HOME` and the user direc
 To change the user directory and/or account name follow the instructions [here](https://support.apple.com/en-us/HT201548)
 
 [1]: https://github.com/nvm-sh/nvm.git
-[2]: https://github.com/nvm-sh/nvm/blob/v0.38.0/install.sh
+[2]: https://github.com/nvm-sh/nvm/blob/v0.39.0/install.sh
 [3]: https://travis-ci.org/nvm-sh/nvm
-[4]: https://github.com/nvm-sh/nvm/releases/tag/v0.38.0
+[4]: https://github.com/nvm-sh/nvm/releases/tag/v0.39.0
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com
 
@@ -905,6 +920,7 @@ Let's assume that:
 - you already have versions `12.20.1` and `14.15.4` installed using `nvm`
 - the current version in use is `14.15.4`
 - you are using the `zsh` shell
+- you have Rosetta 2 installed (macOS prompts you to install Rosetta 2 the first time you open a Intel-only non-command-line application, or you may install Rosetta 2 from the command line with `softwareupdate --install-rosetta`)
 
 ```sh
 # Check what version you're running:
@@ -935,3 +951,17 @@ arm64
 $ nvm use v14.15.4
 Now using node v14.15.4 (npm v6.14.10)
 ```
+
+## Maintainers
+
+Currently, the sole maintainer is [@ljharb](https://github.com/ljharb) - more maintainers are quite welcome, and we hope to add folks to the team over time. [Governance](./GOVERNANCE.md) will be re-evaluated as the project evolves.
+
+## License
+
+See [LICENSE.md](./LICENSE.md).
+
+## Copyright notice
+
+Copyright [OpenJS Foundation](https://openjsf.org) and `nvm` contributors. All rights reserved. The [OpenJS Foundation](https://openjsf.org) has registered trademarks and uses trademarks.  For a list of trademarks of the [OpenJS Foundation](https://openjsf.org), please see our [Trademark Policy](https://trademark-policy.openjsf.org/) and [Trademark List](https://trademark-list.openjsf.org/).  Node.js is a trademark of Joyent, Inc. and is used with its permission.  Trademarks and logos not indicated on the [list of OpenJS Foundation trademarks](https://trademark-list.openjsf.org) are trademarks™ or registered® trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them.
+
+[The OpenJS Foundation](https://openjsf.org/) | [Terms of Use](https://terms-of-use.openjsf.org/) | [Privacy Policy](https://privacy-policy.openjsf.org/) | [OpenJS Foundation Bylaws](https://bylaws.openjsf.org/) | [Trademark Policy](https://trademark-policy.openjsf.org/) | [Trademark List](https://trademark-list.openjsf.org/) | [Cookie Policy](https://www.linuxfoundation.org/cookies/)
