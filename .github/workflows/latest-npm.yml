@@ -1,4 +1,4 @@
-name: 'Tests: `nvm install-latest-npm`'
+name: 'Tests: `nvm install-latest-npm`' 
 
 on: [pull_request, push]
 
