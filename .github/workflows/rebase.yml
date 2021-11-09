@@ -4,6 +4,8 @@ on: [pull_request_target]
 
 jobs:
   _:
+    permissions:
+      contents: write
     name: "Automatic Rebase"
 
     runs-on: ubuntu-latest

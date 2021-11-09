@@ -14,9 +14,14 @@ cache:
     - $TRAVIS_BUILD_DIR/.cache
     - $TRAVIS_BUILD_DIR/node_modules
 before_install:
+  - sudo sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
+  - sudo update-ca-certificates -f
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version
+  - bash --version | head
+  - zsh  --version
+  - dpkg -s dash | grep ^Version | awk '{print $2}'
 install:
   - if [ -z "${SHELLCHECK-}" ]; then nvm install node && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'

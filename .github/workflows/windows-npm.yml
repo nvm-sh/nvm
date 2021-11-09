@@ -9,6 +9,8 @@ env:
 jobs:
   msys_fail_install:
     # Default installation does not work due to npm_config_prefix set to C:\npm\prefix
+    permissions:
+      contents: none
     name: 'MSYS fail prefix nvm install'
     runs-on: windows-latest
     steps:
@@ -20,9 +22,12 @@ jobs:
           ! nvm install --lts
 
   msys_matrix:
+    permissions:
+      contents: none
     name: 'MSYS nvm install'
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         npm-node-version:
           - '--lts'
@@ -42,6 +47,8 @@ jobs:
           nvm install ${{ matrix.npm-node-version }}
 
   cygwin_matrix:
+    permissions:
+      contents: none
     name: 'Cygwin nvm install'
     runs-on: windows-latest
     steps:
@@ -84,6 +91,7 @@ jobs:
     env:
       WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
     strategy:
+      fail-fast: false
       matrix:
         wsl-distrib:
           - Debian
@@ -109,6 +117,8 @@ jobs:
           nvm install ${{ matrix.npm-node-version }}
 
   nvm_windows:
+      permissions:
+        contents: none
       needs: [wsl_matrix, cygwin_matrix, msys_matrix, msys_fail_install]
       runs-on: ubuntu-latest
       steps:

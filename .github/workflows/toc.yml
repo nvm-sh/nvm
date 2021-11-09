@@ -4,6 +4,8 @@ on: [push]
 
 jobs:
   _:
+    permissions:
+      contents: write
     name: "update readme TOC"
 
     runs-on: ubuntu-latest

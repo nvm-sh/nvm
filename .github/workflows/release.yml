@@ -4,6 +4,8 @@ on: [pull_request, push]
 
 jobs:
   release:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
