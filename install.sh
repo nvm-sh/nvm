@@ -300,7 +300,7 @@ nvm_detect_profile() {
 nvm_check_global_modules() {
   local NPM_COMMAND
   NPM_COMMAND="$(command -v npm 2>/dev/null)" || return 0
-  [ -n "${NVM_DIR}" ] && [ -z "${NPM_COMMAND%%$NVM_DIR/*}" ] && return 0
+  [ -n "${NVM_DIR}" ] && [ -z "${NPM_COMMAND%%"$NVM_DIR"/*}" ] && return 0
 
   local NPM_VERSION
   NPM_VERSION="$(npm --version)"

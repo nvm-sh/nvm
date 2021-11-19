@@ -634,7 +634,7 @@ nvm_remote_versions() {
     NVM_LS_REMOTE_EXIT_CODE=$?
     # split output into two
     NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%v4\.0\.0*}"
-    NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#$NVM_LS_REMOTE_PRE_MERGED_OUTPUT}"
+    NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#"$NVM_LS_REMOTE_PRE_MERGED_OUTPUT"}"
   fi
 
   local NVM_LS_REMOTE_IOJS_EXIT_CODE
@@ -940,7 +940,7 @@ nvm_print_alias_path() {
     return 2
   fi
   local ALIAS
-  ALIAS="${ALIAS_PATH##${NVM_ALIAS_DIR}\/}"
+  ALIAS="${ALIAS_PATH##"${NVM_ALIAS_DIR}"\/}"
   local DEST
   DEST="$(nvm_alias "${ALIAS}" 2>/dev/null)" ||:
   if [ -n "${DEST}" ]; then
@@ -1186,7 +1186,7 @@ nvm_strip_iojs_prefix() {
   if [ "${1-}" = "${NVM_IOJS_PREFIX}" ]; then
     nvm_echo
   else
-    nvm_echo "${1#${NVM_IOJS_PREFIX}-}"
+    nvm_echo "${1#"${NVM_IOJS_PREFIX}"-}"
   fi
 }
 
@@ -2614,7 +2614,7 @@ nvm_node_version_has_solaris_binary() {
 # Succeeds if $VERSION represents a version (node, io.js or merged) that has a
 # Solaris binary, fails otherwise.
 nvm_has_solaris_binary() {
-  local VERSION=$1
+  local VERSION="${1-}"
   if nvm_is_merged_node_version "${VERSION}"; then
     return 0 # All merged node versions have a Solaris binary
   elif nvm_is_iojs_version "${VERSION}"; then
