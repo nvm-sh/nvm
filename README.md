@@ -913,6 +913,7 @@ Some issues you may encounter:
     $ NODE_OPTIONS="--max-old-space-size=4096" ./node_modules/.bin/your_node_package
     ```
 - when using `nvm` to install some versions, the compilation fails
+- after `nvm` successfully compiles some versions, `yarn` or `npm` may later fail to install packages with an `incorrect data check` error.
 
 One solution to this issue is to change the architecture of your shell from arm64 to x86.
 
