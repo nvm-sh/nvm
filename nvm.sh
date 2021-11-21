@@ -2093,6 +2093,14 @@ nvm_get_download_slug() {
     fi
   fi
 
+  # If node version in below 16.0.0 then there is no arm64 packages available in node repositories, so we have to install "x64" arch packages
+  # If running MAC M1 :: arm64 arch and Darwin OS then use "x64" Architecture because node doesn't provide darwin_arm64 package below v16.0.0
+  if nvm_version_greater '16.0.0' "${VERSION}"; then
+    if [ "_${NVM_OS}" = '_darwin' ] && [ "${NVM_ARCH}" = 'arm64' ]; then
+      NVM_ARCH=x64
+    fi
+  fi
+
   if [ "${KIND}" = 'binary' ]; then
     nvm_echo "${FLAVOR}-${VERSION}-${NVM_OS}-${NVM_ARCH}"
   elif [ "${KIND}" = 'source' ]; then

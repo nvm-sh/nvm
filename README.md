@@ -152,6 +152,8 @@ If the above doesn't fix the problem, you may try the following:
 
   - For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
 
+**Note** For Macs with the M1 chip, node started providing **arm64** arch darwin packages since v16.0.0. For earlier versions, there were only **darwin_x64** packages available but no **darwin_arm64**. If you are facing issues installing node using `nvm`, you may want to update to v16 or later.
+
 #### Ansible
 
 You can use a task:
