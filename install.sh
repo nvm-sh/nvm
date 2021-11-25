@@ -360,7 +360,7 @@ nvm_do_install() {
     # Autodetect install method
     if nvm_has git; then
       install_nvm_from_git
-    elif nvm_has nvm_download; then
+    elif nvm_has curl || nvm_has wget; then
       install_nvm_as_script
     else
       nvm_echo >&2 'You need git, curl, or wget to install nvm'
@@ -373,7 +373,7 @@ nvm_do_install() {
     fi
     install_nvm_from_git
   elif [ "${METHOD}" = 'script' ]; then
-    if ! nvm_has nvm_download; then
+    if ! nvm_has curl || nvm_has wget; then
       nvm_echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
