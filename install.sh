@@ -356,6 +356,12 @@ nvm_do_install() {
       exit 1
     fi
   fi
+  if nvm_has xcode-select && [ "$(xcode-select -p >/dev/null 2>/dev/null ; echo $?)" = '2' ] && [ "$(which git)" = '/usr/bin/git' ] && [ "$(which curl)" = '/usr/bin/curl' ]; then
+    nvm_echo >&2 'You may be on a Mac, and need to install the Xcode Command Line Developer Tools.'
+    # shellcheck disable=SC2016
+    nvm_echo >&2 'If so, run `xcode-select --install` and try again. If not, please report this!'
+    exit 1
+  fi
   if [ -z "${METHOD}" ]; then
     # Autodetect install method
     if nvm_has git; then
