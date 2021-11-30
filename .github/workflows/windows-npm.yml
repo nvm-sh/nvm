@@ -108,7 +108,7 @@ jobs:
           - '10'
         method:
           - ''
-          # - 'script' # TODO: uncomment this.
+          - 'script'
     steps:
       - uses: Vampire/setup-wsl@v1
         with:

@@ -373,7 +373,7 @@ nvm_do_install() {
     fi
     install_nvm_from_git
   elif [ "${METHOD}" = 'script' ]; then
-    if ! nvm_has curl || nvm_has wget; then
+    if ! nvm_has curl && ! nvm_has wget; then
       nvm_echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
