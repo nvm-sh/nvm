@@ -160,11 +160,11 @@ install_nvm_from_git() {
     exit 2
   }
   if [ -n "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
-    if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
-      command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
+    if command git --no-pager --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
+      command git --no-pager --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
     else
       nvm_echo >&2 "Your version of git is out of date. Please update it!"
-      command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
+      command git --no-pager --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
     fi
   fi
 
@@ -300,7 +300,7 @@ nvm_detect_profile() {
 nvm_check_global_modules() {
   local NPM_COMMAND
   NPM_COMMAND="$(command -v npm 2>/dev/null)" || return 0
-  [ -n "${NVM_DIR}" ] && [ -z "${NPM_COMMAND%%$NVM_DIR/*}" ] && return 0
+  [ -n "${NVM_DIR}" ] && [ -z "${NPM_COMMAND%%"$NVM_DIR"/*}" ] && return 0
 
   local NPM_VERSION
   NPM_VERSION="$(npm --version)"
@@ -360,7 +360,7 @@ nvm_do_install() {
     # Autodetect install method
     if nvm_has git; then
       install_nvm_from_git
-    elif nvm_has nvm_download; then
+    elif nvm_has curl || nvm_has wget; then
       install_nvm_as_script
     else
       nvm_echo >&2 'You need git, curl, or wget to install nvm'
@@ -373,7 +373,7 @@ nvm_do_install() {
     fi
     install_nvm_from_git
   elif [ "${METHOD}" = 'script' ]; then
-    if ! nvm_has nvm_download; then
+    if ! nvm_has curl && ! nvm_has wget; then
       nvm_echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi

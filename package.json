@@ -41,7 +41,7 @@
   "homepage": "https://github.com/nvm-sh/nvm",
   "devDependencies": {
     "dockerfile_lint": "^0.3.4",
-    "doctoc": "^2.0.1",
+    "doctoc": "^2.1.0",
     "eclint": "^2.8.1",
     "markdown-link-check": "^3.8.7",
     "replace": "^1.2.1",

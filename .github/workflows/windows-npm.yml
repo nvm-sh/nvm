@@ -87,6 +87,9 @@ jobs:
 
   wsl_matrix:
     name: 'WSL nvm install'
+    defaults:
+      run:
+          shell: wsl-bash {0}
     runs-on: windows-latest
     env:
       WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
@@ -99,19 +102,24 @@ jobs:
           - Ubuntu-18.04
         npm-node-version:
           - '--lts'
+          - '14'
+          - '12'
           - '11'
+          - '10'
+        method:
+          - ''
+          - 'script'
     steps:
       - uses: Vampire/setup-wsl@v1
         with:
           distribution: ${{ matrix.wsl-distrib }}
-          additional-packages: bash git curl ca-certificates
+          additional-packages: bash git curl ca-certificates wget
       - name: Retrieve nvm on WSL
-        shell: wsl-bash {0}
         run: |
-          if [ "${{ matrix.wsl-distrib }}" = "Ubuntu-18.04" ] && [ "${{ matrix.npm-node-version }}" = "--lts" ]; then
+          if [ -z "${{ matrix.method }}" ]; then
             curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | bash
           else
-            curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | METHOD=script bash
+            curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | METHOD="${{matrix.method}}" bash
           fi
           . "$HOME/.nvm/nvm.sh"
           nvm install ${{ matrix.npm-node-version }}
