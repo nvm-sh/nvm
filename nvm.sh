@@ -988,6 +988,11 @@ nvm_list_aliases() {
   NVM_ALIAS_DIR="$(nvm_alias_path)"
   command mkdir -p "${NVM_ALIAS_DIR}/lts"
 
+  if [ "${ALIAS}" != "${ALIAS#lts/}" ]; then
+    nvm_alias "${ALIAS}"
+    return $?
+  fi
+
   nvm_is_zsh && unsetopt local_options nomatch
   (
     local ALIAS_PATH
