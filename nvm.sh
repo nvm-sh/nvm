@@ -4129,7 +4129,7 @@ nvm() {
         nvm_resolve_alias nvm_ls_current nvm_alias \
         nvm_binary_available nvm_change_path nvm_strip_path \
         nvm_num_version_groups nvm_format_version nvm_ensure_version_prefix \
-        nvm_normalize_version nvm_is_valid_version \
+        nvm_normalize_version nvm_is_valid_version nvm_normalize_lts \
         nvm_ensure_version_installed nvm_cache_dir \
         nvm_version_path nvm_alias_path nvm_version_dir \
         nvm_find_nvmrc nvm_find_up nvm_find_project_dir nvm_tree_contains_path \
