@@ -27,7 +27,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  nvm_echo "v0.39.0"
+  nvm_echo "v0.39.1"
 }
 
 nvm_profile_is_bash_or_zsh() {
