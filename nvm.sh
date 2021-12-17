@@ -3812,8 +3812,14 @@ nvm() {
               PATTERN="${1-}"
               if [ -z "${NVM_LTS-}" ]; then
                 case "${PATTERN}" in
-                  'lts/*') NVM_LTS='*' ;;
-                  lts/*) NVM_LTS="${PATTERN##lts/}" ;;
+                  'lts/*')
+                    NVM_LTS='*'
+                    PATTERN=''
+                  ;;
+                  lts/*)
+                    NVM_LTS="${PATTERN##lts/}"
+                    PATTERN=''
+                  ;;
                 esac
               fi
             fi

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -ex
+set -e
 
 die () { echo "$@" ; cleanup ; exit 1; }
 
@@ -32,9 +32,18 @@ nvm_ls_remote_iojs() {
 }
 
 EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm ls-remote.txt"
-
 OUTPUT="$(nvm ls-remote | sed 's/[ \t]*$//')"
 EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm ls-remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+
+EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm ls-remote lts.txt"
+OUTPUT="$(nvm ls-remote --lts="*" | sed 's/[ \t]*$//')"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote --lts=* did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+
+EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm ls-remote lts.txt"
+OUTPUT="$(nvm ls-remote "lts/*" | sed 's/[ \t]*$//')"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
 
 cleanup
