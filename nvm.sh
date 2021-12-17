@@ -687,6 +687,29 @@ nvm_normalize_version() {
   }' "${1#v}"
 }
 
+nvm_normalize_lts() {
+  local LTS
+  LTS="${1-}"
+
+  if [ "$(expr "${LTS}" : '^lts/-[1-9][0-9]*$')" -gt 0 ]; then
+    local N
+    N="$(echo "${LTS}" | cut -d '-' -f 2)"
+    N=$((N+1))
+    local NVM_ALIAS_DIR
+    NVM_ALIAS_DIR="$(nvm_alias_path)"
+    local RESULT
+    RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
+    if [ "${RESULT}" != '*' ]; then
+      nvm_echo "lts/${RESULT}"
+    else
+      nvm_err 'That many LTS releases do not exist yet.'
+      return 2
+    fi
+  else
+    nvm_echo "${LTS}"
+  fi
+}
+
 nvm_ensure_version_prefix() {
   local NVM_VERSION
   NVM_VERSION="$(nvm_strip_iojs_prefix "${1-}" | command sed -e 's/^\([0-9]\)/v\1/g')"
@@ -1043,27 +1066,14 @@ nvm_alias() {
     nvm_err 'An alias is required.'
     return 1
   fi
+  ALIAS="$(nvm_normalize_lts "${ALIAS}")"
 
-  local NVM_ALIAS_DIR
-  NVM_ALIAS_DIR="$(nvm_alias_path)"
-
-  if [ "$(expr "${ALIAS}" : '^lts/-[1-9][0-9]*$')" -gt 0 ]; then
-    local N
-    N="$(echo "${ALIAS}" | cut -d '-' -f 2)"
-    N=$((N+1))
-    local RESULT
-    RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
-    if [ "${RESULT}" != '*' ]; then
-      nvm_alias "lts/${RESULT}"
-      return $?
-    else
-      nvm_err 'That many LTS releases do not exist yet.'
-      return 2
-    fi
+  if [ -z "${ALIAS}" ]; then
+    return 2
   fi
 
   local NVM_ALIAS_PATH
-  NVM_ALIAS_PATH="${NVM_ALIAS_DIR}/${ALIAS}"
+  NVM_ALIAS_PATH="$(nvm_alias_path)/${ALIAS}"
   if [ ! -f "${NVM_ALIAS_PATH}" ]; then
     nvm_err 'Alias does not exist.'
     return 2
