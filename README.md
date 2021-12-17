@@ -604,24 +604,25 @@ This alias would search 'up' from your current directory in order to detect a `.
 
 ##### Calling `nvm use` automatically in a directory with a `.nvmrc` file
 
-Put this into your `$HOME/.zshrc` after nvm initialization to call `nvm use` automatically whenever you enter a directory that contains an
-`.nvmrc` file with a string telling nvm which node to `use`:
- Usage: follow the [simple official guide to create a .nvmrc file](https://github.com/nvm-sh/nvm#nvmrc) containing the node version number in the directory you want to use.
+Put this into your `$HOME/.zshrc` after nvm initialization to call `nvm use` automatically.
+Usage: follow the [simple official guide to create a .nvmrc file](https://github.com/nvm-sh/nvm#nvmrc) containing the node version number in the directory you want to use.
 ```zsh
 # place this after nvm initialization!
-  autoload -U add-zsh-hook
-  load-nvmrc() {
-    local nvmrc_path=".nvmrc"
+autoload -U add-zsh-hook
+load-nvmrc() {
+  local nvmrc_path=".nvmrc"
 
-    if [ -f "$nvmrc_path" ]; then
-      if [[ "$(which node)" != *"v$(cat "${nvmrc_path}")"* ]]; then
-        nvm use --silent
-      fi
-    elif [[ "$(which node)" != *"v$(cat ~/.nvm/alias/default)"* ]]; then
-      nvm use default --silent
+  if [ -f "$nvmrc_path" ]; then
+    # check if current node version is different from that in the config file
+    if [[ "$(which node)" != *"v$(cat "${nvmrc_path}")"* ]]; then
+      nvm use --silent
     fi
-  }
-  add-zsh-hook chpwd load-nvmrc
+  # check if current node version is different from the default
+  elif [[ "$(which node)" != *"v$(cat ~/.nvm/alias/default)"* ]]; then
+    nvm use default --silent
+  fi
+}
+add-zsh-hook chpwd load-nvmrc
 ```
 
 #### fish
