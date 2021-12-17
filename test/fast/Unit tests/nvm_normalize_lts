@@ -28,9 +28,9 @@ LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
 LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
 
 INDEX=1
-for LTS in $LTS_LIST; do
+printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
     ACTUAL="$(nvm_normalize_lts "lts/-${INDEX}")"
-    MESSAGE="for lts/-${INDEX}"
+    MESSAGE="for lts/-${INDEX} (${LTS})"
     EXPECTED="lts/$(echo "${LTS_LIST}" | tail -n +${INDEX} | head -n1)"
     [ "${ACTUAL}" = "${EXPECTED}" ] || die "${MESSAGE}: expected >${EXPECTED}<, got >${ACTUAL}<"
 

@@ -13,6 +13,8 @@ nvm_alias_path() {
   nvm_echo "../../../alias"
 }
 
+nvm ls-remote >/dev/null || die 'nvm ls-remote (to populate LTS aliases) failed'
+
 MOCKS_DIR="../Unit tests/mocks"
 
 EXPECTED_OUTPUT="$(cat "$MOCKS_DIR/lts-star.txt")"
