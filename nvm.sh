@@ -1465,6 +1465,11 @@ nvm_ls_remote_index_tab() {
 $VERSION_LIST
 EOF
 
+  if [ -n "${LTS-}" ]; then
+    LTS="$(nvm_normalize_lts "lts/${LTS}")"
+    LTS="${LTS#lts/}"
+  fi
+
   VERSIONS="$({ command awk -v lts="${LTS-}" '{
         if (!$1) { next }
         if (lts && $10 ~ /^\-?$/) { next }

@@ -31,19 +31,39 @@ nvm_ls_remote_iojs() {
   cat "$REMOTE_IOJS"
 }
 
-EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm ls-remote.txt"
+MOCKS_DIR="$PWD/mocks"
+
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote.txt"
 OUTPUT="$(nvm ls-remote | sed 's/[ \t]*$//')"
 EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm ls-remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
 
-EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm ls-remote lts.txt"
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote lts.txt"
 OUTPUT="$(nvm ls-remote --lts="*" | sed 's/[ \t]*$//')"
 EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote --lts=* did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
 
-EXPECTED_OUTPUT_PATH="$PWD/mocks/nvm ls-remote lts.txt"
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote lts.txt"
 OUTPUT="$(nvm ls-remote "lts/*" | sed 's/[ \t]*$//')"
 EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+
+EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote lts.txt"
+OUTPUT="$(nvm ls-remote "lts/-1" | sed 's/[ \t]*$//')"
+EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+
+LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
+LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
+
+INDEX=1
+for LTS in $LTS_LIST; do
+    ACTUAL="$(nvm ls-remote "lts/-${INDEX}" | sed 's/[ \t]*$//')"
+    MESSAGE="for lts/-${INDEX} / ${LTS}"
+    EXPECTED="$(nvm ls-remote "lts/${LTS}" | sed 's/[ \t]*$//')"
+    [ "${ACTUAL}" = "${EXPECTED}" ] || die "${MESSAGE}: expected >${EXPECTED}<, got >${ACTUAL}<"
+
+    INDEX=$(($INDEX + 1))
+done
 
 cleanup
