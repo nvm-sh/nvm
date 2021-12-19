@@ -1971,19 +1971,7 @@ nvm_install_binary_extract() {
     command unzip -q "${TARBALL}" -d "${TMPDIR}" || return 1
   # For non Windows system (including WSL running on Windows)
   else
-    local tar_compression_flag
-    tar_compression_flag='z'
-    if nvm_supports_xz "${VERSION}"; then
-      tar_compression_flag='J'
-    fi
-
-    local tar
-    if [ "${NVM_OS}" = 'aix' ]; then
-      tar='gtar'
-    else
-      tar='tar'
-    fi
-    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 || return 1
+    nvm_extract_tarball "${NVM_OS}" "${VERSION}" "${TARBALL}" "${TMPDIR}"
   fi
 
   command mkdir -p "${VERSION_PATH}" || return 1
@@ -2251,6 +2239,40 @@ nvm_download_artifact() {
   nvm_echo "${TARBALL}"
 }
 
+# args: nvm_os, version, tarball, tmpdir
+nvm_extract_tarball() {
+  if [ "$#" -ne 4 ]; then
+    nvm_err 'nvm_extract_tarball requires exactly 4 arguments'
+    return 5
+  fi
+
+  local NVM_OS
+  NVM_OS="${1-}"
+
+  local VERSION
+  VERSION="${2-}"
+
+  local TARBALL
+  TARBALL="${3-}"
+
+  local TMPDIR
+  TMPDIR="${4-}"
+
+  local tar_compression_flag
+  tar_compression_flag='z'
+  if nvm_supports_xz "${VERSION}"; then
+    tar_compression_flag='J'
+  fi
+
+  local tar
+  tar='tar'
+  if [ "${NVM_OS}" = 'aix' ]; then
+    tar='gtar'
+  fi
+
+  command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 || return 1
+}
+
 nvm_get_make_jobs() {
   if nvm_is_natural_num "${1-}"; then
     NVM_MAKE_JOBS="$1"
@@ -2362,18 +2384,6 @@ nvm_install_source() {
     fi
   fi
 
-  local tar_compression_flag
-  tar_compression_flag='z'
-  if nvm_supports_xz "${VERSION}"; then
-    tar_compression_flag='J'
-  fi
-
-  local tar
-  tar='tar'
-  if [ "${NVM_OS}" = 'aix' ]; then
-    tar='gtar'
-  fi
-
   local TARBALL
   local TMPDIR
   local VERSION_PATH
@@ -2393,7 +2403,7 @@ nvm_install_source() {
   if ! (
     # shellcheck disable=SC2086
     command mkdir -p "${TMPDIR}" && \
-    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 && \
+    nvm_extract_tarball "${NVM_OS}" "${VERSION}" "${TARBALL}" "${TMPDIR}" && \
     VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" && \
     nvm_cd "${TMPDIR}" && \
     nvm_echo '$>'./configure --prefix="${VERSION_PATH}" $ADDITIONAL_PARAMETERS'<' && \
@@ -4151,7 +4161,7 @@ nvm() {
         nvm_npmrc_bad_news_bears \
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_format_help_message_colors \
         nvm_echo_with_colors nvm_err_with_colors \
-        nvm_get_artifact_compression nvm_install_binary_extract \
+        nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
