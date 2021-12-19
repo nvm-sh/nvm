@@ -2270,7 +2270,15 @@ nvm_extract_tarball() {
     tar='gtar'
   fi
 
-  command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 || return 1
+  if [ "${NVM_OS}" = 'openbsd' ]; then
+    if [ "${tar_compression_flag}" = 'J' ]; then
+      command xzcat "${TARBALL}" | "${tar}" -xf - -C "${TMPDIR}" -s '/[^\/]*\///' || return 1
+    else
+      command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" -s '/[^\/]*\///' || return 1
+    fi
+  else
+    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 || return 1
+  fi
 }
 
 nvm_get_make_jobs() {
