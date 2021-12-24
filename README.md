@@ -84,7 +84,7 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
-## Installing and Updating
+## Installing and Updating 
 
 ### Install & Update Script
 
