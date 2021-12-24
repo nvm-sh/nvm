@@ -8,6 +8,12 @@ jobs:
     outputs:
       latest: ${{ steps.set-matrix.outputs.requireds }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v1
+        with:
+          allowed-endpoints:
+            iojs.org:443
+            nodejs.org:443
       - uses: ljharb/actions/node/matrix@main
         id: set-matrix
         with:
@@ -39,6 +45,14 @@ jobs:
           - node-version: "0.10"
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v1
+        with:
+          allowed-endpoints:
+            github.com:443
+            iojs.org:443
+            nodejs.org:443
+            registry.npmjs.org:443
       - uses: actions/checkout@v2
       - uses: ljharb/actions/node/install@main
         name: 'nvm install-latest-npm'
@@ -55,4 +69,8 @@ jobs:
     needs: [nodes]
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v1
+        with:
+          egress-policy: block
       - run: 'echo tests completed'

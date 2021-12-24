@@ -32,6 +32,7 @@ nvm ls-remote node > "$MOCKS_DIR/nvm ls-remote node.txt"
 nvm ls-remote iojs > "$MOCKS_DIR/nvm ls-remote iojs.txt"
 nvm_print_implicit_alias remote stable > "$MOCKS_DIR/nvm_print_implicit_alias remote stable.txt"
 nvm_ls_remote stable > "$MOCKS_DIR/nvm_ls_remote stable.txt"
+nvm alias "lts/*" > "$MOCKS_DIR/lts-star.txt"
 
 set +e
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote nightly.txt"

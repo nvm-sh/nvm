@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@v1
+      with:
+        allowed-endpoints:
+          api.github.com:443
     - uses: ljharb/require-allow-edits@main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
