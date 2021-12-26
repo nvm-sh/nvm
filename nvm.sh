@@ -1870,10 +1870,12 @@ nvm_get_arch() {
     *) NVM_ARCH="${HOST_ARCH}" ;;
   esac
 
-  # If running a 64bit ARM kernel but a 32bit ARM userland, change ARCH to 32bit ARM (armv7l)
+  # If running a 64bit ARM kernel but a 32bit ARM userland,
+  # change ARCH to 32bit ARM (armv7l) if /sbin/init is 32bit executable
   local L
-  L=$(ls -dl /sbin/init 2>/dev/null) # if /sbin/init is 32bit executable
-  if [ "$(uname)" = "Linux" ] && [ "${NVM_ARCH}" = arm64 ] && [ "$(od -An -t x1 -j 4 -N 1 "${L#*-> }")" = ' 01' ]; then
+  if [ "$(uname)" = "Linux" ] && [ "${NVM_ARCH}" = arm64 ] &&
+    L="$(ls -dl /sbin/init 2>/dev/null)" &&
+    [ "$(od -An -t x1 -j 4 -N 1 "${L#*-> }")" = ' 01' ]; then
     NVM_ARCH=armv7l
     HOST_ARCH=armv7l
   fi
