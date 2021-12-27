@@ -2742,6 +2742,15 @@ nvm() {
     EXIT_CODE="$?"
     set -a
     return "$EXIT_CODE"
+  elif [ -n "${BASH-}" ] && [ "${-#*E}" != "$-" ]; then
+    # shellcheck disable=SC3041
+    set +E
+    local EXIT_CODE
+    IFS="${DEFAULT_IFS}" nvm "$@"
+    EXIT_CODE="$?"
+    # shellcheck disable=SC3041
+    set -E
+    return "$EXIT_CODE"
   elif [ "${IFS}" != "${DEFAULT_IFS}" ]; then
     IFS="${DEFAULT_IFS}" nvm "$@"
     return "$?"
