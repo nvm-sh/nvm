@@ -203,7 +203,7 @@ If you're running a system without prepackaged binary available, which means you
 
 **Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
 
-  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
+  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](https://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
 
 **Note:** On OS X, if you have/had a "system" node installed and want to install modules globally, keep in mind that:
 
@@ -890,7 +890,7 @@ To change the user directory and/or account name follow the instructions [here](
 [3]: https://travis-ci.org/nvm-sh/nvm
 [4]: https://github.com/nvm-sh/nvm/releases/tag/v0.39.1
 [Urchin]: https://github.com/scraperwiki/urchin
-[Fish]: http://fishshell.com
+[Fish]: https://fishshell.com
 
 **Homebrew makes zsh directories unsecure**
 
