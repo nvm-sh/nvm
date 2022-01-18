@@ -101,15 +101,15 @@ nvm_get_latest() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
+    NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
-    NVM_LATEST_URL="$(wget -q http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    NVM_LATEST_URL="$(wget -q https://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
     nvm_err 'nvm needs curl or wget to proceed.'
     return 1
   fi
   if [ -z "${NVM_LATEST_URL}" ]; then
-    nvm_err "http://latest.nvm.sh did not redirect to the latest release on GitHub"
+    nvm_err "https://latest.nvm.sh did not redirect to the latest release on GitHub"
     return 2
   fi
   nvm_echo "${NVM_LATEST_URL##*/}"
