@@ -104,6 +104,15 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 ```
 
+#### Decreased Shell Load Times
+Adding the above 2 lines can cause the shell to have increased load times. To circumvent this problem, you can add these lines in your profile file (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`) instead.
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+alias nvm="unalias nvm; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"; nvm $@"
+```
+This makes sure that nvm only loads when you try to use it and not cause the shell to wait for nvm to load everytime you start the shell.
+
 #### Additional Notes
 
 - If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.</sub>
