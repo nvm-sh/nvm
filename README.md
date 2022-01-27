@@ -138,7 +138,7 @@ If you get `nvm: command not found` after running the install script, one of the
 
   - Since macOS 10.15, the default shell is `zsh` and nvm will look for `.zshrc` to update, none is installed by default. Create one with `touch ~/.zshrc` and run the install script again.
 
-  - If you use bash, the previous default shell, your system may not have a `.bash_profile` file where the command is set up. Create one with `touch ~/.bash_profile` and run the install script again. Then, run `source ~/.bash_profile` to pick up the `nvm` command.
+  - If you use bash, the previous default shell, your system may not have `.bash_profile` or `.bashrc` files where the command is set up. Create one of them with `touch ~/.bash_profile` or `touch ~/.bashrc` and run the install script again. Then, run `. ~/.bash_profile` or `. ~/.bashrc` to pick up the `nvm` command.
 
   - You have previously used `bash`, but you have `zsh` installed. You need to manually add [these lines](#manual-install) to `~/.zshrc` and run `. ~/.zshrc`.
 
