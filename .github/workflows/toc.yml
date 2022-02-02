@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@v1
+      with:
+        allowed-endpoints:
+          github.com:443
+          registry.npmjs.org:443
     - uses: actions/checkout@v2
       with:
         # https://github.com/actions/checkout/issues/217#issue-599945005

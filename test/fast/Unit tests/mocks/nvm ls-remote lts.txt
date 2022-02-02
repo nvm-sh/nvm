@@ -141,7 +141,9 @@
        v12.22.3  [0;37m (LTS: Erbium)[0m
        v12.22.4  [0;37m (LTS: Erbium)[0m
        v12.22.5  [0;37m (LTS: Erbium)[0m
-       v12.22.6  [1;32m (Latest LTS: Erbium)[0m
+       v12.22.6  [0;37m (LTS: Erbium)[0m
+       v12.22.7  [0;37m (LTS: Erbium)[0m
+       v12.22.8  [1;32m (Latest LTS: Erbium)[0m
        v14.15.0  [0;37m (LTS: Fermium)[0m
        v14.15.1  [0;37m (LTS: Fermium)[0m
        v14.15.2  [0;37m (LTS: Fermium)[0m
@@ -156,4 +158,9 @@
        v14.17.3  [0;37m (LTS: Fermium)[0m
        v14.17.4  [0;37m (LTS: Fermium)[0m
        v14.17.5  [0;37m (LTS: Fermium)[0m
-       v14.17.6  [1;32m (Latest LTS: Fermium)[0m
+       v14.17.6  [0;37m (LTS: Fermium)[0m
+       v14.18.0  [0;37m (LTS: Fermium)[0m
+       v14.18.1  [0;37m (LTS: Fermium)[0m
+       v14.18.2  [1;32m (Latest LTS: Fermium)[0m
+       v16.13.0  [0;37m (LTS: Gallium)[0m
+       v16.13.1  [1;32m (Latest LTS: Gallium)[0m
