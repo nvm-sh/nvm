@@ -10,6 +10,12 @@ nvm_echo() {
   command printf %s\\n "$*" 2>/dev/null
 }
 
+if [ -z "${BASH_VERSION}" ] || [ -n "${ZSH_VERSION}" ]; then
+  # shellcheck disable=SC2016
+  nvm_echo >&2 'Error: the install instructions explicitly say to pipe the install script to `bash`; please follow them'
+  exit 1
+fi
+
 nvm_grep() {
   GREP_OPTIONS='' command grep "$@"
 }
