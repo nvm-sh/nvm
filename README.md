@@ -931,7 +931,7 @@ Here's what you will need to do:
   If that's the case, make sure to source `nvm`.
 
   ```sh
-  $ source "${NVM_DIR}/.nvm/nvm.sh"
+  $ source "${NVM_DIR}/nvm.sh"
   ```
 
 - Install whatever older version of node you are interested in. Let's use 12.22.1 as an example.
