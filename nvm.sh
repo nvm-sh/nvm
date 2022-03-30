@@ -2110,9 +2110,12 @@ nvm_get_download_slug() {
     fi
   fi
 
-  # If node version in below 16.0.0 then there is no arm64 packages available in node repositories, so we have to install "x64" arch packages
-  # If running MAC M1 :: arm64 arch and Darwin OS then use "x64" Architecture because node doesn't provide darwin_arm64 package below v16.0.0
-  if nvm_version_greater '16.0.0' "${VERSION}"; then
+  # If running MAC M1 :: Node v14.17.0 was the first version to offer official experimental support:
+  # https://github.com/nodejs/node/issues/40126 (although binary distributions aren't available until v16)
+  if \
+    nvm_version_greater '14.17.0' "${VERSION}" \
+    || (nvm_version_greater_than_or_equal_to "${VERSION}" '15.0.0' && nvm_version_greater '16.0.0' "${VERSION}") \
+  ; then
     if [ "_${NVM_OS}" = '_darwin' ] && [ "${NVM_ARCH}" = 'arm64' ]; then
       NVM_ARCH=x64
     fi
