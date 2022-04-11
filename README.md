@@ -459,7 +459,7 @@ nvm set-colors rgBcm
 
 #### Persisting custom colors
 
-If you want the custom colors to persist after terminating the shell, export the NVM_COLORS variable in your shell profile. For example, if you want to use cyan, magenta, green, bold red and bold yellow, add the following line:
+If you want the custom colors to persist after terminating the shell, export the `NVM_COLORS` variable in your shell profile. For example, if you want to use cyan, magenta, green, bold red and bold yellow, add the following line:
 
 ```sh
 export NVM_COLORS='cmgRY'
@@ -718,36 +718,36 @@ Put the above sourcing line just below the sourcing line for nvm in your profile
 ### Usage
 
 nvm:
-> $ nvm <kbd>Tab</kbd>
 
-```
+> `$ nvm` <kbd>Tab</kbd>
+```sh
 alias               deactivate          install             list-remote         reinstall-packages  uninstall           version
 cache               exec                install-latest-npm  ls                  run                 unload              version-remote
 current             help                list                ls-remote           unalias             use                 which
 ```
 
 nvm alias:
-> $ nvm alias <kbd>Tab</kbd>
 
-```
+> `$ nvm alias` <kbd>Tab</kbd>
+```sh
 default      iojs         lts/*        lts/argon    lts/boron    lts/carbon   lts/dubnium  lts/erbium   node         stable       unstable
 ```
 
-> $ nvm alias my_alias <kbd>Tab</kbd>
 
-```
+> `$ nvm alias my_alias` <kbd>Tab</kbd>
+```sh
 v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm use:
-> $ nvm use <kbd>Tab</kbd>
+> `$ nvm use` <kbd>Tab</kbd>
 
 ```
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm uninstall:
-> $ nvm uninstall <kbd>Tab</kbd>
+> `$ nvm uninstall` <kbd>Tab</kbd>
 
 ```
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
@@ -779,7 +779,7 @@ set -e
 
 ## Installing nvm on Alpine Linux
 
-In order to provide the best performance (and other optimisations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
+In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
 
 Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
 
@@ -906,7 +906,7 @@ Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` 
 Experimental support for the M1 architecture was added in node.js v15.3 and full support was added in v16.0.
 Because of this, if you try to install older versions of node as usual, you will probably experience either compilation errors when installing node or out-of-memory errors while running your code.
 
-So, if you want to run a version prior to v16.0 on an M1 Mac, it may be best to compile node targeting the x86_64 Intel architecture so that Rosetta 2 can translate the x86_64 processor instructions to ARM-based Apple Silicon instructions.
+So, if you want to run a version prior to v16.0 on an M1 Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that Rosetta 2 can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
 Here's what you will need to do:
 
 - Install Rosetta, if you haven't already done so
@@ -959,7 +959,7 @@ Here's what you will need to do:
   Note: If you selected the box labeled "Open using Rosetta" rather than running the CLI command in the second step, you will see `i386` here.
   Unless you have another reason to have that box selected, you can deselect it now.
 
-- Check to make sure the architecture is correct. `x64` is the abbreviation for x86_64, which is what you want to see.
+- Check to make sure the architecture is correct. `x64` is the abbreviation for `x86_64`, which is what you want to see.
 
   ```sh
   $ node -p process.arch
