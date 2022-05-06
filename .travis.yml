@@ -18,6 +18,7 @@ before_install:
   - sudo update-ca-certificates -f
   - sudo apt-get install -y bzip2 openssl
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
+  - sudo apt-get install -y bzip2 libreadline6-dev openssl
   - pyenv install "2.7.12" && pyenv global "2.7.12"
   - curl --version
   - wget --version
