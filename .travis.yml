@@ -18,8 +18,8 @@ before_install:
   - sudo apt-get install -y bzip2 openssl
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - sudo apt install -y bzip2 libreadline6-dev openssl build-essential curl libbz2-dev libffi-dev liblzma-dev libncursesw5-dev libreadline-dev libsqlite3-dev libssl-dev libxml2-dev libxmlsec1-dev llvm make tk-dev wget xz-utils zlib1g-dev
-  - CPPFLAGS="-I$(pwd ls /ls/usr/ssl)/include" \
-  - LDFLAGS="-L$(pwd ls /ls/usr/ssl)/lib" \
+  - CPPFLAGS="-I$(ls /ls/usr/ssl)/include" \
+  - LDFLAGS="-L$(ls /ls/usr/ssl)/lib" \
   - pyenv install "2.7.12" && pyenv global "2.7.12"
   - curl --version
   - wget --version
