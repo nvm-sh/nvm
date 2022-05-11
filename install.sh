@@ -140,14 +140,14 @@ install_nvm_from_git() {
         nvm_echo >&2 'Failed to initialize nvm repo. Please report this!'
         exit 2
       }
-      command git --git-dir="${INSTALL_DIR}/.git" remote add origin "$(nvm_source)" 2> /dev/null \
-        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url origin "$(nvm_source)" || {
+      command git --git-dir="${INSTALL_DIR}/.git" remote add origin "$(nvm_source "git")" 2> /dev/null \
+        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url origin "$(nvm_source "git")" || {
         nvm_echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
         exit 2
       }
     else
       # Cloning repo
-      command git clone "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
+      command git clone "$(nvm_source "git")" --depth=1 "${INSTALL_DIR}" || {
         nvm_echo >&2 'Failed to clone nvm repo. Please report this!'
         exit 2
       }
