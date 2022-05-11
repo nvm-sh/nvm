@@ -63,7 +63,7 @@ nvm_source() {
   local NVM_METHOD
   NVM_METHOD="$1"
   local NVM_SOURCE_URL
-  NVM_SOURCE_URL="$NVM_SOURCE"
+  NVM_SOURCE_URL="${NVM_SOURCE-}"
   if [ "_$NVM_METHOD" = "_script-nvm-exec" ]; then
     NVM_SOURCE_URL="https://raw.githubusercontent.com/${NVM_GITHUB_REPO}/${NVM_VERSION}/nvm-exec"
   elif [ "_$NVM_METHOD" = "_script-nvm-bash-completion" ]; then
