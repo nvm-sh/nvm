@@ -224,7 +224,7 @@ Homebrew installation is not supported. If you have issues with homebrew-install
 If you have `git` installed (requires git v1.7.10+):
 
 1. clone this repo in the root of your user profile
-  - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
+    - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
 1. `cd ~/.nvm` and check out the latest version with `git checkout v0.39.1`
 1. activate `nvm` by sourcing it from your shell: `. ./nvm.sh`
 
