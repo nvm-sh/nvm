@@ -1,0 +1,152 @@
+.TH "NVM" "1" "March 2018" "NVM" "nvm"
+.
+.SH "NAME"
+nvm \- Manage multiple active node.js versions
+.
+.SH SYNOPSIS
+.B nvm
+[\fB\-\-help\fR]
+[\fB\-\-version\fR]
+[\fB\-\-no\-colors\fR]
+[\fIcommand\fR]
+.SH DESCRIPTION
+Simple bash script to manage multiple active node.js versions.
+.SH OPTIONS
+.TP
+\fB\-\-help\fR
+Print a help message and exit.
+.TP
+\fB\-\-version\fR
+Print the installed version of nvm and exit.
+.TP
+\fB\-\-no\-colors\fR
+Do not print out color codes in output.
+.TP
+\fBinstall\fR [\fB\-s\fR] \fIversion\fR [\fB\-\-reinstall\-packages\-from=\fIversion\fR] [\fB\-\-lts\fR] [\fB\-\-lts=\fIlts\-name\fR] [\fB\-\-skip\-default\-packages\fR] [\fB\-\-latest\-npm\fR]
+Download and install a \fIversion\fR. Uses \fB.nvmrc\fR if available.
+.IP
+If \fB\-s\fR is passed, install \fIversion\fR from source.
+.IP
+If \fB\-\-reinstall\-packages\-from=\fIversion\fR is passed, reinstall packages installed in \fIversion\fR.
+.IP
+If \fB\-\-lts\fR is passed, only select from LTS (long-term support) versions.
+.IP
+If \fB\-\-lts=\fIlts-name\fR is passed, only select from versions for a specific LTS line \fIlts-name\fR.
+.IP
+If \fB\-\-skip\-default\-packages\fR is passed, skip the default-packages file if it exists.
+.IP
+If \fB\-\-latest\-npm\fR is passed, attempt to upgrade to the latest working npm.
+.TP
+\fBuninstall \fIversion\fR [\fB\-\-lts\fR] [\fB\-\-lts=\fIlts\-name\fR]
+Uninstall a \fIversion\fR.
+.IP
+If \fB\-\-lts\fR is passed, uninstall using automatic LTS (long-term support) alias `lts/*`, if available.
+.IP
+If \fB\-\-lts=\fIlts\-name\fR is passed, uninstall using automatic alias for LTS line \fIlts\-name\fR, if available.
+.TP
+\fBuse\fR [\fB\-\-silent\fR] \fIversion\fR [\fB\-\-lts=\fIlts-name\fR]
+Modify PATH to use \fIversion\fR. Uses \fB.nvmrc\fR if available.
+.IP
+If \fB\-\-silent\fR is passed, do not print any output.
+.IP
+If \fB\-\-lts\fR is passed, use automatic LTS alias `lts/*`, if available.
+.IP
+If \fB\-\-lts=\fIversion\fR is passed, use automatic alias for provided LTS line, if available.
+.TP
+\fBexec\fR [\fB\-\-silent\fR] \fIversion\fR [\fIcommand\fR]
+Run \fIcommand\fR on \fIversion\fR. Uses \fB.nvmrc\fR if available.
+.IP
+If \fB\-\-silent\fR is passed, do not print any output.
+.IP
+If \fB\-\-lts\fR is passed, use automatic LTS alias `lts/*`, if available.
+.IP
+If \fB\-\-lts=\fIversion\fR is passed, use automatic alias for provided LTS line, if available.
+.TP
+\fBrun\fR [\fB\-\-silent\fR] \fIversion\fR [\fIargs\fR]
+Run \fBnode\fR on \fIversion\fR with \fIargs\fR as arguments. Uses \fB.nvmrc\fR if available.
+.IP
+If \fB\-\-silent\fR is passed, do not print any output.
+.IP
+If \fB\-\-lts\fR is passed, use automatic LTS alias `lts/*`, if available.
+.IP
+If \fB\-\-lts=\fIversion\fR is passed, use automatic alias for provided LTS line, if available.
+.TP
+\fBcurrent\fR
+Display currently activated version
+.TP
+\fBls\fR [\fIversion\fR]
+List installed versions or versions matching a given \fIversion\fR.
+.TP
+\fBls\-remote\fR [\fI\-\-lts=\fIversion\fR] [\fIversion\fR]
+List all remote versions, or versions matching a given \fIversion\fR, available for install.
+.IP
+If \fB\-\-lts\fR is passed, only show LTS versions.
+.IP
+If \fB\-\-lts=\fIlts\-name\fR is passed, only show versions for a specific LTS line.
+.TP
+\fBversion\fR \fIversion\fR
+Resolve the given description to a single local version \fIversion\fR.
+.TP
+\fBversion\-remote\fR \fIversion\fR [\fB\-\-lts\fR] [\fB\-\-lts=\fIlts-name\fR]
+Resolve the given description to a single remote version \fIversion\fR.
+.IP
+If \fB\-\-lts\fR is passed, only select from LTS versions.
+.IP
+If \fB\-\-lts=\fIlts-name\fR is passed, only select from versions for a specific LTS line.
+.TP
+\fBdeactivate\fR
+Undo effects of \fBnvm\fR on current shell.
+.TP
+\fBalias\fR ([\fIpattern]|\fIname version\fR)
+Show all aliases beginning with \fIpattern\fR, or set an alias named \fIname\fR
+pointing to \fIversion\fR.
+.TP
+\fBunalias\fR \fIname\fR
+Delete the alias name \fIname\fR.
+.TP
+\fBinstall\-latest\-npm\fR
+Attempt to upgrade to the latest working \fBnpm\fR on the current node version.
+.TP
+\fBreinstall\-packages\fR \fIversion\fR
+Reinstall global \fBnpm\fR packages contained in \fIversion\fR to current version.
+.TP
+\fBunload\fR
+unload \fBnvm\fR from shell.
+.TP
+\fBwhich\fR [\fIversion\fR]
+Display path to currently active installed node version, or version \fIversion\fR. Uses \fB.nvmrc\fR if available.
+.TP
+\fBcache\fR (\fBdir\fR|\fBclear\fR)
+If \fBdir\fR is passed, display path to the cache directory for nvm. If \fBclear\fR is passed, empty cache directory for nvm.
+.SH "EXIT STATUS"
+Returns 0 on success, or 127 on failure, along with the output of \fBnvm --help\fR.
+.SH ENVIRONMENT
+\fB$NVM_DIR\fR: Path to directory for \fBnvm\fR-specific information. Usually \fB~\fR.
+.SH FILES
+\fB$NVM_DIR/.nvmrc\fR: Sets default version for options \fBuse\fR, \fBinstall\fR, \fBexec\fR, \fBrun\fR, and \fBwhich\fR.
+.SH NOTES
+To remove, delete, or uninstall \fBnvm\fR, just remove the \fB$NVM_DIR\fR
+folder (usually \fB~/.nvm\fR).
+\fIversion\fR refers to any version\-line string \fBnvm\fR understands. This
+includes:
+.IP
+Full or partial version numbers, starting with an optional "v" (0.10, v0.1.2,
+v1)
+.IP
+default (built\-in) aliases: node, stable, unstable, iojs, system
+.IP
+custom aliases you define with \fBnvm alias foo\fR
+.SH BUGS
+See \fIhttps://github.com/creationix/nvm/issues\fR.
+.SH EXAMPLE
+.TS
+tab(|);
+l l .
+nvm install 8.0.0|Install a specific version number
+nvm use 8.0|Use the latest available 8.0.x release
+nvm run 6.10.3 app.js|run app.js using node 6.10.3
+nvm exec 4.8.3 node app.js|Run \fBnode app.js\fR with $PATH pointing to node 4.8.3
+nvm alias default 8.1.0|Set default node version on a shell
+nvm alias default node|Always default to the latest available node version on a shell
+.TE
+.SH "SEE ALSO"

@@ -348,6 +348,10 @@ nvm_check_global_modules() {
   fi
 }
 
+nvm_install_manpage() {
+    ln -s "$PWD"/nvm.1 /usr/local/share/man/man1/nvm.1
+}
+
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
     if [ -e "${NVM_DIR}" ]; then
@@ -449,6 +453,8 @@ nvm_do_install() {
   nvm_check_global_modules
 
   nvm_install_node
+
+  nvm_install_manpage
 
   nvm_reset
 
