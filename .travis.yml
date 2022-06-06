@@ -1,6 +1,6 @@
 ---
-language: python  
-python: 2.7.18
+language: python
+python: 3.9
 dist: focal
 addons:
   apt:
