@@ -6,6 +6,7 @@ addons:
   apt:
     packages:
       - zsh
+      - build-essential
     #  - ksh
     #  - gcc-4.8
     #  - g++-4.8
