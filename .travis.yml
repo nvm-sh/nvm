@@ -1,12 +1,11 @@
 ---
 language: python
-python: 3.9
+python: 2.7.18
 dist: focal
 addons:
   apt:
     packages:
       - zsh
-      - build-essential
     #  - ksh
     #  - gcc-4.8
     #  - g++-4.8
