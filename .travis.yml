@@ -2,6 +2,8 @@
 language: python
 python: 2.7.18
 dist: focal
+vm:
+  size: large
 addons:
   apt:
     packages:
