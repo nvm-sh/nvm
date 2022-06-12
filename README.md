@@ -1,4 +1,6 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.39.0-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
+<a href="https://github.com/nvm-sh/logos"><img alt="nvm project logo" src="https://raw.githubusercontent.com/nvm-sh/logos/HEAD/nvm-logo-color.svg" height="50" /></a>
+
+# Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.39.1-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
 <!-- To update this table of contents, ensure you have run `npm install` then `npm run doctoc` -->
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -90,10 +92,10 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 
 To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
 ```sh
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 ```
 ```sh
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 ```
 
 Running either of the above commands downloads a script and runs it. The script clones the nvm repository to `~/.nvm`, and attempts to add the source lines from the snippet below to the correct profile file (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
@@ -152,6 +154,8 @@ If the above doesn't fix the problem, you may try the following:
 
   - For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
 
+**Note** For Macs with the M1 chip, node started providing **arm64** arch darwin packages since v16.0.0. For earlier versions, there were only **darwin_x64** packages available but no **darwin_arm64**. If you are facing issues installing node using `nvm`, you may want to update to v16 or later.
+
 #### Ansible
 
 You can use a task:
@@ -159,7 +163,7 @@ You can use a task:
 ```yaml
 - name: nvm
   shell: >
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 ```
@@ -201,7 +205,7 @@ If you're running a system without prepackaged binary available, which means you
 
 **Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
 
-  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
+  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](https://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
 
 **Note:** On OS X, if you have/had a "system" node installed and want to install modules globally, keep in mind that:
 
@@ -221,7 +225,7 @@ If you have `git` installed (requires git v1.7.10+):
 
 1. clone this repo in the root of your user profile
   - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
-1. `cd ~/.nvm` and check out the latest version with `git checkout v0.39.0`
+1. `cd ~/.nvm` and check out the latest version with `git checkout v0.39.1`
 1. activate `nvm` by sourcing it from your shell: `. ./nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
@@ -457,7 +461,7 @@ nvm set-colors rgBcm
 
 #### Persisting custom colors
 
-If you want the custom colors to persist after terminating the shell, export the NVM_COLORS variable in your shell profile. For example, if you want to use cyan, magenta, green, bold red and bold yellow, add the following line:
+If you want the custom colors to persist after terminating the shell, export the `NVM_COLORS` variable in your shell profile. For example, if you want to use cyan, magenta, green, bold red and bold yellow, add the following line:
 
 ```sh
 export NVM_COLORS='cmgRY'
@@ -572,7 +576,7 @@ cdnvm() {
             nvm use default;
         fi
 
-        elif [[ -s $nvm_path/.nvmrc && -r $nvm_path/.nvmrc ]]; then
+    elif [[ -s $nvm_path/.nvmrc && -r $nvm_path/.nvmrc ]]; then
         declare nvm_version
         nvm_version=$(<"$nvm_path"/.nvmrc)
 
@@ -653,7 +657,7 @@ function load_nvm --on-variable="PWD"
     set -l nvmrc_node_version (nvm version (cat $nvmrc_path))
     if test "$nvmrc_node_version" = "N/A"
       nvm install (cat $nvmrc_path)
-    else if test nvmrc_node_version != node_version
+    else if test "$nvmrc_node_version" != "$node_version"
       nvm use $nvmrc_node_version
     end
   else if test "$node_version" != "$default_node_version"
@@ -664,7 +668,7 @@ end
 
 # ~/.config/fish/config.fish
 # You must call it on initialization or listening to directory switching won't work
-load_nvm
+load_nvm > /dev/stderr
 ```
 
 ## Running Tests
@@ -716,36 +720,36 @@ Put the above sourcing line just below the sourcing line for nvm in your profile
 ### Usage
 
 nvm:
-> $ nvm <kbd>Tab</kbd>
 
-```
+> `$ nvm` <kbd>Tab</kbd>
+```sh
 alias               deactivate          install             list-remote         reinstall-packages  uninstall           version
 cache               exec                install-latest-npm  ls                  run                 unload              version-remote
 current             help                list                ls-remote           unalias             use                 which
 ```
 
 nvm alias:
-> $ nvm alias <kbd>Tab</kbd>
 
-```
+> `$ nvm alias` <kbd>Tab</kbd>
+```sh
 default      iojs         lts/*        lts/argon    lts/boron    lts/carbon   lts/dubnium  lts/erbium   node         stable       unstable
 ```
 
-> $ nvm alias my_alias <kbd>Tab</kbd>
 
-```
+> `$ nvm alias my_alias` <kbd>Tab</kbd>
+```sh
 v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm use:
-> $ nvm use <kbd>Tab</kbd>
+> `$ nvm use` <kbd>Tab</kbd>
 
 ```
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm uninstall:
-> $ nvm uninstall <kbd>Tab</kbd>
+> `$ nvm uninstall` <kbd>Tab</kbd>
 
 ```
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
@@ -777,7 +781,7 @@ set -e
 
 ## Installing nvm on Alpine Linux
 
-In order to provide the best performance (and other optimisations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
+In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
 
 Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
 
@@ -787,7 +791,7 @@ If installing nvm on Alpine Linux *is* still what you want or need to do, you sh
 
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc g++ libgcc linux-headers grep util-linux binutils findutils
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 ```
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
@@ -884,11 +888,11 @@ You have to make sure that the user directory name in `$HOME` and the user direc
 To change the user directory and/or account name follow the instructions [here](https://support.apple.com/en-us/HT201548)
 
 [1]: https://github.com/nvm-sh/nvm.git
-[2]: https://github.com/nvm-sh/nvm/blob/v0.39.0/install.sh
+[2]: https://github.com/nvm-sh/nvm/blob/v0.39.1/install.sh
 [3]: https://travis-ci.org/nvm-sh/nvm
-[4]: https://github.com/nvm-sh/nvm/releases/tag/v0.39.0
+[4]: https://github.com/nvm-sh/nvm/releases/tag/v0.39.1
 [Urchin]: https://github.com/scraperwiki/urchin
-[Fish]: http://fishshell.com
+[Fish]: https://fishshell.com
 
 **Homebrew makes zsh directories unsecure**
 
@@ -901,56 +905,70 @@ Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` 
 
 **Macs with M1 chip**
 
-_January 2021:_ there are no pre-compiled NodeJS binaries for versions prior to 15.x for Apple's new M1 chip (arm64 architecture).
+Experimental support for the M1 architecture was added in node.js v15.3 and full support was added in v16.0.
+Because of this, if you try to install older versions of node as usual, you will probably experience either compilation errors when installing node or out-of-memory errors while running your code.
 
-Some issues you may encounter:
+So, if you want to run a version prior to v16.0 on an M1 Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that Rosetta 2 can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
+Here's what you will need to do:
 
-- using `nvm` to install, say, `v14.15.4`:
-  - the C code compiles successfully
-  - but crashes with an out of memory error when used
-  - increasing the memory available to node still produces the out of memory errors:
-    ```sh
-    $ NODE_OPTIONS="--max-old-space-size=4096" ./node_modules/.bin/your_node_package
-    ```
-- when using `nvm` to install some versions, the compilation fails
+- Install Rosetta, if you haven't already done so
 
-One solution to this issue is to change the architecture of your shell from arm64 to x86.
+  ```sh
+  $ softwareupdate --install-rosetta
+  ```
 
-Let's assume that:
-- you already have versions `12.20.1` and `14.15.4` installed using `nvm`
-- the current version in use is `14.15.4`
-- you are using the `zsh` shell
-- you have Rosetta 2 installed (macOS prompts you to install Rosetta 2 the first time you open a Intel-only non-command-line application, or you may install Rosetta 2 from the command line with `softwareupdate --install-rosetta`)
+  You might wonder, "how will my M1 Mac know to use Rosetta for a version of node compiled for an Intel chip?".
+  If an executable contains only Intel instructions, macOS will automatically use Rosetta to translate the instructions.
 
-```sh
-# Check what version you're running:
-$ node --version
-v14.15.4
-# Check architecture of the `node` binary:
-$ node -p process.arch
-arm64
-# This confirms that the arch is for the M1 chip, which is causing the problems.
-# So we need to uninstall it.
-# We can't uninstall the version we are currently using, so switch to another version:
-$ nvm install v12.20.1
-# Now uninstall the version we want to replace:
-$ nvm uninstall v14.15.4
-# Launch a new zsh process under the 64-bit X86 architecture:
-$ arch -x86_64 zsh
-# Install node using nvm. This should download the precompiled x64 binary:
-$ nvm install v14.15.4
-# Now check that the architecture is correct:
-$ node -p process.arch
-x64
-# It is now safe to return to the arm64 zsh process:
-$ exit
-# We're back to a native shell:
-$ arch
-arm64
-# And the new version is now available to use:
-$ nvm use v14.15.4
-Now using node v14.15.4 (npm v6.14.10)
-```
+- Open a shell that's running using Rosetta
+
+  ```sh
+  $ arch -x86_64 zsh
+  ```
+
+  Note: This same thing can also be accomplished by finding the Terminal or iTerm App in Finder, right clicking, selecting "Get Info", and then checking the box labeled "Open using Rosetta".
+
+  Note: This terminal session is now running in `zsh`.
+  If `zsh` is not the shell you typically use, `nvm` may not be `source`'d automatically like it probably is for your usual shell through your dotfiles.
+  If that's the case, make sure to source `nvm`.
+
+  ```sh
+  $ source "${NVM_DIR}/nvm.sh"
+  ```
+
+- Install whatever older version of node you are interested in. Let's use 12.22.1 as an example.
+  This will fetch the node source code and compile it, which will take several minutes.
+
+  ```sh
+  $ nvm install v12.22.1 --shared-zlib
+  ```
+
+  Note: You're probably curious why `--shared-zlib` is included.
+  There's a bug in recent versions of Apple's system `clang` compiler.
+  If one of these broken versions is installed on your system, the above step will likely still succeed even if you didn't include the `--shared-zlib` flag.
+  However, later, when you attempt to `npm install` something using your old version of node.js, you will see `incorrect data check` errors.
+  If you want to avoid the possible hassle of dealing with this, include that flag.
+  For more details, see [this issue](https://github.com/nodejs/node/issues/39313) and [this comment](https://github.com/nodejs/node/issues/39313#issuecomment-902395576)
+
+- Exit back to your native shell.
+
+  ```sh
+  $ exit
+  $ arch
+  arm64
+  ```
+
+  Note: If you selected the box labeled "Open using Rosetta" rather than running the CLI command in the second step, you will see `i386` here.
+  Unless you have another reason to have that box selected, you can deselect it now.
+
+- Check to make sure the architecture is correct. `x64` is the abbreviation for `x86_64`, which is what you want to see.
+
+  ```sh
+  $ node -p process.arch
+  x64
+  ```
+
+Now you should be able to use node as usual.
 
 ## Maintainers
 

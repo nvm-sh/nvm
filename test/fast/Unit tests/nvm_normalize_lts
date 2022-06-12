@@ -1,0 +1,38 @@
+#!/bin/sh
+
+cleanup() {
+    unset nvm_get_os
+}
+
+die () { cleanup; echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+ACTUAL="$(nvm_normalize_lts "foo")"
+EXPECTED='foo'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+ACTUAL="$(nvm_normalize_lts "lts/*")"
+EXPECTED='lts/*'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+
+MOCKS_DIR="../Unit tests/mocks"
+STAR="$(cat "$MOCKS_DIR/lts-star.txt")"
+
+ACTUAL="$(nvm_normalize_lts "${STAR}")"
+EXPECTED="${STAR}"
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
+LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
+
+INDEX=1
+printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
+    ACTUAL="$(nvm_normalize_lts "lts/-${INDEX}")"
+    MESSAGE="for lts/-${INDEX} (${LTS})"
+    EXPECTED="lts/$(echo "${LTS_LIST}" | tail -n +${INDEX} | head -n1)"
+    [ "${ACTUAL}" = "${EXPECTED}" ] || die "${MESSAGE}: expected >${EXPECTED}<, got >${ACTUAL}<"
+
+    INDEX=$(($INDEX + 1))
+done

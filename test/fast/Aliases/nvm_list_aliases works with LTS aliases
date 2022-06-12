@@ -1,0 +1,25 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+
+die () {
+  echo "$@"
+  exit 1
+}
+
+set -e
+
+nvm_alias_path() {
+  nvm_echo "../../../alias"
+}
+
+nvm ls-remote >/dev/null || die 'nvm ls-remote (to populate LTS aliases) failed'
+
+MOCKS_DIR="../Unit tests/mocks"
+
+EXPECTED_OUTPUT="$(cat "$MOCKS_DIR/lts-star.txt")"
+STDOUT_OUTPUT="$(nvm_list_aliases "lts/*")"
+STDERR_OUTPUT="$(nvm_list_aliases "lts/*" 2>&1 >/dev/null)"
+
+[ -z "${STDERR_OUTPUT}" ] || die "expected no stderr output, got >${STDERR_OUTPUT}<"
+[ "${STDOUT_OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected ${EXPECTED_OUTPUT}, got >${STDOUT_OUTPUT}<"
