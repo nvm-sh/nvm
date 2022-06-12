@@ -10,6 +10,12 @@ nvm_echo() {
   command printf %s\\n "$*" 2>/dev/null
 }
 
+if [ -z "${BASH_VERSION}" ] || [ -n "${ZSH_VERSION}" ]; then
+  # shellcheck disable=SC2016
+  nvm_echo >&2 'Error: the install instructions explicitly say to pipe the install script to `bash`; please follow them'
+  exit 1
+fi
+
 nvm_grep() {
   GREP_OPTIONS='' command grep "$@"
 }
@@ -355,6 +361,12 @@ nvm_do_install() {
       nvm_echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
       exit 1
     fi
+  fi
+  if nvm_has xcode-select && [ "$(xcode-select -p >/dev/null 2>/dev/null ; echo $?)" = '2' ] && [ "$(which git)" = '/usr/bin/git' ] && [ "$(which curl)" = '/usr/bin/curl' ]; then
+    nvm_echo >&2 'You may be on a Mac, and need to install the Xcode Command Line Developer Tools.'
+    # shellcheck disable=SC2016
+    nvm_echo >&2 'If so, run `xcode-select --install` and try again. If not, please report this!'
+    exit 1
   fi
   if [ -z "${METHOD}" ]; then
     # Autodetect install method

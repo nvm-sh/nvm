@@ -1,3 +1,5 @@
+<a href="https://github.com/nvm-sh/logos"><img alt="nvm project logo" src="https://raw.githubusercontent.com/nvm-sh/logos/HEAD/nvm-logo-color.svg" height="50" /></a>
+
 # Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.39.1-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
 <!-- To update this table of contents, ensure you have run `npm install` then `npm run doctoc` -->
@@ -203,7 +205,7 @@ If you're running a system without prepackaged binary available, which means you
 
 **Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
 
-  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
+  - [How to Install Command Line Tools in OS X Mavericks & Yosemite (Without Xcode)](https://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/)
 
 **Note:** On OS X, if you have/had a "system" node installed and want to install modules globally, keep in mind that:
 
@@ -459,7 +461,7 @@ nvm set-colors rgBcm
 
 #### Persisting custom colors
 
-If you want the custom colors to persist after terminating the shell, export the NVM_COLORS variable in your shell profile. For example, if you want to use cyan, magenta, green, bold red and bold yellow, add the following line:
+If you want the custom colors to persist after terminating the shell, export the `NVM_COLORS` variable in your shell profile. For example, if you want to use cyan, magenta, green, bold red and bold yellow, add the following line:
 
 ```sh
 export NVM_COLORS='cmgRY'
@@ -655,7 +657,7 @@ function load_nvm --on-variable="PWD"
     set -l nvmrc_node_version (nvm version (cat $nvmrc_path))
     if test "$nvmrc_node_version" = "N/A"
       nvm install (cat $nvmrc_path)
-    else if test nvmrc_node_version != node_version
+    else if test "$nvmrc_node_version" != "$node_version"
       nvm use $nvmrc_node_version
     end
   else if test "$node_version" != "$default_node_version"
@@ -666,7 +668,7 @@ end
 
 # ~/.config/fish/config.fish
 # You must call it on initialization or listening to directory switching won't work
-load_nvm
+load_nvm > /dev/stderr
 ```
 
 ## Running Tests
@@ -718,36 +720,36 @@ Put the above sourcing line just below the sourcing line for nvm in your profile
 ### Usage
 
 nvm:
-> $ nvm <kbd>Tab</kbd>
 
-```
+> `$ nvm` <kbd>Tab</kbd>
+```sh
 alias               deactivate          install             list-remote         reinstall-packages  uninstall           version
 cache               exec                install-latest-npm  ls                  run                 unload              version-remote
 current             help                list                ls-remote           unalias             use                 which
 ```
 
 nvm alias:
-> $ nvm alias <kbd>Tab</kbd>
 
-```
+> `$ nvm alias` <kbd>Tab</kbd>
+```sh
 default      iojs         lts/*        lts/argon    lts/boron    lts/carbon   lts/dubnium  lts/erbium   node         stable       unstable
 ```
 
-> $ nvm alias my_alias <kbd>Tab</kbd>
 
-```
+> `$ nvm alias my_alias` <kbd>Tab</kbd>
+```sh
 v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm use:
-> $ nvm use <kbd>Tab</kbd>
+> `$ nvm use` <kbd>Tab</kbd>
 
 ```
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
 ```
 
 nvm uninstall:
-> $ nvm uninstall <kbd>Tab</kbd>
+> `$ nvm uninstall` <kbd>Tab</kbd>
 
 ```
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
@@ -779,7 +781,7 @@ set -e
 
 ## Installing nvm on Alpine Linux
 
-In order to provide the best performance (and other optimisations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
+In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
 
 Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
 
@@ -890,7 +892,7 @@ To change the user directory and/or account name follow the instructions [here](
 [3]: https://travis-ci.org/nvm-sh/nvm
 [4]: https://github.com/nvm-sh/nvm/releases/tag/v0.39.1
 [Urchin]: https://github.com/scraperwiki/urchin
-[Fish]: http://fishshell.com
+[Fish]: https://fishshell.com
 
 **Homebrew makes zsh directories unsecure**
 
@@ -906,7 +908,7 @@ Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` 
 Experimental support for the M1 architecture was added in node.js v15.3 and full support was added in v16.0.
 Because of this, if you try to install older versions of node as usual, you will probably experience either compilation errors when installing node or out-of-memory errors while running your code.
 
-So, if you want to run a version prior to v16.0 on an M1 Mac, it may be best to compile node targeting the x86_64 Intel architecture so that Rosetta 2 can translate the x86_64 processor instructions to ARM-based Apple Silicon instructions.
+So, if you want to run a version prior to v16.0 on an M1 Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that Rosetta 2 can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
 Here's what you will need to do:
 
 - Install Rosetta, if you haven't already done so
@@ -931,7 +933,7 @@ Here's what you will need to do:
   If that's the case, make sure to source `nvm`.
 
   ```sh
-  $ source "${NVM_DIR}/.nvm/nvm.sh"
+  $ source "${NVM_DIR}/nvm.sh"
   ```
 
 - Install whatever older version of node you are interested in. Let's use 12.22.1 as an example.
@@ -959,7 +961,7 @@ Here's what you will need to do:
   Note: If you selected the box labeled "Open using Rosetta" rather than running the CLI command in the second step, you will see `i386` here.
   Unless you have another reason to have that box selected, you can deselect it now.
 
-- Check to make sure the architecture is correct. `x64` is the abbreviation for x86_64, which is what you want to see.
+- Check to make sure the architecture is correct. `x64` is the abbreviation for `x86_64`, which is what you want to see.
 
   ```sh
   $ node -p process.arch

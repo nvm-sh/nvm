@@ -101,15 +101,15 @@ nvm_get_latest() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S http://latest.nvm.sh -o /dev/null)"
+    NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
-    NVM_LATEST_URL="$(wget -q http://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    NVM_LATEST_URL="$(wget -q https://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
     nvm_err 'nvm needs curl or wget to proceed.'
     return 1
   fi
   if [ -z "${NVM_LATEST_URL}" ]; then
-    nvm_err "http://latest.nvm.sh did not redirect to the latest release on GitHub"
+    nvm_err "https://latest.nvm.sh did not redirect to the latest release on GitHub"
     return 2
   fi
   nvm_echo "${NVM_LATEST_URL##*/}"
@@ -506,6 +506,8 @@ nvm_version_path() {
 nvm_ensure_version_installed() {
   local PROVIDED_VERSION
   PROVIDED_VERSION="${1-}"
+  local IS_VERSION_FROM_NVMRC
+  IS_VERSION_FROM_NVMRC="${2-}"
   if [ "${PROVIDED_VERSION}" = 'system' ]; then
     if nvm_has_system_iojs || nvm_has_system_node; then
       return 0
@@ -527,7 +529,11 @@ nvm_ensure_version_installed() {
       nvm_err "N/A: version \"${PREFIXED_VERSION:-$PROVIDED_VERSION}\" is not yet installed."
     fi
     nvm_err ""
-    nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
+    if [ "${IS_VERSION_FROM_NVMRC}" != '1' ]; then
+        nvm_err "You need to run \`nvm install ${PROVIDED_VERSION}\` to install and use it."
+      else
+        nvm_err 'You need to run `nvm install` to install and use the node version specified in `.nvmrc`.'
+    fi
     return 1
   fi
 }
@@ -1870,9 +1876,12 @@ nvm_get_arch() {
     *) NVM_ARCH="${HOST_ARCH}" ;;
   esac
 
-  # If running a 64bit ARM kernel but a 32bit ARM userland, change ARCH to 32bit ARM (armv7l)
-  L=$(ls -dl /sbin/init 2>/dev/null) # if /sbin/init is 32bit executable
-  if [ "$(uname)" = "Linux" ] && [ "${NVM_ARCH}" = arm64 ] && [ "$(od -An -t x1 -j 4 -N 1 "${L#*-> }")" = ' 01' ]; then
+  # If running a 64bit ARM kernel but a 32bit ARM userland,
+  # change ARCH to 32bit ARM (armv7l) if /sbin/init is 32bit executable
+  local L
+  if [ "$(uname)" = "Linux" ] && [ "${NVM_ARCH}" = arm64 ] &&
+    L="$(command ls -dl /sbin/init 2>/dev/null)" &&
+    [ "$(od -An -t x1 -j 4 -N 1 "${L#*-> }")" = ' 01' ]; then
     NVM_ARCH=armv7l
     HOST_ARCH=armv7l
   fi
@@ -2741,6 +2750,15 @@ nvm() {
     EXIT_CODE="$?"
     set -a
     return "$EXIT_CODE"
+  elif [ -n "${BASH-}" ] && [ "${-#*E}" != "$-" ]; then
+    # shellcheck disable=SC3041
+    set +E
+    local EXIT_CODE
+    IFS="${DEFAULT_IFS}" nvm "$@"
+    EXIT_CODE="$?"
+    # shellcheck disable=SC3041
+    set -E
+    return "$EXIT_CODE"
   elif [ "${IFS}" != "${DEFAULT_IFS}" ]; then
     IFS="${DEFAULT_IFS}" nvm "$@"
     return "$?"
@@ -3510,6 +3528,8 @@ nvm() {
       local NVM_DELETE_PREFIX
       NVM_DELETE_PREFIX=0
       local NVM_LTS
+      local IS_VERSION_FROM_NVMRC
+      IS_VERSION_FROM_NVMRC=0
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -3537,6 +3557,7 @@ nvm() {
         NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version
         if [ -n "${NVM_RC_VERSION-}" ]; then
           PROVIDED_VERSION="${NVM_RC_VERSION}"
+          IS_VERSION_FROM_NVMRC=1
           VERSION="$(nvm_version "${PROVIDED_VERSION}")"
         fi
         unset NVM_RC_VERSION
@@ -3576,14 +3597,12 @@ nvm() {
       fi
       if [ "${VERSION}" = 'N/A' ]; then
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-          nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
-          nvm_err ""
-          nvm_err "You need to run \"nvm install ${PROVIDED_VERSION}\" to install it before using it."
+          nvm_ensure_version_installed "${PROVIDED_VERSION}" "${IS_VERSION_FROM_NVMRC}"
         fi
         return 3
       # This nvm_ensure_version_installed call can be a performance bottleneck
       # on shell startup. Perhaps we can optimize it away or make it faster.
-      elif ! nvm_ensure_version_installed "${VERSION}"; then
+      elif ! nvm_ensure_version_installed "${VERSION}" "${IS_VERSION_FROM_NVMRC}"; then
         return $?
       fi
 
@@ -3638,6 +3657,8 @@ nvm() {
       local provided_version
       local has_checked_nvmrc
       has_checked_nvmrc=0
+      local IS_VERSION_FROM_NVMRC
+      IS_VERSION_FROM_NVMRC=0
       # run given version of node
 
       local NVM_SILENT
@@ -3683,6 +3704,8 @@ nvm() {
             if [ $has_checked_nvmrc -ne 1 ]; then
               NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
             fi
+            provided_version="${NVM_RC_VERSION}"
+            IS_VERSION_FROM_NVMRC=1
             VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
             unset NVM_RC_VERSION
           else
@@ -3705,7 +3728,7 @@ nvm() {
         VERSION=''
       fi
       if [ "_${VERSION}" = "_N/A" ]; then
-        nvm_ensure_version_installed "${provided_version}"
+        nvm_ensure_version_installed "${provided_version}" "${IS_VERSION_FROM_NVMRC}"
       elif [ "${NVM_IOJS}" = true ]; then
         nvm exec "${NVM_SILENT_ARG-}" "${LTS_ARG-}" "${VERSION}" iojs "$@"
       else
