@@ -555,7 +555,7 @@ Put the following at the end of your `$HOME/.bashrc`:
 
 ```bash
 cdnvm() {
-    command cd "$@";
+    command cd "$@" || return $?
     nvm_path=$(nvm_find_up .nvmrc | tr -d '\n')
 
     # If there are no .nvmrc file, use the default nvm version
