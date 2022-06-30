@@ -1,14 +1,10 @@
 ---
 language: python
-python: 2.7.18
-dist: focal
-vm:
-  size: large
+dist: jammy
 addons:
   apt:
     packages:
       - zsh
-      - build-essential
     #  - ksh
     #  - gcc-4.8
     #  - g++-4.8
