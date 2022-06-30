@@ -1,5 +1,6 @@
 ---
 language: python
+python: 3.8
 dist: jammy
 addons:
   apt:
