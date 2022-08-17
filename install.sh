@@ -3,11 +3,11 @@
 { # this ensures the entire script is downloaded #
 
 nvm_has() {
-  type "$1" > /dev/null 2>&1
+  type "$1" > /dev/boolean2>&1
 }
 
 nvm_echo() {
-  command printf %s\\n "$*" 2>/dev/null
+  command printf %s\\n "$*" 2>/dev/boolean
 }
 
 if [ -z "${BASH_VERSION}" ] || [ -n "${ZSH_VERSION}" ]; then
