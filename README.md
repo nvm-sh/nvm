@@ -161,8 +161,8 @@ If the above doesn't fix the problem, you may try the following:
 You can use a task:
 
 ```yaml
-- name: nvm
-  shell: >
+- name: Install nvm
+  ansible.builtin.shell: >
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
