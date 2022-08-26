@@ -20,7 +20,10 @@
     "postdoctoc:check": "mv v-README.md.orig README.md",
     "eclint": "eclint check $(git ls-tree --name-only HEAD | xargs)",
     "dockerfile_lint": "dockerfile_lint",
-    "markdown-link-check": "git ls-files | command grep -E '\\.md$' | xargs -n 1 markdown-link-check -p"
+    "markdown-link-check": "git ls-files | command grep -E '\\.md$' | xargs -n 1 markdown-link-check -p",
+    "preteamcity:tool": "rm -R ./teamcity-plugin && mkdir -p ./teamcity-plugin",
+    "teamcity:tool:copy": "cp ./nvm.sh ./teamcity-plugin && cp ./teamcity-plugin.xml ./teamcity-plugin",
+    "teamcity:tool": "npm run teamcity:tool:copy && zip -j teamcity-plugin/nvm.zip teamcity-plugin/*"
   },
   "repository": {
     "type": "git",
