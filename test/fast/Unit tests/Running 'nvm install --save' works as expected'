@@ -1,0 +1,43 @@
+#!/bin/sh
+\. ../../../nvm.sh
+\. ../../common.sh
+
+set -e
+
+TEST_VERSION="v0.2.4"
+
+if [ -f .nvmrc ]; then mv .nvmrc .nvmrc.orig; fi
+
+cleanup () {
+  nvm cache clear
+  nvm deactivate
+  nvm unalias default
+  rm -rf ${NVM_DIR}/v* .nvmrc
+  if [ -f .nvmrc.orig ]; then mv .nvmrc.orig .nvmrc; fi
+  unset -f nvm_ls_remote nvm_ls_remote_iojs
+}
+
+die () {
+  echo "$@"
+  cleanup
+  exit 1
+}
+
+REMOTE="$PWD/mocks/nvm_ls_remote.txt"
+nvm_ls_remote() {
+  cat "$REMOTE"
+}
+REMOTE_IOJS="$PWD/mocks/nvm_ls_remote_iojs.txt"
+nvm_ls_remote_iojs() {
+  cat "$REMOTE_IOJS"
+}
+
+make_fake_node "$TEST_VERSION"
+
+nvm install --save "$TEST_VERSION" || die "\`nvm install --save $TEST_VERSION\` failed"
+OUTPUT="$(cat .nvmrc)"
+
+nvm_is_valid_version "$(cat .nvmrc)" \
+  || die "\`nvm install --save $TEST_VERSION\`+ \`cat .nvmrc\` outputted invalid version: got '${OUTPUT}'"
+
+cleanup
