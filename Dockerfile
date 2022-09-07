@@ -6,7 +6,7 @@
 # Please note that it'll use about 1.2 GB disk space and about 15 minutes to
 # build this image, it depends on your hardware.
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 LABEL name="nvm-dev-env"
 LABEL version="latest"
@@ -56,8 +56,8 @@ RUN apt update         && \
         jq                    \
         zsh                   \
         ksh                   \
-        gcc-4.8               \
-        g++-4.8               \
+        gcc                   \
+        g++                   \
         xz-utils              \
         build-essential       \
         bash-completion       && \
