@@ -283,6 +283,11 @@ nvm_install_latest_npm() {
     if [ $NVM_IS_13_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 14.15.0; then
       NVM_IS_14_LTS_OR_ABOVE=1
     fi
+    local NVM_IS_14_17_OR_ABOVE
+    NVM_IS_14_17_OR_ABOVE=0
+    if [ $NVM_IS_14_LTS_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 14.17.0; then
+      NVM_IS_14_17_OR_ABOVE=1
+    fi
     local NVM_IS_15_OR_ABOVE
     NVM_IS_15_OR_ABOVE=0
     if [ $NVM_IS_14_LTS_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 15.0.0; then
@@ -292,6 +297,21 @@ nvm_install_latest_npm() {
     NVM_IS_16_OR_ABOVE=0
     if [ $NVM_IS_15_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 16.0.0; then
       NVM_IS_16_OR_ABOVE=1
+    fi
+    local NVM_IS_16_LTS_OR_ABOVE
+    NVM_IS_16_LTS_OR_ABOVE=0
+    if [ $NVM_IS_16_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 16.13.0; then
+      NVM_IS_16_LTS_OR_ABOVE=1
+    fi
+    local NVM_IS_17_OR_ABOVE
+    NVM_IS_17_OR_ABOVE=0
+    if [ $NVM_IS_16_LTS_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 17.0.0; then
+      NVM_IS_17_OR_ABOVE=1
+    fi
+    local NVM_IS_18_OR_ABOVE
+    NVM_IS_18_OR_ABOVE=0
+    if [ $NVM_IS_17_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 18.0.0; then
+      NVM_IS_18_OR_ABOVE=1
     fi
 
     if [ $NVM_IS_4_4_OR_BELOW -eq 1 ] || {
@@ -321,6 +341,14 @@ nvm_install_latest_npm() {
     ; then
       nvm_echo '* `npm` `v7.x` is the last version that works on `node` `v13`, `v15`, below `v12.13`, or `v14.0` - `v14.15`'
       $NVM_NPM_CMD install -g npm@7
+    elif \
+      { [ $NVM_IS_12_LTS_OR_ABOVE -eq 1 ] && [ $NVM_IS_13_OR_ABOVE -eq 0 ]; } \
+      || { [ $NVM_IS_14_LTS_OR_ABOVE -eq 1 ] && [ $NVM_IS_14_17_OR_ABOVE -eq 0 ]; } \
+      || { [ $NVM_IS_16_OR_ABOVE -eq 1 ] && [ $NVM_IS_16_LTS_OR_ABOVE -eq 0 ]; } \
+      || { [ $NVM_IS_17_OR_ABOVE -eq 1 ] && [ $NVM_IS_18_OR_ABOVE -eq 0 ]; } \
+    ; then
+      nvm_echo '* `npm` `v8.x` is the last version that works on `node` `v12`, `v14.13` - `v14.16`, or `v16.0` - `v16.12`'
+      $NVM_NPM_CMD install -g npm@8
     else
       nvm_echo '* Installing latest `npm`; if this does not work on your node version, please report a bug!'
       $NVM_NPM_CMD install -g npm
