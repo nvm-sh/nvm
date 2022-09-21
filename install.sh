@@ -40,7 +40,7 @@ nvm_profile_is_bash_or_zsh() {
   local TEST_PROFILE
   TEST_PROFILE="${1-}"
   case "${TEST_PROFILE-}" in
-    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc")
+    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc" | *"/.zprofile")
       return
     ;;
     *)
@@ -282,11 +282,13 @@ nvm_detect_profile() {
   elif [ "${SHELL#*zsh}" != "$SHELL" ]; then
     if [ -f "$HOME/.zshrc" ]; then
       DETECTED_PROFILE="$HOME/.zshrc"
+    elif [ -f "$HOME/.zprofile" ]; then
+      DETECTED_PROFILE="$HOME/.zprofile"
     fi
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then
-    for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zshrc"
+    for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zprofile" ".zshrc"
     do
       if DETECTED_PROFILE="$(nvm_try_profile "${HOME}/${EACH_PROFILE}")"; then
         break
@@ -415,7 +417,7 @@ nvm_do_install() {
     if [ -n "${PROFILE}" ]; then
       TRIED_PROFILE="${NVM_PROFILE} (as defined in \$PROFILE), "
     fi
-    nvm_echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
+    nvm_echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zprofile, ~/.zshrc, and ~/.profile."
     nvm_echo "=> Create one of them and run this script again"
     nvm_echo "   OR"
     nvm_echo "=> Append the following lines to the correct file yourself:"
