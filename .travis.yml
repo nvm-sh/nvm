@@ -23,7 +23,7 @@ before_install:
   - zsh  --version
   - dpkg -s dash | grep ^Version | awk '{print $2}'
 install:
-  - if [ -z "${SHELLCHECK-}" ]; then nvm install node && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
+  - if [ -z "${SHELLCHECK-}" ]; then nvm install 16 && nvm unalias default && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
 script:
   - if [ -n "${SHELL-}" ] && [ -n "${TEST_SUITE}" ]; then if [ "${TEST_SUITE}" = 'installation_iojs' ]; then travis_retry make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL ; else make TEST_SUITE=$TEST_SUITE URCHIN="$(npm bin)/urchin" test-$SHELL; fi; fi
