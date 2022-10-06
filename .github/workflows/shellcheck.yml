@@ -34,11 +34,14 @@ jobs:
             github.com:443
             pkg-containers.githubusercontent.com:443
       - uses: actions/checkout@v2
-      - name: Install shellcheck
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Install latest shellcheck
         run: brew install shellcheck
         env:
           HOMEBREW_NO_ANALYTICS: 1
-      - run: "shellcheck --version"
+      - run: which shellcheck
+      - run: shellcheck --version
       - name: Run shellcheck on ${{ matrix.file }}
         run: shellcheck -s ${{ matrix.shell }} ${{ matrix.file }}
 
