@@ -3093,7 +3093,6 @@ nvm() {
       local PROVIDED_REINSTALL_PACKAGES_FROM
       local REINSTALL_PACKAGES_FROM
       local SKIP_DEFAULT_PACKAGES
-      local DEFAULT_PACKAGES
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -3293,14 +3292,6 @@ nvm() {
         shift
       done
 
-      if [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
-        DEFAULT_PACKAGES="$(nvm_get_default_packages)"
-        EXIT_CODE=$?
-        if [ $EXIT_CODE -ne 0 ]; then
-          return $EXIT_CODE
-        fi
-      fi
-
       if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ] && [ "$(nvm_ensure_version_prefix "${PROVIDED_REINSTALL_PACKAGES_FROM}")" = "${VERSION}" ]; then
         nvm_err "You can't reinstall global packages from the same version of node you're installing."
         return 4
@@ -3316,17 +3307,22 @@ nvm() {
         FLAVOR="$(nvm_node_prefix)"
       fi
 
+      local EXIT_CODE
+
       if nvm_is_version_installed "${VERSION}"; then
         nvm_err "${VERSION} is already installed."
         if nvm use "${VERSION}"; then
           if [ "${NVM_UPGRADE_NPM}" = 1 ]; then
             nvm install-latest-npm
+            EXIT_CODE=$?
           fi
-          if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -n "${DEFAULT_PACKAGES-}" ]; then
-            nvm_install_default_packages "${DEFAULT_PACKAGES}"
+          if [ $EXIT_CODE -ne 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
+            nvm_install_default_packages
+            EXIT_CODE=$?
           fi
-          if [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
+          if [ $EXIT_CODE -ne 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
             nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
+            EXIT_CODE=$?
           fi
         fi
         if [ -n "${LTS-}" ]; then
@@ -3336,15 +3332,14 @@ nvm() {
           nvm_ensure_default_set "${provided_version}"
         fi
 
-        if [ -n "${ALIAS-}" ]; then
+        if [ $EXIT_CODE -ne 0 ] && [ -n "${ALIAS-}" ]; then
           nvm alias "${ALIAS}" "${provided_version}"
+          EXIT_CODE=$?
         fi
 
-        return $?
+        return $EXIT_CODE
       fi
 
-      local EXIT_CODE
-      EXIT_CODE=-1
       if [ -n "${NVM_INSTALL_THIRD_PARTY_HOOK-}" ]; then
         nvm_err '** $NVM_INSTALL_THIRD_PARTY_HOOK env var set; dispatching to third-party installation method **'
         local NVM_METHOD_PREFERENCE
@@ -3413,10 +3408,11 @@ nvm() {
           nvm install-latest-npm
           EXIT_CODE=$?
         fi
-        if [ -z "${SKIP_DEFAULT_PACKAGES-}" ] && [ -n "${DEFAULT_PACKAGES-}" ]; then
-          nvm_install_default_packages "${DEFAULT_PACKAGES}"
+        if [ $EXIT_CODE -eq 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
+          nvm_install_default_packages
+          EXIT_CODE=$?
         fi
-        if [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
+        if [ $EXIT_CODE -eq 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
           nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
           EXIT_CODE=$?
         fi
@@ -4286,10 +4282,16 @@ nvm_get_default_packages() {
 }
 
 nvm_install_default_packages() {
+  local DEFAULT_PACKAGES
+  DEFAULT_PACKAGES="$(nvm_get_default_packages)"
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -ne 0 ] || [ -z "${DEFAULT_PACKAGES}" ]; then
+    return $EXIT_CODE
+  fi
   nvm_echo "Installing default global packages from ${NVM_DIR}/default-packages..."
-  nvm_echo "npm install -g --quiet $1"
+  nvm_echo "npm install -g --quiet ${DEFAULT_PACKAGES}"
 
-  if ! nvm_echo "$1" | command xargs npm install -g --quiet; then
+  if ! nvm_echo "${DEFAULT_PACKAGES}" | command xargs npm install -g --quiet; then
     nvm_err "Failed installing default packages. Please check if your default-packages file or a package in it has problems!"
     return 1
   fi
