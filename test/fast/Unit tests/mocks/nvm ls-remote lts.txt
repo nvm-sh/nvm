@@ -33,7 +33,7 @@
          v4.8.6  [0;37m (LTS: Argon)[0m
          v4.8.7  [0;37m (LTS: Argon)[0m
          v4.9.0  [0;37m (LTS: Argon)[0m
-         v4.9.1  [1;32m (Latest LTS: Argon)[0m
+[0;30m         v4.9.1[0m  [1;32m (Latest LTS: Argon)[0m
          v6.9.0  [0;37m (LTS: Boron)[0m
          v6.9.1  [0;37m (LTS: Boron)[0m
          v6.9.2  [0;37m (LTS: Boron)[0m
@@ -65,7 +65,7 @@
         v6.15.1  [0;37m (LTS: Boron)[0m
         v6.16.0  [0;37m (LTS: Boron)[0m
         v6.17.0  [0;37m (LTS: Boron)[0m
-        v6.17.1  [1;32m (Latest LTS: Boron)[0m
+[0;30m        v6.17.1[0m  [1;32m (Latest LTS: Boron)[0m
          v8.9.0  [0;37m (LTS: Carbon)[0m
          v8.9.1  [0;37m (LTS: Carbon)[0m
          v8.9.2  [0;37m (LTS: Carbon)[0m
@@ -85,8 +85,8 @@
         v8.15.1  [0;37m (LTS: Carbon)[0m
         v8.16.0  [0;37m (LTS: Carbon)[0m
         v8.16.1  [0;37m (LTS: Carbon)[0m
-        v8.16.2  [0;37m (LTS: Carbon)[0m
-        v8.17.0  [1;32m (Latest LTS: Carbon)[0m
+[0;30m        v8.16.2[0m  [0;37m (LTS: Carbon)[0m
+[0;30m        v8.17.0[0m  [1;32m (Latest LTS: Carbon)[0m
        v10.13.0  [0;37m (LTS: Dubnium)[0m
        v10.14.0  [0;37m (LTS: Dubnium)[0m
        v10.14.1  [0;37m (LTS: Dubnium)[0m
@@ -98,43 +98,43 @@
        v10.16.0  [0;37m (LTS: Dubnium)[0m
        v10.16.1  [0;37m (LTS: Dubnium)[0m
        v10.16.2  [0;37m (LTS: Dubnium)[0m
-       v10.16.3  [0;37m (LTS: Dubnium)[0m
-       v10.17.0  [0;37m (LTS: Dubnium)[0m
+[0;30m       v10.16.3[0m  [0;37m (LTS: Dubnium)[0m
+[0;30m       v10.17.0[0m  [0;37m (LTS: Dubnium)[0m
        v10.18.0  [0;37m (LTS: Dubnium)[0m
        v10.18.1  [0;37m (LTS: Dubnium)[0m
        v10.19.0  [0;37m (LTS: Dubnium)[0m
        v10.20.0  [0;37m (LTS: Dubnium)[0m
-       v10.20.1  [0;37m (LTS: Dubnium)[0m
-       v10.21.0  [0;37m (LTS: Dubnium)[0m
-       v10.22.0  [0;37m (LTS: Dubnium)[0m
-       v10.22.1  [0;37m (LTS: Dubnium)[0m
-       v10.23.0  [0;37m (LTS: Dubnium)[0m
+[0;30m       v10.20.1[0m  [0;37m (LTS: Dubnium)[0m
+[0;30m       v10.21.0[0m  [0;37m (LTS: Dubnium)[0m
+[0;30m       v10.22.0[0m  [0;37m (LTS: Dubnium)[0m
+[0;30m       v10.22.1[0m  [0;37m (LTS: Dubnium)[0m
+[0;30m       v10.23.0[0m  [0;37m (LTS: Dubnium)[0m
        v10.23.1  [0;37m (LTS: Dubnium)[0m
        v10.23.2  [0;37m (LTS: Dubnium)[0m
        v10.23.3  [0;37m (LTS: Dubnium)[0m
        v10.24.0  [0;37m (LTS: Dubnium)[0m
-       v10.24.1  [1;32m (Latest LTS: Dubnium)[0m
+[0;30m       v10.24.1[0m  [1;32m (Latest LTS: Dubnium)[0m
        v12.13.0  [0;37m (LTS: Erbium)[0m
-       v12.13.1  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.13.1[0m  [0;37m (LTS: Erbium)[0m
        v12.14.0  [0;37m (LTS: Erbium)[0m
-       v12.14.1  [0;37m (LTS: Erbium)[0m
-       v12.15.0  [0;37m (LTS: Erbium)[0m
-       v12.16.0  [0;37m (LTS: Erbium)[0m
-       v12.16.1  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.14.1[0m  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.15.0[0m  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.16.0[0m  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.16.1[0m  [0;37m (LTS: Erbium)[0m
        v12.16.2  [0;37m (LTS: Erbium)[0m
-       v12.16.3  [0;37m (LTS: Erbium)[0m
-       v12.17.0  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.16.3[0m  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.17.0[0m  [0;37m (LTS: Erbium)[0m
        v12.18.0  [0;37m (LTS: Erbium)[0m
        v12.18.1  [0;37m (LTS: Erbium)[0m
        v12.18.2  [0;37m (LTS: Erbium)[0m
        v12.18.3  [0;37m (LTS: Erbium)[0m
-       v12.18.4  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.18.4[0m  [0;37m (LTS: Erbium)[0m
        v12.19.0  [0;37m (LTS: Erbium)[0m
-       v12.19.1  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.19.1[0m  [0;37m (LTS: Erbium)[0m
        v12.20.0  [0;37m (LTS: Erbium)[0m
        v12.20.1  [0;37m (LTS: Erbium)[0m
-       v12.20.2  [0;37m (LTS: Erbium)[0m
-       v12.21.0  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.20.2[0m  [0;37m (LTS: Erbium)[0m
+[0;30m       v12.21.0[0m  [0;37m (LTS: Erbium)[0m
        v12.22.0  [0;37m (LTS: Erbium)[0m
        v12.22.1  [0;37m (LTS: Erbium)[0m
        v12.22.2  [0;37m (LTS: Erbium)[0m
@@ -143,24 +143,45 @@
        v12.22.5  [0;37m (LTS: Erbium)[0m
        v12.22.6  [0;37m (LTS: Erbium)[0m
        v12.22.7  [0;37m (LTS: Erbium)[0m
-       v12.22.8  [1;32m (Latest LTS: Erbium)[0m
+       v12.22.8  [0;37m (LTS: Erbium)[0m
+       v12.22.9  [0;37m (LTS: Erbium)[0m
+      v12.22.10  [0;37m (LTS: Erbium)[0m
+      v12.22.11  [0;37m (LTS: Erbium)[0m
+[0;30m      v12.22.12[0m  [1;32m (Latest LTS: Erbium)[0m
        v14.15.0  [0;37m (LTS: Fermium)[0m
        v14.15.1  [0;37m (LTS: Fermium)[0m
        v14.15.2  [0;37m (LTS: Fermium)[0m
        v14.15.3  [0;37m (LTS: Fermium)[0m
        v14.15.4  [0;37m (LTS: Fermium)[0m
-       v14.15.5  [0;37m (LTS: Fermium)[0m
+[0;30m       v14.15.5[0m  [0;37m (LTS: Fermium)[0m
        v14.16.0  [0;37m (LTS: Fermium)[0m
-       v14.16.1  [0;37m (LTS: Fermium)[0m
+[0;30m       v14.16.1[0m  [0;37m (LTS: Fermium)[0m
        v14.17.0  [0;37m (LTS: Fermium)[0m
        v14.17.1  [0;37m (LTS: Fermium)[0m
        v14.17.2  [0;37m (LTS: Fermium)[0m
        v14.17.3  [0;37m (LTS: Fermium)[0m
        v14.17.4  [0;37m (LTS: Fermium)[0m
        v14.17.5  [0;37m (LTS: Fermium)[0m
-       v14.17.6  [0;37m (LTS: Fermium)[0m
+[0;30m       v14.17.6[0m  [0;37m (LTS: Fermium)[0m
        v14.18.0  [0;37m (LTS: Fermium)[0m
        v14.18.1  [0;37m (LTS: Fermium)[0m
-       v14.18.2  [1;32m (Latest LTS: Fermium)[0m
+       v14.18.2  [0;37m (LTS: Fermium)[0m
+[0;30m       v14.18.3[0m  [0;37m (LTS: Fermium)[0m
+       v14.19.0  [0;37m (LTS: Fermium)[0m
+       v14.19.1  [0;37m (LTS: Fermium)[0m
+       v14.19.2  [0;37m (LTS: Fermium)[0m
+[0;30m       v14.19.3[0m  [0;37m (LTS: Fermium)[0m
+[0;30m       v14.20.0[0m  [0;37m (LTS: Fermium)[0m
+[0;30m       v14.20.1[0m  [1;32m (Latest LTS: Fermium)[0m
        v16.13.0  [0;37m (LTS: Gallium)[0m
-       v16.13.1  [1;32m (Latest LTS: Gallium)[0m
+       v16.13.1  [0;37m (LTS: Gallium)[0m
+[0;30m       v16.13.2[0m  [0;37m (LTS: Gallium)[0m
+       v16.14.0  [0;37m (LTS: Gallium)[0m
+       v16.14.1  [0;37m (LTS: Gallium)[0m
+[0;30m       v16.14.2[0m  [0;37m (LTS: Gallium)[0m
+       v16.15.0  [0;37m (LTS: Gallium)[0m
+[0;30m       v16.15.1[0m  [0;37m (LTS: Gallium)[0m
+[0;30m       v16.16.0[0m  [0;37m (LTS: Gallium)[0m
+       v16.17.0  [0;37m (LTS: Gallium)[0m
+[0;30m       v16.17.1[0m  [0;37m (LTS: Gallium)[0m
+[0;30m       v16.18.0[0m  [1;32m (Latest LTS: Gallium)[0m
