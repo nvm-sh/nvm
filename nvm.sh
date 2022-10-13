@@ -2822,7 +2822,7 @@ nvm() {
         local GREY_WHITE_INFO
 
         if [ -z "${NVM_NO_COLORS-}"  ] && nvm_has_colors; then
-          INITIAL_COLOR_INFO='\033[0;32m g\033[0m \033[0;34m b\033[0m \033[0;33m y\033[0m \033[0;31m r\033[0m \033[0;37m e\033[0m'
+          INITIAL_COLOR_INFO='\033[0;34m b\033[0m \033[0;34m y\033[0m \033[0;32m g\033[0m \033[0;31m r\033[0m \033[0;37m e\033[0m'
           RED_INFO='\033[0;31m r\033[0m/\033[1;31mR\033[0m = \033[0;31mred\033[0m / \033[1;31mbold red\033[0m'
           GREEN_INFO='\033[0;32m g\033[0m/\033[1;32mG\033[0m = \033[0;32mgreen\033[0m / \033[1;32mbold green\033[0m'
           BLUE_INFO='\033[0;34m b\033[0m/\033[1;34mB\033[0m = \033[0;34mblue\033[0m / \033[1;34mbold blue\033[0m'
@@ -2832,7 +2832,7 @@ nvm() {
           BLACK_INFO='\033[0;30m k\033[0m/\033[1;30mK\033[0m = \033[0;30mblack\033[0m / \033[1;30mbold black\033[0m'
           GREY_WHITE_INFO='\033[0;37m e\033[0m/\033[1;37mW\033[0m = \033[0;37mlight grey\033[0m / \033[1;37mwhite\033[0m'
         else
-          INITIAL_COLOR_INFO='gbYre'
+          INITIAL_COLOR_INFO='bygre'
           RED_INFO='r/R = red / bold red'
           GREEN_INFO='g/G = green / bold green'
           BLUE_INFO='b/B = blue / bold blue'
