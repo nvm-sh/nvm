@@ -3288,23 +3288,26 @@ nvm() {
       fi
 
       local EXIT_CODE
+      EXIT_CODE=0
 
       if nvm_is_version_installed "${VERSION}"; then
         nvm_err "${VERSION} is already installed."
-        if nvm use "${VERSION}"; then
+        nvm use "${VERSION}"
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 0 ]; then
           if [ "${NVM_UPGRADE_NPM}" = 1 ]; then
             nvm install-latest-npm
             EXIT_CODE=$?
           fi
           if [ $EXIT_CODE -ne 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
             nvm_install_default_packages
-            EXIT_CODE=$?
           fi
           if [ $EXIT_CODE -ne 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
             nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
             EXIT_CODE=$?
           fi
         fi
+
         if [ -n "${LTS-}" ]; then
           LTS="$(echo "${LTS}" | tr '[:upper:]' '[:lower:]')"
           nvm_ensure_default_set "lts/${LTS}"
@@ -3361,7 +3364,10 @@ nvm() {
         if [ $nobinary -ne 1 ] && nvm_binary_available "${VERSION}"; then
           NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_binary "${FLAVOR}" std "${VERSION}" "${nosource}"
           EXIT_CODE=$?
+        else
+          EXIT_CODE=-1
         fi
+
         if [ $EXIT_CODE -ne 0 ]; then
           if [ -z "${NVM_MAKE_JOBS-}" ]; then
             nvm_get_make_jobs
@@ -3375,7 +3381,6 @@ nvm() {
             EXIT_CODE=$?
           fi
         fi
-
       fi
 
       if [ $EXIT_CODE -eq 0 ] && nvm_use_if_needed "${VERSION}" && nvm_install_npm_if_needed "${VERSION}"; then
@@ -3390,7 +3395,6 @@ nvm() {
         fi
         if [ $EXIT_CODE -eq 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
           nvm_install_default_packages
-          EXIT_CODE=$?
         fi
         if [ $EXIT_CODE -eq 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
           nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
