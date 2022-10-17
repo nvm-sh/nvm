@@ -33,7 +33,7 @@ jobs:
             ghcr.io:443
             github.com:443
             pkg-containers.githubusercontent.com:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install latest shellcheck

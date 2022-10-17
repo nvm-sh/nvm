@@ -17,7 +17,7 @@ jobs:
         allowed-endpoints:
           api.github.com:443
           github.com:443
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: ljharb/rebase@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

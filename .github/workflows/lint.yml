@@ -14,7 +14,7 @@ jobs:
             github.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -34,7 +34,7 @@ jobs:
             pkg-containers.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -52,7 +52,7 @@ jobs:
             github.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -68,6 +68,6 @@ jobs:
         with:
           allowed-endpoints:
             github.com:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: check tests filenames
         run: ./rename_test.sh --check

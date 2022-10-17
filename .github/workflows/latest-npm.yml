@@ -53,7 +53,7 @@ jobs:
             iojs.org:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ljharb/actions/node/install@main
         name: 'nvm install-latest-npm'
         with:
