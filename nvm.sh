@@ -1711,6 +1711,7 @@ nvm_print_versions() {
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
     -v old_lts_color="$DEFAULT_COLOR" -v has_colors="$NVM_HAS_COLORS" '
+function alen(arr, i, len) { len=0; for(i in arr) len++; return len; }
 BEGIN {
   fmt_installed = has_colors ? (installed_color ? "\033[" installed_color "%15s\033[0m" : "%15s") : "%15s *";
   fmt_system = has_colors ? (system_color ? "\033[" system_color "%15s\033[0m" : "%15s") : "%15s *";
@@ -1724,11 +1725,11 @@ BEGIN {
 
   split(remote_versions, lines, "|");
   split(installed_versions, installed, "|");
-  rows = length(lines);
+  rows = alen(lines);
 
   for (n = 1; n <= rows; n++) {
     split(lines[n], fields, "[[:blank:]]+");
-    cols = length(fields);
+    cols = alen(fields);
     version = fields[1];
     is_installed = 0;
 
