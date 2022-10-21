@@ -2996,6 +2996,12 @@ nvm() {
       if [ -n "${OS_VERSION}" ]; then
         nvm_err "OS version: ${OS_VERSION}"
       fi
+      if nvm_has "awk"; then
+        nvm_err "awk: $(nvm_command_info awk), $({ command awk -V 2>/dev/null || command awk -W version; } \
+          | command head -n 1)"
+      else
+        nvm_err "awk: not found"
+      fi
       if nvm_has "curl"; then
         nvm_err "curl: $(nvm_command_info curl), $(command curl -V | command head -n 1)"
       else
@@ -3008,7 +3014,7 @@ nvm() {
       fi
 
       local TEST_TOOLS ADD_TEST_TOOLS
-      TEST_TOOLS="git grep awk"
+      TEST_TOOLS="git grep"
       ADD_TEST_TOOLS="sed cut basename rm mkdir xargs"
       if [ "darwin" != "$(nvm_get_os)" ] && [ "freebsd" != "$(nvm_get_os)" ]; then
         TEST_TOOLS="${TEST_TOOLS} ${ADD_TEST_TOOLS}"
