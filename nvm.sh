@@ -2997,7 +2997,7 @@ nvm() {
         nvm_err "OS version: ${OS_VERSION}"
       fi
       if nvm_has "awk"; then
-        nvm_err "awk: $(nvm_command_info awk), $({ command awk -V 2>/dev/null || command awk -W version; } \
+        nvm_err "awk: $(nvm_command_info awk), $({ command awk --version 2>/dev/null || command awk -W version; } \
           | command head -n 1)"
       else
         nvm_err "awk: not found"
