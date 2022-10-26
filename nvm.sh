@@ -1693,6 +1693,7 @@ nvm_print_versions() {
   local DEFAULT_COLOR
   local LTS_COLOR
   local NVM_HAS_COLORS
+  NVM_HAS_COLORS=0
 
   INSTALLED_COLOR=$(nvm_get_colors 1)
   SYSTEM_COLOR=$(nvm_get_colors 2)
