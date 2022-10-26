@@ -70,7 +70,6 @@ env:
     - PATH="/usr/lib/ccache/:$PATH"
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
   matrix:
-    - SHELL=bash TEST_SUITE=install_script
     - SHELL=sh TEST_SUITE=fast
     - SHELL=dash TEST_SUITE=fast
     - SHELL=bash TEST_SUITE=fast
