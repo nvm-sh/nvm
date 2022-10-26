@@ -1,5 +1,5 @@
 language: generic
-dist: xenial
+dist: focal
 addons:
   apt:
     packages:
@@ -22,6 +22,7 @@ before_install:
   - bash --version | head
   - zsh  --version
   - dpkg -s dash | grep ^Version | awk '{print $2}'
+  - pyenv local 3.9
 install:
   - if [ -z "${SHELLCHECK-}" ]; then nvm install 16 && nvm unalias default && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
