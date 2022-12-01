@@ -54,6 +54,7 @@
 - [Docker For Development Environment](#docker-for-development-environment)
 - [Problems](#problems)
 - [macOS Troubleshooting](#macos-troubleshooting)
+- [wsl Troubleshooting](#wsl-troubleshooting)
 - [Maintainers](#maintainers)
 - [License](#license)
 - [Copyright notice](#copyright-notice)
@@ -979,6 +980,37 @@ Here's what you will need to do:
   ```
 
 Now you should be able to use node as usual.
+
+## wsl Troubleshooting
+
+If you've encountered this error on wsl-2
+  ```sh
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0curl: (6) Could not resolve host: raw.githubusercontent.com
+  ```
+It may be due to your antivirus, vpn, or other reasons.
+
+Where you can `ping 8.8.8.8` while you can't `ping google.com`
+
+This could be simply be solved by running in your root directory:
+
+  ```sh
+  sudo rm /etc/resolv.conf
+  sudo bash -c 'echo "nameserver 8.8.8.8" > /etc/resolv.conf'
+  sudo bash -c 'echo "[network]" > /etc/wsl.conf'
+  sudo bash -c 'echo "generateResolvConf = false" >> /etc/wsl.conf'
+  sudo chattr +i /etc/resolv.conf
+  ```
+
+which deletes your `resolve.conf` file thats automatically generated when u run WSL, creates a new file and puts `nameserver 8.8.8.8`, then creates a wsl.conf file and adds `[network]` and `generateResolveConf = false` to prevent auto generation of that file.
+
+you can also run
+  ```sh
+  cat /etc/resolv.conf
+  ```
+to check the contents of the file
 
 ## Maintainers
 
