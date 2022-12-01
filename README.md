@@ -983,13 +983,15 @@ Now you should be able to use node as usual.
 
 ## WSL Troubleshooting
 
-If you've encountered this error on WSL-2
+If you've encountered this error on WSL-2:
+
   ```sh
   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash
     % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                    Dload  Upload   Total   Spent    Left  Speed
     0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0curl: (6) Could not resolve host: raw.githubusercontent.com
   ```
+
 It may be due to your antivirus, VPN, or other reasons.
 
 Where you can `ping 8.8.8.8` while you can't `ping google.com`
