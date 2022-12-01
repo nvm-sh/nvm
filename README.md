@@ -54,7 +54,7 @@
 - [Docker For Development Environment](#docker-for-development-environment)
 - [Problems](#problems)
 - [macOS Troubleshooting](#macos-troubleshooting)
-- [wsl Troubleshooting](#wsl-troubleshooting)
+- [WSL Troubleshooting](#wsl-troubleshooting)
 - [Maintainers](#maintainers)
 - [License](#license)
 - [Copyright notice](#copyright-notice)
@@ -981,7 +981,7 @@ Here's what you will need to do:
 
 Now you should be able to use node as usual.
 
-## wsl Troubleshooting
+## WSL Troubleshooting
 
 If you've encountered this error on wsl-2
   ```sh
@@ -994,7 +994,7 @@ It may be due to your antivirus, vpn, or other reasons.
 
 Where you can `ping 8.8.8.8` while you can't `ping google.com`
 
-This could be simply be solved by running in your root directory:
+This could be simply be solved by running this in your root directory:
 
   ```sh
   sudo rm /etc/resolv.conf
