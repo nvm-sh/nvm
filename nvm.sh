@@ -1923,10 +1923,10 @@ nvm_get_arch() {
 
   # If running a 64bit ARM kernel but a 32bit ARM userland,
   # change ARCH to 32bit ARM (armv7l) if /sbin/init is 32bit executable
-  local L
+  local LIST_SBIN_INIT
   if [ "$(uname)" = "Linux" ] && [ "${NVM_ARCH}" = arm64 ] &&
-    L="$(command ls -dl /sbin/init 2>/dev/null)" &&
-    [ "$(od -An -t x1 -j 4 -N 1 "${L#*-> }")" = ' 01' ]; then
+    LIST_SBIN_INIT="$(command ls -dl /sbin/init 2>/dev/null)" &&
+    [ "$(od -An -t x1 -j 4 -N 1 "${LIST_SBIN_INIT#*-> }")" = ' 01' ]; then
     NVM_ARCH=armv7l
     HOST_ARCH=armv7l
   fi
