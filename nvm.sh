@@ -332,6 +332,10 @@ nvm_install_latest_npm() {
       nvm_echo '* `npm` `v6.9` is the last version that works on `node` `v6.0.x`, `v6.1.x`, `v9.0.x`, `v9.1.x`, or `v9.2.x`'
       $NVM_NPM_CMD install -g npm@6.9
     elif [ $NVM_IS_10_OR_ABOVE -eq 0 ]; then
+      if nvm_version_greater 4.4.4 "${NPM_VERSION}"; then
+        nvm_echo '* `npm` `v4.4.4` or later is required to install npm v6.14.18'
+        $NVM_NPM_CMD install -g npm@4
+      fi
       nvm_echo '* `npm` `v6.x` is the last version that works on `node` below `v10.0.0`'
       $NVM_NPM_CMD install -g npm@6
     elif \
