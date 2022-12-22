@@ -373,6 +373,7 @@ if [ -z "${NVM_DIR-}" ]; then
     # shellcheck disable=SC2169,SC3054
     NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
   fi
+  # shellcheck disable=SC2086
   NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" >/dev/null && \pwd)"
   export NVM_DIR
 else
@@ -693,6 +694,7 @@ ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^ *$/d'
   fi
   # the `sed` is to remove trailing whitespaces (see "weird behavior" ~25 lines up)
   nvm_echo "${VERSIONS}" | command sed 's/ *$//g'
+  # shellcheck disable=SC2317
   return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
 }
 
@@ -872,18 +874,6 @@ nvm_get_colors() {
   esac
 
   nvm_echo "$COLOR"
-}
-
-nvm_wrap_with_color_code() {
-  local CODE
-  CODE="$(nvm_print_color_code "${1}" 2>/dev/null ||:)"
-  local TEXT
-  TEXT="${2-}"
-  if nvm_has_colors && [ -n "${CODE}" ]; then
-    nvm_echo_with_colors "\033[${CODE}${TEXT}\033[0m"
-  else
-    nvm_echo "${TEXT}"
-  fi
 }
 
 nvm_wrap_with_color_code() {
@@ -3801,6 +3791,7 @@ nvm() {
       nvm_ensure_version_installed "${provided_version}"
       EXIT_CODE=$?
       if [ "${EXIT_CODE}" != "0" ]; then
+        # shellcheck disable=SC2086
         return $EXIT_CODE
       fi
 
@@ -3957,6 +3948,7 @@ nvm() {
       nvm_ensure_version_installed "${provided_version}"
       EXIT_CODE=$?
       if [ "${EXIT_CODE}" != "0" ]; then
+        # shellcheck disable=SC2086
         return $EXIT_CODE
       fi
       local NVM_VERSION_DIR
