@@ -55,11 +55,15 @@ jobs:
             registry.npmjs.org:443
       - uses: actions/checkout@v3
       - uses: ljharb/actions/node/install@main
-        name: 'nvm install-latest-npm'
+        name: 'install node'
         with:
           node-version: ${{ matrix.node-version }}
           skip-ls-check: true
           skip-install: true
+          skip-latest-npm: true
+      - run: npm --version
+      - run: '. ./nvm.sh ; nvm install-latest-npm'
+        name: 'nvm install-latest-npm'
       - run: npm --version
 
   node:
