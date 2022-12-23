@@ -12,7 +12,7 @@ nvm deactivate || die 'deactivate failed'
 
 nvm unalias default || die 'unable to unalias default'
 
-NVM_TEST_VERSION=v18.0.0
+NVM_TEST_VERSION=v0.10.7
 
 # Remove the stuff we're clobbering.
 nvm uninstall "${NVM_TEST_VERSION}" || die 'nvm uninstall failed'
