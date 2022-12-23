@@ -45,7 +45,7 @@ Please refer to the [README](README.md) for complete instructions how to install
   - Please include tests. Changes with tests will be merged very quickly.
   - Please manually confirm that your changes work in `bash`, `sh`/`dash`, `ksh`, and `zsh`. Fast tests do run in these shells, but it's nice to manually verify also.
   - Please maintain consistent whitespace - 2-space indentation, trailing newlines in all files, etc.
-  - Any time you make a change to your PR, please rebase freshly on top of master. Nobody likes merge commits.
+  - Any time you make a change to your PR, please rebase freshly on top of the default branch. Nobody likes merge commits.
 
 Even if you don't have all of these items covered, please still feel free to submit a PR/issue! Someone else may be inspired and volunteer to complete it for you.
 
@@ -111,7 +111,7 @@ Co-authored-by: Name Here <email@here>
 
 
 # Code of Conduct
-[Code of Conduct](https://github.com/nvm-sh/nvm/blob/master/CODE_OF_CONDUCT.md)
+[Code of Conduct](https://github.com/nvm-sh/nvm/blob/HEAD/CODE_OF_CONDUCT.md)
 
 # Where can I ask for help?
 If you have any questions, please contact [@LJHarb](mailto:ljharb@gmail.com).

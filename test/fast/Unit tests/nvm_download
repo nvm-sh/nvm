@@ -10,9 +10,9 @@ die () { echo "$@" ; cleanup ; exit 1; }
 set -ex
 
 # nvm_download install.sh
-nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh" >/dev/null || die "nvm_download unable to download install.sh"
+nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/dev/null || die "nvm_download unable to download install.sh"
 
 # nvm_download should fail to download wrong_install.sh
-! nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/master/wrong_install.sh" >/dev/null || die "nvm_download should fail to download no existing file"
+! nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/wrong_install.sh" >/dev/null || die "nvm_download should fail to download no existing file"
 
 cleanup
