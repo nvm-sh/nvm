@@ -172,7 +172,10 @@
        v14.19.2  [0;37m (LTS: Fermium)[0m
        v14.19.3  [0;37m (LTS: Fermium)[0m
        v14.20.0  [0;37m (LTS: Fermium)[0m
-       v14.20.1  [1;32m (Latest LTS: Fermium)[0m
+       v14.20.1  [0;37m (LTS: Fermium)[0m
+       v14.21.0  [0;37m (LTS: Fermium)[0m
+       v14.21.1  [0;37m (LTS: Fermium)[0m
+       v14.21.2  [1;32m (Latest LTS: Fermium)[0m
        v16.13.0  [0;37m (LTS: Gallium)[0m
        v16.13.1  [0;37m (LTS: Gallium)[0m
        v16.13.2  [0;37m (LTS: Gallium)[0m
@@ -184,4 +187,8 @@
        v16.16.0  [0;37m (LTS: Gallium)[0m
        v16.17.0  [0;37m (LTS: Gallium)[0m
        v16.17.1  [0;37m (LTS: Gallium)[0m
-       v16.18.0  [1;32m (Latest LTS: Gallium)[0m
+       v16.18.0  [0;37m (LTS: Gallium)[0m
+       v16.18.1  [0;37m (LTS: Gallium)[0m
+       v16.19.0  [1;32m (Latest LTS: Gallium)[0m
+       v18.12.0  [0;37m (LTS: Hydrogen)[0m
+       v18.12.1  [1;32m (Latest LTS: Hydrogen)[0m

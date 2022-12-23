@@ -1,6 +1,7 @@
-lts/*|lts/gallium
-lts/gallium|v16.18.0
-lts/fermium|v14.20.1
+lts/*|lts/hydrogen
+lts/hydrogen|v18.12.1
+lts/gallium|v16.19.0
+lts/fermium|v14.21.2
 lts/erbium|v12.22.12
 lts/dubnium|v10.24.1
 lts/carbon|v8.17.0

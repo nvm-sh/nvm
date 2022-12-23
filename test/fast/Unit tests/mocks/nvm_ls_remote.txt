@@ -578,7 +578,10 @@ v14.19.1 Fermium
 v14.19.2 Fermium
 v14.19.3 Fermium
 v14.20.0 Fermium
-v14.20.1 Fermium *
+v14.20.1 Fermium
+v14.21.0 Fermium
+v14.21.1 Fermium
+v14.21.2 Fermium *
 v15.0.0
 v15.0.1
 v15.1.0
@@ -627,7 +630,9 @@ v16.15.1 Gallium
 v16.16.0 Gallium
 v16.17.0 Gallium
 v16.17.1 Gallium
-v16.18.0 Gallium *
+v16.18.0 Gallium
+v16.18.1 Gallium
+v16.19.0 Gallium *
 v17.0.0
 v17.0.1
 v17.1.0
@@ -656,3 +661,10 @@ v18.9.0
 v18.9.1
 v18.10.0
 v18.11.0
+v18.12.0 Hydrogen
+v18.12.1 Hydrogen *
+v19.0.0
+v19.0.1
+v19.1.0
+v19.2.0
+v19.3.0

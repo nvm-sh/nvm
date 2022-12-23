@@ -172,7 +172,10 @@ v14.19.1 Fermium
 v14.19.2 Fermium
 v14.19.3 Fermium
 v14.20.0 Fermium
-v14.20.1 Fermium *
+v14.20.1 Fermium
+v14.21.0 Fermium
+v14.21.1 Fermium
+v14.21.2 Fermium *
 v16.13.0 Gallium
 v16.13.1 Gallium
 v16.13.2 Gallium
@@ -184,4 +187,8 @@ v16.15.1 Gallium
 v16.16.0 Gallium
 v16.17.0 Gallium
 v16.17.1 Gallium
-v16.18.0 Gallium *
+v16.18.0 Gallium
+v16.18.1 Gallium
+v16.19.0 Gallium *
+v18.12.0 Hydrogen
+v18.12.1 Hydrogen *
