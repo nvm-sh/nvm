@@ -902,7 +902,7 @@ To change the user directory and/or account name follow the instructions [here](
 [2]: https://github.com/nvm-sh/nvm/blob/v0.39.3/install.sh
 [3]: https://travis-ci.org/nvm-sh/nvm
 [4]: https://github.com/nvm-sh/nvm/releases/tag/v0.39.3
-[Urchin]: https://github.com/scraperwiki/urchin
+[Urchin]: https://git.sdf.org/tlevine/urchin
 [Fish]: https://fishshell.com
 
 **Homebrew makes zsh directories unsecure**
