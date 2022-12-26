@@ -50,6 +50,7 @@ jobs:
         with:
           allowed-endpoints:
             github.com:443
+            raw.githubusercontent.com:443
             iojs.org:443
             nodejs.org:443
             registry.npmjs.org:443
