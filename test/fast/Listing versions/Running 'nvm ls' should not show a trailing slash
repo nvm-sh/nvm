@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+export NVM_DIR="$(cd ../../.. && pwd)"
+
 \. ../../../nvm.sh
 \. ../../common.sh
 

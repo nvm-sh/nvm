@@ -7,6 +7,8 @@ cleanup () {
   rm -rf "${NVM_DIR}/v0.10.4"
 }
 
+export NVM_DIR="$(cd ../.. && pwd)"
+
 \. ../../nvm.sh
 \. ../common.sh
 
