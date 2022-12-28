@@ -125,9 +125,10 @@ jobs:
           nvm install ${{ matrix.npm-node-version }}
 
   nvm_windows:
-      permissions:
-        contents: none
-      needs: [wsl_matrix, cygwin_matrix, msys_matrix, msys_fail_install]
-      runs-on: ubuntu-latest
-      steps:
-        - run: 'echo tests completed'
+    name: 'tests, on windows'
+    permissions:
+      contents: none
+    needs: [wsl_matrix, cygwin_matrix, msys_matrix, msys_fail_install]
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo tests completed'
