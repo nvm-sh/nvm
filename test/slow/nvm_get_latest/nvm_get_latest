@@ -6,6 +6,7 @@ WORK="$PWD/nvm_get_latest-work.$$"
 TEST_BIN="$WORK/bin"
 
 cleanup() {
+  unset -f curl wget
   rm -rf "$WORK"
   export PATH="$OLDPATH"
 }
@@ -95,6 +96,17 @@ OUTER
 chmod +x "$TEST_BIN/wget"
 
 export PATH="$TEST_BIN:$OLDPATH"
+
+# shadowing shell functions, like aliases baked into a user's shell, must be
+# bypassed in favor of the executables on PATH (https://github.com/nvm-sh/nvm/issues/2923)
+curl() {
+  echo >&2 'the shadowing curl function was called'
+  return 1
+}
+wget() {
+  echo >&2 'the shadowing wget function was called'
+  return 1
+}
 
 try nvm_get_latest
 [ "_$CAPTURED_STDOUT" = "_$EXPECTED_VERSION" ] \
