@@ -94,6 +94,13 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 ### Install & Update Script
 
 To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
+
+If you are on a MAC and using a zsh terminal run this command first. 
+
+```sh
+touch ~/.zshrc
+```
+
 ```sh
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 ```
