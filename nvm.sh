@@ -1874,6 +1874,7 @@ nvm_get_os() {
   NVM_UNAME="$(command uname -a)"
   local NVM_OS
   case "${NVM_UNAME}" in
+    Linux\ nixos\ *) NVM_OS=linux-nixos ;;
     Linux\ *) NVM_OS=linux ;;
     Darwin\ *) NVM_OS=darwin ;;
     SunOS\ *) NVM_OS=sunos ;;
@@ -1989,6 +1990,37 @@ nvm_get_mirror() {
   esac
 }
 
+# args: version path
+nvm_nixos_postinstall() {
+  if [ "$#" -ne 1 ]; then
+    nvm_err 'nvm_nixos_postinstall needs 1 parameter'
+    return 1
+  fi
+
+  local VERSION_PATH
+  VERSION_PATH="${1}"
+
+  local DE_GENERATE_TEMPLATE_PATH="${NVM_DIR}/template.nix"
+
+  mv "${VERSION_PATH}/bin/node" "${VERSION_PATH}/bin/node.bin" || return 1
+
+  if [[ ! -f "${DE_GENERATE_TEMPLATE_PATH}" ]]; then
+    echo '{ pkgs ? import <nixpkgs> {} }: # 
+      (pkgs.buildFHSUserEnv {
+        name = "nvm-env";
+        targetPkgs = pkgs: with pkgs; [ coreutils ];
+        multiPkgs = pkgs: with pkgs; [];
+        runScript = "bash";
+      }).env
+    ' >> "${DE_GENERATE_TEMPLATE_PATH}" || return 1
+  fi
+
+  echo "#!/usr/bin/env bash
+    echo $VERSION_PATH/bin/node.bin \$@ | nix-shell --quiet \"${DE_GENERATE_TEMPLATE_PATH}\"
+  " >> "${VERSION_PATH}/bin/node" || return 1
+  command chmod +x "${VERSION_PATH}/bin/node" || return 1
+}
+
 # args: os, prefixed version, version, tarball, extract directory
 nvm_install_binary_extract() {
   if [ "$#" -ne 5 ]; then
@@ -2031,6 +2063,10 @@ nvm_install_binary_extract() {
     command chmod +x "${VERSION_PATH}"/npx 2>/dev/null
   else
     command mv "${TMPDIR}/"* "${VERSION_PATH}" || return 1
+  fi
+
+  if [ "_${NVM_OS}" = '_linux-nixos' ]; then
+    nvm_nixos_postinstall "${VERSION_PATH}"
   fi
 
   command rm -rf "${TMPDIR}"
@@ -2161,7 +2197,13 @@ nvm_get_download_slug() {
   fi
 
   if [ "${KIND}" = 'binary' ]; then
-    nvm_echo "${FLAVOR}-${VERSION}-${NVM_OS}-${NVM_ARCH}"
+    local NORMALIZED_NVM_OS="${NVM_OS}"
+    case "_${NVM_OS}" in
+      "_linux"*)
+        NORMALIZED_NVM_OS="linux"
+      ;;
+    esac
+    nvm_echo "${FLAVOR}-${VERSION}-${NORMALIZED_NVM_OS}-${NVM_ARCH}"
   elif [ "${KIND}" = 'source' ]; then
     nvm_echo "${FLAVOR}-${VERSION}"
   fi
@@ -2345,7 +2387,7 @@ nvm_get_make_jobs() {
   NVM_OS="$(nvm_get_os)"
   local NVM_CPU_CORES
   case "_${NVM_OS}" in
-    "_linux")
+    "_linux"*)
       NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
     ;;
     "_freebsd" | "_darwin" | "_openbsd")
