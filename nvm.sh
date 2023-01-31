@@ -2004,7 +2004,7 @@ nvm_nixos_postinstall() {
 
   mv "${VERSION_PATH}/bin/node" "${VERSION_PATH}/bin/node.bin" || return 1
 
-  if [[ ! -f "${DE_GENERATE_TEMPLATE_PATH}" ]]; then
+  if [ ! -f "${DE_GENERATE_TEMPLATE_PATH}" ]; then
     # Credits: https://github.com/lexleogryfon/de-generate
     echo '{ pkgs ? import <nixpkgs> {} }: #
       (pkgs.buildFHSUserEnv {
