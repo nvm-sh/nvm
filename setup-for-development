@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# install nvm and nodejs
+
+# NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+
+# at this point check if script to load nvm was added to profile or others profiles such as .bashrc
+# if was not add make script that add's the export script
+# reload profile edited eg. `source ~/.bash_profile`
+
+# install node
+nvm install node
