@@ -1885,6 +1885,7 @@ nvm_get_arch() {
   local HOST_ARCH
   local NVM_OS
   local EXIT_CODE
+  local LONG_BIT
 
   NVM_OS="$(nvm_get_os)"
   # If the OS is SunOS, first try to use pkgsrc to guess
@@ -1901,6 +1902,7 @@ nvm_get_arch() {
     HOST_ARCH=ppc64
   else
     HOST_ARCH="$(command uname -m)"
+    LONG_BIT="$(getconf LONG_BIT 2>/dev/null)"
   fi
 
   local NVM_ARCH
@@ -1910,6 +1912,12 @@ nvm_get_arch() {
     aarch64) NVM_ARCH="arm64" ;;
     *) NVM_ARCH="${HOST_ARCH}" ;;
   esac
+
+  # If running inside a 32Bit docker container the kernel still is 64bit
+  # change ARCH to 32bit if LONG_BIT is 32
+  if [ "_${LONG_BIT}" = "_32" ] && [ "${NVM_ARCH}" = "x64" ]; then
+    NVM_ARCH="x86"
+  fi
 
   # If running a 64bit ARM kernel but a 32bit ARM userland,
   # change ARCH to 32bit ARM (armv7l) if /sbin/init is 32bit executable
