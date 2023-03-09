@@ -703,6 +703,8 @@ add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
 
+After saving the file, run `source ~/.zshrc` to reload the configuration with the latest changes made.
+
 ##### fish
 
 This requires that you have [bass](https://github.com/edc/bass) installed.
