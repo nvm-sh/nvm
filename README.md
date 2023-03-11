@@ -581,7 +581,7 @@ cdnvm() {
 
     elif [[ -s $nvm_path/.nvmrc && -r $nvm_path/.nvmrc ]]; then
         declare nvm_version
-        nvm_version=$(<"$nvm_path"/.nvmrc)
+        nvm_version=$(<"$nvm_path"/.nvmrc | sed 's/^v//g')
 
         declare locally_resolved_nvm_version
         # `nvm ls` will check all locally-available versions
