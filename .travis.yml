@@ -22,7 +22,10 @@ before_install:
   - bash --version | head
   - zsh  --version
   - dpkg -s dash | grep ^Version | awk '{print $2}'
-  - pyenv local 3.9 || echo 'pyenv failed'
+  # install python
+  - pyenv install 2.7.18
+  - pyenv local 2.7.18 || echo 'pyenv failed'
+  - python -V
 install:
   - if [ -z "${SHELLCHECK-}" ]; then nvm install 16 && nvm unalias default && npm install && npm prune && npm ls urchin doctoc eclint dockerfile_lint; fi
   - '[ -z "$WITHOUT_CURL" ] || sudo apt-get remove curl -y'
