@@ -45,9 +45,8 @@ jobs:
           skip-ls-check: true
           shell-command: echo installed
       - run: npm ls urchin
-      - run: npm bin
       - run: env
-      - run: make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npm bin)/urchin" test-${{ matrix.shell }}
+      - run: make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npx which urchin)" test-${{ matrix.shell }}
 
   nvm:
     name: 'all test suites, all shells'
