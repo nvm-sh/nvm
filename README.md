@@ -1,6 +1,6 @@
 <a href="https://github.com/nvm-sh/logos"><img alt="nvm project logo" src="https://raw.githubusercontent.com/nvm-sh/logos/HEAD/nvm-logo-color.svg" height="50" /></a>
 
-# Node Version Manager [![Build Status](https://travis-ci.org/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.39.3-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
+# Node Version Manager [![Build Status](https://app.travis-ci.com/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.39.3-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
 <!-- To update this table of contents, ensure you have run `npm install` then `npm run doctoc` -->
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -900,7 +900,7 @@ To change the user directory and/or account name follow the instructions [here](
 
 [1]: https://github.com/nvm-sh/nvm.git
 [2]: https://github.com/nvm-sh/nvm/blob/v0.39.3/install.sh
-[3]: https://travis-ci.org/nvm-sh/nvm
+[3]: https://app.travis-ci.com/nvm-sh/nvm
 [4]: https://github.com/nvm-sh/nvm/releases/tag/v0.39.3
 [Urchin]: https://git.sdf.org/tlevine/urchin
 [Fish]: https://fishshell.com
