@@ -128,24 +128,24 @@ nvm_download() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    eval "curl -q --fail ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} $*"
+    eval "curl -q --fail -w %{http_code} ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} $*"
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
-                            -e 's/--compressed //' \
-                            -e 's/--fail //' \
-                            -e 's/-L //' \
-                            -e 's/-I /--server-response /' \
-                            -e 's/-s /-q /' \
-                            -e 's/-sS /-nv /' \
-                            -e 's/-o /-O /' \
-                            -e 's/-C - /-c /')
+                                        -e 's/--compressed //' \
+                                        -e 's/--fail //' \
+                                        -e 's/-L //' \
+                                        -e 's/-I /--server-response /' \
+                                        -e 's/-s /-q /' \
+                                        -e 's/-sS /-nv /' \
+                                        -e 's/-o /-O /' \
+                                        -e 's/-C - /-c /')
 
     if [ -n "${NVM_AUTH_HEADER:-}" ]; then
       ARGS="${ARGS} --header \"${NVM_AUTH_HEADER}\""
     fi
     # shellcheck disable=SC2086
-    eval wget $ARGS
+    eval wget -S $ARGS 2>&1 | grep '^  HTTP/' | awk '{print $2}'
   fi
 }
 
@@ -2434,12 +2434,18 @@ nvm_download_artifact() {
     nvm_err "Removing the broken local cache..."
     command rm -rf "${TARBALL}"
   fi
+
   nvm_err "Downloading ${TARBALL_URL}..."
-  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || (
+  local NVM_DOWNLOAD_RESULT
+  NVM_DOWNLOAD_RESULT=$(nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}")
+  if [ "${NVM_DEBUG-}" = 1 ]; then
+    nvm_err "Download HTTP Status ${NVM_DOWNLOAD_RESULT}"
+  fi
+  if [ "${NVM_DOWNLOAD_RESULT}" != '200' ]; then
     command rm -rf "${TARBALL}" "${tmpdir}"
     nvm_err "Binary download from ${TARBALL_URL} failed, trying source."
     return 4
-  )
+  fi
 
   if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
     command rm -rf "${TARBALL}" "${tmpdir}"
