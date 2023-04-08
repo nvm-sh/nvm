@@ -31,3 +31,6 @@ ACTUAL="$(PWD=$TEST_DIR/no-nesting-n_m nvm_find_project_dir)"
 
 ACTUAL="$(PWD=$TEST_DIR/no-nesting-pkg nvm_find_project_dir)"
 [ "${ACTUAL}" = "$TEST_DIR/no-nesting-pkg" ] || die "no-nesting-pkg: got ${ACTUAL}"
+
+ACTUAL="$(PWD="." nvm_find_project_dir)"
+[ "${ACTUAL}" = "." ] || die "insufficient permissions for pwd: got ${ACTUAL}"

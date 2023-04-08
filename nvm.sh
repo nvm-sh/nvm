@@ -418,7 +418,7 @@ nvm_tree_contains_path() {
 nvm_find_project_dir() {
   local path_
   path_="${PWD}"
-  while [ "${path_}" != "" ] && [ ! -f "${path_}/package.json" ] && [ ! -d "${path_}/node_modules" ]; do
+  while [ "${path_}" != "" ] && [ "${path_}" != '.' ] && [ ! -f "${path_}/package.json" ] && [ ! -d "${path_}/node_modules" ]; do
     path_=${path_%/*}
   done
   nvm_echo "${path_}"
@@ -428,7 +428,7 @@ nvm_find_project_dir() {
 nvm_find_up() {
   local path_
   path_="${PWD}"
-  while [ "${path_}" != "" ] && [ ! -f "${path_}/${1-}" ]; do
+  while [ "${path_}" != "" ] && [ "${path_}" != '.' ] && [ ! -f "${path_}/${1-}" ]; do
     path_=${path_%/*}
   done
   nvm_echo "${path_}"
