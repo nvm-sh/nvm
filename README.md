@@ -599,8 +599,9 @@ cdnvm() {
         fi
     fi
 }
+
 alias cd='cdnvm'
-cd "$PWD"
+cdnvm "$PWD" || exit
 ```
 
 This alias would search 'up' from your current directory in order to detect a `.nvmrc` file. If it finds it, it will switch to that version; if not, it will use the default version.
@@ -615,11 +616,14 @@ Put this into your `$HOME/.zshrc` to call `nvm use` automatically whenever you e
 ```zsh
 # place this after nvm initialization!
 autoload -U add-zsh-hook
+
 load-nvmrc() {
-  local nvmrc_path="$(nvm_find_nvmrc)"
+  local nvmrc_path
+  nvmrc_path="$(nvm_find_nvmrc)"
 
   if [ -n "$nvmrc_path" ]; then
-    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+    local nvmrc_node_version
+    nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
 
     if [ "$nvmrc_node_version" = "N/A" ]; then
       nvm install
@@ -631,6 +635,7 @@ load-nvmrc() {
     nvm use default
   fi
 }
+
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 ```
