@@ -2,6 +2,8 @@
 
 DIR="$(command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+unset NVM_CD_FLAGS
+
 # shellcheck disable=SC1090,SC1091
 \. "$DIR/nvm.sh" --no-use
 
