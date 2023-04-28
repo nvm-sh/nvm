@@ -1130,7 +1130,7 @@ nvm_ls_current() {
     if [ "${VERSION}" = "v0.6.21-pre" ]; then
       nvm_echo 'v0.6.21'
     else
-      nvm_echo "${VERSION}"
+      nvm_echo "${VERSION:-none}"
     fi
   else
     nvm_echo 'system'
