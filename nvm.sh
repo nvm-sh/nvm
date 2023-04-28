@@ -163,7 +163,11 @@ nvm_is_version_installed() {
 
 nvm_print_npm_version() {
   if nvm_has "npm"; then
-    command printf " (npm v$(npm --version 2>/dev/null))"
+    local NPM_VERSION
+    NPM_VERSION="$(npm --version 2>/dev/null)"
+    if [ -n "${NPM_VERSION}" ]; then
+      command printf " (npm v${NPM_VERSION})"
+    fi
   fi
 }
 
