@@ -80,5 +80,6 @@ run_test x86 osx x86
 run_test amd64 osx x64
 
 run_test arm64 smartos x64
+run_test armv8l smartos x64
 
 cleanup
