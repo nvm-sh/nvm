@@ -74,8 +74,6 @@ Verify your changes
 
 ```
 npm test
-# or
-npm run tests-only
 ```
 
 Push your changes
