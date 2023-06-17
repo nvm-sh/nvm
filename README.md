@@ -55,7 +55,7 @@
 - [9. Installing nvm on Alpine Linux](#9-installing-nvm-on-alpine-linux)
   - [Alpine Linux 3.13+](#alpine-linux-313)
   - [Alpine Linux 3.5 - 3.12](#alpine-linux-35---312)
-- [Uninstalling / Removal](#uninstalling--removal)
+- [10. Uninstalling / Removal](#10-uninstalling--removal)
   - [Manual Uninstall](#manual-uninstall)
 - [11. Docker For Development Environment](#11-docker-for-development-environment)
 - [12. Problems](#12-problems)
@@ -295,6 +295,12 @@ To download, compile, and install the latest release of node, do this:
 nvm install node # "node" is an alias for the latest version
 ```
 
+You can list available versions using `ls-remote`:
+
+```sh
+nvm ls-remote
+```
+
 To install a specific version of node:
 
 ```sh
@@ -303,11 +309,6 @@ nvm install 14.7.0 # or 16.3.0, 12.22.1, etc
 
 The first version installed becomes the default. New shells will start with the default version of node (e.g., `nvm alias default`).
 
-You can list available versions using `ls-remote`:
-
-```sh
-nvm ls-remote
-```
 
 And then in any new shell just use the installed version:
 
@@ -824,7 +825,8 @@ The Node project has some desire but no concrete plans (due to the overheads of 
 As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
 
 <a id="removal"></a>
-## Uninstalling / Removal
+
+## 10. Uninstalling / Removal
 
 ### Manual Uninstall
 
