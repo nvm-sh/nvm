@@ -15,8 +15,8 @@
 
 - [1. Intro](#1-intro)
 - [2. About](#2-about)
-- [Installing and Updating](#installing-and-updating)
-  - [3. Install & Update Script](#3-install--update-script)
+- [3. Installing and Updating](#3-installing-and-updating)
+  - [Install & Update Script](#install--update-script)
     - [Additional Notes](#additional-notes)
     - [Troubleshooting on Linux](#troubleshooting-on-linux)
     - [Troubleshooting on macOS](#troubleshooting-on-macos)
@@ -50,7 +50,7 @@
 - [5. Running Tests](#5-running-tests)
 - [6. Environment variables](#6-environment-variables)
 - [7. Bash Completion](#7-bash-completion)
-  - [4. Usage](#4-usage-1)
+  - [Usage](#usage)
 - [8. Compatibility Issues](#8-compatibility-issues)
 - [9. Installing nvm on Alpine Linux](#9-installing-nvm-on-alpine-linux)
   - [Alpine Linux 3.13+](#alpine-linux-313)
@@ -95,9 +95,10 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
-## Installing and Updating
 
-### 3. Install & Update Script
+## 3. Installing and Updating
+
+### Install & Update Script
 
 To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
 ```sh
@@ -732,7 +733,7 @@ To activate, you need to source `bash_completion`:
 
 Put the above sourcing line just below the sourcing line for nvm in your profile (`.bashrc`, `.bash_profile`).
 
-### 4. Usage
+### Usage
 
 nvm:
 
