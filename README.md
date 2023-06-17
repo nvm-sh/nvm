@@ -15,8 +15,8 @@
 
 - [1. Intro](#1-intro)
 - [2. About](#2-about)
-- [3. Installing and Updating](#3-installing-and-updating)
-  - [Install & Update Script](#install--update-script)
+- [Installing and Updating](#installing-and-updating)
+  - [3. Install & Update Script](#3-install--update-script)
     - [Additional Notes](#additional-notes)
     - [Troubleshooting on Linux](#troubleshooting-on-linux)
     - [Troubleshooting on macOS](#troubleshooting-on-macos)
@@ -26,7 +26,7 @@
   - [Git Install](#git-install)
   - [Manual Install](#manual-install)
   - [Manual Upgrade](#manual-upgrade)
-- [4. Usage](#4. usage)
+- [4. Usage](#4-usage)
   - [Long-term Support](#long-term-support)
   - [Migrating Global Packages While Installing](#migrating-global-packages-while-installing)
   - [Default Global Packages From File While Installing](#default-global-packages-from-file-while-installing)
@@ -50,12 +50,12 @@
 - [5. Running Tests](#5-running-tests)
 - [6. Environment variables](#6-environment-variables)
 - [7. Bash Completion](#7-bash-completion)
-  - [Usage](#usage-1)
+  - [4. Usage](#4-usage-1)
 - [8. Compatibility Issues](#8-compatibility-issues)
 - [9. Installing nvm on Alpine Linux](#9-installing-nvm-on-alpine-linux)
   - [Alpine Linux 3.13+](#alpine-linux-313)
   - [Alpine Linux 3.5 - 3.12](#alpine-linux-35---312)
-- [10. Uninstalling / Removal](#10-uninstalling--removal)
+- [Uninstalling / Removal](#uninstalling--removal)
   - [Manual Uninstall](#manual-uninstall)
 - [11. Docker For Development Environment](#11-docker-for-development-environment)
 - [12. Problems](#12-problems)
@@ -90,14 +90,14 @@ v12.22.6
 Simple as that!
 
 
-## About
+## 2. About
 nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [windows WSL](https://github.com/nvm-sh/nvm#important-notes).
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
 ## Installing and Updating
 
-### Install & Update Script
+### 3. Install & Update Script
 
 To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
 ```sh
@@ -286,7 +286,7 @@ For manual upgrade with `git` (requires git v1.7.10+):
 ) && \. "$NVM_DIR/nvm.sh"
 ```
 
-## Usage
+## 4. Usage
 
 To download, compile, and install the latest release of node, do this:
 
@@ -686,7 +686,7 @@ end
 load_nvm > /dev/stderr
 ```
 
-## Running Tests
+## 5. Running Tests
 
 Tests are written in [Urchin]. Install Urchin (and other dependencies) like so:
 
@@ -709,7 +709,7 @@ Run all of the tests like this:
 
 Nota bene: Avoid running nvm while the tests are running.
 
-## Environment variables
+## 6. Environment variables
 
 nvm exposes the following environment variables:
 
@@ -722,7 +722,7 @@ nvm exposes the following environment variables:
 Additionally, nvm modifies `PATH`, and, if present, `MANPATH` and `NODE_PATH` when changing versions.
 
 
-## Bash Completion
+## 7. Bash Completion
 
 To activate, you need to source `bash_completion`:
 
@@ -732,7 +732,7 @@ To activate, you need to source `bash_completion`:
 
 Put the above sourcing line just below the sourcing line for nvm in your profile (`.bashrc`, `.bash_profile`).
 
-### Usage
+### 4. Usage
 
 nvm:
 
@@ -770,7 +770,7 @@ nvm uninstall:
 my_alias        default        v10.22.0       v12.18.3      v14.8.0
 ```
 
-## Compatibility Issues
+## 8. Compatibility Issues
 
 `nvm` will encounter some issues if you have some non-default settings set. (see [#606](https://github.com/creationix/nvm/issues/606))
 The following are known to cause issues:
@@ -794,7 +794,7 @@ Shell settings:
 set -e
 ```
 
-## Installing nvm on Alpine Linux
+## 9. Installing nvm on Alpine Linux
 
 In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
 
