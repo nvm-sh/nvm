@@ -16,3 +16,9 @@ TEST_PATH="$NVM_DIR/v0.10.5/bin:/usr/bin:$NVM_DIR/v0.11.5/bin:$NVM_DIR/v0.9.5/bi
 STRIPPED_PATH=`nvm_strip_path "$TEST_PATH" "/bin"`
 
 [ "$STRIPPED_PATH" = "/usr/bin:/usr/local/bin" ] || die "Not correctly stripped: $STRIPPED_PATH "
+
+TEST_PATH=":/a/b/bin::/c/d/bin:"
+
+STRIPPED_PATH=`nvm_strip_path "$TEST_PATH" "/bin"`
+
+[ "$STRIPPED_PATH" = "$TEST_PATH" ] || die "Stripping does not preserve colons: $STRIPPED_PATH "
