@@ -499,7 +499,9 @@ nvm deactivate
 To set a default Node version to be used in any new shell, use the alias 'default':
 
 ```sh
-nvm alias default node
+nvm alias default node # this refers to the latest installed version of node
+nvm alias default 18 # this refers to the latest installed v18.x version of node
+nvm alias default 18.12  # this refers to the latest installed v18.12.x version of node
 ```
 
 #### Use a mirror of node binaries
