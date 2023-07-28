@@ -448,7 +448,11 @@ nvm_do_install() {
 
   # Source nvm
   # shellcheck source=/dev/null
-  \. "$(nvm_install_dir)/nvm.sh"
+  if [ -z "${NVM_NOUSE-}" ] ; then
+    \. "$(nvm_install_dir)/nvm.sh"
+  else
+    \. "$(nvm_install_dir)/nvm.sh" --no-use
+  fi
 
   nvm_check_global_modules
 

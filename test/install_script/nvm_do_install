@@ -1,8 +1,27 @@
 #!/bin/sh
 
+setup () {
+  #nvm_do_install is available
+  type nvm_do_install > /dev/null 2>&1 || die 'nvm_do_install is not available'
+}
+
+cleanup () {
+  unset NVM_ENV
+  unset NVM_NOUSE
+  rm -rf "$NVM_DIR/lib" >/dev/null 2>&1
+}
+
 die () { echo "$@" ; exit 1; }
 
+#nvm install
 NVM_ENV=testing \. ../../install.sh
 
-#nvm_do_install is available
-type nvm_do_install > /dev/null 2>&1 || die 'nvm_do_install is not available'
+setup
+
+cleanup
+
+#nvm install --no-use
+NVM_NOUSE=true
+NVM_ENV=testing \. ../../install.sh > /dev/null
+
+setup
