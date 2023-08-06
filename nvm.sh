@@ -1663,7 +1663,7 @@ nvm_compare_checksum() {
     nvm_err "Computed checksum of '${FILE}' is empty." # missing in raspberry pi binary
     nvm_err 'WARNING: Continuing *without checksum verification*'
     return
-  elif [ "${COMPUTED_SUM}" != "${CHECKSUM}" ]; then
+  elif [ "${COMPUTED_SUM}" != "${CHECKSUM}" ] && [ "${COMPUTED_SUM}" != "\\${CHECKSUM}" ]; then
     nvm_err "Checksums do not match: '${COMPUTED_SUM}' found, '${CHECKSUM}' expected."
     return 1
   fi
