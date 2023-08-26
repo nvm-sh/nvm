@@ -2784,7 +2784,7 @@ nvm_check_file_permissions() {
       if [ -n "${NVM_DEBUG-}" ]; then
         nvm_err "${FILE}"
       fi
-      if ! nvm_check_file_permissions "${FILE}"; then
+      if [ ! -L "${FILE}" ] && ! nvm_check_file_permissions "${FILE}"; then
         return 2
       fi
     elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
