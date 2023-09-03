@@ -1,0 +1,4 @@
+# Maintainer: Tom Wadley <tom@tomwadley.net>
+[ -e "$NVM_DIR" ] || mkdir -p "$NVM_DIR"
+[ -e "$NVM_DIR/nvm.sh" ] || ln -s /usr/share/nvm/nvm.sh "$NVM_DIR/nvm.sh"
+[ -e "$NVM_DIR/nvm-exec" ] || ln -s /usr/share/nvm/nvm-exec "$NVM_DIR/nvm-exec"
