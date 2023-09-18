@@ -86,7 +86,7 @@ RUN useradd -ms /bin/bash nvm
 
 # Copy and set permission for nvm directory
 COPY . /home/nvm/.nvm/
-RUN chown nvm:nvm -R "home/nvm/.nvm"
+RUN chown nvm:nvm -R "/home/nvm/.nvm"
 
 # Set sudoer for "nvm"
 RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
