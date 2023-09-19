@@ -24,9 +24,6 @@ ENV SHELLCHECK_VERSION=0.7.0
 # ref: https://launchpad.net/ubuntu/+archivemirrors
 ENV UBUNTU_APT_SITE ubuntu.cs.utah.edu
 
-# Disable src package source
-RUN sed -i 's/^deb-src\ /\#deb-src\ /g' /etc/apt/sources.list
-
 # Replace origin apt package site with the mirror site
 RUN sed -E -i "s/([a-z]+.)?archive.ubuntu.com/$UBUNTU_APT_SITE/g" /etc/apt/sources.list
 RUN sed -i "s/security.ubuntu.com/$UBUNTU_APT_SITE/g" /etc/apt/sources.list
