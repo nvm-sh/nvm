@@ -456,7 +456,7 @@ nvm_do_install() {
 
   nvm_reset
 
-  nvm_echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
+  nvm_echo "=> Close and reopen your terminal to start using nvm or run the command \`source ${NVM_PROFILE}\` or run the following to use it now:"
   command printf "${SOURCE_STR}"
   if ${BASH_OR_ZSH} ; then
     command printf "${COMPLETION_STR}"
