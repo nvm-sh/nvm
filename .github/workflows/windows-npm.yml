@@ -126,9 +126,6 @@ jobs:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
       - name: Retrieve nvm on WSL
-        env:
-          C: /usr/bin/gcc-8
-          CXX: /usr/bin/g++-8
         run: |
           if [ -z "${{ matrix.method }}" ]; then
             curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | bash
@@ -138,6 +135,47 @@ jobs:
           . "$HOME/.nvm/nvm.sh"
           nvm install ${{ matrix.npm-node-version }}
           node -v
+
+  wsl_matrix_unofficial:
+    name: 'WSL nvm install'
+    defaults:
+      run:
+          shell: wsl-bash {0}
+    runs-on: windows-latest
+    env:
+      WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
+      NVM_NODEJS_ORG_MIRROR: https://unofficial-builds.nodejs.org/download/release
+    strategy:
+      fail-fast: false
+      matrix:
+        wsl-distrib:
+          - Alpine
+        npm-node-version:
+          - '--lts'
+          - '21'
+          - '18'
+          - '16'
+          - '14'
+          - '12'
+          - '11'
+          - '10'
+        method:
+          - ''
+          - 'script'
+    steps:
+      - uses: Vampire/setup-wsl@v2
+        with:
+          distribution: ${{ matrix.wsl-distrib }}
+          additional-packages: bash git curl ca-certificates wget
+      - name: Retrieve nvm on WSL
+        run: |
+          if [ -z "${{ matrix.method }}" ]; then
+            curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | bash
+          else
+            curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | METHOD="${{matrix.method}}" bash
+          fi
+          . "$HOME/.nvm/nvm.sh"
+          NVM_NODEJS_ORG_MIRROR=${{ env.NVM_NODEJS_ORG_MIRROR }} nvm install ${{ matrix.npm-node-version }}
 
   nvm_windows:
     name: 'tests, on windows'

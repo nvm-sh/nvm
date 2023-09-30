@@ -1965,6 +1965,10 @@ nvm_get_arch() {
     HOST_ARCH=armv7l
   fi
 
+  if [ -f "/etc/alpine-release" ]; then
+    NVM_ARCH=x64-musl
+  fi
+
   nvm_echo "${NVM_ARCH}"
 }
 
