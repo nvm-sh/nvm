@@ -55,7 +55,8 @@ jobs:
       - name: Install Cygwin
         shell: bash
         run: |
-          export SITE='https://mirror.clarkson.edu/cygwin/'
+          export SITE='https://mirror.clarkson.edu/cygwin/' # see https://archlinux.org/mirrors/clarkson.edu/1603/ for uptime status
+          export SITE='https://mirrors.kernel.org/sourceware/cygwin/'
           export LOCALDIR="$(pwd)"
           export ROOTDIR="$USERPROFILE\\cygwin"
           export PACKAGES='bash,git,curl'
