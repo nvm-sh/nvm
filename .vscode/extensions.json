@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "jianglinghao.vscode-npm-scripts"
+        "jianglinghao.vscode-npm-scripts",
+        "stevenhansel.vscode-nvm",
+        "vadimcn.vscode-lldb"
     ]
 }
