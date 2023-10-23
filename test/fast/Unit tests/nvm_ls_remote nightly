@@ -27,10 +27,10 @@ OUTPUT="$(nvm_ls_remote)"
 EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm_ls_remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
 
-OUTPUT="$(nvm_ls_remote 10.0)"
-EXPECTED_OUTPUT="v10.0.0-nightly20180424982adb5994
-v10.0.1-nightly20180505ff148b987d"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote 10.0 did not output 10.0 nightly versions; got $OUTPUT"
+OUTPUT="$(nvm_ls_remote 11)"
+EXPECTED_OUTPUT="v11.0.0-nightly201810011be804d625
+v11.1.0-nightly20181101af6d26281f"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_ls_remote 11 did not output v11 nightly versions; got $OUTPUT"
 
 # Sanity checks
 OUTPUT="$(nvm_print_implicit_alias remote stable)"
