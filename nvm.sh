@@ -1090,7 +1090,7 @@ nvm_list_aliases() {
       NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}" &
     done
     wait
-  ) | sort
+  ) | command sort
 
   (
     local ALIAS_NAME
@@ -1103,7 +1103,7 @@ nvm_list_aliases() {
       } &
     done
     wait
-  ) | sort
+  ) | command sort
 
   (
     local LTS_ALIAS
@@ -1117,7 +1117,7 @@ nvm_list_aliases() {
       } &
     done
     wait
-  ) | sort
+  ) | command sort
   return
 }
 
