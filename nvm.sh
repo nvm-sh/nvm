@@ -1177,8 +1177,10 @@ nvm_resolve_alias() {
 
   local SEEN_ALIASES
   SEEN_ALIASES="${ALIAS}"
+  local NVM_ALIAS_INDEX
+  NVM_ALIAS_INDEX=1
   while true; do
-    ALIAS_TEMP="$(nvm_alias "${ALIAS}" 2>/dev/null || nvm_echo)"
+    ALIAS_TEMP="$( (nvm_alias "${ALIAS}" 2>/dev/null | command head -n "${NVM_ALIAS_INDEX}" | command tail -n 1) || nvm_echo)"
 
     if [ -z "${ALIAS_TEMP}" ]; then
       break
