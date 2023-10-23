@@ -542,11 +542,24 @@ $ echo "node" > .nvmrc # to default to the latest version
 
 [NB these examples assume a POSIX-compliant shell version of `echo`. If you use a Windows `cmd` development environment, eg the `.nvmrc` file is used to configure a remote Linux deployment, then keep in mind the `"`s will be copied leading to an invalid file. Remove them.]
 
-Then when you run nvm:
+Then when you run nvm use:
 
 ```sh
 $ nvm use
 Found '/path/to/project/.nvmrc' with version <5.9>
+Now using node v5.9.1 (npm v3.7.3)
+```
+
+Running nvm install will also switch over to the correct version, but if the correct node version isn't already installed, it will install it for you.
+
+```sh
+$ nvm install
+Found '/path/to/project/.nvmrc' with version <5.9>
+Downloading and installing node v5.9.1...
+Downloading https://nodejs.org/dist/v5.9.1/node-v5.9.1-linux-x64.tar.xz...
+#################################################################################### 100.0%
+Computing checksum with sha256sum
+Checksums matched!
 Now using node v5.9.1 (npm v3.7.3)
 ```
 
