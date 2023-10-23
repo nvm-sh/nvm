@@ -1141,7 +1141,7 @@ nvm_alias() {
     return 2
   fi
 
-  command cat "${NVM_ALIAS_PATH}"
+  command awk 'NF' "${NVM_ALIAS_PATH}"
 }
 
 nvm_ls_current() {
