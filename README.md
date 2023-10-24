@@ -356,7 +356,7 @@ Any time your local copy of `nvm` connects to https://nodejs.org, it will re-cre
 To get the latest LTS version of node and migrate your existing installed packages, use
 
 ```sh
-nvm install 'lts/*' --reinstall-packages-from=current
+nvm install --reinstall-packages-from=current 'lts/*'
 ```
 
 ### Migrating Global Packages While Installing
@@ -364,7 +364,7 @@ nvm install 'lts/*' --reinstall-packages-from=current
 If you want to install a new version of Node.js and migrate npm packages from a previous version:
 
 ```sh
-nvm install node --reinstall-packages-from=node
+nvm install --reinstall-packages-from=node node
 ```
 
 This will first use "nvm version node" to identify the current version you're migrating packages from. Then it resolves the new version to install from the remote server and installs it. Lastly, it runs "nvm reinstall-packages" to reinstall the npm packages from your prior version of Node to the new one.
@@ -372,8 +372,8 @@ This will first use "nvm version node" to identify the current version you're mi
 You can also install and migrate npm packages from specific versions of Node like this:
 
 ```sh
-nvm install 6 --reinstall-packages-from=5
-nvm install v4.2 --reinstall-packages-from=iojs
+nvm install --reinstall-packages-from=5 6
+nvm install --reinstall-packages-from=iojs v4.2
 ```
 
 Note that reinstalling packages _explicitly does not update the npm version_ — this is to ensure that npm isn't accidentally upgraded to a broken version for the new node version.
@@ -381,7 +381,7 @@ Note that reinstalling packages _explicitly does not update the npm version_ —
 To update npm at the same time add the `--latest-npm` flag, like this:
 
 ```sh
-nvm install 'lts/*' --reinstall-packages-from=default --latest-npm
+nvm install --reinstall-packages-from=default --latest-npm 'lts/*'
 ```
 
 or, you can at any time run the following command to get the latest supported npm version on the current node version:
@@ -415,7 +415,7 @@ nvm install iojs
 If you want to install a new version of io.js and migrate npm packages from a previous version:
 
 ```sh
-nvm install iojs --reinstall-packages-from=iojs
+nvm install --reinstall-packages-from=iojs iojs
 ```
 
 The same guidelines mentioned for migrating npm packages in node are applicable to io.js.
