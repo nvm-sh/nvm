@@ -1,4 +1,5 @@
-lts/*|lts/hydrogen
+lts/*|lts/iron
+lts/iron|v20.9.0
 lts/hydrogen|v18.18.2
 lts/gallium|v16.20.2
 lts/fermium|v14.21.3

@@ -209,3 +209,4 @@
        v18.18.0  [0;37m (LTS: Hydrogen)[0m
        v18.18.1  [0;37m (LTS: Hydrogen)[0m
        v18.18.2  [1;32m (Latest LTS: Hydrogen)[0m
+        v20.9.0  [1;32m (Latest LTS: Iron)[0m
