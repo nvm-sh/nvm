@@ -1,3 +1,4 @@
 {
-    "npm-scripts.showStartNotification": false
+    "npm-scripts.showStartNotification": false,
+    "compile-hero.disable-compile-files-on-did-save-code": false
 }
