@@ -756,23 +756,31 @@ nvm_normalize_lts() {
   local LTS
   LTS="${1-}"
 
-  if [ "$(expr "${LTS}" : '^lts/-[1-9][0-9]*$')" -gt 0 ]; then
-    local N
-    N="$(echo "${LTS}" | cut -d '-' -f 2)"
-    N=$((N+1))
-    local NVM_ALIAS_DIR
-    NVM_ALIAS_DIR="$(nvm_alias_path)"
-    local RESULT
-    RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
-    if [ "${RESULT}" != '*' ]; then
-      nvm_echo "lts/${RESULT}"
-    else
-      nvm_err 'That many LTS releases do not exist yet.'
-      return 2
-    fi
-  else
-    nvm_echo "${LTS}"
-  fi
+  case "${LTS}" in
+    lts/-[123456789] | lts/-[123456789][0123456789]*)
+      local N
+      N="$(echo "${LTS}" | cut -d '-' -f 2)"
+      N=$((N+1))
+      # shellcheck disable=SC2181
+      if [ $? -ne 0 ]; then
+        nvm_echo "${LTS}"
+        return 0
+      fi
+      local NVM_ALIAS_DIR
+      NVM_ALIAS_DIR="$(nvm_alias_path)"
+      local RESULT
+      RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
+      if [ "${RESULT}" != '*' ]; then
+        nvm_echo "lts/${RESULT}"
+      else
+        nvm_err 'That many LTS releases do not exist yet.'
+        return 2
+      fi
+    ;;
+    *)
+      nvm_echo "${LTS}"
+    ;;
+  esac
 }
 
 nvm_ensure_version_prefix() {
