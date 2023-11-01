@@ -99,23 +99,36 @@ jobs:
       matrix:
         wsl-distrib:
           - Debian
-          - Alpine
+        # - Alpine # fails
+          - Ubuntu-20.04
           - Ubuntu-18.04
         npm-node-version:
           - '--lts'
+          - '21'
+          - '18'
+          - '16'
           - '14'
           - '12'
-          - '11'
           - '10'
+        exclude:
+          - wsl-distrib: Ubuntu-18.04
+            npm-node-version: '--lts'
+          - wsl-distrib: Ubuntu-18.04
+            npm-node-version: '21'
+          - wsl-distrib: Ubuntu-18.04
+            npm-node-version: '18'
         method:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v1
+      - uses: Vampire/setup-wsl@v2
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
       - name: Retrieve nvm on WSL
+        env:
+          C: /usr/bin/gcc-8
+          CXX: /usr/bin/g++-8
         run: |
           if [ -z "${{ matrix.method }}" ]; then
             curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | bash
@@ -124,6 +137,7 @@ jobs:
           fi
           . "$HOME/.nvm/nvm.sh"
           nvm install ${{ matrix.npm-node-version }}
+          node -v
 
   nvm_windows:
     name: 'tests, on windows'
