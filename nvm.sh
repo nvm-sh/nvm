@@ -2023,14 +2023,25 @@ nvm_is_merged_node_version() {
 }
 
 nvm_get_mirror() {
+  local NVM_MIRROR
+  NVM_MIRROR=''
   case "${1}-${2}" in
-    node-std) nvm_echo "${NVM_NODEJS_ORG_MIRROR:-https://nodejs.org/dist}" ;;
-    iojs-std) nvm_echo "${NVM_IOJS_ORG_MIRROR:-https://iojs.org/dist}" ;;
+    node-std) NVM_MIRROR="${NVM_NODEJS_ORG_MIRROR:-https://nodejs.org/dist}" ;;
+    iojs-std) NVM_MIRROR="${NVM_IOJS_ORG_MIRROR:-https://iojs.org/dist}" ;;
     *)
       nvm_err 'unknown type of node.js or io.js release'
       return 1
     ;;
   esac
+
+  case "${NVM_MIRROR}" in
+    *\`* | *\\* | *\'* | *\(* )
+      nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
+      return 2
+    ;;
+  esac
+
+  nvm_echo "${NVM_MIRROR}"
 }
 
 # args: os, prefixed version, version, tarball, extract directory

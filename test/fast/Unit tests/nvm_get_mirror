@@ -30,3 +30,11 @@ unset NVM_NODEJS_ORG_MIRROR
 NVM_IOJS_ORG_MIRROR="test://domain"
 [ "$(nvm_get_mirror iojs std)" = "test://domain" ] || die "iojs-std mirror should respect NVM_IOJS_ORG_MIRROR"
 unset NVM_IOJS_ORG_MIRROR
+
+NVM_NODEJS_ORG_MIRROR='`do something bad`'
+! nvm_get_mirror node std || die 'NVM_NODEJS_ORG_MIRROR errors with command injection attempt'
+[ "$(nvm_get_mirror node std)" = "" ] || die 'NVM_NODEJS_ORG_MIRROR is protected against command injection'
+
+NVM_IOJS_ORG_MIRROR='`do something bad`'
+! nvm_get_mirror iojs std || die 'NVM_IOJS_ORG_MIRROR errors with command injection attempt'
+[ "$(nvm_get_mirror iojs std)" = "" ] || die 'NVM_IOJS_ORG_MIRROR is protected against command injection'
