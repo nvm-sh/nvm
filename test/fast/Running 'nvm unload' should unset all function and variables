@@ -24,6 +24,7 @@ env | grep -v PATH= | grep -v IFS= | sort >> "${AFTER}"
 
 ! type nvm > /dev/null 2>&1 || die "nvm not unloaded"
 
+diff "${BEFORE}" "${AFTER}"
 DIFF="$(diff "${BEFORE}" "${AFTER}" ||:)"
 [ -z "${DIFF}" ] || die "function pollution found: ${DIFF}"
 
