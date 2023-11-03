@@ -52,12 +52,28 @@ nvm_profile_is_bash_or_zsh() {
 #
 # Outputs the location to NVM depending on:
 # * The availability of $NVM_SOURCE
+# * The presence of $NVM_INSTALL_GITHUB_REPO
 # * The method used ("script" or "git" in the script, defaults to "git")
 # NVM_SOURCE always takes precedence unless the method is "script-nvm-exec"
 #
 nvm_source() {
   local NVM_GITHUB_REPO
   NVM_GITHUB_REPO="${NVM_INSTALL_GITHUB_REPO:-nvm-sh/nvm}"
+  if [ "${NVM_GITHUB_REPO}" != 'nvm-sh/nvm' ]; then
+    { nvm_echo >&2 "$(cat)" ; } << EOF
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE REPO IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+
+The default repository for this install is \`nvm-sh/nvm\`,
+but the environment variables \`\$NVM_INSTALL_GITHUB_REPO\` is
+currently set to \`${NVM_GITHUB_REPO}\`.
+
+If this is not intentional, interrupt this installation and
+verify your environment variables.
+EOF
+  fi
   local NVM_VERSION
   NVM_VERSION="${NVM_INSTALL_VERSION:-$(nvm_latest_version)}"
   local NVM_METHOD
