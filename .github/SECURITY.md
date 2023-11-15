@@ -21,3 +21,7 @@ We meet 95% of the “silver” criteria. The gaps are as follows:
 We meet 65% of the “gold” criteria. The gaps are as follows:
   - we do not yet have the “silver” badge; see all the gaps above.
   - We do not include a copyright or license statement in each source file. Efforts are underway to change this archaic practice into a suggestion instead of a hard requirement.
+
+## Threat Model
+
+See [THREAT_MODEL.md](./THREAT_MODEL.md).
