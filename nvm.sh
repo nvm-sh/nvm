@@ -461,9 +461,10 @@ nvm_find_up() {
 
 nvm_find_nvmrc() {
   local dir
-  dir="$(nvm_find_up '.nvmrc')"
-  if [ -e "${dir}/.nvmrc" ]; then
-    nvm_echo "${dir}/.nvmrc"
+  local rcfile="${1:-.nvmrc}"
+  dir="$(nvm_find_up "${rcfile}")"
+  if [ -e "${dir}/${rcfile}" ]; then
+    nvm_echo "${dir}/${rcfile}"
   fi
 }
 
