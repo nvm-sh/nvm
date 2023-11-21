@@ -472,7 +472,13 @@ nvm_find_nvmrc() {
 nvm_rc_version() {
   export NVM_RC_VERSION=''
   local NVMRC_PATH
-  NVMRC_PATH="$(nvm_find_nvmrc)"
+  
+  if [ -n "$1" ]; then
+    NVMRC_PATH="$(nvm_find_nvmrc "$1")"
+  else
+    NVMRC_PATH="$(nvm_find_nvmrc)"
+  fi
+
   if [ ! -e "${NVMRC_PATH}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
       nvm_err "No .nvmrc file found"
@@ -3131,6 +3137,7 @@ nvm() {
       local PROVIDED_REINSTALL_PACKAGES_FROM
       local REINSTALL_PACKAGES_FROM
       local SKIP_DEFAULT_PACKAGES
+      local NVM_RC_PATH
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -3225,6 +3232,10 @@ nvm() {
             SKIP_DEFAULT_PACKAGES=true
             shift
           ;;
+          --config=*)
+            NVM_RC_PATH="${1#--config=}"
+            shift
+          ;;
           *)
             break # stop parsing args
           ;;
@@ -3246,7 +3257,7 @@ nvm() {
             shift
           fi
         else
-          nvm_rc_version
+          nvm_rc_version "$NVM_RC_PATH" 
           if [ $version_not_provided -eq 1 ] && [ -z "${NVM_RC_VERSION}" ]; then
             unset NVM_RC_VERSION
             >&2 nvm --help
