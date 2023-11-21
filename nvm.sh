@@ -3794,7 +3794,7 @@ nvm() {
           if [ "_${VERSION:-N/A}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
             provided_version=''
             if [ $has_checked_nvmrc -ne 1 ]; then
-              NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version $NVM_RC_PATH && has_checked_nvmrc=1
+              NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version "$NVM_RC_PATH" && has_checked_nvmrc=1
             fi
             provided_version="${NVM_RC_VERSION}"
             IS_VERSION_FROM_NVMRC=1
