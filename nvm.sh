@@ -3612,6 +3612,7 @@ nvm() {
       local NVM_LTS
       local IS_VERSION_FROM_NVMRC
       IS_VERSION_FROM_NVMRC=0
+      local NVM_RC_PATH
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -3623,6 +3624,10 @@ nvm() {
           --) ;;
           --lts) NVM_LTS='*' ;;
           --lts=*) NVM_LTS="${1##--lts=}" ;;
+          --config=*)
+            NVM_RC_PATH="${1#--config=}"
+            shift
+          ;;
           --*) ;;
           *)
             if [ -n "${1-}" ]; then
@@ -3636,7 +3641,7 @@ nvm() {
       if [ -n "${NVM_LTS-}" ]; then
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
       elif [ -z "${PROVIDED_VERSION-}" ]; then
-        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version
+        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version "$NVM_RC_PATH"
         if [ -n "${NVM_RC_VERSION-}" ]; then
           PROVIDED_VERSION="${NVM_RC_VERSION}"
           IS_VERSION_FROM_NVMRC=1
@@ -3746,6 +3751,7 @@ nvm() {
       local NVM_SILENT
       local NVM_SILENT_ARG
       local NVM_LTS
+      local NVM_RC_PATH
       while [ $# -gt 0 ]; do
         case "$1" in
           --silent)
@@ -3755,6 +3761,10 @@ nvm() {
           ;;
           --lts) NVM_LTS='*' ; shift ;;
           --lts=*) NVM_LTS="${1##--lts=}" ; shift ;;
+          --config=*)
+            NVM_RC_PATH="${1#--config=}"
+            shift
+          ;;
           *)
             if [ -n "$1" ]; then
               break
@@ -3766,7 +3776,7 @@ nvm() {
       done
 
       if [ $# -lt 1 ] && [ -z "${NVM_LTS-}" ]; then
-        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
+        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version "$NVM_RC_PATH" && has_checked_nvmrc=1
         if [ -n "${NVM_RC_VERSION-}" ]; then
           VERSION="$(nvm_version "${NVM_RC_VERSION-}")" ||:
         fi
@@ -3784,7 +3794,7 @@ nvm() {
           if [ "_${VERSION:-N/A}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
             provided_version=''
             if [ $has_checked_nvmrc -ne 1 ]; then
-              NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
+              NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version $NVM_RC_PATH && has_checked_nvmrc=1
             fi
             provided_version="${NVM_RC_VERSION}"
             IS_VERSION_FROM_NVMRC=1
@@ -3822,11 +3832,16 @@ nvm() {
     "exec")
       local NVM_SILENT
       local NVM_LTS
+      local NVM_RC_PATH
       while [ $# -gt 0 ]; do
         case "$1" in
           --silent) NVM_SILENT=1 ; shift ;;
           --lts) NVM_LTS='*' ; shift ;;
           --lts=*) NVM_LTS="${1##--lts=}" ; shift ;;
+          --config=*)
+            NVM_RC_PATH="${1#--config=}"
+            shift
+          ;;
           --) break ;;
           --*)
             nvm_err "Unsupported option \"$1\"."
@@ -3850,7 +3865,7 @@ nvm() {
       elif [ -n "${provided_version}" ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
         if [ "_${VERSION}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
-          NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
+          NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version "$NVM_RC_PATH" && has_checked_nvmrc=1
           provided_version="${NVM_RC_VERSION}"
           unset NVM_RC_VERSION
           VERSION="$(nvm_version "${provided_version}")" ||:
@@ -3974,16 +3989,21 @@ nvm() {
     "which")
       local NVM_SILENT
       local provided_version
+      local NVM_RC_PATH
       while [ $# -ne 0 ]; do
         case "${1}" in
           --silent) NVM_SILENT=1 ;;
+          --config=*)
+            NVM_RC_PATH="${1#--config=}"
+            shift
+          ;;
           --) ;;
           *) provided_version="${1-}" ;;
         esac
         shift
       done
       if [ -z "${provided_version-}" ]; then
-        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version
+        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version "$NVM_RC_PATH"
         if [ -n "${NVM_RC_VERSION}" ]; then
           provided_version="${NVM_RC_VERSION}"
           VERSION=$(nvm_version "${NVM_RC_VERSION}") ||:
