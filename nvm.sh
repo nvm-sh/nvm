@@ -472,7 +472,7 @@ nvm_find_nvmrc() {
 nvm_rc_version() {
   export NVM_RC_VERSION=''
   local NVMRC_PATH
-  
+
   if [ -n "$1" ]; then
     NVMRC_PATH="$(nvm_find_nvmrc "$1")"
   else
@@ -3257,7 +3257,7 @@ nvm() {
             shift
           fi
         else
-          nvm_rc_version "$NVM_RC_PATH" 
+          nvm_rc_version "$NVM_RC_PATH"
           if [ $version_not_provided -eq 1 ] && [ -z "${NVM_RC_VERSION}" ]; then
             unset NVM_RC_VERSION
             >&2 nvm --help
