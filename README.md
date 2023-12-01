@@ -159,13 +159,13 @@ If you get `nvm: command not found` after running the install script, one of the
 
 If the above doesn't fix the problem, you may try the following:
 
-  - If you use bash, it may be that your `.bash_profile` (or `~/.profile`) does not source your `~/.bashrc` properly. You could fix this by adding `source ~/<your_profile_file>` to it or follow the next step below.
+  - If you use bash, it may be that your `.bash_profile` (or `~/.profile`) does not source your `~/.bashrc` properly. You could fix this by adding `source ~/<your_profile_file>` to it or following the next step below.
 
   - Try adding [the snippet from the install section](#profile_snippet), that finds the correct nvm directory and loads nvm, to your usual profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).
 
   - For more information about this issue and possible workarounds, please [refer here](https://github.com/nvm-sh/nvm/issues/576)
 
-**Note** For Macs with the M1 chip, node started offering **arm64** arch darwin packages since v16.0.0 and experimental **arm64** support when compiling from source since v14.17.0. If you are facing issues installing node using `nvm`, you may want to update to one of those versions or later.
+**Note** For Macs with the Apple Silicon chip, node started offering **arm64** arch Darwin packages since v16.0.0 and experimental **arm64** support when compiling from source since v14.17.0. If you are facing issues installing node using `nvm`, you may want to update to one of those versions or later.
 
 #### Ansible
 
@@ -193,9 +193,9 @@ which should output `nvm` if the installation was successful. Please note that `
 
 ### Important Notes
 
-If you're running a system without prepackaged binary available, which means you're going to install nodejs or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
+If you're running a system without prepackaged binary available, which means you're going to install node or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
-**Note:** `nvm` also support Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [GitBash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` also supports Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [GitBash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
 
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
@@ -211,7 +211,7 @@ If you're running a system without prepackaged binary available, which means you
 
 **Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
 
-  - [[#900] [Bug] nodejs on FreeBSD may need to be patched](https://github.com/nvm-sh/nvm/issues/900)
+  - [[#900] [Bug] node on FreeBSD may need to be patched](https://github.com/nvm-sh/nvm/issues/900)
   - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
 
 **Note:** On OS X, if you do not have Xcode installed and you do not wish to download the ~4.3GB file, you can install the `Command Line Tools`. You can check out this blog post on how to just that:
@@ -944,12 +944,12 @@ Ignore insecure directories and continue [y] or abort compinit [n]? y
 
 Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` and `/usr/local/share/zsh`. This is **not** an `nvm` problem - it is a homebrew problem. Refer [here](https://github.com/zsh-users/zsh-completions/issues/680) for some solutions related to the issue.
 
-**Macs with M1 chip**
+**Macs with Apple Silicon chips**
 
-Experimental support for the M1 architecture was added in node.js v15.3 and full support was added in v16.0.
+Experimental support for the Apple Silicon chip architecture was added in node.js v15.3 and full support was added in v16.0.
 Because of this, if you try to install older versions of node as usual, you will probably experience either compilation errors when installing node or out-of-memory errors while running your code.
 
-So, if you want to run a version prior to v16.0 on an M1 Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that Rosetta 2 can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
+So, if you want to run a version prior to v16.0 on an Apple Silicon Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that Rosetta 2 can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
 Here's what you will need to do:
 
 - Install Rosetta, if you haven't already done so
@@ -958,7 +958,7 @@ Here's what you will need to do:
   $ softwareupdate --install-rosetta
   ```
 
-  You might wonder, "how will my M1 Mac know to use Rosetta for a version of node compiled for an Intel chip?".
+  You might wonder, "how will my Apple Silicon Mac know to use Rosetta for a version of node compiled for an Intel chip?".
   If an executable contains only Intel instructions, macOS will automatically use Rosetta to translate the instructions.
 
 - Open a shell that's running using Rosetta
@@ -1037,7 +1037,7 @@ This could simply be solved by running this in your root directory:
   sudo chattr +i /etc/resolv.conf
   ```
 
-This deletes your `resolv.conf` file thats automatically generated when u run WSL, creates a new file and puts `nameserver 8.8.8.8`, then creates a `wsl.conf` file and adds `[network]` and `generateResolveConf = false` to prevent auto generation of that file.
+This deletes your `resolv.conf` file that is automatically generated when u run WSL, creates a new file and puts `nameserver 8.8.8.8`, then creates a `wsl.conf` file and adds `[network]` and `generateResolveConf = false` to prevent auto-generation of that file.
 
 You can check the contents of the file by running:
 
