@@ -2035,11 +2035,17 @@ nvm_get_mirror() {
   esac
 
   case "${NVM_MIRROR}" in
-    *\`* | *\\* | *\'* | *\(* )
+    *\`* | *\\* | *\'* | *\(* | *' '* )
       nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
       return 2
     ;;
   esac
+
+
+  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ $0 ~ "^https?://[a-zA-Z0-9./_-]+$" }'; then
+      nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
+      return 2
+  fi
 
   nvm_echo "${NVM_MIRROR}"
 }
