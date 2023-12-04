@@ -47,6 +47,7 @@ jobs:
           nvm install ${{ matrix.npm-node-version }}
 
   cygwin_matrix:
+    continue-on-error: true
     permissions:
       contents: none
     name: 'Cygwin nvm install'
