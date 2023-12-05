@@ -3565,7 +3565,7 @@ nvm() {
         fi
       else
         export PATH="${NEWPATH}"
-        command hash -r
+        builtin hash -r
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
         fi
@@ -3697,7 +3697,7 @@ nvm() {
         export MANPATH
       fi
       export PATH
-      command hash -r
+      builtin hash -r
       export NVM_BIN="${NVM_VERSION_DIR}/bin"
       export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
