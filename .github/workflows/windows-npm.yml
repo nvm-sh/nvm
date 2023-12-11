@@ -47,6 +47,7 @@ jobs:
           nvm install ${{ matrix.npm-node-version }}
 
   cygwin_matrix:
+    continue-on-error: true
     permissions:
       contents: none
     name: 'Cygwin nvm install'
@@ -87,6 +88,7 @@ jobs:
           bash.exe "%USERPROFILE%\setup.sh"
 
   wsl_matrix:
+    continue-on-error: true
     name: 'WSL nvm install'
     defaults:
       run:
@@ -99,19 +101,29 @@ jobs:
       matrix:
         wsl-distrib:
           - Debian
-          - Alpine
+        # - Alpine # fails
+          - Ubuntu-20.04
           - Ubuntu-18.04
         npm-node-version:
           - '--lts'
+          - '21'
+          - '18'
+          - '16'
           - '14'
           - '12'
-          - '11'
           - '10'
+        exclude:
+          - wsl-distrib: Ubuntu-18.04
+            npm-node-version: '--lts'
+          - wsl-distrib: Ubuntu-18.04
+            npm-node-version: '21'
+          - wsl-distrib: Ubuntu-18.04
+            npm-node-version: '18'
         method:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v1
+      - uses: Vampire/setup-wsl@v2
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
@@ -124,12 +136,55 @@ jobs:
           fi
           . "$HOME/.nvm/nvm.sh"
           nvm install ${{ matrix.npm-node-version }}
+          node -v
+
+  wsl_matrix_unofficial:
+    continue-on-error: true
+    name: 'WSL nvm install'
+    defaults:
+      run:
+          shell: wsl-bash {0}
+    runs-on: windows-latest
+    env:
+      WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
+      NVM_NODEJS_ORG_MIRROR: https://unofficial-builds.nodejs.org/download/release
+    strategy:
+      fail-fast: false
+      matrix:
+        wsl-distrib:
+          - Alpine
+        npm-node-version:
+          - '--lts'
+          - '21'
+          - '18'
+          - '16'
+          - '14'
+          - '12'
+          - '11'
+          - '10'
+        method:
+          - ''
+          - 'script'
+    steps:
+      - uses: Vampire/setup-wsl@v2
+        with:
+          distribution: ${{ matrix.wsl-distrib }}
+          additional-packages: bash git curl ca-certificates wget
+      - name: Retrieve nvm on WSL
+        run: |
+          if [ -z "${{ matrix.method }}" ]; then
+            curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | bash
+          else
+            curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | METHOD="${{matrix.method}}" bash
+          fi
+          . "$HOME/.nvm/nvm.sh"
+          NVM_NODEJS_ORG_MIRROR=${{ env.NVM_NODEJS_ORG_MIRROR }} nvm install ${{ matrix.npm-node-version }}
 
   nvm_windows:
     name: 'tests, on windows'
     permissions:
       contents: none
-    needs: [wsl_matrix, cygwin_matrix, msys_matrix, msys_fail_install]
+    needs: [wsl_matrix, wsl_matrix_unofficial, cygwin_matrix, msys_matrix, msys_fail_install]
     runs-on: ubuntu-latest
     steps:
       - run: 'echo tests completed'

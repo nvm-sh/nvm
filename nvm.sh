@@ -756,23 +756,31 @@ nvm_normalize_lts() {
   local LTS
   LTS="${1-}"
 
-  if [ "$(expr "${LTS}" : '^lts/-[1-9][0-9]*$')" -gt 0 ]; then
-    local N
-    N="$(echo "${LTS}" | cut -d '-' -f 2)"
-    N=$((N+1))
-    local NVM_ALIAS_DIR
-    NVM_ALIAS_DIR="$(nvm_alias_path)"
-    local RESULT
-    RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
-    if [ "${RESULT}" != '*' ]; then
-      nvm_echo "lts/${RESULT}"
-    else
-      nvm_err 'That many LTS releases do not exist yet.'
-      return 2
-    fi
-  else
-    nvm_echo "${LTS}"
-  fi
+  case "${LTS}" in
+    lts/-[123456789] | lts/-[123456789][0123456789]*)
+      local N
+      N="$(echo "${LTS}" | cut -d '-' -f 2)"
+      N=$((N+1))
+      # shellcheck disable=SC2181
+      if [ $? -ne 0 ]; then
+        nvm_echo "${LTS}"
+        return 0
+      fi
+      local NVM_ALIAS_DIR
+      NVM_ALIAS_DIR="$(nvm_alias_path)"
+      local RESULT
+      RESULT="$(command ls "${NVM_ALIAS_DIR}/lts" | command tail -n "${N}" | command head -n 1)"
+      if [ "${RESULT}" != '*' ]; then
+        nvm_echo "lts/${RESULT}"
+      else
+        nvm_err 'That many LTS releases do not exist yet.'
+        return 2
+      fi
+    ;;
+    *)
+      nvm_echo "${LTS}"
+    ;;
+  esac
 }
 
 nvm_ensure_version_prefix() {
@@ -1090,7 +1098,7 @@ nvm_list_aliases() {
       NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}" &
     done
     wait
-  ) | sort
+  ) | command sort
 
   (
     local ALIAS_NAME
@@ -1103,7 +1111,7 @@ nvm_list_aliases() {
       } &
     done
     wait
-  ) | sort
+  ) | command sort
 
   (
     local LTS_ALIAS
@@ -1117,7 +1125,7 @@ nvm_list_aliases() {
       } &
     done
     wait
-  ) | sort
+  ) | command sort
   return
 }
 
@@ -1141,7 +1149,7 @@ nvm_alias() {
     return 2
   fi
 
-  command cat "${NVM_ALIAS_PATH}"
+  command awk 'NF' "${NVM_ALIAS_PATH}"
 }
 
 nvm_ls_current() {
@@ -1177,8 +1185,10 @@ nvm_resolve_alias() {
 
   local SEEN_ALIASES
   SEEN_ALIASES="${ALIAS}"
+  local NVM_ALIAS_INDEX
+  NVM_ALIAS_INDEX=1
   while true; do
-    ALIAS_TEMP="$(nvm_alias "${ALIAS}" 2>/dev/null || nvm_echo)"
+    ALIAS_TEMP="$( (nvm_alias "${ALIAS}" 2>/dev/null | command head -n "${NVM_ALIAS_INDEX}" | command tail -n 1) || nvm_echo)"
 
     if [ -z "${ALIAS_TEMP}" ]; then
       break
@@ -1955,6 +1965,10 @@ nvm_get_arch() {
     HOST_ARCH=armv7l
   fi
 
+  if [ -f "/etc/alpine-release" ]; then
+    NVM_ARCH=x64-musl
+  fi
+
   nvm_echo "${NVM_ARCH}"
 }
 
@@ -2009,14 +2023,31 @@ nvm_is_merged_node_version() {
 }
 
 nvm_get_mirror() {
+  local NVM_MIRROR
+  NVM_MIRROR=''
   case "${1}-${2}" in
-    node-std) nvm_echo "${NVM_NODEJS_ORG_MIRROR:-https://nodejs.org/dist}" ;;
-    iojs-std) nvm_echo "${NVM_IOJS_ORG_MIRROR:-https://iojs.org/dist}" ;;
+    node-std) NVM_MIRROR="${NVM_NODEJS_ORG_MIRROR:-https://nodejs.org/dist}" ;;
+    iojs-std) NVM_MIRROR="${NVM_IOJS_ORG_MIRROR:-https://iojs.org/dist}" ;;
     *)
       nvm_err 'unknown type of node.js or io.js release'
       return 1
     ;;
   esac
+
+  case "${NVM_MIRROR}" in
+    *\`* | *\\* | *\'* | *\(* | *' '* )
+      nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
+      return 2
+    ;;
+  esac
+
+
+  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ $0 ~ "^https?://[a-zA-Z0-9./_-]+$" }'; then
+      nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
+      return 2
+  fi
+
+  nvm_echo "${NVM_MIRROR}"
 }
 
 # args: os, prefixed version, version, tarball, extract directory
@@ -3534,7 +3565,7 @@ nvm() {
         fi
       else
         export PATH="${NEWPATH}"
-        hash -r
+        \hash -r
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
         fi
@@ -3666,7 +3697,7 @@ nvm() {
         export MANPATH
       fi
       export PATH
-      hash -r
+      \hash -r
       export NVM_BIN="${NVM_VERSION_DIR}/bin"
       export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
@@ -4195,7 +4226,7 @@ nvm() {
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" | "-v")
-      nvm_echo '0.39.5'
+      nvm_echo '0.39.7'
     ;;
     "unload")
       nvm deactivate >/dev/null 2>&1
