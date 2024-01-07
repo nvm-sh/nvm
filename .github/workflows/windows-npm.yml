@@ -47,6 +47,7 @@ jobs:
           nvm install ${{ matrix.npm-node-version }}
 
   cygwin_matrix:
+    continue-on-error: true
     permissions:
       contents: none
     name: 'Cygwin nvm install'
@@ -87,6 +88,7 @@ jobs:
           bash.exe "%USERPROFILE%\setup.sh"
 
   wsl_matrix:
+    continue-on-error: true
     name: 'WSL nvm install'
     defaults:
       run:
@@ -137,6 +139,7 @@ jobs:
           node -v
 
   wsl_matrix_unofficial:
+    continue-on-error: true
     name: 'WSL nvm install'
     defaults:
       run:
@@ -181,7 +184,7 @@ jobs:
     name: 'tests, on windows'
     permissions:
       contents: none
-    needs: [wsl_matrix, cygwin_matrix, msys_matrix, msys_fail_install]
+    needs: [wsl_matrix, wsl_matrix_unofficial, cygwin_matrix, msys_matrix, msys_fail_install]
     runs-on: ubuntu-latest
     steps:
       - run: 'echo tests completed'

@@ -2042,11 +2042,17 @@ nvm_get_mirror() {
   esac
 
   case "${NVM_MIRROR}" in
-    *\`* | *\\* | *\'* | *\(* )
+    *\`* | *\\* | *\'* | *\(* | *' '* )
       nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
       return 2
     ;;
   esac
+
+
+  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ $0 ~ "^https?://[a-zA-Z0-9./_-]+$" }'; then
+      nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
+      return 2
+  fi
 
   nvm_echo "${NVM_MIRROR}"
 }
@@ -3571,7 +3577,7 @@ nvm() {
         fi
       else
         export PATH="${NEWPATH}"
-        hash -r
+        \hash -r
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
         fi
@@ -3708,7 +3714,7 @@ nvm() {
         export MANPATH
       fi
       export PATH
-      hash -r
+      \hash -r
       export NVM_BIN="${NVM_VERSION_DIR}/bin"
       export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
@@ -4252,7 +4258,7 @@ nvm() {
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" | "-v")
-      nvm_echo '0.39.5'
+      nvm_echo '0.39.7'
     ;;
     "unload")
       nvm deactivate >/dev/null 2>&1
