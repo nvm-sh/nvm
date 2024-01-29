@@ -844,6 +844,8 @@ As a potential alternative, @mhart (a Node contributor) has some [Docker images 
 
 To remove `nvm` manually, execute the following:
 
+First, use `nvm unload` to remove the nvm command from your terminal session. then:
+
 ```sh
 $ rm -rf "$NVM_DIR"
 ```
