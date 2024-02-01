@@ -2239,8 +2239,6 @@ nvm_get_artifact_compression() {
   COMPRESSION='tar.gz'
   if [ "_${NVM_OS}" = '_win' ]; then
     COMPRESSION='zip'
-  elif nvm_supports_xz "${VERSION}"; then
-    COMPRESSION='tar.xz'
   fi
 
   nvm_echo "${COMPRESSION}"
