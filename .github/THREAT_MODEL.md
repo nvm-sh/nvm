@@ -11,7 +11,7 @@ The aim of this section is to facilitate the identification of potential securit
 
 The following assets are considered important for the `nvm` project:
   - `nvm` source code and project documentation
-  - Underlying `nvm`` dependencies
+  - Underlying `nvm` dependencies
   - `nvm` development infrastructure
   - `nvm` installed devices including servers
 
