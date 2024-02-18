@@ -9,13 +9,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
+            api.github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "14"
       - run: npm install

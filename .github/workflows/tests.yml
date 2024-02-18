@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
@@ -34,7 +34,7 @@ jobs:
             raw.githubusercontent.com:443
             nodejs.org:443
             iojs.org:443
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: sudo ${{ matrix.shell }} --version 2> /dev/null || dpkg -s ${{ matrix.shell }} 2> /dev/null || which ${{ matrix.shell }}
       - run: curl --version
       - run: wget --version
