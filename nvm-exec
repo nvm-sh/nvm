@@ -9,9 +9,12 @@ unset NVM_CD_FLAGS
 
 if [ -n "$NODE_VERSION" ]; then
   nvm use "$NODE_VERSION" > /dev/null || exit 127
-elif ! nvm use >/dev/null 2>&1; then
-  echo "No NODE_VERSION provided; no .nvmrc file found" >&2
-  exit 127
+else
+  nvm_rc_version > /dev/null && nvm_ensure_version_installed "$NVM_RC_VERSION";
+  if ! nvm use >/dev/null 2>&1; then
+    echo "No NODE_VERSION provided; no .nvmrc file found" >&2
+    exit 127
+  fi
 fi
 
 exec "$@"
