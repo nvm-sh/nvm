@@ -8,14 +8,14 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
             raw.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -27,7 +27,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             ghcr.io:443
@@ -36,7 +36,7 @@ jobs:
             pkg-containers.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -48,14 +48,14 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
             raw.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -67,11 +67,11 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
             raw.githubusercontent.com:443
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: check tests filenames
         run: ./rename_test.sh --check

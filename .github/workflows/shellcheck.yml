@@ -27,13 +27,14 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             ghcr.io:443
             github.com:443
             pkg-containers.githubusercontent.com:443
-      - uses: actions/checkout@v3
+            formulae.brew.sh:443
+      - uses: actions/checkout@v4
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install latest shellcheck
@@ -52,7 +53,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - name: Harden Runner
-          uses: step-security/harden-runner@v1
+          uses: step-security/harden-runner@v2
           with:
             egress-policy: block
         - run: 'echo tests completed'
