@@ -187,4 +187,4 @@ jobs:
     needs: [wsl_matrix, wsl_matrix_unofficial, cygwin_matrix, msys_matrix, msys_fail_install]
     runs-on: ubuntu-latest
     steps:
-      - run: 'echo tests completed'
+      - run: true

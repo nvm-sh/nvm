@@ -75,8 +75,4 @@ jobs:
     needs: [nodes]
     runs-on: ubuntu-latest
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: block
-      - run: 'echo tests completed'
+      - run: true
