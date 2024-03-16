@@ -1122,10 +1122,9 @@ nvm_list_aliases() {
         if [ -n "${LTS_ALIAS}" ]; then
           nvm_echo "${LTS_ALIAS}"
         fi
-      } &
+      }
     done
-    wait
-  ) | command sort
+  )
   return
 }
 
