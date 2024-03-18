@@ -844,6 +844,8 @@ As a potential alternative, @mhart (a Node contributor) has some [Docker images 
 
 To remove `nvm` manually, execute the following:
 
+First, use `nvm unload` to remove the nvm command from your terminal session. then:
+
 ```sh
 $ rm -rf "$NVM_DIR"
 ```
@@ -1035,7 +1037,7 @@ This could simply be solved by running this in your root directory:
   sudo chattr +i /etc/resolv.conf
   ```
 
-This deletes your `resolv.conf` file that is automatically generated when u run WSL, creates a new file and puts `nameserver 8.8.8.8`, then creates a `wsl.conf` file and adds `[network]` and `generateResolveConf = false` to prevent auto-generation of that file.
+This deletes your `resolv.conf` file that is automatically generated when you run WSL, creates a new file and puts `nameserver 8.8.8.8`, then creates a `wsl.conf` file and adds `[network]` and `generateResolveConf = false` to prevent auto-generation of that file.
 
 You can check the contents of the file by running:
 
