@@ -1,0 +1,10 @@
+lts/*|lts/iron
+lts/iron|v20.9.0
+lts/hydrogen|v18.18.2
+lts/gallium|v16.20.2
+lts/fermium|v14.21.3
+lts/erbium|v12.22.12
+lts/dubnium|v10.24.1
+lts/carbon|v8.17.0
+lts/boron|v6.17.1
+lts/argon|v4.9.1
