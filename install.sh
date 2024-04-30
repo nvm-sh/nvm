@@ -163,7 +163,8 @@ install_nvm_from_git() {
       }
     else
       # Cloning repo
-      command git clone "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
+      command git clone "$(nvm_source)" --depth=1 -o origin "${INSTALL_DIR}" 2> /dev/null \
+        || command git clone "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
         nvm_echo >&2 'Failed to clone nvm repo. Please report this!'
         exit 2
       }
