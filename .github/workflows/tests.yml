@@ -53,4 +53,4 @@ jobs:
     needs: [tests]
     runs-on: ubuntu-latest
     steps:
-      - run: 'echo tests completed'
+      - run: true

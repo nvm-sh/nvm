@@ -56,4 +56,4 @@ jobs:
           uses: step-security/harden-runner@v2
           with:
             egress-policy: block
-        - run: 'echo tests completed'
+        - run: true
