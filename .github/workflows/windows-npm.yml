@@ -123,7 +123,7 @@ jobs:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v2
+      - uses: Vampire/setup-wsl@v3
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
@@ -166,7 +166,7 @@ jobs:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v2
+      - uses: Vampire/setup-wsl@v3
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
