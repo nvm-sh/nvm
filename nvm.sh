@@ -467,7 +467,89 @@ nvm_find_nvmrc() {
   fi
 }
 
-# Obtain nvm version from rc file
+nvm_nvmrc_invalid_msg() {
+  local error_text
+  error_text="invalid .nvmrc!
+all non-commented content (anything after # is a comment) must be either:
+  - a single bare nvm-recognized version-ish
+  - or, multiple distinct key-value pairs, each key/value separated by a single equals sign (=)
+
+additionally, a single bare nvm-recognized version-ish must be present (after stripping comments)."
+
+  local warn_text
+  warn_text="non-commented content parsed:
+${1}"
+
+  nvm_err "$(nvm_wrap_with_color_code r "${error_text}")
+
+$(nvm_wrap_with_color_code y "${warn_text}")"
+}
+
+nvm_process_nvmrc() {
+  local NVMRC_PATH="$1"
+  local lines
+  local unpaired_line
+
+  lines=$(command sed 's/#.*//' "$NVMRC_PATH" | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
+
+  if [ -z "$lines" ]; then
+    nvm_nvmrc_invalid_msg "${lines}"
+    return 1
+  fi
+
+  # Initialize key-value storage
+  local keys=''
+  local values=''
+
+  while IFS= read -r line; do
+    if [ -z "${line}" ]; then
+      continue
+    elif [ -z "${line%%=*}" ]; then
+      if [ -n "${unpaired_line}" ]; then
+        nvm_nvmrc_invalid_msg "${lines}"
+        return 1
+      fi
+      unpaired_line="${line}"
+    elif case "$line" in *'='*) true;; *) false;; esac; then
+      key="${line%%=*}"
+      value="${line#*=}"
+
+      # Trim whitespace around key and value
+      key=$(nvm_echo "${key}" | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      value=$(nvm_echo "${value}" | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+      # Check for invalid key "node"
+      if [ "${key}" = 'node' ]; then
+        nvm_nvmrc_invalid_msg "${lines}"
+        return 1
+      fi
+
+      # Check for duplicate keys
+      if nvm_echo "${keys}" | nvm_grep -q -E "(^| )${key}( |$)"; then
+        nvm_nvmrc_invalid_msg "${lines}"
+        return 1
+      fi
+      keys="${keys} ${key}"
+      values="${values} ${value}"
+    else
+      if [ -n "${unpaired_line}" ]; then
+        nvm_nvmrc_invalid_msg "${lines}"
+        return 1
+      fi
+      unpaired_line="${line}"
+    fi
+  done <<EOF
+$lines
+EOF
+
+  if [ -z "${unpaired_line}" ]; then
+    nvm_nvmrc_invalid_msg "${lines}"
+    return 1
+  fi
+
+  nvm_echo "${unpaired_line}"
+}
+
 nvm_rc_version() {
   export NVM_RC_VERSION=''
   local NVMRC_PATH
@@ -478,7 +560,12 @@ nvm_rc_version() {
     fi
     return 1
   fi
-  NVM_RC_VERSION="$(command head -n 1 "${NVMRC_PATH}" | command tr -d '\r')" || command printf ''
+
+
+  if ! NVM_RC_VERSION="$(nvm_process_nvmrc "${NVMRC_PATH}")"; then
+    return 1
+  fi
+
   if [ -z "${NVM_RC_VERSION}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
       nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
@@ -4058,6 +4145,9 @@ nvm() {
         # so, unalias it.
         nvm unalias "${ALIAS}"
         return $?
+      elif echo "${ALIAS}" | grep -q "#"; then
+        nvm_err 'Aliases with a comment delimiter (#) are not supported.'
+        return 1
       elif [ "${TARGET}" != '--' ]; then
         # a target was passed: create an alias
         if [ "${ALIAS#*\/}" != "${ALIAS}" ]; then
@@ -4271,6 +4361,7 @@ nvm() {
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code nvm_format_help_message_colors \
         nvm_echo_with_colors nvm_err_with_colors \
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
+        nvm_process_nvmrc nvm_nvmrc_invalid_msg \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \

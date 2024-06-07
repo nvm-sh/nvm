@@ -101,3 +101,105 @@ watch() {
   kill %2;
   return $EXIT_CODE
 }
+
+parse_json() {
+  local json
+  json="$1"
+  local key
+  key=""
+  local value
+  value=""
+  local output
+  output=""
+  local in_key
+  in_key=0
+  local in_value
+  in_value=0
+  local in_string
+  in_string=0
+  local escaped
+  escaped=0
+  local buffer
+  buffer=""
+  local char
+  local len
+  len=${#json}
+  local arr_index
+  arr_index=0
+  local in_array
+  in_array=0
+
+  for ((i = 0; i < len; i++)); do
+    char="${json:i:1}"
+
+    if [ "$in_string" -eq 1 ]; then
+      if [ "$escaped" -eq 1 ]; then
+        buffer="$buffer$char"
+        escaped=0
+      elif [ "$char" = "\\" ]; then
+        escaped=1
+      elif [ "$char" = "\"" ]; then
+        in_string=0
+        if [ "$in_key" -eq 1 ]; then
+          key="$buffer"
+          buffer=""
+          in_key=0
+        elif [ "$in_value" -eq 1 ]; then
+          value="$buffer"
+          buffer=""
+          output="$output$key=\"$value\"\n"
+          in_value=0
+        elif [ "$in_array" -eq 1 ]; then
+          value="$buffer"
+          buffer=""
+          output="$output$arr_index=\"$value\"\n"
+          arr_index=$((arr_index + 1))
+        fi
+      else
+        buffer="$buffer$char"
+      fi
+      continue
+    fi
+
+    case "$char" in
+      "\"")
+        in_string=1
+        buffer=""
+        if [ "$in_value" -eq 0 ] && [ "$in_array" -eq 0 ]; then
+          in_key=1
+        fi
+        ;;
+      ":")
+        in_value=1
+        ;;
+      ",")
+        if [ "$in_value" -eq 1 ]; then
+          in_value=0
+        fi
+        ;;
+      "[")
+        in_array=1
+        ;;
+      "]")
+        in_array=0
+        ;;
+      "{" | "}")
+        ;;
+      *)
+        if [ "$in_value" -eq 1 ] && [ "$char" != " " ] && [ "$char" != "\n" ] && [ "$char" != "\t" ]; then
+          buffer="$buffer$char"
+        fi
+        ;;
+    esac
+  done
+
+  printf "%b" "$output"
+}
+
+extract_value() {
+  local key
+  key="$1"
+  local parsed
+  parsed="$2"
+  echo "$parsed" | grep "^$key=" | cut -d'=' -f2 | tr -d '"'
+}
