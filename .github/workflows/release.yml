@@ -2,10 +2,11 @@ name: 'Tests: release process'
 
 on: [pull_request, push]
 
+permissions:
+  contents: read
+
 jobs:
   release:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner

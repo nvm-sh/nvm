@@ -2,6 +2,9 @@ name: 'Tests on Windows: `nvm install`'
 
 on: [pull_request, push]
 
+permissions:
+  contents: read
+
 env:
   NVM_INSTALL_GITHUB_REPO: ${{ github.repository }}
   NVM_INSTALL_VERSION: ${{ github.sha }}
