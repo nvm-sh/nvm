@@ -111,7 +111,7 @@ nvm_json_throw() {
 
 nvm_json_awk_egrep() {
   local pattern_string
-  pattern_string=$1
+  pattern_string="${1}"
 
   awk '{
     while ($0) {
@@ -130,14 +130,14 @@ nvm_json_tokenize() {
   local ESCAPE
   local CHAR
 
-  if echo "test string" | grep -Eo "test" > /dev/null 2>&1; then
-    ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
-    CHAR='[^[:cntrl:]"\\]'
-  else
+  # if echo "test string" | grep -Eo "test" > /dev/null 2>&1; then
+  #   ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+  #   CHAR='[^[:cntrl:]"\\]'
+  # else
     GREP=nvm_json_awk_egrep
     ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
     CHAR='[^[:cntrl:]"\\\\]'
-  fi
+  # fi
 
   local STRING
   STRING="\"${CHAR}*(${ESCAPE}${CHAR}*)*\""
