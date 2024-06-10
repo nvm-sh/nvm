@@ -102,104 +102,146 @@ watch() {
   return $EXIT_CODE
 }
 
-parse_json() {
-  local json
-  json="$1"
-  local key
-  key=""
-  local value
-  value=""
-  local output
-  output=""
-  local in_key
-  in_key=0
-  local in_value
-  in_value=0
-  local in_string
-  in_string=0
-  local escaped
-  escaped=0
-  local buffer
-  buffer=""
-  local char
-  local len
-  len=${#json}
-  local arr_index
-  arr_index=0
-  local in_array
-  in_array=0
 
-  for ((i = 0; i < len; i++)); do
-    char="${json:i:1}"
-
-    if [ "$in_string" -eq 1 ]; then
-      if [ "$escaped" -eq 1 ]; then
-        buffer="$buffer$char"
-        escaped=0
-      elif [ "$char" = "\\" ]; then
-        escaped=1
-      elif [ "$char" = "\"" ]; then
-        in_string=0
-        if [ "$in_key" -eq 1 ]; then
-          key="$buffer"
-          buffer=""
-          in_key=0
-        elif [ "$in_value" -eq 1 ]; then
-          value="$buffer"
-          buffer=""
-          output="$output$key=\"$value\"\n"
-          in_value=0
-        elif [ "$in_array" -eq 1 ]; then
-          value="$buffer"
-          buffer=""
-          output="$output$arr_index=\"$value\"\n"
-          arr_index=$((arr_index + 1))
-        fi
-      else
-        buffer="$buffer$char"
-      fi
-      continue
-    fi
-
-    case "$char" in
-      "\"")
-        in_string=1
-        buffer=""
-        if [ "$in_value" -eq 0 ] && [ "$in_array" -eq 0 ]; then
-          in_key=1
-        fi
-        ;;
-      ":")
-        in_value=1
-        ;;
-      ",")
-        if [ "$in_value" -eq 1 ]; then
-          in_value=0
-        fi
-        ;;
-      "[")
-        in_array=1
-        ;;
-      "]")
-        in_array=0
-        ;;
-      "{" | "}")
-        ;;
-      *)
-        if [ "$in_value" -eq 1 ] && [ "$char" != " " ] && [ "$char" != "\n" ] && [ "$char" != "\t" ]; then
-          buffer="$buffer$char"
-        fi
-        ;;
-    esac
-  done
-
-  printf "%b" "$output"
+# JSON parsing from https://gist.github.com/assaf/ee377a186371e2e269a7
+nvm_json_throw() {
+  nvm_err "$*"
+  exit 1
 }
 
-extract_value() {
+nvm_json_awk_egrep() {
+  local pattern_string
+  pattern_string="${1}"
+
+  awk '{
+    while ($0) {
+      start=match($0, pattern);
+      token=substr($0, start, RLENGTH);
+      print token;
+      $0=substr($0, start+RLENGTH);
+    }
+  }' "pattern=${pattern_string}"
+}
+
+nvm_json_tokenize() {
+  local GREP
+  GREP='grep -Eao'
+
+  local ESCAPE
+  local CHAR
+
+  # if echo "test string" | grep -Eo "test" > /dev/null 2>&1; then
+  #   ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+  #   CHAR='[^[:cntrl:]"\\]'
+  # else
+    GREP=nvm_json_awk_egrep
+    ESCAPE='(\\\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
+    CHAR='[^[:cntrl:]"\\\\]'
+  # fi
+
+  local STRING
+  STRING="\"${CHAR}*(${ESCAPE}${CHAR}*)*\""
+  local NUMBER
+  NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'
+  local KEYWORD
+  KEYWORD='null|false|true'
+  local SPACE
+  SPACE='[[:space:]]+'
+
+  $GREP "${STRING}|${NUMBER}|${KEYWORD}|${SPACE}|." | TERM=dumb grep -Ev "^${SPACE}$"
+}
+
+_json_parse_array() {
+  local index=0
+  local ary=''
+  read -r token
+  case "$token" in
+    ']') ;;
+    *)
+      while :; do
+        _json_parse_value "${1}" "${index}"
+        index=$((index+1))
+        ary="${ary}${value}"
+        read -r token
+        case "${token}" in
+          ']') break ;;
+          ',') ary="${ary}," ;;
+          *) nvm_json_throw "EXPECTED , or ] GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+      done
+      ;;
+  esac
+  :
+}
+
+_json_parse_object() {
   local key
-  key="$1"
-  local parsed
-  parsed="$2"
-  echo "$parsed" | grep "^$key=" | cut -d'=' -f2 | tr -d '"'
+  local obj=''
+  read -r token
+  case "$token" in
+    '}') ;;
+    *)
+      while :; do
+        case "${token}" in
+          '"'*'"') key="${token}" ;;
+          *) nvm_json_throw "EXPECTED string GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+        case "${token}" in
+          ':') ;;
+          *) nvm_json_throw "EXPECTED : GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+        _json_parse_value "${1}" "${key}"
+        obj="${obj}${key}:${value}"
+        read -r token
+        case "${token}" in
+          '}') break ;;
+          ',') obj="${obj}," ;;
+          *) nvm_json_throw "EXPECTED , or } GOT ${token:-EOF}" ;;
+        esac
+        read -r token
+      done
+    ;;
+  esac
+  :
+}
+
+_json_parse_value() {
+  local jpath="${1:+$1,}$2"
+  local isleaf=0
+  local isempty=0
+  local print=0
+
+  case "$token" in
+    '{') _json_parse_object "${jpath}" ;;
+    '[') _json_parse_array  "${jpath}" ;;
+    # At this point, the only valid single-character tokens are digits.
+    ''|[!0-9]) nvm_json_throw "EXPECTED value GOT >${token:-EOF}<" ;;
+    *)
+      value=$token
+      isleaf=1
+      [ "${value}" = '""' ] && isempty=1
+    ;;
+  esac
+
+  [ "${value}" = '' ] && return
+  [ "${isleaf}" -eq 1 ] && [ $isempty -eq 0 ] && print=1
+  [ "${print}" -eq 1 ] && printf "[%s]\t%s\n" "${jpath}" "${value}"
+  :
+}
+
+_json_parse() {
+  read -r token
+  _json_parse_value
+  read -r token
+  case "${token}" in
+    '') ;;
+    *) nvm_json_throw "EXPECTED EOF GOT >${token}<" ;;
+  esac
+}
+
+nvm_json_extract() {
+  nvm_json_tokenize | _json_parse | grep -e "${1}" | awk '{print $2 $3}'
 }
