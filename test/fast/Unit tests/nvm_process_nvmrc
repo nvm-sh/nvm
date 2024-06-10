@@ -14,7 +14,7 @@ for f in ../../../test/fixtures/nvmrc/test/fixtures/valid/*; do
   STDOUT="$(nvm_process_nvmrc $f/.nvmrc 2>/dev/null)"
   EXIT_CODE="$(nvm_process_nvmrc $f/.nvmrc >/dev/null 2>/dev/null; echo $?)"
 
-  EXPECTED="$(extract_value node "$(parse_json "$(cat "$f/expected.json")")")"
+  EXPECTED="$(nvm_json_extract node < "${f}/expected.json" | tr -d '"')"
 
   [ "${EXIT_CODE}" = "0" ] || die "$(basename "${f}"): expected exit code of 0 but got ${EXIT_CODE}"
 
@@ -26,7 +26,7 @@ for f in ../../../test/fixtures/nvmrc/test/fixtures/invalid/*; do
   STDERR="$(nvm_process_nvmrc $f/.nvmrc 2>&1 >/dev/null | awk '{if(NR > 8) print $0}' | strip_colors)"
   EXIT_CODE="$(nvm_process_nvmrc $f/.nvmrc >/dev/null 2>/dev/null; echo $?)"
 
-  EXPECTED="$(parse_json "$(cat "$f/expected.json")" | sed 's/^[0-9]*="//;s/"$//')"
+  EXPECTED="$(nvm_json_extract < "${f}/expected.json" | tr -d '"')"
 
   [ "${EXIT_CODE}" != "0" ] || die "$(basename "${f}"): expected exit code of 'not 0' but got ${EXIT_CODE}"
 
