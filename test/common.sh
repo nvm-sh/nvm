@@ -125,14 +125,10 @@ nvm_json_awk_egrep() {
 
 nvm_json_tokenize() {
   local GREP
+  GREP='grep -Eao'
+
   local ESCAPE
   local CHAR
-
-  if echo 'test string' | grep -Eao --color=never 'test' > /dev/null 2>&1; then
-    GREP='grep -Eao --color=never'
-  else
-    GREP='grep -Eao'
-  fi
 
   if echo "test string" | grep -Eo "test" > /dev/null 2>&1; then
     ESCAPE='(\\[^u[:cntrl:]]|\\u[0-9a-fA-F]{4})'
@@ -152,7 +148,7 @@ nvm_json_tokenize() {
   local SPACE
   SPACE='[[:space:]]+'
 
-  $GREP "${STRING}|${NUMBER}|${KEYWORD}|${SPACE}|." | grep -Ev "^${SPACE}$"
+  $GREP "${STRING}|${NUMBER}|${KEYWORD}|${SPACE}|." | TERM=dumb grep -Ev "^${SPACE}$"
 }
 
 _json_parse_array() {
