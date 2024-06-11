@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo $@ ; exit 1; }
+
+. ../../../nvm.sh
+
+echo "0.10.7" > .nvmrc
+
+# Check nvm run without --silent
+OUTPUT="$(nvm run --version | awk '{print $6}' | head -1)"
+EXPECTED_OUTPUT="<0.10.7>"
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] \
+  || die "\`nvm run\` failed to run; did not match with the .nvmrc version; got >${OUTPUT}<"
+
+OUTPUT="$(nvm run --silent --version)"
+EXPECTED_OUTPUT=""
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] \
+  || die "\`nvm run --silent\` failed to run silently; expected no output, got >${OUTPUT}<"
+
+# Output shouldn't be silent if --silent flag is not at the third argument position
+OUTPUT="$(nvm run --version --silent)"
+EXPECTED_OUTPUT=""
+[ "${OUTPUT}" != "${EXPECTED_OUTPUT}" ] \
+  || die "\`nvm run --version --silent\` should not be silent; expected >${OUTPUT}<, got no output"
