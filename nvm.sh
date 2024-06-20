@@ -121,20 +121,21 @@ nvm_download() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    curl --fail ${CURL_COMPRESSED_FLAG:-} -q "$@"
+    # shellcheck disable=SC1083
+    curl --fail ${CURL_COMPRESSED_FLAG:-} -q -w %{http_code} "$@"
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
-                            -e 's/--compressed //' \
-                            -e 's/--fail //' \
-                            -e 's/-L //' \
-                            -e 's/-I /--server-response /' \
-                            -e 's/-s /-q /' \
-                            -e 's/-sS /-nv /' \
-                            -e 's/-o /-O /' \
-                            -e 's/-C - /-c /')
+                                       -e 's/--compressed //' \
+                                       -e 's/--fail //' \
+                                       -e 's/-L //' \
+                                       -e 's/-I /--server-response /' \
+                                       -e 's/-s /-q /' \
+                                       -e 's/-sS /-nv /' \
+                                       -e 's/-o /-O /' \
+                                       -e 's/-C - /-c /')
     # shellcheck disable=SC2086
-    eval wget $ARGS
+    eval wget -S $ARGS 2>&1 | grep '^  HTTP/' | awk '{print $2}'
   fi
 }
 
@@ -2417,12 +2418,17 @@ nvm_download_artifact() {
     nvm_err "Removing the broken local cache..."
     command rm -rf "${TARBALL}"
   fi
+
   nvm_err "Downloading ${TARBALL_URL}..."
-  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || (
+  download_result=$(nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}")
+  if [ "${NVM_DEBUG-}" = 1 ]; then
+    nvm_err "Download HTTP Status ${download_result}"
+  fi
+  if [ "${download_result}" != '200' ]; then
     command rm -rf "${TARBALL}" "${tmpdir}"
     nvm_err "Binary download from ${TARBALL_URL} failed, trying source."
     return 4
-  )
+  fi
 
   if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
     command rm -rf "${TARBALL}" "${tmpdir}"
