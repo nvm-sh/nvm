@@ -8,6 +8,10 @@ addons:
     #  - gcc-4.8
     #  - g++-4.8
 
+# https://gist.github.com/iedemam/9830045
+git:
+  submodules: false
+
 cache:
   ccache: true
   directories:
@@ -16,6 +20,11 @@ cache:
 before_install:
   - sudo sed -i 's/mozilla\/DST_Root_CA_X3.crt/!mozilla\/DST_Root_CA_X3.crt/g' /etc/ca-certificates.conf
   - sudo update-ca-certificates -f
+
+  # https://gist.github.com/iedemam/9830045
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
+
   - $SHELL --version 2> /dev/null || dpkg -s $SHELL 2> /dev/null || which $SHELL
   - curl --version
   - wget --version

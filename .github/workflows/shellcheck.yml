@@ -2,10 +2,11 @@ name: 'Tests: shellcheck'
 
 on: [pull_request, push]
 
+permissions:
+  contents: read
+
 jobs:
   shellcheck_matrix:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -52,8 +53,4 @@ jobs:
       needs: [shellcheck_matrix]
       runs-on: ubuntu-latest
       steps:
-        - name: Harden Runner
-          uses: step-security/harden-runner@v2
-          with:
-            egress-policy: block
         - run: true

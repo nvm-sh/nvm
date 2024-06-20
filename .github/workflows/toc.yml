@@ -2,6 +2,9 @@ name: update readme TOC
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   _:
     permissions:

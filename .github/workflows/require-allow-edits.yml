@@ -2,6 +2,9 @@ name: Require “Allow Edits”
 
 on: [pull_request_target]
 
+permissions:
+  contents: read
+
 jobs:
   _:
     permissions:

@@ -2,6 +2,9 @@ name: urchin tests
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   tests:
     permissions:
@@ -49,6 +52,8 @@ jobs:
       - run: make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npx which urchin)" test-${{ matrix.shell }}
 
   nvm:
+    permissions:
+      contents: none
     name: 'all test suites, all shells'
     needs: [tests]
     runs-on: ubuntu-latest
