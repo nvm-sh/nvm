@@ -39,6 +39,7 @@
   - [Restoring PATH](#restoring-path)
   - [Set default node version](#set-default-node-version)
   - [Use a mirror of node binaries](#use-a-mirror-of-node-binaries)
+    - [Pass Authorization header to mirror](#pass-authorization-header-to-mirror)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
@@ -529,6 +530,13 @@ NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 ```
 
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs. Note that using `nvm` in multiple shell tabs with this environment variable enabled can cause race conditions.
+
+#### Pass Authorization header to mirror
+To pass an Authorization header through to the mirror url, set `$NVM_AUTH_HEADER`
+
+```sh
+NVM_AUTH_HEADER="Bearer secret-token" nvm install node
+```
 
 ### .nvmrc
 

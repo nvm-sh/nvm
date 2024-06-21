@@ -116,12 +116,19 @@ nvm_get_latest() {
 }
 
 nvm_download() {
-  local CURL_COMPRESSED_FLAG
   if nvm_has "curl"; then
+    local CURL_COMPRESSED_FLAG=""
+    local CURL_HEADER_FLAG=""
+
+    if [ -n "${NVM_AUTH_HEADER:-}" ]; then
+      sanitized_header=$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")
+      CURL_HEADER_FLAG="--header \"Authorization: ${sanitized_header}\""
+    fi
+
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    curl --fail ${CURL_COMPRESSED_FLAG:-} -q "$@"
+    eval "curl -q --fail ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} $*"
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
@@ -133,9 +140,18 @@ nvm_download() {
                             -e 's/-sS /-nv /' \
                             -e 's/-o /-O /' \
                             -e 's/-C - /-c /')
+
+    if [ -n "${NVM_AUTH_HEADER:-}" ]; then
+      ARGS="${ARGS} --header \"${NVM_AUTH_HEADER}\""
+    fi
     # shellcheck disable=SC2086
     eval wget $ARGS
   fi
+}
+
+nvm_sanitize_auth_header() {
+    # Remove potentially dangerous characters
+    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9:;_. -]//g'
 }
 
 nvm_has_system_node() {
@@ -4358,7 +4374,7 @@ nvm() {
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
-        nvm_npmrc_bad_news_bears \
+        nvm_npmrc_bad_news_bears nvm_sanitize_auth_header \
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code nvm_format_help_message_colors \
         nvm_echo_with_colors nvm_err_with_colors \
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
