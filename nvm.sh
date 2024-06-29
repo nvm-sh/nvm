@@ -1856,7 +1856,7 @@ nvm_print_versions() {
   fi
 
   command awk \
-    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" -v min_ver="${NVM_MIN_VER:-v0}" \
+    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" -v min_ver="${NVM_MIN:-v0}" \
     -v installed_versions="$(nvm_ls | tr '\n' '|')" -v current="$NVM_CURRENT" \
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
