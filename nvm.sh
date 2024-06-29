@@ -1914,19 +1914,24 @@ BEGIN {
   split(remote_versions, lines, "|");
   split(installed_versions, installed, "|");
   rows = alen(lines);
-  filter = (min_ver != "v0");
+  filter_on = (vcmp("v0.0.0", min_ver) != 0);
   for (m = n = 1; n <= rows; n++) {
     split(lines[n], fields, "[[:blank:]]+");
     cols = alen(fields);
     version = fields[1];
-    if (filter && comp(version, min_ver) < 0) continue;
-
-    filter = 0;
     is_installed = 0;
     for (i in installed) {
       if (version == installed[i]) {
         is_installed = 1;
         break;
+      }
+    }
+
+    if (filter_on && !is_installed) {
+      if (vcmp(version, min_ver) >= 0) {
+        filter_on = 0;
+      } else {
+        continue;
       }
     }
 
@@ -1951,8 +1956,8 @@ BEGIN {
     output[m++] = formatted;
   }
 
-  for (m in output) {
-    print output[m]
+  for (n = 1; n < m; n++) {
+    print output[n]
   }
 
   exit
