@@ -1,0 +1,139 @@
+#!/bin/sh
+
+# shellcheck disable=SC2317
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_remote_versions nvm_ls nvm_ls_current nvm_remote_versions
+  if [ -n "$TEMP_NVM_MIN_VER" ]; then
+    export NVM_MIN_VER="$TEMP_NVM_MIN_VER"
+  fi
+}
+
+\. ../../../nvm.sh
+
+
+if [ -n "$NVM_MIN_VER" ]; then
+  TEMP_NVM_MIN_VER="$NVM_MIN_VER"
+  unset NVM_MIN_VER
+fi
+
+# mock currently installed versions
+nvm_ls() {
+  echo "v16.20.2
+v18.20.3
+system"
+}
+
+# mock currently active version
+nvm_ls_current() {
+  echo "v18.20.3"
+}
+
+nvm_remote_versions() {
+  echo "v16.0.0
+v16.20.2 Gallium *
+v17.0.0
+v17.9.1
+v18.0.0
+v18.1.0
+v18.20.2 Hydrogen
+v18.20.3 Hydrogen *
+v19.0.0
+v19.9.0
+v20.0.0
+v20.8.1
+v20.9.0 Iron *
+v21.0.0
+v21.1.0"
+}
+
+
+# nvm_print_versions should print all versions from nvm_remote_versions
+OUTPUT="$(NVM_NO_COLORS=1 nvm_print_versions "$(nvm_remote_versions)")"
+EXPECTED_OUTPUT="        v16.0.0
+       v16.20.2 * (Latest LTS: Gallium)
+        v17.0.0
+        v17.9.1
+        v18.0.0
+        v18.1.0
+       v18.20.2   (LTS: Hydrogen)
+->     v18.20.3 * (Latest LTS: Hydrogen)
+        v19.0.0
+        v19.9.0
+        v20.0.0
+        v20.8.1
+        v20.9.0   (Latest LTS: Iron)
+        v21.0.0
+        v21.1.0"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_print_versions did not output all expected versions; got $OUTPUT"
+
+
+# versions lower than 18 should be filtered out, but v16.20.2 should be kept since it's installed
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=18 nvm_print_versions "$(nvm_remote_versions)")"
+EXPECTED_OUTPUT="       v16.20.2 * (Latest LTS: Gallium)
+        v18.0.0
+        v18.1.0
+       v18.20.2   (LTS: Hydrogen)
+->     v18.20.3 * (Latest LTS: Hydrogen)
+        v19.0.0
+        v19.9.0
+        v20.0.0
+        v20.8.1
+        v20.9.0   (Latest LTS: Iron)
+        v21.0.0
+        v21.1.0"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=18 nvm_print_versions did not output all expected versions; got $OUTPUT"
+
+
+# versions lower than 19 should be filtered out
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=19 nvm_print_versions "$(nvm_remote_versions)")"
+EXPECTED_OUTPUT="       v16.20.2 * (Latest LTS: Gallium)
+->     v18.20.3 * (Latest LTS: Hydrogen)
+        v19.0.0
+        v19.9.0
+        v20.0.0
+        v20.8.1
+        v20.9.0   (Latest LTS: Iron)
+        v21.0.0
+        v21.1.0"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=19 nvm_print_versions did not output all expected versions; got $OUTPUT"
+
+
+# versions lower than 20.1 should be filtered out, so v20.0.0 is out
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=20.1 nvm_print_versions "$(nvm_remote_versions)")"
+EXPECTED_OUTPUT="       v16.20.2 * (Latest LTS: Gallium)
+->     v18.20.3 * (Latest LTS: Hydrogen)
+        v20.8.1
+        v20.9.0   (Latest LTS: Iron)
+        v21.0.0
+        v21.1.0"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=20.1 nvm_print_versions did not output all expected versions; got $OUTPUT"
+
+
+# assume v18.20.3 is NOT installed, so now it should be filtered out
+nvm_ls() {
+  echo "v16.20.2
+system"
+}
+
+nvm_ls_current() {
+  echo "v16.20.2"
+}
+
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=20.1 nvm_print_versions "$(nvm_remote_versions)")"
+EXPECTED_OUTPUT="->     v16.20.2 * (Latest LTS: Gallium)
+        v20.8.1
+        v20.9.0   (Latest LTS: Iron)
+        v21.0.0
+        v21.1.0"
+
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=20.1 nvm_print_versions did not output all expected versions; got $OUTPUT"
+
+
+cleanup
