@@ -6,17 +6,17 @@ die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
   unset -f nvm_remote_versions nvm_ls nvm_ls_current nvm_remote_versions
-  if [ -n "$TEMP_NVM_MIN_VER" ]; then
-    export NVM_MIN_VER="$TEMP_NVM_MIN_VER"
+  if [ -n "$TEMP_NVM_MIN" ]; then
+    export NVM_MIN="$TEMP_NVM_MIN"
   fi
 }
 
 \. ../../../nvm.sh
 
 
-if [ -n "$NVM_MIN_VER" ]; then
-  TEMP_NVM_MIN_VER="$NVM_MIN_VER"
-  unset NVM_MIN_VER
+if [ -n "$NVM_MIN" ]; then
+  TEMP_NVM_MIN="$NVM_MIN"
+  unset NVM_MIN
 fi
 
 # mock currently installed versions
@@ -72,7 +72,7 @@ v21.1.0"
 
 
 # versions lower than 18 should be filtered out, but v16.20.2 should be kept since it's installed
-OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=18 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=18 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
 EXPECTED_OUTPUT="v16.20.2 * (Latest LTS: Gallium)
 v18.0.0
 v18.1.0
@@ -86,11 +86,11 @@ v20.9.0   (Latest LTS: Iron)
 v21.0.0
 v21.1.0"
 
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=18 nvm_print_versions did not output all expected versions; got $OUTPUT"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN=18 nvm_print_versions did not output all expected versions; got $OUTPUT"
 
 
 # versions lower than 19 should be filtered out
-OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=19 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=19 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
 EXPECTED_OUTPUT="v16.20.2 * (Latest LTS: Gallium)
 ->     v18.20.3 * (Latest LTS: Hydrogen)
 v19.0.0
@@ -101,11 +101,11 @@ v20.9.0   (Latest LTS: Iron)
 v21.0.0
 v21.1.0"
 
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=19 nvm_print_versions did not output all expected versions; got $OUTPUT"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN=19 nvm_print_versions did not output all expected versions; got $OUTPUT"
 
 
 # versions lower than 20.1 should be filtered out, so v20.0.0 is out
-OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=20.1 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=20.1 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
 EXPECTED_OUTPUT="v16.20.2 * (Latest LTS: Gallium)
 ->     v18.20.3 * (Latest LTS: Hydrogen)
 v20.8.1
@@ -113,7 +113,7 @@ v20.9.0   (Latest LTS: Iron)
 v21.0.0
 v21.1.0"
 
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=20.1 nvm_print_versions did not output all expected versions; got $OUTPUT"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN=20.1 nvm_print_versions did not output all expected versions; got $OUTPUT"
 
 
 # assume v18.20.3 is NOT installed, so now it should be filtered out
@@ -126,14 +126,14 @@ nvm_ls_current() {
   echo "v16.20.2"
 }
 
-OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN_VER=20.1 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=20.1 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
 EXPECTED_OUTPUT="->     v16.20.2 * (Latest LTS: Gallium)
 v20.8.1
 v20.9.0   (Latest LTS: Iron)
 v21.0.0
 v21.1.0"
 
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN_VER=20.1 nvm_print_versions did not output all expected versions; got $OUTPUT"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "NVM_MIN=20.1 nvm_print_versions did not output all expected versions; got $OUTPUT"
 
 
 cleanup
