@@ -72,7 +72,7 @@ v21.1.0"
 
 
 # versions lower than 18 should be filtered out, but v16.20.2 should be kept since it's installed
-OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=18 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=v18 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
 EXPECTED_OUTPUT="v16.20.2 * (Latest LTS: Gallium)
 v18.0.0
 v18.1.0
@@ -105,7 +105,7 @@ v21.1.0"
 
 
 # versions lower than 20.1 should be filtered out, so v20.0.0 is out
-OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=20.1 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
+OUTPUT="$(NVM_NO_COLORS=1 NVM_MIN=v20.1 nvm_print_versions "$(nvm_remote_versions)" | sed -r 's/^[ \t]+//')"
 EXPECTED_OUTPUT="v16.20.2 * (Latest LTS: Gallium)
 ->     v18.20.3 * (Latest LTS: Hydrogen)
 v20.8.1
