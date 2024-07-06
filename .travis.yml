@@ -32,7 +32,7 @@ before_install:
   - zsh  --version
   - dpkg -s dash | grep ^Version | awk '{print $2}'
   # install python
-  - pyenv install 2.7.18
+  - pyenv local 2.7.18 || pyenv install 2.7.18
   - pyenv local 2.7.18 || echo 'pyenv failed'
   - python -V
 install:
