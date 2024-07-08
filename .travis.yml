@@ -12,6 +12,8 @@ addons:
 git:
   submodules: false
 
+group: previous
+
 cache:
   ccache: true
   directories:
