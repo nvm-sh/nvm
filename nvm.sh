@@ -765,6 +765,11 @@ nvm_remote_versions() {
       NVM_FLAVOR="${NVM_NODE_PREFIX}"
       unset PATTERN
     ;;
+    *)
+      if [ "${NVM_IOJS_ORG_MIRROR-x}" = '' ]; then
+        NVM_FLAVOR="${NVM_NODE_PREFIX}"
+      fi
+    ;;
   esac
 
   if nvm_validate_implicit_alias "${PATTERN-}" 2>/dev/null; then
