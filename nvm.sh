@@ -3128,6 +3128,7 @@ nvm() {
         nvm_echo '  nvm ls-remote [<version>]                   List remote versions available for install, matching a given <version> if provided'
         nvm_echo '    --lts                                     When listing, only show LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only show versions for a specific LTS line'
+        nvm_echo '    --min=<version>                           When listing, only show versions greater than or equal to <version>, including minor/patch updates for installed versions'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm version <version>                       Resolve the given description to a single local version'
         nvm_echo '  nvm version-remote <version>                Resolve the given description to a single remote version'
@@ -4144,6 +4145,7 @@ nvm() {
     ;;
     "ls-remote" | "list-remote")
       local NVM_LTS
+      local NVM_MIN="${NVM_MIN-}"
       local PATTERN
       local NVM_NO_COLORS
 
@@ -4155,6 +4157,9 @@ nvm() {
           ;;
           --lts=*)
             NVM_LTS="${1##--lts=}"
+          ;;
+          --min=*)
+            NVM_MIN="${1##--min=}"
           ;;
           --no-colors) NVM_NO_COLORS="${1}" ;;
           --*)
