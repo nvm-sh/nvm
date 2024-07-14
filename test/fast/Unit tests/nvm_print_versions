@@ -5,7 +5,7 @@
 die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
-  unset -f nvm_remote_versions nvm_ls nvm_ls_current nvm_remote_versions
+  unset -f nvm_remote_versions nvm_ls nvm_ls_current
   if [ -n "$TEMP_NVM_MIN" ]; then
     export NVM_MIN="$TEMP_NVM_MIN"
   fi
