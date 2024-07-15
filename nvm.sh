@@ -4108,7 +4108,8 @@ nvm() {
     ;;
     "ls-remote" | "list-remote")
       local NVM_LTS
-      local NVM_MIN="${NVM_MIN-}"
+      local NVM_MIN
+      NVM_MIN="${NVM_MIN-}"
       local PATTERN
       local NVM_NO_COLORS
 
