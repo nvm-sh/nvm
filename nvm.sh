@@ -370,8 +370,9 @@ nvm_install_latest_npm() {
       || { [ $NVM_IS_16_OR_ABOVE -eq 1 ] && [ $NVM_IS_16_LTS_OR_ABOVE -eq 0 ]; } \
       || { [ $NVM_IS_17_OR_ABOVE -eq 1 ] && [ $NVM_IS_18_OR_ABOVE -eq 0 ]; } \
     ; then
-      nvm_echo '* `npm` `v8.x` is the last version that works on `node` `v12`, `v14.13` - `v14.16`, or `v16.0` - `v16.12`'
-      $NVM_NPM_CMD install -g npm@8
+      nvm_echo '* `npm` `v8.6` is the last version that works on `node` `v12`, `v14.13` - `v14.16`, or `v16.0` - `v16.12`'
+      # ^8.7 breaks `npm ls` on file: deps
+      $NVM_NPM_CMD install -g npm@8.6
     elif \
       [ $NVM_IS_18_17_OR_ABOVE -eq 0 ] \
       || { [ $NVM_IS_19_OR_ABOVE -eq 1 ] && [ $NVM_IS_20_5_OR_ABOVE -eq 0 ]; } \
