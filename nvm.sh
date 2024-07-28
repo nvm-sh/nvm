@@ -4436,37 +4436,23 @@ nvm() {
 }
 
 nvm_get_default_packages() {
-  local NVM_DEFAULT_PACKAGE_FILE="${NVM_DIR}/default-packages"
+  local NVM_DEFAULT_PACKAGE_FILE
+  NVM_DEFAULT_PACKAGE_FILE="${NVM_DIR}/default-packages"
   if [ -f "${NVM_DEFAULT_PACKAGE_FILE}" ]; then
-    local DEFAULT_PACKAGES
-    DEFAULT_PACKAGES=''
-
-    # Read lines from $NVM_DIR/default-packages
-    local line
-    # ensure a trailing newline
-    WORK=$(mktemp -d) || exit $?
-    # shellcheck disable=SC2064
-    trap "command rm -rf '$WORK'" EXIT
-    # shellcheck disable=SC1003
-    sed -e '$a\' "${NVM_DEFAULT_PACKAGE_FILE}" > "${WORK}/default-packages"
-    while IFS=' ' read -r line; do
-      # Skip empty lines.
-      [ -n "${line-}" ] || continue
-
-      # Skip comment lines that begin with `#`.
-      [ "$(nvm_echo "${line}" | command cut -c1)" != "#" ] || continue
-
-      # Fail on lines that have multiple space-separated words
-      case $line in
-        *\ *)
-          nvm_err "Only one package per line is allowed in the ${NVM_DIR}/default-packages file. Please remove any lines with multiple space-separated values."
-          return 1
-        ;;
-      esac
-
-      DEFAULT_PACKAGES="${DEFAULT_PACKAGES}${line} "
-    done < "${WORK}/default-packages"
-    echo "${DEFAULT_PACKAGES}" | command xargs
+    command awk -v filename="${NVM_DEFAULT_PACKAGE_FILE}" '
+      /^[[:space:]]*#/ { next }                     # Skip lines that begin with #
+      /^[[:space:]]*$/ { next }                     # Skip empty lines
+      /[[:space:]]/ && !/^[[:space:]]*#/ {
+        print "Only one package per line is allowed in `" filename "`. Please remove any lines with multiple space-separated values." > "/dev/stderr"
+        err = 1
+        exit 1
+      }
+      {
+        if (NR > 1 && !prev_space) printf " "
+        printf "%s", $0
+        prev_space = 0
+      }
+    ' "${NVM_DEFAULT_PACKAGE_FILE}"
   fi
 }
 

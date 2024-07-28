@@ -74,7 +74,7 @@ rimraf
 EOF
 
 DEFAULT_PKGS="$(nvm_get_default_packages 2>&1 >/dev/null)"
-EXPECTED_PKGS="Only one package per line is allowed in the $FILE file. Please remove any lines with multiple space-separated values."
+EXPECTED_PKGS="Only one package per line is allowed in \`${FILE}\`. Please remove any lines with multiple space-separated values."
 [ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "4: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
 
 cleanup
