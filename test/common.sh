@@ -245,3 +245,8 @@ _json_parse() {
 nvm_json_extract() {
   nvm_json_tokenize | _json_parse | grep -e "${1}" | awk '{print $2 $3}'
 }
+
+# ensures that commands are run as if in a terminal
+run_in_terminal() {
+  script -q -a /dev/null sh -c "\. ../nvm.sh ; $*"
+}
