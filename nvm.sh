@@ -83,7 +83,7 @@ nvm_has_colors() {
   if nvm_has tput; then
     NVM_NUM_COLORS="$(tput -T "${TERM:-vt100}" colors)"
   fi
-  [ "${NVM_NUM_COLORS:--1}" -ge 8 ]
+  [ "${NVM_NUM_COLORS:--1}" -ge 8 ] && [ "${NVM_NO_COLORS-}" != '--no-colors' ]
 }
 
 nvm_curl_libz_support() {
@@ -1094,7 +1094,7 @@ nvm_print_formatted_alias() {
   fi
   local ARROW
   ARROW='->'
-  if [ -z "${NVM_NO_COLORS}" ] && nvm_has_colors; then
+  if nvm_has_colors; then
     ARROW='\033[0;90m->\033[0m'
     if [ "_${DEFAULT}" = '_true' ]; then
       NEWLINE=" \033[${DEFAULT_COLOR}(default)\033[0m\n"
@@ -1832,7 +1832,7 @@ nvm_print_versions() {
   DEFAULT_COLOR=$(nvm_get_colors 5)
   LTS_COLOR=$(nvm_get_colors 6)
 
-  if [ -z "${NVM_NO_COLORS-}" ] && nvm_has_colors; then
+  if nvm_has_colors; then
     NVM_HAS_COLORS=1
   fi
 
