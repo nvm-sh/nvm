@@ -45,7 +45,7 @@
     "eclint": "^2.8.1",
     "markdown-link-check": "^3.12.2",
     "replace": "^1.2.2",
-    "semver": "^7.6.2",
+    "semver": "^7.6.3",
     "urchin": "^0.0.5"
   }
 }
