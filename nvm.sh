@@ -1892,7 +1892,7 @@ nvm_print_versions() {
   fi
 
   command awk \
-    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" -v min_ver="${NVM_MIN:-v0}" \
+    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" -v min="${NVM_MIN:-v0}" \
     -v installed_versions="$(nvm_ls | tr '\n' '|')" -v current="$NVM_CURRENT" \
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
@@ -1915,7 +1915,7 @@ BEGIN {
   split(remote_versions, lines, "|");
   split(installed_versions, installed, "|");
   rows = alen(lines);
-  filter_on = (vcmp("v0.0.0", min_ver) != 0);
+  filter_on = (vcmp("v0.0.0", min) != 0);
   current_major = -1;
   for (m = n = 1; n <= rows; n++) {
     split(lines[n], fields, "[[:blank:]]+");
@@ -1932,7 +1932,7 @@ BEGIN {
     if (filter_on != 0) {
       if (is_installed) {
         current_major = v2m(version);
-      } else if (vcmp(version, min_ver) >= 0) {
+      } else if (vcmp(version, min) >= 0) {
         filter_on = 0;
       } else if (v2m(version) != current_major) {
         continue;
