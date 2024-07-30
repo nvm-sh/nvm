@@ -61,6 +61,8 @@
 - [macOS Troubleshooting](#macos-troubleshooting)
 - [WSL Troubleshooting](#wsl-troubleshooting)
 - [Maintainers](#maintainers)
+- [Project Support](#project-support)
+- [Enterprise Support](#enterprise-support)
 - [License](#license)
 - [Copyright notice](#copyright-notice)
 
@@ -1069,6 +1071,16 @@ You can check the contents of the file by running:
 ## Maintainers
 
 Currently, the sole maintainer is [@ljharb](https://github.com/ljharb) - more maintainers are quite welcome, and we hope to add folks to the team over time. [Governance](./GOVERNANCE.md) will be re-evaluated as the project evolves.
+
+## Project Support
+
+Only the latest version (v0.39.7 at this time) is supported.
+
+## Enterprise Support
+
+If you are unable to update to the latest version of `nvm`, our [partners](https://openjsf.org/ecosystem-sustainability-program) provide commercial security fixes for all unsupported versions:
+
+  - [HeroDevs Never-Ending Support](https://www.herodevs.com/support?utm_source=OpenJS&utm_medium=Link&utm_campaign=nvm_openjs)
 
 ## License
 
