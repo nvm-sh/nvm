@@ -127,7 +127,7 @@ Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not conta
 
 - The installer can use `git`, `curl`, or `wget` to download `nvm`, whichever is available.
 
-- You can instruct the installer to not edit your shell config (for example if you already get completions via a [zsh nvm plugin](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm)) by setting `PROFILE=/dev/null` before running the `install.sh` script. Here's an example one-line command to do that: `PROFILE=/dev/null bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash'`
+- You can instruct the installer to not edit your shell config (for example if you already get completions via a [zsh nvm plugin](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm)) by setting `PROFILE=/dev/null` before running the `install.sh` script. Here's an example one-line command to do that: `PROFILE=/dev/null bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash'`
 
 #### Troubleshooting on Linux
 
@@ -1012,7 +1012,7 @@ Here's what you will need to do:
   If one of these broken versions is installed on your system, the above step will likely still succeed even if you didn't include the `--shared-zlib` flag.
   However, later, when you attempt to `npm install` something using your old version of node.js, you will see `incorrect data check` errors.
   If you want to avoid the possible hassle of dealing with this, include that flag.
-  For more details, see [this issue](https://github.com/nodejs/node/issues/39313) and [this comment](https://github.com/nodejs/node/issues/39313#issuecomment-90.39.776)
+  For more details, see [this issue](https://github.com/nodejs/node/issues/39313) and [this comment](https://github.com/nodejs/node/issues/39313#issuecomment-90.40.076)
 
 - Exit back to your native shell.
 
@@ -1074,7 +1074,7 @@ Currently, the sole maintainer is [@ljharb](https://github.com/ljharb) - more ma
 
 ## Project Support
 
-Only the latest version (v0.39.7 at this time) is supported.
+Only the latest version (v0.40.0 at this time) is supported.
 
 ## Enterprise Support
 

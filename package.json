@@ -1,6 +1,6 @@
 {
   "name": "nvm",
-  "version": "0.39.7",
+  "version": "0.40.0",
   "description": "Node Version Manager - Simple bash script to manage multiple active node.js versions",
   "directories": {
     "test": "test"
@@ -45,7 +45,7 @@
     "eclint": "^2.8.1",
     "markdown-link-check": "^3.12.2",
     "replace": "^1.2.2",
-    "semver": "^7.6.2",
+    "semver": "^7.6.3",
     "urchin": "^0.0.5"
   }
 }
