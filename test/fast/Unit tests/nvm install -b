@@ -4,6 +4,10 @@ die () { echo "$@" ; exit 1; }
 
 \. ../../../nvm.sh
 
+nvm_install_source() {
+  exit 42
+}
+
 VERSION="0.7.0"
 
 EXIT_CODE=$(nvm install -b "${VERSION}" ; echo $?)

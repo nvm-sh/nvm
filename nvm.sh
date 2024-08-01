@@ -2437,7 +2437,7 @@ nvm_download_artifact() {
   nvm_err "Downloading ${TARBALL_URL}..."
   nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || (
     command rm -rf "${TARBALL}" "${tmpdir}"
-    nvm_err "Binary download from ${TARBALL_URL} failed, trying source."
+    nvm_err "download from ${TARBALL_URL} failed"
     return 4
   )
 
@@ -3564,7 +3564,7 @@ nvm() {
           fi
         fi
 
-        if [ $EXIT_CODE -ne 0 ]; then
+        if [ $EXIT_CODE -ne 0 ] && [ $nosource -ne 1 ]; then
           if [ -z "${NVM_MAKE_JOBS-}" ]; then
             nvm_get_make_jobs
           fi
