@@ -3558,6 +3558,10 @@ nvm() {
           EXIT_CODE=$?
         else
           EXIT_CODE=-1
+          if [ $nosource -eq 1 ]; then
+            nvm_err "Binary download is not available for ${VERSION}"
+            EXIT_CODE=3
+          fi
         fi
 
         if [ $EXIT_CODE -ne 0 ]; then
@@ -3575,25 +3579,27 @@ nvm() {
         fi
       fi
 
-      if [ $EXIT_CODE -eq 0 ] && nvm_use_if_needed "${VERSION}" && nvm_install_npm_if_needed "${VERSION}"; then
-        if [ -n "${LTS-}" ]; then
-          nvm_ensure_default_set "lts/${LTS}"
+      if [ $EXIT_CODE -eq 0 ]; then
+        if nvm_use_if_needed "${VERSION}" && nvm_install_npm_if_needed "${VERSION}"; then
+          if [ -n "${LTS-}" ]; then
+            nvm_ensure_default_set "lts/${LTS}"
+          else
+            nvm_ensure_default_set "${provided_version}"
+          fi
+          if [ "${NVM_UPGRADE_NPM}" = 1 ]; then
+            nvm install-latest-npm
+            EXIT_CODE=$?
+          fi
+          if [ $EXIT_CODE -eq 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
+            nvm_install_default_packages
+          fi
+          if [ $EXIT_CODE -eq 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
+            nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
+            EXIT_CODE=$?
+          fi
         else
-          nvm_ensure_default_set "${provided_version}"
-        fi
-        if [ "${NVM_UPGRADE_NPM}" = 1 ]; then
-          nvm install-latest-npm
           EXIT_CODE=$?
         fi
-        if [ $EXIT_CODE -eq 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
-          nvm_install_default_packages
-        fi
-        if [ $EXIT_CODE -eq 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
-          nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
-          EXIT_CODE=$?
-        fi
-      else
-        EXIT_CODE=$?
       fi
 
       return $EXIT_CODE
