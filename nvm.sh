@@ -503,9 +503,9 @@ $(nvm_wrap_with_color_code 'y' "${warn_text}")"
 }
 
 nvm_process_nvmrc() {
-  local NVMRC_PATH="$1"
+  local NVMRC_PATH
+  NVMRC_PATH="$1"
   local lines
-  local unpaired_line
 
   lines=$(command sed 's/#.*//' "$NVMRC_PATH" | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
 
@@ -515,8 +515,12 @@ nvm_process_nvmrc() {
   fi
 
   # Initialize key-value storage
-  local keys=''
-  local values=''
+  local keys
+  keys=''
+  local values
+  values=''
+  local unpaired_line
+  unpaired_line=''
 
   while IFS= read -r line; do
     if [ -z "${line}" ]; then
