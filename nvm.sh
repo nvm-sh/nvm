@@ -434,6 +434,7 @@ else
 fi
 unset NVM_SCRIPT_SOURCE 2>/dev/null
 
+
 nvm_tree_contains_path() {
   local tree
   tree="${1-}"
@@ -449,13 +450,20 @@ nvm_tree_contains_path() {
   previous_pathdir="${node_path}"
   local pathdir
   pathdir=$(dirname "${previous_pathdir}")
+
+  # Convert tree path to canonical form for case-insensitive comparison
+  local tree_canonical
+  tree_canonical=$(cd "${tree}" && pwd -P)
+
   while [ "${pathdir}" != '' ] && [ "${pathdir}" != '.' ] && [ "${pathdir}" != '/' ] &&
-      [ "${pathdir}" != "${tree}" ] && [ "${pathdir}" != "${previous_pathdir}" ]; do
+      [ "${pathdir}" != "${tree_canonical}" ] && [ "${pathdir}" != "${previous_pathdir}" ]; do
     previous_pathdir="${pathdir}"
     pathdir=$(dirname "${previous_pathdir}")
   done
-  [ "${pathdir}" = "${tree}" ]
+
+  [ "${pathdir}" = "${tree_canonical}" ]
 }
+
 
 nvm_find_project_dir() {
   local path_
