@@ -4556,31 +4556,41 @@ nvm_supports_xz() {
 nvm_auto() {
   local NVM_MODE
   NVM_MODE="${1-}"
-  local VERSION
-  local NVM_CURRENT
-  if [ "_${NVM_MODE}" = '_install' ]; then
-    VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
-    if [ -n "${VERSION}" ] && ! [ "_${VERSION}" = '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-      nvm install "${VERSION}" >/dev/null
-    elif nvm_rc_version >/dev/null 2>&1; then
-      nvm install >/dev/null
-    fi
-  elif [ "_$NVM_MODE" = '_use' ]; then
-    NVM_CURRENT="$(nvm_ls_current)"
-    if [ "_${NVM_CURRENT}" = '_none' ] || [ "_${NVM_CURRENT}" = '_system' ]; then
-      VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
-      if [ -n "${VERSION}" ] && ! [ "_${VERSION}" = '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-        nvm use --silent "${VERSION}" >/dev/null
-      elif nvm_rc_version >/dev/null 2>&1; then
-        nvm use --silent >/dev/null
+
+  case "${NVM_MODE}" in
+    none) return 0 ;;
+    use | install)
+      local VERSION
+      local NVM_CURRENT
+      NVM_CURRENT="$(nvm_ls_current)"
+      if [ "_${NVM_CURRENT}" = '_none' ] || [ "_${NVM_CURRENT}" = '_system' ]; then
+        VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+        if [ -n "${VERSION}" ]; then
+          if [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
+            if [ "_${NVM_MODE}" = '_install' ]; then
+              nvm install "${VERSION}" >/dev/null
+            else
+              nvm use --silent "${VERSION}" >/dev/null
+            fi
+          else
+            return 0
+          fi
+        elif nvm_rc_version >/dev/null 2>&1; then
+          if [ "_${NVM_MODE}" = '_install' ]; then
+            nvm install >/dev/null
+          else
+            nvm use --silent >/dev/null
+          fi
+        fi
+      else
+        nvm use --silent "${NVM_CURRENT}" >/dev/null
       fi
-    else
-      nvm use --silent "${NVM_CURRENT}" >/dev/null
-    fi
-  elif [ "_${NVM_MODE}" != '_none' ]; then
-    nvm_err 'Invalid auto mode supplied.'
-    return 1
-  fi
+    ;;
+    *)
+      nvm_err 'Invalid auto mode supplied.'
+      return 1
+    ;;
+  esac
 }
 
 nvm_process_parameters() {
