@@ -3360,6 +3360,10 @@ nvm() {
             shift
           ;;
           --save | -w)
+            if [ $NVM_WRITE_TO_NVMRC -eq 1 ]; then
+              nvm_err '--save and -w may only be provided once'
+              return 6
+            fi
             NVM_WRITE_TO_NVMRC=1
             shift
           ;;
@@ -3509,6 +3513,11 @@ nvm() {
           nvm_ensure_default_set "lts/${LTS}"
         else
           nvm_ensure_default_set "${provided_version}"
+        fi
+
+        if [ $NVM_WRITE_TO_NVMRC -eq 1 ]; then
+          nvm_write_nvmrc "${VERSION}"
+          EXIT_CODE=$?
         fi
 
         if [ $EXIT_CODE -ne 0 ] && [ -n "${ALIAS-}" ]; then
@@ -3746,6 +3755,8 @@ nvm() {
       local NVM_LTS
       local IS_VERSION_FROM_NVMRC
       IS_VERSION_FROM_NVMRC=0
+      local NVM_WRITE_TO_NVMRC
+      NVM_WRITE_TO_NVMRC=0
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -3757,7 +3768,13 @@ nvm() {
           --) ;;
           --lts) NVM_LTS='*' ;;
           --lts=*) NVM_LTS="${1##--lts=}" ;;
-          --save | -w) NVM_WRITE_TO_NVMRC=1 ;;
+          --save | -w)
+            if [ $NVM_WRITE_TO_NVMRC -eq 1 ]; then
+              nvm_err '--save and -w may only be provided once'
+              return 6
+            fi
+            NVM_WRITE_TO_NVMRC=1
+          ;;
           --*) ;;
           *)
             if [ -n "${1-}" ]; then
@@ -3791,8 +3808,8 @@ nvm() {
         return 127
       fi
 
-      if [ "${NVM_WRITE_TO_NVMRC:-0}" -eq 1 ]; then
-        nvm_write_nvmrc "$VERSION"
+      if [ $NVM_WRITE_TO_NVMRC -eq 1 ]; then
+        nvm_write_nvmrc "${VERSION}"
       fi
 
       if [ "_${VERSION}" = '_system' ]; then
@@ -3810,7 +3827,7 @@ nvm() {
           nvm_err 'System version of node not found.'
         fi
         return 127
-      elif [ "_${VERSION}" = "_∞" ]; then
+      elif [ "_${VERSION}" = '_∞' ]; then
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_err "The alias \"${PROVIDED_VERSION}\" leads to an infinite loop. Aborting."
         fi
