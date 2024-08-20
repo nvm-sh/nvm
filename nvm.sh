@@ -81,7 +81,7 @@ nvm_command_info() {
 nvm_has_colors() {
   local NVM_NUM_COLORS
   if nvm_has tput; then
-    NVM_NUM_COLORS="$(tput -T "${TERM:-vt100}" colors)"
+    NVM_NUM_COLORS="$(command tput -T "${TERM:-vt100}" colors)"
   fi
   [ "${NVM_NUM_COLORS:--1}" -ge 8 ] && [ "${NVM_NO_COLORS-}" != '--no-colors' ]
 }
