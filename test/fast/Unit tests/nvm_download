@@ -25,4 +25,7 @@ NVM_AUTH_HEADER="Bearer test-token" nvm_download "http://127.0.0.1/bearer" > /de
 nvm_download "http://127.0.0.1/bearer" > /dev/null && die 'nvm_download with no auth header should not send the header and should fail'
 docker stop httpbin && docker rm httpbin
 
+# ensure quoted extra args remain quoted
+nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" -o "; die quoted-command-not-quoted" || die 'command failed'
+
 cleanup

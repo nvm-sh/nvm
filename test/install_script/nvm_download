@@ -12,7 +12,7 @@ nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/de
 
 # nvm_download should fail to download wrong_install.sh
 if nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/wrong_install.sh" &>/dev/null; then
-  die "nvm_download should fail to download no existing file"
+  die "nvm_download should fail to download nonexistent file"
 fi
 
 cleanup
