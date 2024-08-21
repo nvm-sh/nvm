@@ -4559,7 +4559,7 @@ nvm_auto() {
 
   case "${NVM_MODE}" in
     none) return 0 ;;
-    use | install)
+    use)
       local VERSION
       local NVM_CURRENT
       NVM_CURRENT="$(nvm_ls_current)"
@@ -4567,23 +4567,26 @@ nvm_auto() {
         VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
         if [ -n "${VERSION}" ]; then
           if [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-            if [ "_${NVM_MODE}" = '_install' ]; then
-              nvm install "${VERSION}" >/dev/null
-            else
-              nvm use --silent "${VERSION}" >/dev/null
-            fi
+            nvm use --silent "${VERSION}" >/dev/null
           else
             return 0
           fi
         elif nvm_rc_version >/dev/null 2>&1; then
-          if [ "_${NVM_MODE}" = '_install' ]; then
-            nvm install >/dev/null
-          else
-            nvm use --silent >/dev/null
-          fi
+          nvm use --silent >/dev/null
         fi
       else
         nvm use --silent "${NVM_CURRENT}" >/dev/null
+      fi
+    ;;
+    install)
+      local VERSION
+      VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
+      if [ -n "${VERSION}" ] && [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
+        nvm install "${VERSION}" >/dev/null
+      elif nvm_rc_version >/dev/null 2>&1; then
+        nvm install >/dev/null
+      else
+        return 0
       fi
     ;;
     *)
