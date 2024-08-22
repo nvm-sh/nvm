@@ -4,6 +4,7 @@ addons:
   apt:
     packages:
       - zsh
+<<<<<<< HEAD
     #  - ksh
     #  - gcc-4.8
     #  - g++-4.8
@@ -12,6 +13,8 @@ addons:
 git:
   submodules: false
 
+=======
+>>>>>>> f9670e18a6bec3a93c8e904c96f008704c4e798e
 cache:
   ccache: true
   directories:
@@ -31,8 +34,12 @@ before_install:
   - bash --version | head
   - zsh  --version
   - dpkg -s dash | grep ^Version | awk '{print $2}'
+<<<<<<< HEAD
   # install python
   - pyenv local 2.7.18 || pyenv install 2.7.18
+=======
+  - pyenv install 2.7.18
+>>>>>>> f9670e18a6bec3a93c8e904c96f008704c4e798e
   - pyenv local 2.7.18 || echo 'pyenv failed'
   - python -V
 install:
@@ -60,10 +67,6 @@ jobs:
       dist: xenial
     - env: SHELL=zsh TEST_SUITE=installation_node WITHOUT_CURL=1
       dist: xenial
-    #- env: SHELL=ksh TEST_SUITE=installation_node
-    #  dist: xenial
-    #- env: SHELL=ksh TEST_SUITE=installation_node WITHOUT_CURL=1
-    #  dist: xenial
     - env: SHELL=bash TEST_SUITE=xenial
       dist: xenial
     - env: SHELL=sh TEST_SUITE=xenial
@@ -72,8 +75,6 @@ jobs:
       dist: xenial
     - env: SHELL=zsh TEST_SUITE=xenial
       dist: xenial
-    #- env: SHELL=ksh TEST_SUITE=xenial
-    #  dist: xenial
 env:
   global:
     - CXX=g++
@@ -86,17 +87,14 @@ env:
     - SHELL=dash TEST_SUITE=fast
     - SHELL=bash TEST_SUITE=fast
     - SHELL=zsh TEST_SUITE=fast
-    #  - SHELL=ksh TEST_SUITE=fast
     - SHELL=sh TEST_SUITE=sourcing
     - SHELL=dash TEST_SUITE=sourcing
     - SHELL=bash TEST_SUITE=sourcing
     - SHELL=zsh TEST_SUITE=sourcing
-    #  - SHELL=ksh TEST_SUITE=sourcing
     - SHELL=sh TEST_SUITE=slow
     - SHELL=dash TEST_SUITE=slow
     - SHELL=bash TEST_SUITE=slow
     - SHELL=zsh TEST_SUITE=slow
-    #  - SHELL=ksh TEST_SUITE=slow
     - SHELL=sh TEST_SUITE=installation_iojs
     - SHELL=sh TEST_SUITE=installation_iojs WITHOUT_CURL=1
     - SHELL=dash TEST_SUITE=installation_iojs
@@ -105,5 +103,3 @@ env:
     - SHELL=bash TEST_SUITE=installation_iojs WITHOUT_CURL=1
     - SHELL=zsh TEST_SUITE=installation_iojs
     - SHELL=zsh TEST_SUITE=installation_iojs WITHOUT_CURL=1
-    #  - SHELL=ksh TEST_SUITE=installation_iojs
-    #  - SHELL=ksh TEST_SUITE=installation_iojs WITHOUT_CURL=1

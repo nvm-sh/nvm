@@ -1,0 +1,6 @@
+v6.9.6-nightly201702013f61aae59d Boron *
+v8.9.1-nightly20171104a815e1b6a2 Carbon *
+v10.15.3-nightly20190301156e4c8e89 Dubnium
+v10.15.4-nightly201905019101d9368f Dubnium
+v10.16.2-nightly20190801f025f8524b Dubnium *
+v12.22.10-nightly2022012660c9d3bb95 Erbium *
