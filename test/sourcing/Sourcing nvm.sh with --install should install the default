@@ -2,6 +2,7 @@
 \. ../common.sh
 
 die () { echo "$@" ; exit 1; }
+
 supports_source_options () {
   [ "_$(echo 'echo $1' | . /dev/stdin yes)" = "_yes" ]
 }
@@ -11,6 +12,8 @@ if ! supports_source_options; then
   exit 0;
 fi
 
+rm .nvmrc
+export NVM_DIR="${PWD}/../.."
 echo '0.10.2' > ../../alias/default || die 'creation of default alias failed'
 
 echo 'sourcing nvm with --install...'
@@ -19,6 +22,8 @@ echo 'sourcing nvm with --install...'
 EXIT_CODE="$?"
 
 echo 'sourcing complete.'
+
+[ "$(nvm_alias default)" = '0.10.2' ] || die "nvm_alias default did not return '0.10.2', got >$(nvm_alias default)<"
 
 nvm_version 0.10.2 >/dev/null 2>&1 || die "v0.10.2 not installed: \n$(nvm_ls)"
 

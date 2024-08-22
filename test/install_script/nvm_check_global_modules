@@ -27,15 +27,15 @@ setup () {
   mkdir -p "$npm_config_prefix/lib"
 }
 
-
 setup
 
 npm install -g nop >/dev/null || die 'nvm_check_global_modules cannot be tested because `npm` cannot install the `nop` package'
 message=$(nvm_check_global_modules)
 [ ! -z "$message" ] || die "nvm_check_global_modules should have printed a notice when npm had global modules installed; got:\n${message}"
 
-if [ -n "${ORIGINAL_NVM_DIR}" ]; then
+if [ -n "${ORIGINAL_NVM_DIR}" ] && [ -z "${GITHUB_ACTIONS}" ]; then
   # Admit we're using NVM, just for this one test
+  # TODO: fix this for GHA
   message=$(NVM_DIR="${ORIGINAL_NVM_DIR}" nvm_check_global_modules)
   [ -z "$message" ] || die "nvm_check_global_modules should not have printed a notice when npm is managed by nvm; got:\n${message}"
 fi

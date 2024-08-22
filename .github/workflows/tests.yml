@@ -19,13 +19,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - shell: bash
+        exclude:
+          - shell: sh
             suite: install_script
-      #   shell:
-      #     - bash
-      #   suite:
-      #     - install_script
+          - shell: dash
+            suite: install_script
+          - shell: zsh
+            suite: install_script
+          - shell: ksh
+            suite: install_script
+        suite:
+          - install_script
+          - sourcing
+        shell:
+          - sh
+          - bash
+          - dash
+          - zsh
+          # - ksh
 
     steps:
       - name: Harden Runner
@@ -37,7 +48,13 @@ jobs:
             raw.githubusercontent.com:443
             nodejs.org:443
             iojs.org:443
+            azure.archive.ubuntu.com:80
+            packages.microsoft.com:443
       - uses: actions/checkout@v4
+      - run: sudo apt-get update; sudo apt-get install ${{ matrix.shell }}
+        if: matrix.shell == 'zsh' || matrix.shell == 'ksh'
+        # zsh (https://github.com/actions/runner-images/issues/264) and ksh are not in the ubuntu image
+        shell: bash
       - run: sudo ${{ matrix.shell }} --version 2> /dev/null || dpkg -s ${{ matrix.shell }} 2> /dev/null || which ${{ matrix.shell }}
       - run: curl --version
       - run: wget --version
@@ -48,6 +65,7 @@ jobs:
           skip-ls-check: true
           shell-command: echo installed
       - run: npm ls urchin
+      - run: npx which urchin
       - run: env
       - run: make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npx which urchin)" test-${{ matrix.shell }}
 

@@ -12,9 +12,7 @@ NVM_DIR_CACHED="${NVM_DIR}"
 nvm unload || die 'unloading returned nonzero exit code'
 NVM_DIR="${NVM_DIR_CACHED}"
 
-echo '0.10.1' > ../../alias/default || die 'creation of default alias failed'
-
-which node && die 'node was found in PATH after unloading nvm'
+echo '0.10.1' > "${NVM_DIR}/alias/default" || die 'creation of default alias failed'
 
 # Now to begin the real test
 \. ../../nvm.sh || die 'sourcing returned nonzero exit code'

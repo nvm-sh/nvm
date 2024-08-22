@@ -43,7 +43,7 @@ $(SHELL_TARGETS):
 	@shell='$@'; shell=$${shell##*-}; \
 	which "$$shell" >/dev/null || { printf '\033[0;31m%s\033[0m\n' "WARNING: Cannot test with shell '$$shell': not found." >&2; exit 0; } && \
 	printf '\n\033[0;34m%s\033[0m\n' "Running tests in $$shell"; \
-	[ -z "$$TRAVIS_BUILD_DIR" ] && for v in $$(set | awk -F'=' '$$1 ~ "^NVM_" { print $$1 }'); do unset $$v; done && unset v; \
+	[ -z "$$TRAVIS_BUILD_DIR" ] && [ -z "$$GITHUB_ACTIONS" ] && for v in $$(set | awk -F'=' '$$1 ~ "^NVM_" { print $$1 }'); do unset $$v; done && unset v; \
 	for suite in $(TEST_SUITE); do \
 		echo "Running test suite: $$suite"; \
 		$(URCHIN) -f -s $$shell test/$$suite || exit; \
