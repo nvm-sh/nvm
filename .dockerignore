@@ -8,6 +8,7 @@ test/bak
 .urchin.log
 .urchin_stdout
 test/**/test_output
+test/**/.nvmrc
 
 node_modules/
 npm-debug.log

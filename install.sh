@@ -33,7 +33,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  nvm_echo "v0.39.7"
+  nvm_echo "v0.40.0"
 }
 
 nvm_profile_is_bash_or_zsh() {
@@ -358,7 +358,7 @@ nvm_check_global_modules() {
     command printf %s\\n "$NPM_GLOBAL_MODULES"
     nvm_echo '=> If you wish to uninstall them at a later point (or re-install them under your'
     # shellcheck disable=SC2016
-    nvm_echo '=> `nvm` Nodes), you can remove them from the system Node as follows:'
+    nvm_echo '=> `nvm` node installs), you can remove them from the system Node as follows:'
     nvm_echo
     nvm_echo '     $ nvm use system'
     nvm_echo '     $ npm uninstall -g a_module'

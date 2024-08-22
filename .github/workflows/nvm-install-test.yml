@@ -1,0 +1,104 @@
+name: 'Tests: nvm install with set -e'
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'git ref to use'
+        required: false
+        default: 'HEAD'
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: matrix
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
+            echo "matrix=\"[\"${{ github.event.inputs.ref }}\"]\"" >> $GITHUB_OUTPUT
+          else
+            TAGS="$((echo "HEAD" && git tag --sort=-v:refname --merged HEAD --format='%(refname:strip=2) %(creatordate:short)' | grep '^v' | while read tag date; do
+              if [ "$(uname)" == "Darwin" ]; then
+                timestamp=$(date -j -f "%Y-%m-%d" "$date" +%s)
+                threshold=$(date -j -v-4y +%s)
+              else
+                timestamp=$(date -d "$date" +%s)
+                threshold=$(date -d "4 years ago" +%s)
+              fi
+              if [ $timestamp -ge $threshold ]; then echo "$tag"; fi
+            done) | xargs)"
+            echo $TAGS
+            TAGS_JSON=$(printf "%s\n" $TAGS | jq -R . | jq -sc .)
+            echo "matrix=${TAGS_JSON}" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    needs: [matrix]
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.ref == 'v0.40.0' }} # https://github.com/nvm-sh/nvm/issues/3405
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: ${{ fromJson(needs.matrix.outputs.matrix) }}
+        has-nvmrc:
+          - 'no nvmrc'
+          - 'nvmrc'
+        shell-level:
+          - 1 shlvl
+          - 2 shlvls
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: resolve HEAD to sha
+        run: |
+          if [ '${{ matrix.ref }}' = 'HEAD' ]; then
+            REF="$(git rev-parse HEAD)"
+          else
+            REF="${{ matrix.ref }}"
+          fi
+          echo "resolved ref: ${REF}"
+          echo "ref="$REF"" >> $GITHUB_ENV
+      - run: echo $- # which options are set
+      - run: echo node > .nvmrc
+        if: ${{ matrix.has-nvmrc == 'nvmrc' }}
+      - run:  curl -I --compressed -v https://nodejs.org/dist/
+      - name: 'install nvm'
+        run: |
+          set -e
+          export NVM_INSTALL_VERSION="${ref}"
+          curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${ref}/install.sh" | bash
+      - name: nvm --version
+        run: |
+          set +e
+          . $NVM_DIR/nvm.sh && nvm --version
+      - name: nvm install in 1 shell level, ${{ matrix.has-nvmrc }}
+        if: ${{ matrix.shell-level == '1 shlvl' }}
+        run: |
+          set -ex
+          . $NVM_DIR/nvm.sh
+          echo nvm.sh sourced
+          nvm --version
+          if [ '${{ matrix.has-nvmrc }}' == 'nvmrc' ]; then
+            nvm install
+          fi
+      - name: nvm install in 2 shell levels, ${{ matrix.has-nvmrc }}
+        if: ${{ matrix.shell-level == '2 shlvls' }}
+        run: |
+          if [ '${{ matrix.has-nvmrc }}' == 'nvmrc' ]; then
+            bash -c "set -ex && . $NVM_DIR/nvm.sh && echo nvm.sh sourced && nvm --version && nvm install"
+          else
+            bash -c "set -ex && . $NVM_DIR/nvm.sh && echo nvm.sh sourced && nvm --version"
+          fi
+
+  finisher:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - run: true
