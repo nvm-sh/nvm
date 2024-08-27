@@ -14,6 +14,8 @@
     "test/installation/node": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_node test-$shell",
     "test/installation/iojs": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=installation_iojs test-$shell",
     "test/sourcing": "shell=$(basename -- $(ps -o comm= $(ps -o ppid= -p $PPID)) | sed 's/^-//'); make TEST_SUITE=sourcing test-$shell",
+    "test:check-exec": "(IFS=$'\\n'; for file in $(git ls-files test); do if [ ! -x \"$file\" ] && [[ \"$file\" != *.* ]] && [[ \"$file\" != test/fixtures/* ]]; then echo \"$file\"; fi; done) | tee /dev/stderr | awk 'END {if (NR > 0) exit 1}'",
+    "test:check-nonexec": "(IFS=$'\\n'; for file in $(git ls-files test); do if [ -x \"$file\" ] && [ ! -d \"$file\" ] && { [[ \"$file\" =~ '\\.(json|txt|sh|js|log)$' ]] || [[ \"$file\" =~ '^test/(mocks|fixtures)/.*' ]]; }; then echo \"$file\"; fi; done) | tee /dev/stderr | awk 'END {if (NR > 0) exit 1}'",
     "doctoc": "doctoc --title='## Table of Contents' --github README.md",
     "predoctoc:check": "cp README.md v-README.md.orig && npm run doctoc",
     "doctoc:check": "diff -q README.md v-README.md.orig",

@@ -22,11 +22,11 @@ nvm deactivate 2>/dev/null || die 'unable to deactivate'
 
 \. ../../common.sh
 
-MOCKS_DIR="$PWD/mocks"
+MOCKS_DIR="${PWD}/mocks"
 
 nvm_download() {
   if [ "$*" = "-L -s $(nvm_get_mirror node std)/index.tab -o -" ]; then
-    cat "$MOCKS_DIR/nodejs.org-dist-index.tab"
+    cat "${MOCKS_DIR}/nodejs.org-dist-index.tab"
     return
   fi
   return 42
@@ -34,15 +34,15 @@ nvm_download() {
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote lts.txt"
 OUTPUT="$(nvm ls-remote --lts | sed 's/[ \t]*$//')"
-EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote --lts did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}" | sed 's/[ \t]*$//' )"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote --lts did not output expected sorted versions; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote lts.txt"
 OUTPUT="$(nvm ls-remote "lts/*" | sed 's/[ \t]*$//')"
-EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}" | sed 's/[ \t]*$//' )"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
-MOCKS_DIR="$PWD/mocks"
+MOCKS_DIR="${PWD}/mocks"
 LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
 LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
 
@@ -56,18 +56,18 @@ printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
   INDEX=$(($INDEX + 1))
 done
 
-REMOTE="$PWD/mocks/nvm_ls_remote.txt"
+REMOTE="${PWD}/mocks/nvm_ls_remote.txt"
 nvm_ls_remote() {
-  cat "$REMOTE"
+  cat "${REMOTE}"
 }
-REMOTE_IOJS="$PWD/mocks/nvm_ls_remote_iojs.txt"
+REMOTE_IOJS="${PWD}/mocks/nvm_ls_remote_iojs.txt"
 nvm_ls_remote_iojs() {
-  cat "$REMOTE_IOJS"
+  cat "${REMOTE_IOJS}"
 }
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote.txt"
 OUTPUT="$(nvm ls-remote | sed 's/[ \t]*$//')"
-EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm ls-remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}" | sed 's/[ \t]*$//' )"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "bare nvm ls-remote did not output expected sorted versions; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 cleanup

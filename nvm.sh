@@ -2199,7 +2199,7 @@ nvm_install_binary_extract() {
   command mkdir -p "${VERSION_PATH}" || return 1
 
   if [ "${NVM_OS}" = 'win' ]; then
-    command mv "${TMPDIR}/"*/* "${VERSION_PATH}" || return 1
+    command mv "${TMPDIR}/"*/* "${VERSION_PATH}/" || return 1
     command chmod +x "${VERSION_PATH}"/node.exe || return 1
     command chmod +x "${VERSION_PATH}"/npm || return 1
     command chmod +x "${VERSION_PATH}"/npx 2>/dev/null
@@ -2278,8 +2278,8 @@ nvm_install_binary() {
 
   # Read nosource from arguments
   if [ "${nosource-}" = '1' ]; then
-      nvm_err 'Binary download failed. Download from source aborted.'
-      return 0
+    nvm_err 'Binary download failed. Download from source aborted.'
+    return 0
   fi
 
   nvm_err 'Binary download failed, trying source.'
@@ -2922,11 +2922,11 @@ nvm_is_natural_num() {
 
 nvm_write_nvmrc() {
   local VERSION_STRING
-  VERSION_STRING=$(nvm_version "${1-$VERSION_STRING}")
-  if [ "$VERSION_STRING" = '∞' ] || [ "$VERSION_STRING" = 'N/A' ]; then
+  VERSION_STRING=$(nvm_version "${1-}")
+  if [ "${VERSION_STRING}" = '∞' ] || [ "${VERSION_STRING}" = 'N/A' ]; then
     return 1
   fi
-  echo "$VERSION_STRING" | tee "$PWD"/.nvmrc > /dev/null || {
+  echo "${VERSION_STRING}" | tee "$PWD"/.nvmrc > /dev/null || {
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
       nvm_err "Warning: Unable to write version number ($VERSION_STRING) to .nvmrc"
     fi

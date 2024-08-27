@@ -44,7 +44,7 @@ nvm_ls_remote_iojs() {
 
 make_fake_node "${TEST_VERSION}"
 
-nvm install -w "${TEST_VERSION}" || die "\`nvm install -w ${TEST_VERSION}\` failed"
+nvm use -w "${TEST_VERSION}" || die "\`nvm install -w ${TEST_VERSION}\` failed"
 OUTPUT="$(cat .nvmrc)"
 
 nvm_is_valid_version "${OUTPUT}" \
@@ -52,7 +52,7 @@ nvm_is_valid_version "${OUTPUT}" \
 
 rm .nvmrc || die 'removing of .nvmrc failed'
 
-nvm install --save "${TEST_VERSION}" || die "\`nvm install --save ${TEST_VERSION}\` failed"
+nvm use --save "${TEST_VERSION}" || die "\`nvm install --save ${TEST_VERSION}\` failed"
 OUTPUT="$(cat .nvmrc)"
 
 nvm_is_valid_version "${OUTPUT}" \

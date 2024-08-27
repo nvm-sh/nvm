@@ -1,6 +1,10 @@
 #!/bin/sh
 
-die () { echo "$@" ; exit 1; }
+die () {
+  unset -f nvm_install_binary nvm_install_source
+  echo "$@"
+  exit 1
+}
 
 \. ../../nvm.sh
 
@@ -22,16 +26,28 @@ nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || die "'nvm run $N
 NVM_CURRENT_DEFAULT="$(nvm_alias default)"
 [ "$NVM_CURRENT_DEFAULT" = "$NVM_TEST_VERSION" ] || die "wrong default alias: $(nvm alias)"
 
-# Falls back to source but if -b is set fails binary download.
+nvm_install_binary() {
+  >&2 echo 'binary failed'
+  return 1
+}
+
+# binary fails, falls back to source, but if -b is set, fails
 OUTPUT="$(nvm install -b 9.0.0 2>&1)"
-EXPECTED_OUTPUT='Binary download failed. Download from source aborted.'
-if [ "${OUTPUT#*$EXPECTED_OUTPUT}" = "${OUTPUT}" ]; then
+EXPECTED_OUTPUT='binary failed'
+if [ "${OUTPUT#*"${EXPECTED_OUTPUT}"}" = "${OUTPUT}" ]; then
   die "No source binary flag is active and should have returned >${EXPECTED_OUTPUT}<. Instead it returned >${OUTPUT}<"
 fi
 
-# Falls back to source but if -b is not set.
+nvm_install_source() {
+  >&2 echo 'source intentionally failed'
+  return 1
+}
+
+# binary fails, falls back to source if -b is not set
 OUTPUT="$(nvm install 9.0.0 2>&1)"
-EXPECTED_OUTPUT='Binary download failed. Download from source aborted.'
-if [ "${OUTPUT#*$EXPECTED_OUTPUT}" != "${OUTPUT}" ]; then
-  die "No source binary flag is active and should have returned >${EXPECTED_OUTPUT}<. Instead it returned >${OUTPUT}<"
-fi
+EXPECTED_OUTPUT="binary failed
+Detected that you have 2 CPU core(s)
+Number of CPU core(s) less than or equal to 2, running in single-threaded mode
+source intentionally failed"
+
+[ "${EXPECTED_OUTPUT}" = "${OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
