@@ -58,12 +58,11 @@ jobs:
       - run: sudo ${{ matrix.shell }} --version 2> /dev/null || dpkg -s ${{ matrix.shell }} 2> /dev/null || which ${{ matrix.shell }}
       - run: curl --version
       - run: wget --version
-      - uses: ljharb/actions/node/run@main
+      - uses: ljharb/actions/node/install@main
         name: 'npm install && version checks'
         with:
           node-version: 'lts/*'
           skip-ls-check: true
-          shell-command: echo installed
       - run: npm ls urchin
       - run: npx which urchin
       - run: env
