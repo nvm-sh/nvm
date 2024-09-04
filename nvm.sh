@@ -891,6 +891,10 @@ nvm_normalize_lts() {
       fi
     ;;
     *)
+      if [ "${LTS}" != "$(echo "${LTS}" | command tr '[:upper:]' '[:lower:]')" ]; then
+        nvm_err 'LTS names must be lowercase'
+        return 3
+      fi
       nvm_echo "${LTS}"
     ;;
   esac
