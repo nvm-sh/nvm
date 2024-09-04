@@ -1253,7 +1253,9 @@ nvm_alias() {
     nvm_err 'An alias is required.'
     return 1
   fi
-  ALIAS="$(nvm_normalize_lts "${ALIAS}")"
+  if ! ALIAS="$(nvm_normalize_lts "${ALIAS}")"; then
+    return $?
+  fi
 
   if [ -z "${ALIAS}" ]; then
     return 2
@@ -1656,7 +1658,9 @@ $VERSION_LIST
 EOF
 
   if [ -n "${LTS-}" ]; then
-    LTS="$(nvm_normalize_lts "lts/${LTS}")"
+    if ! LTS="$(nvm_normalize_lts "lts/${LTS}")"; then
+      return $?
+    fi
     LTS="${LTS#lts/}"
   fi
 
@@ -3421,9 +3425,11 @@ nvm() {
         ;;
       esac
 
+      local EXIT_CODE
       VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "${provided_version}")"
+      EXIT_CODE="$?"
 
-      if [ "${VERSION}" = 'N/A' ]; then
+      if [ "${VERSION}" = 'N/A' ] || [ $EXIT_CODE -ne 0 ]; then
         local LTS_MSG
         local REMOTE_CMD
         if [ "${LTS-}" = '*' ]; then
@@ -3432,6 +3438,10 @@ nvm() {
         elif [ -n "${LTS-}" ]; then
           LTS_MSG="(with LTS filter '${LTS}') "
           REMOTE_CMD="nvm ls-remote --lts=${LTS}"
+          if [ -z "${provided_version}" ]; then
+            nvm_err "Version with LTS filter '${LTS}' not found - try \`${REMOTE_CMD}\` to browse available versions."
+            return 3
+          fi
         else
           REMOTE_CMD='nvm ls-remote'
         fi
@@ -3496,7 +3506,6 @@ nvm() {
         FLAVOR="$(nvm_node_prefix)"
       fi
 
-      local EXIT_CODE
       EXIT_CODE=0
 
       if nvm_is_version_installed "${VERSION}"; then
