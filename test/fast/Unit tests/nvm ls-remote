@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -e
-
 die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
@@ -55,6 +53,14 @@ printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
 
   INDEX=$(($INDEX + 1))
 done
+
+OUTPUT="$(nvm ls-remote lts/ARGON 2>&1)"
+EXIT_CODE=$?
+[ $EXIT_CODE -eq 3 ] || die "nvm ls-remote lts/ARGON did not exit 3, got '${EXIT_CODE}'"
+
+EXPECTED_OUTPUT="LTS names must be lowercase
+            N/A"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/ARGON did not output expected error message; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 REMOTE="${PWD}/mocks/nvm_ls_remote.txt"
 nvm_ls_remote() {

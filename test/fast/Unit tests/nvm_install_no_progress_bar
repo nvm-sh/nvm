@@ -6,7 +6,7 @@ cleanup () {
   nvm cache clear
   nvm deactivate
   rm -rf ${NVM_DIR}/v*
-  nvm unalias default
+  nvm unalias default || true
 }
 
 die () { >&2 echo "$@" ; cleanup ; exit 1; }
