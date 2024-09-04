@@ -16,6 +16,9 @@ ACTUAL="$(nvm_normalize_lts "lts/*")"
 EXPECTED='lts/*'
 [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
 
+if ACTUAL="$(nvm_normalize_lts lts/ARGON)"; then
+  die "expected failure, got >${ACTUAL}<"
+fi
 
 MOCKS_DIR="../Unit tests/mocks"
 STAR="$(cat "$MOCKS_DIR/lts-star.txt")"
