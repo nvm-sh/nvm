@@ -509,21 +509,25 @@ EOF
 
   # Determine the shell configuration file based on the current shell
   case "$SHELL" in
-    */bash)
-      CONFIG_FILE="$HOME/.bashrc"
-      ;;
-    */zsh)
-      CONFIG_FILE="$HOME/.zshrc"
-      ;;
-    *)
-      echo "Unsupported shell: $SHELL"
-      exit 1
-      ;;
-  esac
-
-  # Append the code to the appropriate configuration file
-  append_to_file "$CONFIG_FILE" "$CODE"
-
+      */bash)
+        CONFIG_FILE="$HOME/.bashrc"
+        BASH_OR_ZSH=true
+        append_to_file "$CONFIG_FILE" "$CODE"
+        ;;
+      */zsh)
+        CONFIG_FILE="$HOME/.zshrc"
+        BASH_OR_ZSH=true
+        append_to_file "$CONFIG_FILE" "$CODE"
+        ;;
+      */ash)
+        CONFIG_FILE="$HOME/.profile"  # or another appropriate file for ash
+        append_to_file "$CONFIG_FILE" "$CODE"
+        ;;
+      *)
+        echo "Unsupported shell to add node version to the shell: $SHELL"
+        ;;
+    esac
+    
   # Source nvm
   # shellcheck source=/dev/null
   . "$(nvm_install_dir)/nvm.sh"
