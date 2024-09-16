@@ -370,7 +370,6 @@ nvm_check_global_modules() {
 append_to_file() {
   local file=$1
   local code=$2
-  
   echo "$code" >> "$file"
   echo "code added to the file"
 }
