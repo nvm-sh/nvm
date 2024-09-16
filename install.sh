@@ -464,35 +464,35 @@ nvm_do_install() {
 
   # Define the code to add to the shell configuration file
   CODE=$(cat <<'EOF'
-  # Function to get current node version
-  get_node_version() {
-    if command -v node >/dev/null 2>&1; then
-      echo "(node $(node -v))"
-    fi
-  }
-  
-  # Update prompt based on the shell (bash or zsh)
-  if [ "$SHELL" = "/bin/bash" ] || [ "$SHELL" = "/usr/bin/bash" ]; then
-    # For bash
-    echo "Setting up for bash..."
-   
-    # Add dynamic prompt setup for bash
-    PROMPT_COMMAND='PS1="\u@\h \w \$(get_node_version)$ "'
-    export PROMPT_COMMAND
-  
-  elif [ "$SHELL" = "/bin/zsh" ] || [ "$SHELL" = "/usr/bin/zsh" ]; then
-    # For zsh
-    echo "Setting up for zsh..."
-   
-    # Set the prompt dynamically in zsh
-    precmd() {
-      PS1='%n@%m %~ $(get_node_version)$ '
+    # Function to get current node version
+    get_node_version() {
+      if command -v node >/dev/null 2>&1; then
+        echo "(node $(node -v))"
+      fi
     }
-    export -f precmd
   
-    # Enable prompt substitution in zsh
-    setopt promptsubst
-  fi
+    # Update prompt based on the shell (bash or zsh)
+    if [ "$SHELL" = "/bin/bash" ] || [ "$SHELL" = "/usr/bin/bash" ]; then
+      # For bash
+      echo "Setting up for bash..."
+     
+      # Add dynamic prompt setup for bash
+      PROMPT_COMMAND='PS1="\u@\h \w \$(get_node_version)$ "'
+      export PROMPT_COMMAND
+    
+    elif [ "$SHELL" = "/bin/zsh" ] || [ "$SHELL" = "/usr/bin/zsh" ]; then
+      # For zsh
+      echo "Setting up for zsh..."
+     
+      # Set the prompt dynamically in zsh
+      precmd() {
+        PS1='%n@%m %~ $(get_node_version)$ '
+      }
+      export -f precmd
+    
+      # Enable prompt substitution in zsh
+      setopt promptsubst
+    fi
   EOF
   )
   
