@@ -527,7 +527,7 @@ EOF
         echo "Unsupported shell to add node version to the shell: $SHELL"
         ;;
     esac
-    
+
   # Source nvm
   # shellcheck source=/dev/null
   . "$(nvm_install_dir)/nvm.sh"
