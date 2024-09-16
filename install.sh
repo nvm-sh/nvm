@@ -366,15 +366,6 @@ nvm_check_global_modules() {
   fi
 }
 
-#!/bin/bash
-
-# Function to get current node version
-get_node_version() {
-  if command -v node >/dev/null 2>&1; then
-    echo "(node $(node -v))"
-  fi
-}
-
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
     if [ -e "${NVM_DIR}" ]; then
@@ -471,6 +462,60 @@ nvm_do_install() {
     command printf "${COMPLETION_STR}"
   fi
 
+  # Define the code to add to the shell configuration file
+  CODE=$(cat <<'EOF'
+  # Function to get current node version
+  get_node_version() {
+    if command -v node >/dev/null 2>&1; then
+      echo "(node $(node -v))"
+    fi
+  }
+  
+  # Update prompt based on the shell (bash or zsh)
+  if [ "$SHELL" = "/bin/bash" ] || [ "$SHELL" = "/usr/bin/bash" ]; then
+    # For bash
+    echo "Setting up for bash..."
+   
+    # Add dynamic prompt setup for bash
+    PROMPT_COMMAND='PS1="\u@\h \w \$(get_node_version)$ "'
+    export PROMPT_COMMAND
+  
+  elif [ "$SHELL" = "/bin/zsh" ] || [ "$SHELL" = "/usr/bin/zsh" ]; then
+    # For zsh
+    echo "Setting up for zsh..."
+   
+    # Set the prompt dynamically in zsh
+    precmd() {
+      PS1='%n@%m %~ $(get_node_version)$ '
+    }
+    export -f precmd
+  
+    # Enable prompt substitution in zsh
+    setopt promptsubst
+  fi
+  EOF
+  )
+  
+  # Determine the shell configuration file based on the current shell
+  case "$SHELL" in
+    */bash)
+      CONFIG_FILE="$HOME/.bashrc"
+      ;;
+    */zsh)
+      CONFIG_FILE="$HOME/.zshrc"
+      ;;
+    *)
+      echo "Unsupported shell: $SHELL"
+      exit 1
+      ;;
+  esac
+
+  # Append the code to the appropriate configuration file
+  append_to_file "$CONFIG_FILE" "$CODE"
+
+
+  
+
   # Source nvm
   # shellcheck source=/dev/null
   \. "$(nvm_install_dir)/nvm.sh"
@@ -485,29 +530,6 @@ nvm_do_install() {
   command printf "${SOURCE_STR}"
   if ${BASH_OR_ZSH} ; then
     command printf "${COMPLETION_STR}"
-  fi
-
-  # Update prompt based on the shell (bash or zsh)
-  if [ "$SHELL" = "/bin/bash" ] || [ "$SHELL" = "/usr/bin/bash" ]; then
-    # For bash
-    echo "Setting up for bash..."
-  
-    # Add dynamic prompt setup for bash
-    PROMPT_COMMAND='PS1="\u@\h \w \$(get_node_version)$ "'
-    export PROMPT_COMMAND
-    
-  elif [ "$SHELL" = "/bin/zsh" ] || [ "$SHELL" = "/usr/bin/zsh" ]; then
-    # For zsh
-    echo "Setting up for zsh..."
-  
-    # Set the prompt dynamically in zsh
-    precmd() {
-      PS1='%n@%m %~ $(get_node_version)$ '
-    }
-    export -f precmd
-  
-    # Enable prompt substitution in zsh
-    setopt promptsubst
   fi
   
 }
