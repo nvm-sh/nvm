@@ -370,13 +370,9 @@ nvm_check_global_modules() {
 append_to_file() {
   local file=$1
   local code=$2
-
-  if ! grep -q "$code" "$file"; then
-    echo "$code" >> "$file"
-    echo "Added code to $file"
-  else
-    echo "Code already present in $file"
-  fi
+  
+  echo "$code" >> "$file"
+  echo "code added to the file"
 }
 
 nvm_do_install() {
