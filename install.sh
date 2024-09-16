@@ -366,61 +366,76 @@ nvm_check_global_modules() {
   fi
 }
 
+# Function to append code to the specified file
+append_to_file() {
+  local file=$1
+  local code=$2
+
+  if ! grep -q "$code" "$file"; then
+    echo "$code" >> "$file"
+    echo "Added code to $file"
+  else
+    echo "Code already present in $file"
+  fi
+}
+
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
     if [ -e "${NVM_DIR}" ]; then
-      nvm_echo >&2 "File \"${NVM_DIR}\" has the same name as installation directory."
+      echo >&2 "File \"${NVM_DIR}\" has the same name as installation directory."
       exit 1
     fi
 
     if [ "${NVM_DIR}" = "$(nvm_default_install_dir)" ]; then
       mkdir "${NVM_DIR}"
     else
-      nvm_echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
+      echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
       exit 1
     fi
   fi
+
   # Disable the optional which check, https://www.shellcheck.net/wiki/SC2230
   # shellcheck disable=SC2230
-  if nvm_has xcode-select && [ "$(xcode-select -p >/dev/null 2>/dev/null ; echo $?)" = '2' ] && [ "$(which git)" = '/usr/bin/git' ] && [ "$(which curl)" = '/usr/bin/curl' ]; then
-    nvm_echo >&2 'You may be on a Mac, and need to install the Xcode Command Line Developer Tools.'
+  if command -v xcode-select >/dev/null 2>&1 && [ "$(xcode-select -p >/dev/null 2>/dev/null ; echo $?)" = '2' ] && [ "$(command -v git)" = '/usr/bin/git' ] && [ "$(command -v curl)" = '/usr/bin/curl' ]; then
+    echo >&2 'You may be on a Mac, and need to install the Xcode Command Line Developer Tools.'
     # shellcheck disable=SC2016
-    nvm_echo >&2 'If so, run `xcode-select --install` and try again. If not, please report this!'
+    echo >&2 'If so, run `xcode-select --install` and try again. If not, please report this!'
     exit 1
   fi
+
   if [ -z "${METHOD}" ]; then
     # Autodetect install method
-    if nvm_has git; then
+    if command -v git >/dev/null 2>&1; then
       install_nvm_from_git
-    elif nvm_has curl || nvm_has wget; then
+    elif command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1; then
       install_nvm_as_script
     else
-      nvm_echo >&2 'You need git, curl, or wget to install nvm'
+      echo >&2 'You need git, curl, or wget to install nvm'
       exit 1
     fi
   elif [ "${METHOD}" = 'git' ]; then
-    if ! nvm_has git; then
-      nvm_echo >&2 "You need git to install nvm"
+    if ! command -v git >/dev/null 2>&1; then
+      echo >&2 "You need git to install nvm"
       exit 1
     fi
     install_nvm_from_git
   elif [ "${METHOD}" = 'script' ]; then
-    if ! nvm_has curl && ! nvm_has wget; then
-      nvm_echo >&2 "You need curl or wget to install nvm"
+    if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+      echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
     install_nvm_as_script
   else
-    nvm_echo >&2 "The environment variable \$METHOD is set to \"${METHOD}\", which is not recognized as a valid installation method."
+    echo >&2 "The environment variable \$METHOD is set to \"${METHOD}\", which is not recognized as a valid installation method."
     exit 1
   fi
 
-  nvm_echo
+  echo
 
   local NVM_PROFILE
   NVM_PROFILE="$(nvm_detect_profile)"
   local PROFILE_INSTALL_DIR
-  PROFILE_INSTALL_DIR="$(nvm_install_dir | command sed "s:^$HOME:\$HOME:")"
+  PROFILE_INSTALL_DIR="$(nvm_install_dir | sed "s:^$HOME:\$HOME:")"
 
   SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\\n"
 
@@ -428,74 +443,75 @@ nvm_do_install() {
   COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion\n'
   BASH_OR_ZSH=false
 
-  if [ -z "${NVM_PROFILE-}" ] ; then
+  if [ -z "${NVM_PROFILE-}" ]; then
     local TRIED_PROFILE
     if [ -n "${PROFILE}" ]; then
       TRIED_PROFILE="${NVM_PROFILE} (as defined in \$PROFILE), "
     fi
-    nvm_echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zprofile, ~/.zshrc, and ~/.profile."
-    nvm_echo "=> Create one of them and run this script again"
-    nvm_echo "   OR"
-    nvm_echo "=> Append the following lines to the correct file yourself:"
+    echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zprofile, ~/.zshrc, and ~/.profile."
+    echo "=> Create one of them and run this script again"
+    echo "   OR"
+    echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
-    nvm_echo
+    echo
   else
     if nvm_profile_is_bash_or_zsh "${NVM_PROFILE-}"; then
       BASH_OR_ZSH=true
     fi
-    if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
-      nvm_echo "=> Appending nvm source string to $NVM_PROFILE"
+    if ! grep -qc '/nvm.sh' "$NVM_PROFILE"; then
+      echo "=> Appending nvm source string to $NVM_PROFILE"
       command printf "${SOURCE_STR}" >> "$NVM_PROFILE"
     else
-      nvm_echo "=> nvm source string already in ${NVM_PROFILE}"
+      echo "=> nvm source string already in ${NVM_PROFILE}"
     fi
     # shellcheck disable=SC2016
-    if ${BASH_OR_ZSH} && ! command grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
-      nvm_echo "=> Appending bash_completion source string to $NVM_PROFILE"
+    if ${BASH_OR_ZSH} && ! grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
+      echo "=> Appending bash_completion source string to $NVM_PROFILE"
       command printf "$COMPLETION_STR" >> "$NVM_PROFILE"
     else
-      nvm_echo "=> bash_completion source string already in ${NVM_PROFILE}"
+      echo "=> bash_completion source string already in ${NVM_PROFILE}"
     fi
   fi
-  if ${BASH_OR_ZSH} && [ -z "${NVM_PROFILE-}" ] ; then
-    nvm_echo "=> Please also append the following lines to the if you are using bash/zsh shell:"
+
+  if ${BASH_OR_ZSH} && [ -z "${NVM_PROFILE-}" ]; then
+    echo "=> Please also append the following lines to the if you are using bash/zsh shell:"
     command printf "${COMPLETION_STR}"
   fi
 
   # Define the code to add to the shell configuration file
   CODE=$(cat <<'EOF'
-    # Function to get current node version
-    get_node_version() {
-      if command -v node >/dev/null 2>&1; then
-        echo "(node $(node -v))"
-      fi
-    }
-  
-    # Update prompt based on the shell (bash or zsh)
-    if [ "$SHELL" = "/bin/bash" ] || [ "$SHELL" = "/usr/bin/bash" ]; then
-      # For bash
-      echo "Setting up for bash..."
-     
-      # Add dynamic prompt setup for bash
-      PROMPT_COMMAND='PS1="\u@\h \w \$(get_node_version)$ "'
-      export PROMPT_COMMAND
-    
-    elif [ "$SHELL" = "/bin/zsh" ] || [ "$SHELL" = "/usr/bin/zsh" ]; then
-      # For zsh
-      echo "Setting up for zsh..."
-     
-      # Set the prompt dynamically in zsh
-      precmd() {
-        PS1='%n@%m %~ $(get_node_version)$ '
-      }
-      export -f precmd
-    
-      # Enable prompt substitution in zsh
-      setopt promptsubst
-    fi
-  EOF
+# Function to get current node version
+get_node_version() {
+  if command -v node >/dev/null 2>&1; then
+    echo "(node $(node -v))"
+  fi
+}
+
+# Update prompt based on the shell (bash or zsh)
+if [ "$SHELL" = "/bin/bash" ] || [ "$SHELL" = "/usr/bin/bash" ]; then
+  # For bash
+  echo "Setting up for bash..."
+
+  # Add dynamic prompt setup for bash
+  PROMPT_COMMAND='PS1="\u@\h \w \$(get_node_version)$ "'
+  export PROMPT_COMMAND
+
+elif [ "$SHELL" = "/bin/zsh" ] || [ "$SHELL" = "/usr/bin/zsh" ]; then
+  # For zsh
+  echo "Setting up for zsh..."
+
+  # Set the prompt dynamically in zsh
+  precmd() {
+    PS1='%n@%m %~ $(get_node_version)$ '
+  }
+  export -f precmd
+
+  # Enable prompt substitution in zsh
+  setopt promptsubst
+fi
+EOF
   )
-  
+
   # Determine the shell configuration file based on the current shell
   case "$SHELL" in
     */bash)
@@ -513,25 +529,19 @@ nvm_do_install() {
   # Append the code to the appropriate configuration file
   append_to_file "$CONFIG_FILE" "$CODE"
 
-
-  
-
   # Source nvm
   # shellcheck source=/dev/null
-  \. "$(nvm_install_dir)/nvm.sh"
+  . "$(nvm_install_dir)/nvm.sh"
 
   nvm_check_global_modules
-
   nvm_install_node
-
   nvm_reset
 
-  nvm_echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
+  echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
   command printf "${SOURCE_STR}"
-  if ${BASH_OR_ZSH} ; then
+  if ${BASH_OR_ZSH}; then
     command printf "${COMPLETION_STR}"
   fi
-  
 }
 
 #
