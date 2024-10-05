@@ -700,10 +700,12 @@ nvm_ensure_version_installed() {
       nvm_err "N/A: version \"${PREFIXED_VERSION:-$PROVIDED_VERSION}\" is not yet installed."
     fi
     nvm_err ""
-    if [ "${IS_VERSION_FROM_NVMRC}" != '1' ]; then
-        nvm_err "You need to run \`nvm install ${PROVIDED_VERSION}\` to install and use it."
-      else
-        nvm_err 'You need to run `nvm install` to install and use the node version specified in `.nvmrc`.'
+    if [ "${PROVIDED_VERSION}" = 'lts' ]; then
+      nvm_err '`lts` is not an alias - you may need to run `nvm install --lts` to install and `nvm use --lts` to use it.'
+    elif [ "${IS_VERSION_FROM_NVMRC}" != '1' ]; then
+      nvm_err "You need to run \`nvm install ${PROVIDED_VERSION}\` to install and use it."
+    else
+      nvm_err 'You need to run `nvm install` to install and use the node version specified in `.nvmrc`.'
     fi
     return 1
   fi
