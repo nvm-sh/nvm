@@ -1856,12 +1856,15 @@ nvm_print_versions() {
   fi
 
   command awk \
-    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" \
+    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" -v min="${NVM_MIN:-v0}" \
     -v installed_versions="$(nvm_ls | tr '\n' '|')" -v current="$NVM_CURRENT" \
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
     -v old_lts_color="$DEFAULT_COLOR" -v has_colors="$NVM_HAS_COLORS" '
 function alen(arr, i, len) { len=0; for(i in arr) len++; return len; }
+function v2a(v, a) { sub(/^(iojs-)?v/, "", v); split(v, a, "."); }
+function v2m(v, a) { sub(/^(iojs-)?v/, "", v); split(v, a, "."); return a[1]; }
+function vcmp(v1,v2,a1,a2,i,d) { v2a(v1,a1); v2a(v2,a2); for(i=1;i<4;i++) { d = a1[i] - a2[i]; if(d!=0) return d; } return 0; }
 BEGIN {
   fmt_installed = has_colors ? (installed_color ? "\033[" installed_color "%15s\033[0m" : "%15s") : "%15s *";
   fmt_system = has_colors ? (system_color ? "\033[" system_color "%15s\033[0m" : "%15s") : "%15s *";
@@ -1876,17 +1879,27 @@ BEGIN {
   split(remote_versions, lines, "|");
   split(installed_versions, installed, "|");
   rows = alen(lines);
-
-  for (n = 1; n <= rows; n++) {
+  filter_on = (vcmp("v0.0.0", min) != 0);
+  current_major = -1;
+  for (m = n = 1; n <= rows; n++) {
     split(lines[n], fields, "[[:blank:]]+");
     cols = alen(fields);
     version = fields[1];
     is_installed = 0;
-
     for (i in installed) {
       if (version == installed[i]) {
         is_installed = 1;
         break;
+      }
+    }
+
+    if (filter_on != 0) {
+      if (is_installed != 0) {
+        current_major = v2m(version);
+      } else if (vcmp(version, min) >= 0) {
+        filter_on = 0;
+      } else if (v2m(version) != current_major) {
+        continue;
       }
     }
 
@@ -1895,12 +1908,11 @@ BEGIN {
       fmt_version = fmt_current;
     } else if (version == "system") {
       fmt_version = fmt_system;
-    } else if (is_installed) {
+    } else if (is_installed != 0) {
       fmt_version = fmt_installed;
     }
 
-    padding = (!has_colors && is_installed) ? "" : "  ";
-
+    padding = (is_installed && !has_colors) ? "" : "  ";
     if (cols == 1) {
       formatted = sprintf(fmt_version, version);
     } else if (cols == 2) {
@@ -1909,10 +1921,10 @@ BEGIN {
       formatted = sprintf((fmt_version padding fmt_latest_lts), version, fields[2]);
     }
 
-    output[n] = formatted;
+    output[m++] = formatted;
   }
 
-  for (n = 1; n <= rows; n++) {
+  for (n = 1; n < m; n++) {
     print output[n]
   }
 
@@ -3079,6 +3091,7 @@ nvm() {
         nvm_echo '  nvm ls-remote [<version>]                   List remote versions available for install, matching a given <version> if provided'
         nvm_echo '    --lts                                     When listing, only show LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only show versions for a specific LTS line'
+        nvm_echo '    --min=<version>                           When listing, only show versions greater than or equal to <version>, including minor/patch updates for installed versions'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm version <version>                       Resolve the given description to a single local version'
         nvm_echo '  nvm version-remote <version>                Resolve the given description to a single remote version'
@@ -4097,6 +4110,10 @@ nvm() {
       local NVM_LTS
       local PATTERN
       local NVM_NO_COLORS
+      local NVM_MIN_ENV
+      NVM_MIN_ENV="${NVM_MIN-}"
+      local NVM_MIN
+      NVM_MIN="${NVM_MIN_ENV-}"
 
       while [ $# -gt 0 ]; do
         case "${1-}" in
@@ -4106,6 +4123,9 @@ nvm() {
           ;;
           --lts=*)
             NVM_LTS="${1##--lts=}"
+          ;;
+          --min=*)
+            NVM_MIN="${1##--min=}"
           ;;
           --no-colors) NVM_NO_COLORS="${1}" ;;
           --*)
