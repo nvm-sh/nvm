@@ -646,7 +646,7 @@ cdnvm() {
 }
 
 alias cd='cdnvm'
-cdnvm "$PWD" || exit
+
 ```
 
 This alias would search 'up' from your current directory in order to detect a `.nvmrc` file. If it finds it, it will switch to that version; if not, it will use the default version.
