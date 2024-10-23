@@ -196,6 +196,9 @@ nvm_install_latest_npm() {
   nvm_echo 'Attempting to upgrade to the latest working version of npm...'
   local NODE_VERSION
   NODE_VERSION="$(nvm_strip_iojs_prefix "$(nvm_ls_current)")"
+  local NPM_VERSION
+  NPM_VERSION="$(npm --version 2>/dev/null)"
+
   if [ "${NODE_VERSION}" = 'system' ]; then
     NODE_VERSION="$(node --version)"
   elif [ "${NODE_VERSION}" = 'none' ]; then
@@ -206,8 +209,6 @@ nvm_install_latest_npm() {
     nvm_err 'Unable to obtain node version.'
     return 1
   fi
-  local NPM_VERSION
-  NPM_VERSION="$(npm --version 2>/dev/null)"
   if [ -z "${NPM_VERSION}" ]; then
     nvm_err 'Unable to obtain npm version.'
     return 2
