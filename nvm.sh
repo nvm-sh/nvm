@@ -13,6 +13,42 @@
 # shellcheck disable=SC3028
 NVM_SCRIPT_SOURCE="$_"
 
+NVM_LOG_LEVEL=${NVM_LOG_LEVEL:-INFO}
+NVM_VERSION="0.39.0"  # Update this with the actual nvm version
+
+nvm_log() {
+  local level=$1
+  shift
+  if [[ $NVM_LOG_LEVEL == DEBUG || ($NVM_LOG_LEVEL == INFO && $level != DEBUG) ]]; then
+    printf "[%s] [%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$level" "$*" >&2
+  fi
+}
+
+nvm_debug() { nvm_log DEBUG "$@"; }
+nvm_info() { nvm_log INFO "$@"; }
+nvm_warn() { nvm_log WARN "$@"; }
+nvm_error() { nvm_log ERROR "$@"; }
+
+nvm_run_command() {
+  nvm_debug "Executing: $*"
+  "$@"
+}
+
+nvm_time_operation() {
+  local start_time=$(date +%s)
+  "$@"
+  local end_time=$(date +%s)
+  local duration=$((end_time - start_time))
+  nvm_info "Operation took ${duration} seconds"
+}
+
+nvm_log_env() {
+  nvm_debug "Environment:"
+  nvm_debug "  NVM_DIR: $NVM_DIR"
+  nvm_debug "  PATH: $PATH"
+  nvm_debug "  Shell: $SHELL"
+}
+
 nvm_is_zsh() {
   [ -n "${ZSH_VERSION-}" ]
 }
@@ -797,7 +833,7 @@ nvm_remote_versions() {
   esac
 
   if nvm_validate_implicit_alias "${PATTERN-}" 2>/dev/null; then
-    nvm_err 'Implicit aliases are not supported in nvm_remote_versions.'
+    nvm_error 'Implicit aliases are not supported in nvm_remote_versions.'
     return 1
   fi
 
@@ -889,13 +925,13 @@ nvm_normalize_lts() {
       if [ "${RESULT}" != '*' ]; then
         nvm_echo "lts/${RESULT}"
       else
-        nvm_err 'That many LTS releases do not exist yet.'
+        nvm_error 'That many LTS releases do not exist yet.'
         return 2
       fi
     ;;
     *)
       if [ "${LTS}" != "$(echo "${LTS}" | command tr '[:upper:]' '[:lower:]')" ]; then
-        nvm_err 'LTS names must be lowercase'
+        nvm_error 'LTS names must be lowercase'
         return 3
       fi
       nvm_echo "${LTS}"
@@ -943,7 +979,7 @@ nvm_num_version_groups() {
 
 nvm_strip_path() {
   if [ -z "${NVM_DIR-}" ]; then
-    nvm_err '${NVM_DIR} not set!'
+    nvm_error '${NVM_DIR} not set!'
     return 1
   fi
   command printf %s "${1-}" | command awk -v NVM_DIR="${NVM_DIR}" -v RS=: '
@@ -956,10 +992,10 @@ nvm_strip_path() {
 }
 
 nvm_change_path() {
-  # if there’s no initial path, just return the supplementary path
+  # if there's no initial path, just return the supplementary path
   if [ -z "${1-}" ]; then
     nvm_echo "${3-}${2-}"
-  # if the initial path doesn’t contain an nvm path, prepend the supplementary
+  # if the initial path doesn't contain an nvm path, prepend the supplementary
   # path
   elif ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/[^/]*${2-}" \
     && ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
@@ -1026,7 +1062,7 @@ nvm_get_colors() {
       COLOR=$(nvm_echo "$SYS_COLOR" | command tr '0;' '1;')
       ;;
     *)
-      nvm_err "Invalid color index, ${1-}"
+      nvm_error "Invalid color index, ${1-}"
       return 1
     ;;
   esac
@@ -1066,7 +1102,7 @@ nvm_print_color_code() {
     'e') nvm_echo '0;37m' ;;
     'W') nvm_echo '1;37m' ;;
     *)
-      nvm_err "Invalid color code: ${1-}";
+      nvm_error "Invalid color code: ${1-}";
       return 1
     ;;
   esac
@@ -1148,13 +1184,13 @@ nvm_print_alias_path() {
   local NVM_ALIAS_DIR
   NVM_ALIAS_DIR="${1-}"
   if [ -z "${NVM_ALIAS_DIR}" ]; then
-    nvm_err 'An alias dir is required.'
+    nvm_error 'An alias dir is required.'
     return 1
   fi
   local ALIAS_PATH
   ALIAS_PATH="${2-}"
   if [ -z "${ALIAS_PATH}" ]; then
-    nvm_err 'An alias path is required.'
+    nvm_error 'An alias path is required.'
     return 2
   fi
   local ALIAS
@@ -1170,7 +1206,7 @@ nvm_print_default_alias() {
   local ALIAS
   ALIAS="${1-}"
   if [ -z "${ALIAS}" ]; then
-    nvm_err 'A default alias is required.'
+    nvm_error 'A default alias is required.'
     return 1
   fi
   local DEST
@@ -1184,13 +1220,13 @@ nvm_make_alias() {
   local ALIAS
   ALIAS="${1-}"
   if [ -z "${ALIAS}" ]; then
-    nvm_err "an alias name is required"
+    nvm_error "an alias name is required"
     return 1
   fi
   local VERSION
   VERSION="${2-}"
   if [ -z "${VERSION}" ]; then
-    nvm_err "an alias target version is required"
+    nvm_error "an alias target version is required"
     return 2
   fi
   nvm_echo "${VERSION}" | tee "$(nvm_alias_path)/${ALIAS}" >/dev/null
@@ -1253,7 +1289,7 @@ nvm_alias() {
   local ALIAS
   ALIAS="${1-}"
   if [ -z "${ALIAS}" ]; then
-    nvm_err 'An alias is required.'
+    nvm_error 'An alias is required.'
     return 1
   fi
   if ! ALIAS="$(nvm_normalize_lts "${ALIAS}")"; then
@@ -1267,7 +1303,7 @@ nvm_alias() {
   local NVM_ALIAS_PATH
   NVM_ALIAS_PATH="$(nvm_alias_path)/${ALIAS}"
   if [ ! -f "${NVM_ALIAS_PATH}" ]; then
-    nvm_err 'Alias does not exist.'
+    nvm_error 'Alias does not exist.'
     return 2
   fi
 
@@ -1572,7 +1608,7 @@ nvm_ls_remote_index_tab() {
   local LTS
   LTS="${NVM_LTS-}"
   if [ "$#" -lt 3 ]; then
-    nvm_err 'not enough arguments'
+    nvm_error 'not enough arguments'
     return 5
   fi
 
@@ -1594,11 +1630,11 @@ nvm_ls_remote_index_tab() {
     iojs-std) PREFIX="$(nvm_iojs_prefix)-" ;;
     node-std) PREFIX='' ;;
     iojs-*)
-      nvm_err 'unknown type of io.js release'
+      nvm_error 'unknown type of io.js release'
       return 4
     ;;
     *)
-      nvm_err 'unknown type of node.js release'
+      nvm_error 'unknown type of node.js release'
       return 4
     ;;
   esac
@@ -1712,8 +1748,8 @@ nvm_get_checksum_binary() {
   elif nvm_has_non_aliased 'sha1'; then
     nvm_echo 'sha1'
   else
-    nvm_err 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
-    nvm_err 'Unaliased sha1sum or sha1 not found.'
+    nvm_error 'Unaliased sha256sum, shasum, sha256, gsha256sum, openssl, or bssl not found.'
+    nvm_error 'Unaliased sha1sum or sha1 not found.'
     return 1
   fi
 }
@@ -1739,36 +1775,36 @@ nvm_compute_checksum() {
   local FILE
   FILE="${1-}"
   if [ -z "${FILE}" ]; then
-    nvm_err 'Provided file to checksum is empty.'
+    nvm_error 'Provided file to checksum is empty.'
     return 2
   elif ! [ -f "${FILE}" ]; then
-    nvm_err 'Provided file to checksum does not exist.'
+    nvm_error 'Provided file to checksum does not exist.'
     return 1
   fi
 
   if nvm_has_non_aliased "sha256sum"; then
-    nvm_err 'Computing checksum with sha256sum'
+    nvm_debug 'Computing checksum with sha256sum'
     command sha256sum "${FILE}" | command awk '{print $1}'
   elif nvm_has_non_aliased "shasum"; then
-    nvm_err 'Computing checksum with shasum -a 256'
+    nvm_debug 'Computing checksum with shasum -a 256'
     command shasum -a 256 "${FILE}" | command awk '{print $1}'
   elif nvm_has_non_aliased "sha256"; then
-    nvm_err 'Computing checksum with sha256 -q'
+    nvm_debug 'Computing checksum with sha256 -q'
     command sha256 -q "${FILE}" | command awk '{print $1}'
   elif nvm_has_non_aliased "gsha256sum"; then
-    nvm_err 'Computing checksum with gsha256sum'
+    nvm_debug 'Computing checksum with gsha256sum'
     command gsha256sum "${FILE}" | command awk '{print $1}'
   elif nvm_has_non_aliased "openssl"; then
-    nvm_err 'Computing checksum with openssl dgst -sha256'
+    nvm_debug 'Computing checksum with openssl dgst -sha256'
     command openssl dgst -sha256 "${FILE}" | command awk '{print $NF}'
   elif nvm_has_non_aliased "bssl"; then
-    nvm_err 'Computing checksum with bssl sha256sum'
+    nvm_debug 'Computing checksum with bssl sha256sum'
     command bssl sha256sum "${FILE}" | command awk '{print $1}'
   elif nvm_has_non_aliased "sha1sum"; then
-    nvm_err 'Computing checksum with sha1sum'
+    nvm_debug 'Computing checksum with sha1sum'
     command sha1sum "${FILE}" | command awk '{print $1}'
   elif nvm_has_non_aliased "sha1"; then
-    nvm_err 'Computing checksum with sha1 -q'
+    nvm_debug 'Computing checksum with sha1 -q'
     command sha1 -q "${FILE}"
   fi
 }
@@ -1777,10 +1813,10 @@ nvm_compare_checksum() {
   local FILE
   FILE="${1-}"
   if [ -z "${FILE}" ]; then
-    nvm_err 'Provided file to checksum is empty.'
+    nvm_error 'Provided file to checksum is empty.'
     return 4
   elif ! [ -f "${FILE}" ]; then
-    nvm_err 'Provided file to checksum does not exist.'
+    nvm_error 'Provided file to checksum does not exist.'
     return 3
   fi
 
@@ -1790,19 +1826,19 @@ nvm_compare_checksum() {
   local CHECKSUM
   CHECKSUM="${2-}"
   if [ -z "${CHECKSUM}" ]; then
-    nvm_err 'Provided checksum to compare to is empty.'
+    nvm_error 'Provided checksum to compare to is empty.'
     return 2
   fi
 
   if [ -z "${COMPUTED_SUM}" ]; then
-    nvm_err "Computed checksum of '${FILE}' is empty." # missing in raspberry pi binary
-    nvm_err 'WARNING: Continuing *without checksum verification*'
+    nvm_error "Computed checksum of '${FILE}' is empty." # missing in raspberry pi binary
+    nvm_warn 'WARNING: Continuing *without checksum verification*'
     return
   elif [ "${COMPUTED_SUM}" != "${CHECKSUM}" ] && [ "${COMPUTED_SUM}" != "\\${CHECKSUM}" ]; then
-    nvm_err "Checksums do not match: '${COMPUTED_SUM}' found, '${CHECKSUM}' expected."
+    nvm_error "Checksums do not match: '${COMPUTED_SUM}' found, '${CHECKSUM}' expected."
     return 1
   fi
-  nvm_err 'Checksums matched!'
+  nvm_debug 'Checksums matched!'
 }
 
 # args: flavor, type, version, slug, compression
@@ -1811,7 +1847,7 @@ nvm_get_checksum() {
   case "${1-}" in
     node | iojs) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_error 'supported flavors: node, iojs'
       return 2
     ;;
   esac
@@ -1932,7 +1968,7 @@ nvm_validate_implicit_alias() {
       return
     ;;
     *)
-      nvm_err "Only implicit aliases 'stable', 'unstable', '${NVM_IOJS_PREFIX}', and '${NVM_NODE_PREFIX}' are supported."
+      nvm_error "Only implicit aliases 'stable', 'unstable', '${NVM_IOJS_PREFIX}', and '${NVM_NODE_PREFIX}' are supported."
       return 1
     ;;
   esac
@@ -1940,7 +1976,7 @@ nvm_validate_implicit_alias() {
 
 nvm_print_implicit_alias() {
   if [ "_$1" != "_local" ] && [ "_$1" != "_remote" ]; then
-    nvm_err "nvm_print_implicit_alias must be specified with local or remote as the first argument."
+    nvm_error "nvm_print_implicit_alias must be specified with local or remote as the first argument."
     return 1
   fi
 
@@ -2101,13 +2137,13 @@ nvm_get_minor_version() {
   VERSION="$1"
 
   if [ -z "${VERSION}" ]; then
-    nvm_err 'a version is required'
+    nvm_error 'a version is required'
     return 1
   fi
 
   case "${VERSION}" in
     v | .* | *..* | v*[!.0123456789]* | [!v]*[!.0123456789]* | [!v0123456789]* | v[!0123456789]*)
-      nvm_err 'invalid version number'
+      nvm_error 'invalid version number'
       return 2
     ;;
   esac
@@ -2118,7 +2154,7 @@ nvm_get_minor_version() {
   local MINOR
   MINOR="$(nvm_echo "${PREFIXED_VERSION}" | nvm_grep -e '^v' | command cut -c2- | command cut -d . -f 1,2)"
   if [ -z "${MINOR}" ]; then
-    nvm_err 'invalid version number! (please report this)'
+    nvm_error 'invalid version number! (please report this)'
     return 3
   fi
   nvm_echo "${MINOR}"
@@ -2128,7 +2164,7 @@ nvm_ensure_default_set() {
   local VERSION
   VERSION="$1"
   if [ -z "${VERSION}" ]; then
-    nvm_err 'nvm_ensure_default_set: a version is required'
+    nvm_error 'nvm_ensure_default_set: a version is required'
     return 1
   elif nvm_alias default >/dev/null 2>&1; then
     # default already set
@@ -2138,7 +2174,7 @@ nvm_ensure_default_set() {
   OUTPUT="$(nvm alias default "${VERSION}")"
   local EXIT_CODE
   EXIT_CODE="$?"
-  nvm_echo "Creating default alias: ${OUTPUT}"
+  nvm_info "Creating default alias: ${OUTPUT}"
   return $EXIT_CODE
 }
 
@@ -2153,21 +2189,21 @@ nvm_get_mirror() {
     node-std) NVM_MIRROR="${NVM_NODEJS_ORG_MIRROR:-https://nodejs.org/dist}" ;;
     iojs-std) NVM_MIRROR="${NVM_IOJS_ORG_MIRROR:-https://iojs.org/dist}" ;;
     *)
-      nvm_err 'unknown type of node.js or io.js release'
+      nvm_error 'unknown type of node.js or io.js release'
       return 1
     ;;
   esac
 
   case "${NVM_MIRROR}" in
     *\`* | *\\* | *\'* | *\(* | *' '* )
-      nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
+      nvm_error '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
       return 2
     ;;
   esac
 
 
   if ! nvm_echo "${NVM_MIRROR}" | command awk '{ $0 ~ "^https?://[a-zA-Z0-9./_-]+$" }'; then
-      nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
+      nvm_error '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
       return 2
   fi
 
@@ -2177,7 +2213,7 @@ nvm_get_mirror() {
 # args: os, prefixed version, version, tarball, extract directory
 nvm_install_binary_extract() {
   if [ "$#" -ne 5 ]; then
-    nvm_err 'nvm_install_binary_extract needs 5 parameters'
+    nvm_error 'nvm_install_binary_extract needs 5 parameters'
     return 1
   fi
 
@@ -2195,7 +2231,7 @@ nvm_install_binary_extract() {
   local VERSION_PATH
 
   [ -n "${TMPDIR-}" ] && \
-  command mkdir -p "${TMPDIR}" && \
+  nvm_run_command mkdir -p "${TMPDIR}" && \
   VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" || return 1
 
   # For Windows system (GitBash with MSYS, Cygwin)
@@ -2229,7 +2265,7 @@ nvm_install_binary() {
   case "${1-}" in
     node | iojs) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_error 'supported flavors: node, iojs'
       return 4
     ;;
   esac
@@ -2240,7 +2276,7 @@ nvm_install_binary() {
   local PREFIXED_VERSION
   PREFIXED_VERSION="${3-}"
   if [ -z "${PREFIXED_VERSION}" ]; then
-    nvm_err 'A version number is required.'
+    nvm_error 'A version number is required.'
     return 3
   fi
 
@@ -2268,18 +2304,17 @@ nvm_install_binary() {
     NODE_OR_IOJS="io.js"
   fi
   if [ "${NVM_NO_PROGRESS-}" = "1" ]; then
-    # --silent, --show-error, use short option as @samrocketman mentions the compatibility issue.
     PROGRESS_BAR="-sS"
   else
     PROGRESS_BAR="--progress-bar"
   fi
-  nvm_echo "Downloading and installing ${NODE_OR_IOJS-} ${VERSION}..."
+  nvm_info "Downloading and installing ${NODE_OR_IOJS-} ${VERSION}..."
   TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
   if [ -f "${TARBALL}" ]; then
     TMPDIR="$(dirname "${TARBALL}")/files"
   fi
 
-  if nvm_install_binary_extract "${NVM_OS}" "${PREFIXED_VERSION}" "${VERSION}" "${TARBALL}" "${TMPDIR}"; then
+  if nvm_time_operation nvm_install_binary_extract "${NVM_OS}" "${PREFIXED_VERSION}" "${VERSION}" "${TARBALL}" "${TMPDIR}"; then
     if [ -n "${ALIAS-}" ]; then
       nvm alias "${ALIAS}" "${provided_version}"
     fi
@@ -2289,11 +2324,11 @@ nvm_install_binary() {
 
   # Read nosource from arguments
   if [ "${nosource-}" = '1' ]; then
-    nvm_err 'Binary download failed. Download from source aborted.'
+    nvm_error 'Binary download failed. Download from source aborted.'
     return 0
   fi
 
-  nvm_err 'Binary download failed, trying source.'
+  nvm_warn 'Binary download failed, trying source.'
   if [ -n "${TMPDIR-}" ]; then
     command rm -rf "${TMPDIR}"
   fi
@@ -2306,7 +2341,7 @@ nvm_get_download_slug() {
   case "${1-}" in
     node | iojs) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_error 'supported flavors: node, iojs'
       return 1
     ;;
   esac
@@ -2315,7 +2350,7 @@ nvm_get_download_slug() {
   case "${2-}" in
     binary | source) KIND="${2}" ;;
     *)
-      nvm_err 'supported kinds: binary, source'
+      nvm_error 'supported kinds: binary, source'
       return 2
     ;;
   esac
@@ -2376,7 +2411,7 @@ nvm_download_artifact() {
   case "${1-}" in
     node | iojs) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_error 'supported flavors: node, iojs'
       return 1
     ;;
   esac
@@ -2385,7 +2420,7 @@ nvm_download_artifact() {
   case "${2-}" in
     binary | source) KIND="${2}" ;;
     *)
-      nvm_err 'supported kinds: binary, source'
+      nvm_error 'supported kinds: binary, source'
       return 1
     ;;
   esac
@@ -2403,12 +2438,12 @@ nvm_download_artifact() {
   VERSION="${4}"
 
   if [ -z "${VERSION}" ]; then
-    nvm_err 'A version number is required.'
+    nvm_error 'A version number is required.'
     return 3
   fi
 
   if [ "${KIND}" = 'binary' ] && ! nvm_binary_available "${VERSION}"; then
-    nvm_err "No precompiled binary available for ${VERSION}."
+    nvm_error "No precompiled binary available for ${VERSION}."
     return
   fi
 
@@ -2428,7 +2463,7 @@ nvm_download_artifact() {
     tmpdir="$(nvm_cache_dir)/src/${SLUG}"
   fi
   command mkdir -p "${tmpdir}/files" || (
-    nvm_err "creating directory ${tmpdir}/files failed"
+    nvm_error "creating directory ${tmpdir}/files failed"
     return 3
   )
 
@@ -2443,27 +2478,27 @@ nvm_download_artifact() {
   fi
 
   if [ -r "${TARBALL}" ]; then
-    nvm_err "Local cache found: $(nvm_sanitize_path "${TARBALL}")"
+    nvm_error "Local cache found: $(nvm_sanitize_path "${TARBALL}")"
     if nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" >/dev/null 2>&1; then
-      nvm_err "Checksums match! Using existing downloaded archive $(nvm_sanitize_path "${TARBALL}")"
+      nvm_info "Checksums match! Using existing downloaded archive $(nvm_sanitize_path "${TARBALL}")"
       nvm_echo "${TARBALL}"
       return 0
     fi
     nvm_compare_checksum "${TARBALL}" "${CHECKSUM}"
-    nvm_err "Checksum check failed!"
-    nvm_err "Removing the broken local cache..."
+    nvm_error "Checksum check failed!"
+    nvm_error "Removing the broken local cache..."
     command rm -rf "${TARBALL}"
   fi
-  nvm_err "Downloading ${TARBALL_URL}..."
+  nvm_info "Downloading ${TARBALL_URL}..."
   nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || (
     command rm -rf "${TARBALL}" "${tmpdir}"
-    nvm_err "download from ${TARBALL_URL} failed"
+    nvm_error "download from ${TARBALL_URL} failed"
     return 4
   )
 
   if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
     command rm -rf "${TARBALL}" "${tmpdir}"
-    nvm_err "HTTP 404 at URL ${TARBALL_URL}"
+    nvm_error "HTTP 404 at URL ${TARBALL_URL}"
     return 5
   fi
 
@@ -2478,7 +2513,7 @@ nvm_download_artifact() {
 # args: nvm_os, version, tarball, tmpdir
 nvm_extract_tarball() {
   if [ "$#" -ne 4 ]; then
-    nvm_err 'nvm_extract_tarball requires exactly 4 arguments'
+    nvm_error 'nvm_extract_tarball requires exactly 4 arguments'
     return 5
   fi
 
@@ -2524,7 +2559,7 @@ nvm_get_make_jobs() {
     return
   elif [ -n "${1-}" ]; then
     unset NVM_MAKE_JOBS
-    nvm_err "$1 is invalid for number of \`make\` jobs, must be a natural number"
+    nvm_error "$1 is invalid for number of \`make\` jobs, must be a natural number"
   fi
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
@@ -2544,8 +2579,8 @@ nvm_get_make_jobs() {
     ;;
   esac
   if ! nvm_is_natural_num "${NVM_CPU_CORES}"; then
-    nvm_err 'Can not determine how many core(s) are available, running in single-threaded mode.'
-    nvm_err 'Please report an issue on GitHub to help us make nvm run faster on your computer!'
+    nvm_error 'Can not determine how many core(s) are available, running in single-threaded mode.'
+    nvm_error 'Please report an issue on GitHub to help us make nvm run faster on your computer!'
     NVM_MAKE_JOBS=1
   else
     nvm_echo "Detected that you have ${NVM_CPU_CORES} CPU core(s)"
@@ -2565,7 +2600,7 @@ nvm_install_source() {
   case "${1-}" in
     node | iojs) FLAVOR="${1}" ;;
     *)
-      nvm_err 'supported flavors: node, iojs'
+      nvm_error 'supported flavors: node, iojs'
       return 4
     ;;
   esac
@@ -2576,7 +2611,7 @@ nvm_install_source() {
   local PREFIXED_VERSION
   PREFIXED_VERSION="${3-}"
   if [ -z "${PREFIXED_VERSION}" ]; then
-    nvm_err 'A version number is required.'
+    nvm_error 'A version number is required.'
     return 3
   fi
 
@@ -2656,7 +2691,7 @@ nvm_install_source() {
     command rm -f "${VERSION_PATH}" 2>/dev/null && \
     $make -j "${NVM_MAKE_JOBS}" ${MAKE_CXX-} install
   ); then
-    nvm_err "nvm: install ${VERSION} failed!"
+    nvm_error "nvm: install ${VERSION} failed!"
     command rm -rf "${TMPDIR-}"
     return 1
   fi
@@ -2675,10 +2710,10 @@ nvm_install_npm_if_needed() {
   if ! nvm_has "npm"; then
     nvm_echo 'Installing npm...'
     if nvm_version_greater 0.2.0 "${VERSION}"; then
-      nvm_err 'npm requires node v0.2.3 or higher'
+      nvm_error 'npm requires node v0.2.3 or higher'
     elif nvm_version_greater_than_or_equal_to "${VERSION}" 0.2.0; then
       if nvm_version_greater 0.2.3 "${VERSION}"; then
-        nvm_err 'npm requires node v0.2.3 or higher'
+        nvm_error 'npm requires node v0.2.3 or higher'
       else
         nvm_download -L https://npmjs.org/install.sh -o - | clean=yes npm_install=0.2.19 sh
       fi
@@ -2737,7 +2772,7 @@ nvm_die_on_prefix() {
   case "${NVM_DELETE_PREFIX}" in
     0 | 1) ;;
     *)
-      nvm_err 'First argument "delete the prefix" must be zero or one'
+      nvm_error 'First argument "delete the prefix" must be zero or one'
       return 1
     ;;
   esac
@@ -2746,7 +2781,7 @@ nvm_die_on_prefix() {
   local NVM_VERSION_DIR
   NVM_VERSION_DIR="${3-}"
   if [ -z "${NVM_COMMAND}" ] || [ -z "${NVM_VERSION_DIR}" ]; then
-    nvm_err 'Second argument "nvm command", and third argument "nvm version dir", must both be nonempty'
+    nvm_error 'Second argument "nvm command", and third argument "nvm version dir", must both be nonempty'
     return 2
   fi
 
@@ -2755,8 +2790,8 @@ nvm_die_on_prefix() {
   # however, `npm exec` in npm v7.2+ sets $PREFIX; if set, inherit it
   if [ -n "${PREFIX-}" ] && [ "$(nvm_version_path "$(node -v)")" != "${PREFIX}" ]; then
     nvm deactivate >/dev/null 2>&1
-    nvm_err "nvm is not compatible with the \"PREFIX\" environment variable: currently set to \"${PREFIX}\""
-    nvm_err 'Run `unset PREFIX` to unset it.'
+    nvm_error "nvm is not compatible with the \"PREFIX\" environment variable: currently set to \"${PREFIX}\""
+    nvm_error 'Run `unset PREFIX` to unset it.'
     return 3
   fi
 
@@ -2779,8 +2814,8 @@ nvm_die_on_prefix() {
     fi
     if [ -n "${NVM_CONFIG_VALUE-}" ] && ! nvm_tree_contains_path "${NVM_DIR}" "${NVM_CONFIG_VALUE}"; then
       nvm deactivate >/dev/null 2>&1
-      nvm_err "nvm is not compatible with the \"${NVM_NPM_CONFIG_x_PREFIX_ENV}\" environment variable: currently set to \"${NVM_CONFIG_VALUE}\""
-      nvm_err "Run \`unset ${NVM_NPM_CONFIG_x_PREFIX_ENV}\` to unset it."
+      nvm_error "nvm is not compatible with the \"${NVM_NPM_CONFIG_x_PREFIX_ENV}\" environment variable: currently set to \"${NVM_CONFIG_VALUE}\""
+      nvm_error "Run \`unset ${NVM_NPM_CONFIG_x_PREFIX_ENV}\` to unset it."
       return 4
     fi
   fi
@@ -2804,9 +2839,9 @@ nvm_die_on_prefix() {
       npm config --loglevel=warn delete prefix --userconfig="${NVM_NPM_BUILTIN_NPMRC}"
       npm config --loglevel=warn delete globalconfig --userconfig="${NVM_NPM_BUILTIN_NPMRC}"
     else
-      nvm_err "Your builtin npmrc file ($(nvm_sanitize_path "${NVM_NPM_BUILTIN_NPMRC}"))"
-      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
-      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      nvm_error "Your builtin npmrc file ($(nvm_sanitize_path "${NVM_NPM_BUILTIN_NPMRC}"))"
+      nvm_error 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_error "Run \`${NVM_COMMAND}\` to unset it."
       return 10
     fi
   fi
@@ -2818,9 +2853,9 @@ nvm_die_on_prefix() {
       npm config --global --loglevel=warn delete prefix
       npm config --global --loglevel=warn delete globalconfig
     else
-      nvm_err "Your global npmrc file ($(nvm_sanitize_path "${NVM_NPM_GLOBAL_NPMRC}"))"
-      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
-      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      nvm_error "Your global npmrc file ($(nvm_sanitize_path "${NVM_NPM_GLOBAL_NPMRC}"))"
+      nvm_error 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_error "Run \`${NVM_COMMAND}\` to unset it."
       return 10
     fi
   fi
@@ -2832,9 +2867,9 @@ nvm_die_on_prefix() {
       npm config --loglevel=warn delete prefix --userconfig="${NVM_NPM_USER_NPMRC}"
       npm config --loglevel=warn delete globalconfig --userconfig="${NVM_NPM_USER_NPMRC}"
     else
-      nvm_err "Your user’s .npmrc file ($(nvm_sanitize_path "${NVM_NPM_USER_NPMRC}"))"
-      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
-      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      nvm_error "Your user's .npmrc file ($(nvm_sanitize_path "${NVM_NPM_USER_NPMRC}"))"
+      nvm_error 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_error "Run \`${NVM_COMMAND}\` to unset it."
       return 10
     fi
   fi
@@ -2846,9 +2881,9 @@ nvm_die_on_prefix() {
       npm config --loglevel=warn delete prefix
       npm config --loglevel=warn delete globalconfig
     else
-      nvm_err "Your project npmrc file ($(nvm_sanitize_path "${NVM_NPM_PROJECT_NPMRC}"))"
-      nvm_err 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
-      nvm_err "Run \`${NVM_COMMAND}\` to unset it."
+      nvm_error "Your project npmrc file ($(nvm_sanitize_path "${NVM_NPM_PROJECT_NPMRC}"))"
+      nvm_error 'has a `globalconfig` and/or a `prefix` setting, which are incompatible with nvm.'
+      nvm_error "Run \`${NVM_COMMAND}\` to unset it."
       return 10
     fi
   fi
@@ -2939,7 +2974,7 @@ nvm_write_nvmrc() {
   fi
   echo "${VERSION_STRING}" | tee "$PWD"/.nvmrc > /dev/null || {
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-      nvm_err "Warning: Unable to write version number ($VERSION_STRING) to .nvmrc"
+      nvm_error "Warning: Unable to write version number ($VERSION_STRING) to .nvmrc"
     fi
     return 3
   }
@@ -2954,13 +2989,13 @@ nvm_check_file_permissions() {
   for FILE in "$1"/* "$1"/.[!.]* "$1"/..?* ; do
     if [ -d "$FILE" ]; then
       if [ -n "${NVM_DEBUG-}" ]; then
-        nvm_err "${FILE}"
+        nvm_error "${FILE}"
       fi
       if [ ! -L "${FILE}" ] && ! nvm_check_file_permissions "${FILE}"; then
         return 2
       fi
     elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
-      nvm_err "file is not writable or self-owned: $(nvm_sanitize_path "$FILE")"
+      nvm_error "file is not writable or self-owned: $(nvm_sanitize_path "$FILE")"
       return 1
     fi
   done
