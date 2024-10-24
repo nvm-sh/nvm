@@ -2047,6 +2047,11 @@ nvm_get_arch() {
   local EXIT_CODE
   local LONG_BIT
 
+  if [ -n "$NVM_NODEJS_ORG_ARCH" ]; then
+    nvm_echo "${NVM_NODEJS_ORG_ARCH}"
+    return
+  fi
+
   NVM_OS="$(nvm_get_os)"
   # If the OS is SunOS, first try to use pkgsrc to guess
   # the most appropriate arch. If it's not available, use
