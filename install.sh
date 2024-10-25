@@ -40,7 +40,7 @@ nvm_profile_is_bash_or_zsh() {
   local TEST_PROFILE
   TEST_PROFILE="${1-}"
   case "${TEST_PROFILE-}" in
-    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc" | *"/.zprofile")
+    *"/.bashrc" | *"/.bash_profile" | *"/.zshenv" | *"/.zshrc" | *"/.zprofile")
       return
     ;;
     *)
@@ -300,11 +300,13 @@ nvm_detect_profile() {
       DETECTED_PROFILE="$HOME/.zshrc"
     elif [ -f "$HOME/.zprofile" ]; then
       DETECTED_PROFILE="$HOME/.zprofile"
+    elif [ -f "$HOME/.zshenv" ]; then
+      DETECTED_PROFILE="$HOME/.zshenv"
     fi
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then
-    for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zprofile" ".zshrc"
+    for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zprofile" ".zshrc" ".zshenv"
     do
       if DETECTED_PROFILE="$(nvm_try_profile "${HOME}/${EACH_PROFILE}")"; then
         break
