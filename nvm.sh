@@ -4530,7 +4530,11 @@ nvm_supports_xz() {
   if [ "_${NVM_OS}" = '_darwin' ]; then
     local MACOS_VERSION
     MACOS_VERSION="$(sw_vers -productVersion)"
-    if nvm_version_greater "10.9.0" "${MACOS_VERSION}"; then
+    if tar --version | command grep -q GNU && ! command which xz >/dev/null 2>&1; then
+      # On macOS with GNU tar in use, and no xv on the path, xv-compressed
+      # tarballs aren't supported
+      return 1
+    elif nvm_version_greater "10.9.0" "${MACOS_VERSION}"; then
       # macOS 10.8 and earlier doesn't support extracting xz-compressed tarballs with tar
       return 1
     fi
