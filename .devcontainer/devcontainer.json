@@ -1,0 +1,5 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+  }
+}[![Automatic Rebase](https://github.com/nvm-sh/nvm/actions/workflows/rebase.yml/badge.svg)](https://github.com/nvm-sh/nvm/actions/workflows/rebase.yml)
