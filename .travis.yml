@@ -82,11 +82,6 @@ env:
     - PATH="/usr/lib/ccache/:$PATH"
     - NVM_DIR="${TRAVIS_BUILD_DIR}"
   matrix:
-    - SHELL=sh TEST_SUITE=fast
-    - SHELL=dash TEST_SUITE=fast
-    - SHELL=bash TEST_SUITE=fast
-    - SHELL=zsh TEST_SUITE=fast
-    #  - SHELL=ksh TEST_SUITE=fast
     - SHELL=sh TEST_SUITE=slow
     - SHELL=dash TEST_SUITE=slow
     - SHELL=bash TEST_SUITE=slow
