@@ -8,6 +8,8 @@ cleanup() {
     export NVM_COLORS=TEMP_NVM_COLORS
   fi
   unset TEMP_NVM_COLORS
+  rm -rf "${NVM_DIR}/alias/lts"
+  mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
 }
 
 \. ../../../nvm.sh
@@ -16,11 +18,23 @@ if [ -n "${NVM_COLORS-}" ]; then
   unset NVM_COLORS
 fi
 
+MOCKS_DIR="../Unit tests/mocks"
+
+LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
+
+STAR="$(cat "${MOCKS_DIR}/lts-star.txt")"
+
+mv "${NVM_DIR}/alias/lts" "${NVM_DIR}/alias/lts-backup" ||:
+mkdir -p "${NVM_DIR}/alias/lts"
+
+echo "${STAR}" > "${NVM_DIR}/alias/lts/\*"
+printf '%s\n' "$(cat "${LTS_NAMES_PATH}" | tail -n +1)" | while IFS= read -r LTS; do
+  cp "${NVM_DIR}/alias/lts-backup/${LTS}" "${NVM_DIR}/alias/lts/"
+done
+
 nvm deactivate 2>/dev/null || die 'unable to deactivate'
 
 \. ../../common.sh
-
-MOCKS_DIR="${PWD}/mocks"
 
 nvm_download() {
   if [ "$*" = "-L -s $(nvm_get_mirror node std)/index.tab -o -" ]; then
@@ -40,8 +54,6 @@ OUTPUT="$(nvm ls-remote "lts/*" | sed 's/[ \t]*$//')"
 EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}" | sed 's/[ \t]*$//' )"
 [ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
-MOCKS_DIR="${PWD}/mocks"
-LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
 LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
 
 INDEX=1
