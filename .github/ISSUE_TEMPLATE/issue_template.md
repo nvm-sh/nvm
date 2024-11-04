@@ -1,5 +1,5 @@
 ---
-name: ISSUE_TEMPLATE
+name: File an issue…
 about: Create a report to help us improve
 title: ''
 labels: ''
