@@ -23,7 +23,7 @@ cleanup () {
   unset -f setup cleanup die
   unset ZDOTDIR
   rm -f ".bashrc" ".bash_profile" ".zprofile" ".zshrc" ".profile" "test_profile" > "/dev/null" 2>&1
-  rm -rf zdot>&1
+  rm -rf zdotdir 2>&1
 }
 
 die () { echo "$@" '$NVM_DETECT_PROFILE:' "$NVM_DETECT_PROFILE"; cleanup; exit 1; }
@@ -94,21 +94,21 @@ fi
 #
 
 # It should favor .profile if file exists
-NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.profile" ]; then
   die "nvm_detect_profile should have selected .profile"
 fi
 
 # Otherwise, it should favor .bashrc if file exists
 rm ".profile"
-NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
   die "nvm_detect_profile should have selected .bashrc"
 fi
 
 # Otherwise, it should favor .bash_profile if file exists
 rm ".bashrc"
-NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bash_profile" ]; then
   die "nvm_detect_profile should have selected .bash_profile"
 fi
