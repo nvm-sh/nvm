@@ -35,31 +35,31 @@ setup
 #
 
 # setting $PROFILE to /dev/null should return no detected profile
-NVM_DETECT_PROFILE="$(PROFILE='/dev/null'; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(PROFILE='/dev/null' nvm_detect_profile)"
 if [ -n "$NVM_DETECT_PROFILE" ]; then
   die "nvm_detect_profile still detected a profile even though PROFILE=/dev/null"
 fi
 
 # .bashrc should be detected for bash
-NVM_DETECT_PROFILE="$(SHELL="/bin/bash"; unset PROFILE; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/bin/bash" PROFILE= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
   die "nvm_detect_profile didn't pick \$HOME/.bashrc for bash"
 fi
 
 # $PROFILE should override .bashrc profile detection
-NVM_DETECT_PROFILE="$(SHELL="/bin/bash"; PROFILE="test_profile"; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/bin/bash" PROFILE="test_profile" nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
   die "nvm_detect_profile ignored \$PROFILE"
 fi
 
 # zdotdir/.zshrc should be detected for zsh
-NVM_DETECT_PROFILE="$(SHELL="/bin/zsh"; unset PROFILE; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/bin/zsh" PROFILE= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$ZDOTDIR/.zshrc" ]; then
   die "nvm_detect_profile didn't pick \$ZDOTDIR/.zshrc for zsh"
 fi
 
 # .zshrc should be detected for zsh
-NVM_DETECT_PROFILE="$(SHELL="/bin/zsh"; unset PROFILE; unset ZDOTDIR; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL="/bin/zsh" PROFILE= ZDOTDIR= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.zshrc" ]; then
   die "nvm_detect_profile didn't pick \$HOME/.zshrc for zsh"
 fi
@@ -75,7 +75,7 @@ fi
 #
 
 # $PROFILE is a valid file
-NVM_DETECT_PROFILE="$(PROFILE="test_profile"; unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(PROFILE="test_profile" SHELL= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
   die "nvm_detect_profile didn't pick \$PROFILE when it was a valid file"
 fi
@@ -94,56 +94,56 @@ fi
 #
 
 # It should favor .profile if file exists
-NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= ZDOTDIR= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.profile" ]; then
   die "nvm_detect_profile should have selected .profile"
 fi
 
 # Otherwise, it should favor .bashrc if file exists
 rm ".profile"
-NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= ZDOTDIR= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
   die "nvm_detect_profile should have selected .bashrc"
 fi
 
 # Otherwise, it should favor .bash_profile if file exists
 rm ".bashrc"
-NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= ZDOTDIR= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.bash_profile" ]; then
   die "nvm_detect_profile should have selected .bash_profile"
 fi
 
 # Otherwise, it should favor zdotdir/.zprofile if file exists
 rm ".bash_profile"
-NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$ZDOTDIR/.zprofile" ]; then
   die "nvm_detect_profile should have selected zdotdir/.zprofile"
 fi
 
 # Otherwise, it should favor .zprofile if file exists
 rm "zdotdir/.zprofile"
-NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= ZDOTDIR= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.zprofile" ]; then
   die "nvm_detect_profile should have selected .zprofile"
 fi
 
 # Otherwise, it should favor zdotdir/.zshrc if file exists
 rm ".zprofile"
-NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$ZDOTDIR/.zshrc" ]; then
   die "nvm_detect_profile should have selected zdotdir/.zshrc"
 fi
 
 # Otherwise, it should favor .zshrc if file exists
 rm "zdotdir/.zshrc"
-NVM_DETECT_PROFILE="$(unset SHELL; unset ZDOTDIR; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= ZDOTDIR= nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.zshrc" ]; then
   die "nvm_detect_profile should have selected .zshrc"
 fi
 
 # It should be empty if none is found
 rm ".zshrc"
-NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
+NVM_DETECT_PROFILE="$(SHELL= nvm_detect_profile)"
 if [ ! -z "$NVM_DETECT_PROFILE" ]; then
   die "nvm_detect_profile should have returned an empty value"
 fi
