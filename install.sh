@@ -296,17 +296,17 @@ nvm_detect_profile() {
       DETECTED_PROFILE="$HOME/.bash_profile"
     fi
   elif [ "${SHELL#*zsh}" != "$SHELL" ]; then
-    if [ -f "$HOME/.zshrc" ]; then
-      DETECTED_PROFILE="$HOME/.zshrc"
-    elif [ -f "$HOME/.zprofile" ]; then
-      DETECTED_PROFILE="$HOME/.zprofile"
+    if [ -f "${ZDOTDIR:-${HOME}}/.zshrc" ]; then
+      DETECTED_PROFILE="${ZDOTDIR:-${HOME}}/.zshrc"
+    elif [ -f "${ZDOTDIR:-${HOME}}/.zprofile" ]; then
+      DETECTED_PROFILE="${ZDOTDIR:-${HOME}}/.zprofile"
     fi
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then
     for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zprofile" ".zshrc"
     do
-      if DETECTED_PROFILE="$(nvm_try_profile "${HOME}/${EACH_PROFILE}")"; then
+      if DETECTED_PROFILE="$(nvm_try_profile "${ZDOTDIR:-${HOME}}/${EACH_PROFILE}")"; then
         break
       fi
     done

@@ -208,5 +208,27 @@ v18.17.0 Hydrogen
 v18.17.1 Hydrogen
 v18.18.0 Hydrogen
 v18.18.1 Hydrogen
-v18.18.2 Hydrogen *
-v20.9.0 Iron *
+v18.18.2 Hydrogen
+v18.19.0 Hydrogen
+v18.19.1 Hydrogen
+v18.20.0 Hydrogen
+v18.20.1 Hydrogen
+v18.20.2 Hydrogen
+v18.20.3 Hydrogen
+v18.20.4 Hydrogen *
+v20.9.0 Iron
+v20.10.0 Iron
+v20.11.0 Iron
+v20.11.1 Iron
+v20.12.0 Iron
+v20.12.1 Iron
+v20.12.2 Iron
+v20.13.0 Iron
+v20.13.1 Iron
+v20.14.0 Iron
+v20.15.0 Iron
+v20.15.1 Iron
+v20.16.0 Iron
+v20.17.0 Iron
+v20.18.0 Iron *
+v22.11.0 Jod *

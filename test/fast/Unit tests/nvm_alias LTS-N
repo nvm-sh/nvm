@@ -5,13 +5,25 @@ die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
   unset -f nvm_download
+  rm -rf "${NVM_DIR}/alias/lts"
+  mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
 }
 
 \. ../../../nvm.sh
 
-set -ex
-
 MOCKS_DIR="${PWD}/mocks"
+
+LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
+LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
+
+mv "${NVM_DIR}/alias/lts" "${NVM_DIR}/alias/lts-backup" ||:
+mkdir -p "${NVM_DIR}/alias/lts"
+
+for LTS in $LTS_LIST; do
+  cp "${NVM_DIR}/alias/lts-backup/${LTS}" "${NVM_DIR}/alias/lts/"
+done
+
+set -ex
 
 # sample output at the time the test was written
 TAB_PATH="${MOCKS_DIR}/nodejs.org-dist-index.tab"
@@ -20,8 +32,6 @@ nvm_download() {
 }
 
 nvm_ls_remote >/dev/null || die "nvm_ls_remote_failed?!"
-
-LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
 
 N=0
 while IFS= read -r LTS; do
