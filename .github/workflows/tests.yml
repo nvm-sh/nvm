@@ -31,6 +31,7 @@ jobs:
         suite:
           - install_script
           - sourcing
+          - slow
         shell:
           - sh
           - bash
@@ -52,7 +53,7 @@ jobs:
             packages.microsoft.com:443
       - uses: actions/checkout@v4
       - run: sudo apt-get update; sudo apt-get install ${{ matrix.shell }}
-        if: matrix.shell == 'zsh' || matrix.shell == 'ksh'
+        if: matrix.shell == 'zsh' || matrix.shell == 'ksh' || matrix.shell == 'bash'
         # zsh (https://github.com/actions/runner-images/issues/264) and ksh are not in the ubuntu image
         shell: bash
       - run: sudo ${{ matrix.shell }} --version 2> /dev/null || dpkg -s ${{ matrix.shell }} 2> /dev/null || which ${{ matrix.shell }}
