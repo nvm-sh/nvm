@@ -87,11 +87,6 @@ env:
     - SHELL=bash TEST_SUITE=fast
     - SHELL=zsh TEST_SUITE=fast
     #  - SHELL=ksh TEST_SUITE=fast
-    - SHELL=sh TEST_SUITE=slow
-    - SHELL=dash TEST_SUITE=slow
-    - SHELL=bash TEST_SUITE=slow
-    - SHELL=zsh TEST_SUITE=slow
-    #  - SHELL=ksh TEST_SUITE=slow
     - SHELL=sh TEST_SUITE=installation_iojs
     - SHELL=sh TEST_SUITE=installation_iojs WITHOUT_CURL=1
     - SHELL=dash TEST_SUITE=installation_iojs
