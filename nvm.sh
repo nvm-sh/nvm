@@ -1667,10 +1667,11 @@ EOF
     LTS="${LTS#lts/}"
   fi
 
-  VERSIONS="$({ command awk -v lts="${LTS-}" '{
+  VERSIONS="$({ command awk -v lts="${LTS-}" -v pattern="${PATTERN:-.*}" '{
         if (!$1) { next }
         if (lts && $10 ~ /^\-?$/) { next }
         if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next }
+        if ($1 !~ pattern) { next }
         if ($10 !~ /^\-?$/) {
           if ($10 && $10 != prev) {
             print $1, $10, "*"
@@ -1682,7 +1683,6 @@ EOF
         }
         prev=$10;
       }' \
-    | nvm_grep -w "${PATTERN:-.*}" \
     | $SORT_COMMAND; } << EOF
 $VERSION_LIST
 EOF
