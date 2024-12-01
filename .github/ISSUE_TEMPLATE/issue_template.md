@@ -1,3 +1,11 @@
+---
+name: File an issue…
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
+---
 
 <!-- Thank you for being interested in nvm! Please help us by filling out the following form if you‘re having trouble. If you have a feature request, or some other question, please feel free to clear out the form. Thanks! -->
 

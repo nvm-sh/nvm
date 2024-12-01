@@ -679,7 +679,14 @@
        v18.17.1  [0;37m (LTS: Hydrogen)[0m
        v18.18.0  [0;37m (LTS: Hydrogen)[0m
        v18.18.1  [0;37m (LTS: Hydrogen)[0m
-       v18.18.2  [1;32m (Latest LTS: Hydrogen)[0m
+       v18.18.2  [0;37m (LTS: Hydrogen)[0m
+       v18.19.0  [0;37m (LTS: Hydrogen)[0m
+       v18.19.1  [0;37m (LTS: Hydrogen)[0m
+       v18.20.0  [0;37m (LTS: Hydrogen)[0m
+       v18.20.1  [0;37m (LTS: Hydrogen)[0m
+       v18.20.2  [0;37m (LTS: Hydrogen)[0m
+       v18.20.3  [0;37m (LTS: Hydrogen)[0m
+       v18.20.4  [1;32m (Latest LTS: Hydrogen)[0m
         v19.0.0
         v19.0.1
         v19.1.0
@@ -706,6 +713,47 @@
         v20.7.0
         v20.8.0
         v20.8.1
-        v20.9.0  [1;32m (Latest LTS: Iron)[0m
+        v20.9.0  [0;37m (LTS: Iron)[0m
+       v20.10.0  [0;37m (LTS: Iron)[0m
+       v20.11.0  [0;37m (LTS: Iron)[0m
+       v20.11.1  [0;37m (LTS: Iron)[0m
+       v20.12.0  [0;37m (LTS: Iron)[0m
+       v20.12.1  [0;37m (LTS: Iron)[0m
+       v20.12.2  [0;37m (LTS: Iron)[0m
+       v20.13.0  [0;37m (LTS: Iron)[0m
+       v20.13.1  [0;37m (LTS: Iron)[0m
+       v20.14.0  [0;37m (LTS: Iron)[0m
+       v20.15.0  [0;37m (LTS: Iron)[0m
+       v20.15.1  [0;37m (LTS: Iron)[0m
+       v20.16.0  [0;37m (LTS: Iron)[0m
+       v20.17.0  [0;37m (LTS: Iron)[0m
+       v20.18.0  [1;32m (Latest LTS: Iron)[0m
         v21.0.0
         v21.1.0
+        v21.2.0
+        v21.3.0
+        v21.4.0
+        v21.5.0
+        v21.6.0
+        v21.6.1
+        v21.6.2
+        v21.7.0
+        v21.7.1
+        v21.7.2
+        v21.7.3
+        v22.0.0
+        v22.1.0
+        v22.2.0
+        v22.3.0
+        v22.4.0
+        v22.4.1
+        v22.5.0
+        v22.5.1
+        v22.6.0
+        v22.7.0
+        v22.8.0
+        v22.9.0
+       v22.10.0
+       v22.11.0  [1;32m (Latest LTS: Jod)[0m
+        v23.0.0
+        v23.1.0

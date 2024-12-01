@@ -1,6 +1,7 @@
-lts/*|lts/iron
-lts/iron|v20.9.0
-lts/hydrogen|v18.18.2
+lts/*|lts/jod
+lts/jod|v22.11.0
+lts/iron|v20.18.0
+lts/hydrogen|v18.20.4
 lts/gallium|v16.20.2
 lts/fermium|v14.21.3
 lts/erbium|v12.22.12
