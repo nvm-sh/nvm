@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Define the base directory for the "OS"
+OS_NAME="UniqueOS"
+BASE_DIR="$HOME/$OS_NAME"
+
+# Create the base directory
+mkdir -p "$BASE_DIR"
+
+# Create essential directories
+mkdir -p "$BASE_DIR/bin"
+mkdir -p "$BASE_DIR/etc"
+mkdir -p "$BASE_DIR/lib"
+mkdir -p "$BASE_DIR/var"
+mkdir -p "$BASE_DIR/home/user"
+
+# Create some placeholder files
+echo "#!/bin/bash" > "$BASE_DIR/bin/hello"
+echo "echo 'Welcome to $OS_NAME!'" >> "$BASE_DIR/bin/hello"
+chmod +x "$BASE_DIR/bin/hello"
+
+echo "UniqueOS Configuration" > "$BASE_DIR/etc/os.conf"
+echo "Version: 1.0" >> "$BASE_DIR/etc/os.conf"
+echo "Maintainer: Your Name" >> "$BASE_DIR/etc/os.conf"
+
+# Create a README file
+cat <<EOL > "$BASE_DIR/README.txt"
+Welcome to $OS_NAME!
+
+This is a minimal simulation of an operating system structure.
+
+Directories created:
+- bin: Contains executable files
+- etc: Configuration files
+- lib: Libraries
+- var: Variable data
+- home/user: User home directory
+
+To run the sample program, use:
+  $BASE_DIR/bin/hello
+
+Enjoy your unique OS experience!
+EOL
+
+# Print the structure
+echo "Unique OS structure created at: $BASE_DIR"
+tree "$BASE_DIR"
