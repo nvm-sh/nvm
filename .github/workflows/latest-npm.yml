@@ -37,6 +37,11 @@ jobs:
       matrix:
         node-version: ${{ fromJson(needs.matrix.outputs.latest) }}
         include:
+          - node-version: "21"
+          - node-version: "20.5"
+          - node-version: "20.4"
+          - node-version: "14.17"
+          - node-version: "14.16"
           - node-version: "9.2"
           - node-version: "9.1"
           - node-version: "9.0"
