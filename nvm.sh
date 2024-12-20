@@ -444,8 +444,7 @@ fi
 if [ -z "${NVM_DIR-}" ]; then
   # shellcheck disable=SC2128
   if [ -n "${BASH_SOURCE-}" ]; then
-    # shellcheck disable=SC2169,SC3054
-    NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+    NVM_SCRIPT_SOURCE="${BASH_SOURCE}"
   fi
   # shellcheck disable=SC2086
   NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" >/dev/null && \pwd)"
