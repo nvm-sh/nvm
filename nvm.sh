@@ -1955,6 +1955,10 @@ BEGIN {
     print output[n]
   }
 
+  if (rows > --m) {
+    printf("[INFO] showing %d (of %d) versions.\n", m, rows) > "/dev/stderr"
+  }
+
   exit
 }'
 }
