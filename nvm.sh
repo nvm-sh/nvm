@@ -136,15 +136,17 @@ nvm_download() {
     eval "curl -q --fail ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} ${NVM_DOWNLOAD_ARGS}"
   elif nvm_has "wget"; then
     # Emulate curl with wget
-    ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
-                            -e 's/--compressed //' \
-                            -e 's/--fail //' \
-                            -e 's/-L //' \
-                            -e 's/-I /--server-response /' \
-                            -e 's/-s /-q /' \
-                            -e 's/-sS /-nv /' \
-                            -e 's/-o /-O /' \
-                            -e 's/-C - /-c /')
+    ARGS=$(nvm_echo "$@" | command sed "
+      s/--progress-bar /--progress=bar /
+      s/--compressed //
+      s/--fail //
+      s/-L //
+      s/-I /--server-response /
+      s/-s /-q /
+      s/-sS /-nv /
+      s/-o /-O /
+      s/-C - /-c /
+    ")
 
     if [ -n "${NVM_AUTH_HEADER:-}" ]; then
       ARGS="${ARGS} --header \"${NVM_AUTH_HEADER}\""
@@ -2732,7 +2734,7 @@ nvm_npm_global_modules() {
   local NPMLIST
   local VERSION
   VERSION="$1"
-  NPMLIST=$(nvm use "${VERSION}" >/dev/null && npm list -g --depth=0 2>/dev/null | command sed 1,1d | nvm_grep -v 'UNMET PEER DEPENDENCY')
+  NPMLIST=$(nvm use "${VERSION}" >/dev/null && npm list -g --depth=0 2>/dev/null | command sed -e '1d' -e '/UNMET PEER DEPENDENCY/d')
 
   local INSTALLS
   INSTALLS=$(nvm_echo "${NPMLIST}" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
