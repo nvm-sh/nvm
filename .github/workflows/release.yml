@@ -19,6 +19,8 @@ jobs:
             raw.githubusercontent.com:443
             registry.npmjs.org:443
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
       - uses: actions/setup-node@v4
         with:
           node-version: "14"
