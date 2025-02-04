@@ -83,4 +83,11 @@ EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
 OUTPUT="$(NVM_LTS=argon nvm_ls_remote)"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "\`NVM_LTS=argon nvm_ls_remote\` did not output >$EXPECTED_OUTPUT<; got >$OUTPUT<"
 
+OUTPUT="$(nvm_ls_remote Argon 2>&1)"
+EXIT_CODE=$?
+[ $EXIT_CODE -eq 3 ] || die "nvm_ls_remote Argon did not exit 3, got '${EXIT_CODE}'"
+
+EXPECTED_OUTPUT='N/A'
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm_ls_remote Argon did not output expected error message; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
 cleanup

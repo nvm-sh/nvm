@@ -1688,10 +1688,15 @@ EOF
     LTS="${LTS#lts/}"
   fi
 
-  VERSIONS="$({ command awk -v lts="${LTS-}" '{
-        if (!$1) { next }
-        if (lts && $10 ~ /^\-?$/) { next }
-        if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next }
+  VERSIONS="$({ command awk -v lts="${LTS-}" -v pattern="${PATTERN:-.*}" '
+      BEGIN {
+        if (pattern == "") pattern = ".*"
+      }
+      {
+        if (!$1) { next } # skip empty lines
+        if (lts && $10 ~ /^\-?$/) { next } # skip if LTS wanted, and row is not LTS
+        if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next } # skip if LTS filter does not match
+        if ($1 !~ pattern) { next } # only keep rows matching the pattern
         if ($10 !~ /^\-?$/) {
           if ($10 && $10 != prev) {
             print $1, $10, "*"
@@ -1703,7 +1708,6 @@ EOF
         }
         prev=$10;
       }' \
-    | nvm_grep -w "${PATTERN:-.*}" \
     | $SORT_COMMAND; } << EOF
 $VERSION_LIST
 EOF
