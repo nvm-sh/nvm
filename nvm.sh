@@ -1415,11 +1415,11 @@ nvm_add_iojs_prefix() {
 nvm_strip_iojs_prefix() {
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
-  if [ "${1-}" = "${NVM_IOJS_PREFIX}" ]; then
-    nvm_echo
-  else
-    nvm_echo "${1#"${NVM_IOJS_PREFIX}"-}"
-  fi
+
+  case "${1-}" in
+    "${NVM_IOJS_PREFIX}") nvm_echo ;;
+    *) nvm_echo "${1#"${NVM_IOJS_PREFIX}"-}" ;;
+  esac
 }
 
 nvm_ls() {
@@ -1551,12 +1551,15 @@ nvm_ls() {
   fi
 
   if [ "${NVM_ADD_SYSTEM-}" = true ]; then
-    if [ -z "${PATTERN}" ] || [ "${PATTERN}" = 'v' ]; then
-      VERSIONS="${VERSIONS}
+    case "${PATTERN}" in
+      '' | v)
+        VERSIONS="${VERSIONS}
 system"
-    elif [ "${PATTERN}" = 'system' ]; then
-      VERSIONS="system"
-    fi
+      ;;
+      system)
+        VERSIONS="system"
+      ;;
+    esac
   fi
 
   if [ -z "${VERSIONS}" ]; then
@@ -1690,7 +1693,7 @@ EOF
     LTS="${LTS#lts/}"
   fi
 
-  VERSIONS="$({ command awk -v lts="${LTS-}" '{
+  VERSIONS="$( { command awk -v lts="${LTS-}" '{
         if (!$1) { next }
         if (lts && $10 ~ /^\-?$/) { next }
         if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next }
