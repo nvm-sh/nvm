@@ -1,0 +1,28 @@
+imię: NodeJS z Gulpem
+
+nie:
+ naciśnij:
+ oddziały: [ „mistrz" ]
+ pull_request:
+ oddziały: [ „mistrz" ]
+
+praca:
+ budować:
+ biegnie: ubuntu-najnowsze
+
+ strategia:
+ macierz:
+ wersja węzła: [18.x, 20.x, 22.x]
+
+ kroki:
+    - używa: akcje/kasa@v4
+
+    - imię: Użyj Node.js ${{ matrix.node-version }}
+ używa: akcje/węzeł konfiguracji@v4
+ z:
+ wersja węzła: ${{ matrix.node-version }}
+
+    - imię: Budować
+ biegać: |
+ instaluj npm
+ łyk
