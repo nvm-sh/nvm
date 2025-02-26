@@ -317,7 +317,7 @@ For manual upgrade with `git` (requires git v1.7.10+):
 To download, compile, and install the latest release of node, do this:
 
 ```sh
-nvm install node # "node" is an alias for the latest version
+nvm install latest
 ```
 
 To install a specific version of node:
