@@ -890,7 +890,7 @@ my_alias        default        v10.22.0       v12.18.3      v14.8.0
 
 ## Compatibility Issues
 
-`nvm` will encounter some issues if you have some non-default settings set. (see [#606](https://github.com/creationix/nvm/issues/606))
+`nvm` will encounter some issues if you have some non-default settings set. (see [#606](https://github.com/nvm-sh/nvm/issues/606))
 The following are known to cause issues:
 
 Inside `~/.npmrc`:
