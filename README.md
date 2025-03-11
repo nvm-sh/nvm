@@ -19,6 +19,7 @@
   - [Install & Update Script](#install--update-script)
     - [Additional Notes](#additional-notes)
     - [Installing in Docker](#installing-in-docker)
+      - [Installing in Docker for CICD-Jobs](#installing-in-docker-for-cicd-jobs)
     - [Troubleshooting on Linux](#troubleshooting-on-linux)
     - [Troubleshooting on macOS](#troubleshooting-on-macos)
     - [Ansible](#ansible)
@@ -152,6 +153,62 @@ RUN echo '. "${BASH_ENV}"' >> ~/.bashrc
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | PROFILE="${BASH_ENV}" bash
 RUN echo node > .nvmrc
 RUN nvm install
+```
+
+##### Installing in Docker for CICD-Jobs
+
+More robust, works in CI/CD-Jobs. Can be run in interactive and non-interactive containers.
+See https://github.com/nvm-sh/nvm/issues/3531.
+
+```Dockerfile
+FROM ubuntu:latest
+ARG NODE_VERSION=20
+
+# install curl
+RUN apt update && apt install curl -y
+
+# install nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+# set env
+ENV NVM_DIR=/root/.nvm
+
+# install node
+RUN bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION"
+
+# set ENTRYPOINT for reloading nvm-environment
+ENTRYPOINT ["bash", "-c", "source $NVM_DIR/nvm.sh && exec \"$@\"", "--"]
+
+# set cmd to bash
+CMD ["/bin/bash"]
+
+```
+
+This example defaults to installation of nodejs version 20.x.y. Optionally you can easily override the version with docker build args like:
+```
+docker build -t nvmimage --build-arg NODE_VERSION=19 .
+```
+
+After creation of the image you can start container interactively and run commands, for example:
+```
+docker run --rm -it nvmimage
+
+root@0a6b5a237c14:/# nvm -v
+0.40.1
+
+root@0a6b5a237c14:/# node -v
+v19.9.0
+
+root@0a6b5a237c14:/# npm -v
+9.6.3
+```
+
+Noninteractive example:
+```
+user@host:/tmp/test $ docker run --rm -it nvmimage node -v
+v19.9.0
+user@host:/tmp/test $ docker run --rm -it nvmimage npm -v
+9.6.3
 ```
 
 #### Troubleshooting on Linux
