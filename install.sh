@@ -151,7 +151,7 @@ install_nvm_from_git() {
     command printf '\r=> '
     fetch_error="Failed to update nvm with $NVM_VERSION, run 'git fetch' in $INSTALL_DIR yourself."
   else
-    fetch_error="Failed to fetch $remote with $NVM_VERSION. Please report this!"
+    fetch_error="Failed to fetch ${remote} with ${NVM_VERSION}. Please report this!"
     nvm_echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf '\r=> '
     mkdir -p "${INSTALL_DIR}"
