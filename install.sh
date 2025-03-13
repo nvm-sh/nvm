@@ -141,9 +141,7 @@ install_nvm_from_git() {
 
   local remote
   remote="$(git config --global clone.defaultRemoteName || true)"
-  if [ -z "$remote" ]; then
-      remote=origin
-  fi
+  remote="${remote:-origin}"
   local fetch_error
   if [ -d "$INSTALL_DIR/.git" ]; then
     # Updating repo
