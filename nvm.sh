@@ -136,15 +136,17 @@ nvm_download() {
     eval "curl -q --fail ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} ${NVM_DOWNLOAD_ARGS}"
   elif nvm_has "wget"; then
     # Emulate curl with wget
-    ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
-                            -e 's/--compressed //' \
-                            -e 's/--fail //' \
-                            -e 's/-L //' \
-                            -e 's/-I /--server-response /' \
-                            -e 's/-s /-q /' \
-                            -e 's/-sS /-nv /' \
-                            -e 's/-o /-O /' \
-                            -e 's/-C - /-c /')
+    ARGS=$(nvm_echo "$@" | command sed "
+      s/--progress-bar /--progress=bar /
+      s/--compressed //
+      s/--fail //
+      s/-L //
+      s/-I /--server-response /
+      s/-s /-q /
+      s/-sS /-nv /
+      s/-o /-O /
+      s/-C - /-c /
+    ")
 
     if [ -n "${NVM_AUTH_HEADER:-}" ]; then
       ARGS="${ARGS} --header \"${NVM_AUTH_HEADER}\""
@@ -354,6 +356,21 @@ nvm_install_latest_npm() {
     if [ $NVM_IS_19_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 20.5.0; then
       NVM_IS_20_5_OR_ABOVE=1
     fi
+    local NVM_IS_20_17_or_ABOVE
+    NVM_IS_20_17_or_ABOVE=0
+    if [ $NVM_IS_20_5_OR_ABOVE -eq 1 ] && nvm_version_greater 20.17.0 "${NODE_VERSION}"; then
+      NVM_IS_20_17_or_ABOVE=1
+    fi
+    local NVM_IS_21_OR_ABOVE
+    NVM_IS_21_OR_ABOVE=0
+    if [ $NVM_IS_20_17_or_ABOVE -eq 1 ] && nvm_version_greater 21.0.0 "${NODE_VERSION}"; then
+      NVM_IS_21_OR_ABOVE=1
+    fi
+    local NVM_IS_22_9_OR_ABOVE
+    NVM_IS_22_9_OR_ABOVE=0
+    if [ $NVM_IS_21_OR_ABOVE -eq 1 ] && nvm_version_greater 22.9.0 "${NODE_VERSION}"; then
+      NVM_IS_22_9_OR_ABOVE=1
+    fi
 
     if [ $NVM_IS_4_4_OR_BELOW -eq 1 ] || {
       [ $NVM_IS_5_OR_ABOVE -eq 1 ] && nvm_version_greater 5.10.0 "${NODE_VERSION}"; \
@@ -399,8 +416,15 @@ nvm_install_latest_npm() {
       [ $NVM_IS_18_17_OR_ABOVE -eq 0 ] \
       || { [ $NVM_IS_19_OR_ABOVE -eq 1 ] && [ $NVM_IS_20_5_OR_ABOVE -eq 0 ]; } \
     ; then
+      # TODO: 10.8.3 can run on 16.20.2?? https://github.com/nodejs/Release/issues/884#issuecomment-2558077691
       nvm_echo '* `npm` `v9.x` is the last version that works on `node` `< v18.17`, `v19`, or `v20.0` - `v20.4`'
       $NVM_NPM_CMD install -g npm@9
+    elif \
+      [ $NVM_IS_20_17_or_ABOVE -eq 0 ] \
+      || { [ $NVM_IS_21_OR_ABOVE -eq 1 ] && [ $NVM_IS_22_9_OR_ABOVE -eq 0 ]; } \
+    ; then
+      nvm_echo '* `npm` `v10.x` is the last version that works on `node` `< v20.17`, `v21`, or `v22.0` - `v22.8`'
+      $NVM_NPM_CMD install -g npm@10
     else
       nvm_echo '* Installing latest `npm`; if this does not work on your node version, please report a bug!'
       $NVM_NPM_CMD install -g npm
@@ -422,8 +446,7 @@ fi
 if [ -z "${NVM_DIR-}" ]; then
   # shellcheck disable=SC2128
   if [ -n "${BASH_SOURCE-}" ]; then
-    # shellcheck disable=SC2169,SC3054
-    NVM_SCRIPT_SOURCE="${BASH_SOURCE[0]}"
+    NVM_SCRIPT_SOURCE="${BASH_SOURCE}"
   fi
   # shellcheck disable=SC2086
   NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" >/dev/null && \pwd)"
@@ -1392,11 +1415,11 @@ nvm_add_iojs_prefix() {
 nvm_strip_iojs_prefix() {
   local NVM_IOJS_PREFIX
   NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
-  if [ "${1-}" = "${NVM_IOJS_PREFIX}" ]; then
-    nvm_echo
-  else
-    nvm_echo "${1#"${NVM_IOJS_PREFIX}"-}"
-  fi
+
+  case "${1-}" in
+    "${NVM_IOJS_PREFIX}") nvm_echo ;;
+    *) nvm_echo "${1#"${NVM_IOJS_PREFIX}"-}" ;;
+  esac
 }
 
 nvm_ls() {
@@ -1528,12 +1551,15 @@ nvm_ls() {
   fi
 
   if [ "${NVM_ADD_SYSTEM-}" = true ]; then
-    if [ -z "${PATTERN}" ] || [ "${PATTERN}" = 'v' ]; then
-      VERSIONS="${VERSIONS}
+    case "${PATTERN}" in
+      '' | v)
+        VERSIONS="${VERSIONS}
 system"
-    elif [ "${PATTERN}" = 'system' ]; then
-      VERSIONS="system"
-    fi
+      ;;
+      system)
+        VERSIONS="system"
+      ;;
+    esac
   fi
 
   if [ -z "${VERSIONS}" ]; then
@@ -1667,7 +1693,7 @@ EOF
     LTS="${LTS#lts/}"
   fi
 
-  VERSIONS="$({ command awk -v lts="${LTS-}" '{
+  VERSIONS="$( { command awk -v lts="${LTS-}" '{
         if (!$1) { next }
         if (lts && $10 ~ /^\-?$/) { next }
         if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next }
@@ -2711,10 +2737,10 @@ nvm_npm_global_modules() {
   local NPMLIST
   local VERSION
   VERSION="$1"
-  NPMLIST=$(nvm use "${VERSION}" >/dev/null && npm list -g --depth=0 2>/dev/null | command sed 1,1d | nvm_grep -v 'UNMET PEER DEPENDENCY')
+  NPMLIST=$(nvm use "${VERSION}" >/dev/null && npm list -g --depth=0 2>/dev/null | command sed -e '1d' -e '/UNMET PEER DEPENDENCY/d')
 
   local INSTALLS
-  INSTALLS=$(nvm_echo "${NPMLIST}" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' | command xargs)
+  INSTALLS=$(nvm_echo "${NPMLIST}" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' -e '/^corepack@[^ ]*.*$/ d' | command xargs)
 
   local LINKS
   LINKS="$(nvm_echo "${NPMLIST}" | command sed -n 's/.* -> \(.*\)/\1/ p')"
@@ -4412,7 +4438,7 @@ nvm() {
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" | "-v")
-      nvm_echo '0.40.1'
+      nvm_echo '0.40.2'
     ;;
     "unload")
       nvm deactivate >/dev/null 2>&1

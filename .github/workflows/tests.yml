@@ -31,6 +31,8 @@ jobs:
         suite:
           - install_script
           - sourcing
+          - slow
+          - installation_iojs
         shell:
           - sh
           - bash

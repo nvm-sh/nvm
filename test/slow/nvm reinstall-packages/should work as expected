@@ -16,7 +16,7 @@ EXPECTED_PACKAGES_INSTALL="autoprefixer bower david@11 grunt-cli grunth-cli http
 echo "$EXPECTED_PACKAGES_INSTALL" | sed -e 's/test-npmlink //' | xargs npm install -g --quiet
 
 get_packages() {
-  npm list -g --depth=0 | \sed -e '1 d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' | xargs
+  npm list -g --depth=0 | \sed -e '1 d' -e 's/^.* \(.*\)@.*/\1/' -e '/^npm$/ d' -e '/^corepack$/ d' | xargs
 }
 
 nvm use 0.10.29

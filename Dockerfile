@@ -91,16 +91,20 @@ RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 # Switch to user "nvm" from now
 USER nvm
 
+# Create a script file sourced by both interactive and non-interactive bash shells
+ENV BASH_ENV /home/nvm/.bash_env
+RUN touch "$BASH_ENV"
+RUN echo '. "$BASH_ENV"' >> "$HOME/.bashrc"
+
 # nvm
-RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$HOME/.bashrc"
-RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
-RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
+RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$BASH_ENV"
+RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$BASH_ENV"
+RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$BASH_ENV"
 
 # nodejs and tools
-RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
-    nvm install node                    && \
-    npm install -g doctoc urchin eclint dockerfile_lint && \
-    npm install --prefix "$HOME/.nvm/"'
+RUN nvm install node
+RUN npm install -g doctoc urchin eclint dockerfile_lint
+RUN npm install --prefix "$HOME/.nvm/"
 
 # Set WORKDIR to nvm directory
 WORKDIR /home/nvm/.nvm
