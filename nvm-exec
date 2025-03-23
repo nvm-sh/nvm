@@ -7,6 +7,7 @@ unset NVM_CD_FLAGS
 # shellcheck disable=SC1090,SC1091
 \. "$DIR/nvm.sh" --no-use
 
+nvm_rc_version > /dev/null && nvm_ensure_version_installed "$NVM_RC_VERSION";
 if [ -n "$NODE_VERSION" ]; then
   nvm use "$NODE_VERSION" > /dev/null || exit 127
 elif ! nvm use >/dev/null 2>&1; then
