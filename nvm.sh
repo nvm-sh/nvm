@@ -356,19 +356,19 @@ nvm_install_latest_npm() {
     if [ $NVM_IS_19_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 20.5.0; then
       NVM_IS_20_5_OR_ABOVE=1
     fi
-    local NVM_IS_20_17_or_ABOVE
-    NVM_IS_20_17_or_ABOVE=0
-    if [ $NVM_IS_20_5_OR_ABOVE -eq 1 ] && nvm_version_greater 20.17.0 "${NODE_VERSION}"; then
-      NVM_IS_20_17_or_ABOVE=1
+    local NVM_IS_20_17_OR_ABOVE
+    NVM_IS_20_17_OR_ABOVE=0
+    if [ $NVM_IS_20_5_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 20.17.0; then
+      NVM_IS_20_17_OR_ABOVE=1
     fi
     local NVM_IS_21_OR_ABOVE
     NVM_IS_21_OR_ABOVE=0
-    if [ $NVM_IS_20_17_or_ABOVE -eq 1 ] && nvm_version_greater 21.0.0 "${NODE_VERSION}"; then
+    if [ $NVM_IS_20_17_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 21.0.0; then
       NVM_IS_21_OR_ABOVE=1
     fi
     local NVM_IS_22_9_OR_ABOVE
     NVM_IS_22_9_OR_ABOVE=0
-    if [ $NVM_IS_21_OR_ABOVE -eq 1 ] && nvm_version_greater 22.9.0 "${NODE_VERSION}"; then
+    if [ $NVM_IS_21_OR_ABOVE -eq 1 ] && nvm_version_greater_than_or_equal_to "${NODE_VERSION}" 22.9.0; then
       NVM_IS_22_9_OR_ABOVE=1
     fi
 
@@ -420,7 +420,7 @@ nvm_install_latest_npm() {
       nvm_echo '* `npm` `v9.x` is the last version that works on `node` `< v18.17`, `v19`, or `v20.0` - `v20.4`'
       $NVM_NPM_CMD install -g npm@9
     elif \
-      [ $NVM_IS_20_17_or_ABOVE -eq 0 ] \
+      [ $NVM_IS_20_17_OR_ABOVE -eq 0 ] \
       || { [ $NVM_IS_21_OR_ABOVE -eq 1 ] && [ $NVM_IS_22_9_OR_ABOVE -eq 0 ]; } \
     ; then
       nvm_echo '* `npm` `v10.x` is the last version that works on `node` `< v20.17`, `v21`, or `v22.0` - `v22.8`'
