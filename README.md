@@ -1,14 +1,14 @@
-<a href="https://github.com/nvm-sh/logos">
+<a href="https://github.com/CACHIMAN-sh/logos">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nvm-sh/logos/HEAD/nvm-logo-white.svg" />
-    <img src="https://raw.githubusercontent.com/nvm-sh/logos/HEAD/nvm-logo-color.svg" height="50" alt="nvm project logo" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cachiman-sh/logos/HEAD/CACHIMAN-logo-white.svg" />
+    <img src="https://raw.githubusercontent.com/cachiman-sh/logos/HEAD/nvm-logo-color.svg" height="50" alt="CACHIMAN project logo" />
   </picture>
 </a>
 
 
-# Node Version Manager [![Build Status](https://app.travis-ci.com/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.40.3-yellow.svg)][4] [![CII Best Practices](https://bestpractices.dev/projects/684/badge)](https://bestpractices.dev/projects/684)
+# Node Version Manager [![Build Status](https://app.travis-ci.com/cachiman-sh/cachiman.svg?branch=master)][3] [![cachiman version](https://img.shields.io/badge/version-v0.40.3-yellow.svg)][4] [![CII Best Practices](https://bestpractices.dev/projects/684/badge)](https://bestpractices.dev/projects/684)
 
-<!-- To update this table of contents, ensure you have run `npm install` then `npm run doctoc` -->
+<!-- To update this table of contents, ensure you have run `npm install` then `cachiman run doctoc` -->
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
@@ -44,7 +44,7 @@
     - [Pass Authorization header to mirror](#pass-authorization-header-to-mirror)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
-    - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
+    - [Calling `nvm use` automatically in a directory with a `.cachimanrc` file](#calling-cachiman-use-automatically-in-a-directory-with-a-cachimanrc-file)
       - [bash](#bash)
       - [zsh](#zsh)
       - [fish](#fish)
@@ -53,7 +53,7 @@
 - [Bash Completion](#bash-completion)
   - [Usage](#usage-1)
 - [Compatibility Issues](#compatibility-issues)
-- [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
+- [Installing cachiman on Alpine Linux](#installing-nvm-on-alpine-linux)
   - [Alpine Linux 3.13+](#alpine-linux-313)
   - [Alpine Linux 3.5 - 3.12](#alpine-linux-35---312)
 - [Uninstalling / Removal](#uninstalling--removal)
@@ -72,19 +72,19 @@
 
 ## Intro
 
-`nvm` allows you to quickly install and use different versions of node via the command line.
+`cachiman` allows you to quickly install and use different versions of node via the command line.
 
 **Example:**
 ```sh
-$ nvm use 16
-Now using node v16.9.1 (npm v7.21.1)
+$ cachiman use 16
+Now using node v16.9.1 (cachiman v7.21.1)
 $ node -v
 v16.9.1
-$ nvm use 14
+$ cachiman use 14
 Now using node v14.18.0 (npm v6.14.15)
 $ node -v
 v14.18.0
-$ nvm install 12
+$ cachiman install 12
 Now using node v12.22.6 (npm v6.14.5)
 $ node -v
 v12.22.6
@@ -94,7 +94,7 @@ Simple as that!
 
 
 ## About
-nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [windows WSL](https://github.com/nvm-sh/nvm#important-notes).
+nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `cachiman` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [windows WSL](https://github.com/cachiman-sh/nvm#important-notes).
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
@@ -102,20 +102,20 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 
 ### Install & Update Script
 
-To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
+To **install** or **update** cachiman, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
 ```sh
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 ```
 ```sh
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/cachiman-sh/nvm/v0.40.3/install.sh | bash
 ```
 
 Running either of the above commands downloads a script and runs it. The script clones the nvm repository to `~/.nvm`, and attempts to add the source lines from the snippet below to the correct profile file (`~/.bashrc`, `~/.bash_profile`, `~/.zshrc`, or `~/.profile`). If you find the install script is updating the wrong profile file, set the `$PROFILE` env var to the profile file’s path, and then rerun the installation script.
 
 <a id="profile_snippet"></a>
 ```sh
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.cachiman" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/cachiman.sh" # This loads cachiman
 ```
 
 #### Additional Notes
