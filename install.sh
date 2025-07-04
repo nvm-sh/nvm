@@ -139,6 +139,9 @@ install_nvm_from_git() {
     fi
   fi
 
+  local remote
+  remote="$(git config --global clone.defaultRemoteName || true)"
+  remote="${remote:-origin}"
   local fetch_error
   if [ -d "$INSTALL_DIR/.git" ]; then
     # Updating repo
@@ -146,7 +149,7 @@ install_nvm_from_git() {
     command printf '\r=> '
     fetch_error="Failed to update nvm with $NVM_VERSION, run 'git fetch' in $INSTALL_DIR yourself."
   else
-    fetch_error="Failed to fetch origin with $NVM_VERSION. Please report this!"
+    fetch_error="Failed to fetch ${remote} with ${NVM_VERSION}. Please report this!"
     nvm_echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf '\r=> '
     mkdir -p "${INSTALL_DIR}"
@@ -156,9 +159,9 @@ install_nvm_from_git() {
         nvm_echo >&2 'Failed to initialize nvm repo. Please report this!'
         exit 2
       }
-      command git --git-dir="${INSTALL_DIR}/.git" remote add origin "$(nvm_source)" 2> /dev/null \
-        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url origin "$(nvm_source)" || {
-        nvm_echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
+      command git --git-dir="${INSTALL_DIR}/.git" remote add "$remote" "$(nvm_source)" 2> /dev/null \
+        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url "$remote" "$(nvm_source)" || {
+        nvm_echo >&2 'Failed to add remote "'"$remote"'" (or set the URL). Please report this!'
         exit 2
       }
     else
@@ -170,10 +173,10 @@ install_nvm_from_git() {
     fi
   fi
   # Try to fetch tag
-  if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin tag "$NVM_VERSION" --depth=1 2>/dev/null; then
+  if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch "$remote" tag "$NVM_VERSION" --depth=1 2>/dev/null; then
     :
   # Fetch given version
-  elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin "$NVM_VERSION" --depth=1; then
+  elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch "$remote" "$NVM_VERSION" --depth=1; then
     nvm_echo >&2 "$fetch_error"
     exit 1
   fi
