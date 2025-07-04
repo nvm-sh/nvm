@@ -443,7 +443,7 @@ Node has a [schedule](https://github.com/nodejs/Release#release-schedule) for lo
 
 Any time your local copy of `nvm` connects to https://nodejs.org, it will re-create the appropriate local aliases for all available LTS lines. These aliases (stored under `$NVM_DIR/alias/lts`), are managed by `nvm`, and you should not modify, remove, or create these files - expect your changes to be undone, and expect meddling with these files to cause bugs that will likely not be supported.
 
-To get the latest LTS version of node and migrate your existing installed packages, use
+To get the latest LTS version of node and migrate your existing installed packages, use:
 
 ```sh
 nvm install --reinstall-packages-from=current 'lts/*'
