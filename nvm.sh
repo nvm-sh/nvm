@@ -3911,7 +3911,7 @@ nvm() {
       export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
         case "$(uname -s)" in
-          CYGWIN*|MINGW*|MINGW32*|MSYS*)
+          CYGWIN*|MINGW*|MSYS*)
 
             # Windows cygwin
             command rm -rf "${NVM_DIR}/current" && cmd //C mklink //J "$(cygpath -w "${NVM_DIR}/current")" "$(cygpath -w "${NVM_VERSION_DIR}")" >/dev/null
