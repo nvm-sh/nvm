@@ -3912,7 +3912,7 @@ nvm() {
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
         case "$(uname -s)" in
           CYGWIN*|MINGW*|MINGW32*|MSYS*)
-            command rm -f "${NVM_DIR}/current" && cmd //C mklink //J "$(cygpath -w "${NVM_DIR}/current")" "$(cygpath -w "${NVM_VERSION_DIR}")"
+            command rm -rf "${NVM_DIR}/current" && cmd //C mklink //J "$(cygpath -w "${NVM_DIR}/current")" "$(cygpath -w "${NVM_VERSION_DIR}")" >/dev/null
             ;;
           *)
             command rm -f "${NVM_DIR}/current" && ln -s "${NVM_VERSION_DIR}" "${NVM_DIR}/current"
