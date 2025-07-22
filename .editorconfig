@@ -10,26 +10,26 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.txt]
-indent_size = false
+indent_size = unset
 
 [test/fast/Listing versions/Running 'nvm ls' calls into nvm_alias]
-indent_size = false
+indent_size = unset
 
 [test/fast/Listing versions/Running 'nvm ls --no-alias' does not call into nvm_alias]
-indent_size = false
+indent_size = unset
 
 [test/fast/Unit tests/mocks/**]
-insert_final_newline = off
+insert_final_newline = unset
 
 [test/**/.urchin*]
-insert_final_newline = off
+insert_final_newline = unset
 
 [Makefile]
 indent_style = tab
 
 [test/fixtures/nvmrc/**]
-indent_style = off
-insert_final_newline = off
+indent_style = unset
+insert_final_newline = unset
 
 [test/fixtures/actual/alias/empty]
-insert_final_newline = off
+insert_final_newline = unset
