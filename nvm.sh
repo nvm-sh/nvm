@@ -1591,6 +1591,11 @@ nvm_ls_remote() {
     fi
     PATTERN="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${IMPLICIT}" | command tail -1 | command awk '{ print $1 }')"
   elif [ -n "${PATTERN}" ]; then
+    # Check if PATTERN is a known LTS name without lts/ prefix
+    if [ -f "$(nvm_alias_path)/lts/$(echo "${PATTERN}" | tr '[:upper:]' '[:lower:]')" ]; then
+      nvm_err "LTS names must be prefixed with 'lts/'. Use 'lts/${PATTERN}' instead."
+      return 3
+    fi
     PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
   else
     PATTERN=".*"
