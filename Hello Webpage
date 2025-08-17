@@ -1,0 +1,83 @@
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="script.js"></script>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>বাংলাদেশ 3D প্র্যাকটিক্যাল</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 p-4">
+
+  <h1 class="text-2xl font-bold mb-4">বাংলাদেশ 1-10 শ্রেণীর 3D প্র্যাকটিক্যাল অ্যাপ</h1>
+
+  <div class="flex flex-col lg:flex-row gap-4">
+    <!-- Navigation -->
+    <div class="lg:w-1/3 bg-white p-4 rounded shadow">
+      <label class="block mb-1">শ্রেণি</label>
+      <select id="grade" class="w-full p-2 border rounded mb-3">
+        <option value="1">শ্রেণি 1</option>
+        <option value="9">শ্রেণি 9</option>
+      </select>
+
+      <label class="block mb-1">প্র্যাকটিক্যাল</label>
+      <select id="practical" class="w-full p-2 border rounded">
+        <option value="plant">গাছের অংশ</option>
+        <option value="reaction">রসায়নিক বিক্রিয়া</option>
+      </select>
+
+      <button id="loadModel" class="mt-3 p-2 bg-indigo-500 text-white rounded w-full">মডেল লোড করো</button>
+    </div>
+
+    <!-- 3D Viewer -->
+    <div class="lg:w-2/3 bg-white rounded shadow p-4">
+      <canvas id="threeCanvas" class="w-full h-80"></canvas>
+    </div>
+  </div>
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="script.js"></script>
+</html>
+const canvas = document.getElementById('threeCanvas');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf0f0f0);
+
+const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+camera.position.set(0, 1.5, 3);
+
+const renderer = new THREE.WebGLRenderer({ canvas });
+renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(5,5,5);
+scene.add(light);
+
+const loader = new THREE.GLTFLoader();
+let currentModel = null;
+
+document.getElementById('loadModel').addEventListener('click', () => {
+  const practical = document.getElementById('practical').value;
+
+  let modelUrl = '';
+  if(practical === 'plant') modelUrl = '/models/plant.glb';
+  if(practical === 'reaction') modelUrl = '/models/reaction.glb';
+
+  if(currentModel) scene.remove(currentModel);
+
+  loader.load(modelUrl, (gltf) => {
+    currentModel = gltf.scene;
+    scene.add(currentModel);
+  });
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  if(currentModel) currentModel.rotation.y += 0.01;
+  renderer.render(scene, camera);
+}
+animate();
