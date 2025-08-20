@@ -496,7 +496,10 @@ stevemao/left-pad
 
 ### io.js
 
-If you want to install [io.js](https://github.com/iojs/io.js/):
+> [!WARNING]
+> io.js was a [fork of Node.js](https://en.wikipedia.org/wiki/Node.js#History), created in 2014 and merged back in 2015. io.js shipped v1, v2, and v3 release lines; post-merge, node.js began releasing with v4.
+
+If you want to install io.js:
 
 ```sh
 nvm install iojs
