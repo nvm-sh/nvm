@@ -1551,13 +1551,15 @@ nvm_ls() {
   fi
 
   if [ "${NVM_ADD_SYSTEM-}" = true ]; then
+    local SYSTEM_VERSION
+    SYSTEM_VERSION="$(nvm deactivate >/dev/null 2>&1 && node -v 2>/dev/null)"
     case "${PATTERN}" in
       '' | v)
         VERSIONS="${VERSIONS}
-system"
+system ${SYSTEM_VERSION}"
       ;;
       system)
-        VERSIONS="system"
+        VERSIONS="system ${SYSTEM_VERSION}"
       ;;
     esac
   fi
@@ -1899,6 +1901,7 @@ BEGIN {
 
   fmt_latest_lts = has_colors && latest_lts_color ? ("\033[" latest_lts_color " (Latest LTS: %s)\033[0m") : " (Latest LTS: %s)";
   fmt_old_lts = has_colors && old_lts_color ? ("\033[" old_lts_color " (LTS: %s)\033[0m") : " (LTS: %s)";
+  fmt_system_target = has_colors && system_color ? (" (\033[" system_color "-> %s\033[0m)") : " (-> %s)";
 
   split(remote_versions, lines, "|");
   split(installed_versions, installed, "|");
@@ -1930,6 +1933,8 @@ BEGIN {
 
     if (cols == 1) {
       formatted = sprintf(fmt_version, version);
+    } else if (version == "system" && cols >= 2) {
+      formatted = sprintf((fmt_version fmt_system_target), version, fields[2]);
     } else if (cols == 2) {
       formatted = sprintf((fmt_version padding fmt_old_lts), version, fields[2]);
     } else if (cols == 3 && fields[3] == "*") {
