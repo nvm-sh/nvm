@@ -2985,7 +2985,8 @@ nvm_check_file_permissions() {
       if [ ! -L "${FILE}" ] && ! nvm_check_file_permissions "${FILE}"; then
         return 2
       fi
-    elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ ! -O "$FILE" ]; then
+    elif [ -e "$FILE" ] && [ ! -w "$FILE" ] && [ -z "$(command find "${FILE}" -prune -user "$(command id -u)")" ]; then
+      # ^ file ownership check from https://www.shellcheck.net/wiki/SC3067
       nvm_err "file is not writable or self-owned: $(nvm_sanitize_path "$FILE")"
       return 1
     fi
