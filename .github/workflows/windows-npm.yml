@@ -133,6 +133,16 @@ jobs:
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
+
+      # see https://github.com/Vampire/setup-wsl/issues/76#issuecomment-3258201135
+      - shell: 'wsl-bash {0}'
+        run: 'sed -i s/ftp.debian.org/archive.debian.org/ /etc/apt/sources.list'
+      - uses: Vampire/setup-wsl@v3
+        with:
+          distribution: ${{ matrix.wsl-distrib }}
+          additional-packages: bash git curl ca-certificates wget
+          update: 'true'
+
       - name: Retrieve nvm on WSL
         run: |
           if [ -z "${{ matrix.method }}" ]; then
@@ -176,6 +186,16 @@ jobs:
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
+
+      # see https://github.com/Vampire/setup-wsl/issues/76#issuecomment-3258201135
+      - shell: 'wsl-bash {0}'
+        run: 'sed -i s/ftp.debian.org/archive.debian.org/ /etc/apt/sources.list'
+      - uses: Vampire/setup-wsl@v3
+        with:
+          distribution: ${{ matrix.wsl-distrib }}
+          additional-packages: bash git curl ca-certificates wget
+          update: 'true'
+
       - name: Retrieve nvm on WSL
         run: |
           if [ -z "${{ matrix.method }}" ]; then
