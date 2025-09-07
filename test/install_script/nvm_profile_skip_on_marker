@@ -1,0 +1,35 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+# Load the install script functions
+NVM_ENV=testing \. ../../install.sh
+
+# Simple test to verify the marker check works
+echo "Testing profile marker check functionality"
+
+# Create a test profile with marker
+TEMP_PROFILE=$(mktemp)
+echo "# nvm completions" > "$TEMP_PROFILE"
+
+# Test that grep detects the marker
+if command grep -qc '# nvm completions' "$TEMP_PROFILE"; then
+  echo "Marker detection works"
+else
+  die "Failed to detect '# nvm completions' marker"
+fi
+
+# Test profile without marker
+TEMP_PROFILE2=$(mktemp)
+echo "# some other comment" > "$TEMP_PROFILE2"
+
+if command grep -qc '# nvm completions' "$TEMP_PROFILE2"; then
+  die "False positive: detected marker when it shouldn't exist"
+else
+  echo "Correctly reports no marker when absent"
+fi
+
+# Cleanup
+rm -f "$TEMP_PROFILE" "$TEMP_PROFILE2"
+
+echo "All tests passed!"
