@@ -1,6 +1,8 @@
 #!/bin/sh
 
 cleanup () {
+  rm tmp3/tmp2
+  rmdir tmp3
   rm tmp/node
   rmdir tmp
   rm tmp2/node
@@ -14,6 +16,8 @@ mkdir -p tmp
 touch tmp/node
 mkdir -p tmp2
 touch tmp2/node
+mkdir -p tmp3
+ln -s tmp2 tmp3/
 
 [ "$(nvm_tree_contains_path 2>&1)" = "both the tree and the node path are required" ] || die 'incorrect error message with no args'
 [ "$(nvm_tree_contains_path > /dev/null 2>&1 ; echo $?)" = "2" ] || die 'incorrect error code with no args'
@@ -27,5 +31,7 @@ nvm_tree_contains_path tmp tmp2/node && die '"tmp" should not contain "tmp2/node
 nvm_tree_contains_path tmp2 tmp2/node || die '"tmp2" should contain "tmp2/node"'
 
 nvm_tree_contains_path tmp2 tmp/node && die '"tmp2" should not contain "tmp/node"'
+
+nvm_tree_contains_path tmp2 tmp3 && die 'no idea'
 
 cleanup
