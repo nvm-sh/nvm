@@ -1,6 +1,6 @@
-# nvm Copilot Instructions
+# nvm Coding Agent Instructions
 
-This document provides guidance for GitHub Copilot when working with the Node Version Manager (nvm) codebase.
+This document provides guidance for AI coding agents when working with the Node Version Manager (nvm) codebase.
 
 ## Overview
 
@@ -424,4 +424,4 @@ nvm works on Windows via several compatibility layers:
 2. Include bash, curl, git, tar, and wget packages during installation
 3. Run nvm installation in Cygwin terminal
 
-This guide should help GitHub Copilot understand the nvm codebase structure, testing procedures, and development environment setup requirements.
+This guide should help AI coding agents understand the nvm codebase structure, testing procedures, and development environment setup requirements.
