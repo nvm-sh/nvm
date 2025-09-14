@@ -57,3 +57,4 @@ nvm_make_alias() {
 nvm ls-remote --lts > /dev/null
 
 echo "done! Don't forget to git commit them."
+
