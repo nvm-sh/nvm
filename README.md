@@ -1021,7 +1021,7 @@ $ docker run -h nvm-dev -it nvm-dev
 nvm@nvm-dev:~/.nvm$
 ```
 
-It takes about about 8 minutes to build the image and the image size is about 650MB, so it's not suitable for production usage.
+It takes several minutes to build the image and the image size is about 650MB, so it's not suitable for production usage.
 
 For more information and documentation about Docker, please refer to its [official website][docker-www] and [documentation][docker-docs]:
 
