@@ -965,35 +965,22 @@ export NVM_DIR="$HOME/.nvm"
 
 ## Docker For Development Environment
 
-To make the development and testing work easier, we have a Dockerfile for development usage, which is based on an Ubuntu 22.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
-
+To make the development and testing work easier, we have a Dockerfile for development usage. This is an Ubuntu 22.04 base image with some development tools added and a copy of this repo (including the current working copy) copied to `~/.nvm/` in the image. To build and use it, `cd` to the root of this repo and:
 ```sh
-$ docker build -t nvm-dev .
+docker build -t nvm-dev .           # Create the nvm-dev image
+docker images                       # Confirm nvm-dev appears in the list.
+
+#   Create a container named `nvm-dev` (with the same hostname)
+#   and enter an interactive session in it.
+docker run --name nvm-dev -h nvm-dev -it nvm-dev
 ```
 
-This will package your current nvm repository with our pre-defined development environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
+This will place you in the container in the `~/.nvm/` directory as the `nvm` user. When you exit the container will not be deleted (so as to avoid losing any work in it); you can re-enter the container with `docker start -i nvm-dev` or delete it permanently with `docker container rm -f nvm-dev`. (For more information on using Docker, see the [website][dr-web] and [documentation][dr-docs].
 
-```sh
-$ docker images
+Note that the build takes several minutes and well over half a gigabyte of disk space, so it's not suitable for production usage.
 
-REPOSITORY         TAG                 IMAGE ID            CREATED             SIZE
-nvm-dev            latest              9ca4c57a97d8        7 days ago          650 MB
-```
-
-If you got no error message, now you can easily involve in:
-
-```sh
-$ docker run -h nvm-dev -it nvm-dev
-
-nvm@nvm-dev:~/.nvm$
-```
-
-Please note that it'll take several minutes to build the image and the image size would be about 650MB, so it's not suitable for production usage.
-
-For more information and documentation about docker, please refer to its official website:
-
-  - https://www.docker.com/
-  - https://docs.docker.com/
+[dr-docs]: https://docs.docker.com/
+[dr-web]: https://www.docker.com/
 
 ## Problems
 
