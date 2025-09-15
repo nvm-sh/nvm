@@ -1001,13 +1001,17 @@ export NVM_DIR="$HOME/.nvm"
 To make development and testing work easier we supply a Dockerfile for development usage. It's based on an Ubuntu base image prepared with essential and useful tools for `nvm` development. To build the docker image of the environment, do a Docker build at the root of `nvm` repository:
 
 ```sh
-$ docker build -t nvm-dev .
+docker build -t nvm-dev .           # Create the nvm-dev image
+docker images                       # Confirm nvm-dev appears in the list.
+
+#   Create a container named `nvm-dev` (with the same hostname)
+#   and enter an interactive session in it.
+docker run --name nvm-dev -h nvm-dev -it nvm-dev
 ```
 
-This will package your current nvm working copy with our pre-defined development environment into a Docker image named `nvm-dev`. After the build you should see it appear in the list of images:
+This will place you in the container in the `~/.nvm/` directory as the `nvm` user. When you exit the container will not be deleted (so as to avoid losing any work in it); you can re-enter the container with `docker start -i nvm-dev` or delete it permanently with `docker container rm -f nvm-dev`. (For more information on using Docker, see the [website][dr-web] and [documentation][dr-docs].
 
-```sh
-$ docker images
+Note that the build takes several minutes and well over half a gigabyte of disk space, so it's not suitable for production usage.
 
 REPOSITORY         TAG                 IMAGE ID            CREATED             SIZE
 nvm-dev            latest              9ca4c57a97d8        7 days ago          650 MB
