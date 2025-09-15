@@ -965,7 +965,7 @@ export NVM_DIR="$HOME/.nvm"
 
 ## Docker For Development Environment
 
-To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 18.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
+To make the development and testing work easier, we have a Dockerfile for development usage, which is based on an Ubuntu 22.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
 
 ```sh
 $ docker build -t nvm-dev .
