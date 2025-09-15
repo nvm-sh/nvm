@@ -998,13 +998,13 @@ export NVM_DIR="$HOME/.nvm"
 
 ## Docker For Development Environment
 
-To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 18.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
+To make development and testing work easier we supply a Dockerfile for development usage. It's based on an Ubuntu base image prepared with essential and useful tools for `nvm` development. To build the docker image of the environment, do a Docker build at the root of `nvm` repository:
 
 ```sh
 $ docker build -t nvm-dev .
 ```
 
-This will package your current nvm repository with our pre-defined development environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
+This will package your current nvm working copy with our pre-defined development environment into a Docker image named `nvm-dev`. After the build you should see it appear in the list of images:
 
 ```sh
 $ docker images
@@ -1013,7 +1013,7 @@ REPOSITORY         TAG                 IMAGE ID            CREATED             S
 nvm-dev            latest              9ca4c57a97d8        7 days ago          650 MB
 ```
 
-If you got no error message, now you can easily involve in:
+To start and enter a container based on this image:
 
 ```sh
 $ docker run -h nvm-dev -it nvm-dev
@@ -1021,12 +1021,9 @@ $ docker run -h nvm-dev -it nvm-dev
 nvm@nvm-dev:~/.nvm$
 ```
 
-Please note that it'll take about 8 minutes to build the image and the image size would be about 650MB, so it's not suitable for production usage.
+It takes about about 8 minutes to build the image and the image size is about 650MB, so it's not suitable for production usage.
 
-For more information and documentation about docker, please refer to its official website:
-
-  - https://www.docker.com/
-  - https://docs.docker.com/
+For more information and documentation about Docker, please refer to its [official website][docker-www] and [documentation][docker-docs]:
 
 ## Problems
 
@@ -1205,3 +1202,7 @@ See [LICENSE.md](./LICENSE.md).
 
 Copyright [OpenJS Foundation](https://openjsf.org) and `nvm` contributors. All rights reserved. The [OpenJS Foundation](https://openjsf.org) has registered trademarks and uses trademarks.  For a list of trademarks of the [OpenJS Foundation](https://openjsf.org), please see our [Trademark Policy](https://trademark-policy.openjsf.org/) and [Trademark List](https://trademark-list.openjsf.org/).  Trademarks and logos not indicated on the [list of OpenJS Foundation trademarks](https://trademark-list.openjsf.org) are trademarks™ or registered® trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them.
 [The OpenJS Foundation](https://openjsf.org/) | [Terms of Use](https://terms-of-use.openjsf.org/) | [Privacy Policy](https://privacy-policy.openjsf.org/) | [Bylaws](https://bylaws.openjsf.org/) | [Code of Conduct](https://code-of-conduct.openjsf.org) | [Trademark Policy](https://trademark-policy.openjsf.org/) | [Trademark List](https://trademark-list.openjsf.org/) | [Cookie Policy](https://www.linuxfoundation.org/cookies/)
+
+<!-------------------------------------------------------------------->
+[docker-docs]: https://docs.docker.com/
+[docker-www]: https://www.docker.com/
