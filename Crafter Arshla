@@ -1,0 +1,77 @@
+/SellProductApp
+|-- /android
+|-- /ios
+|-- /src
+    |-- /components
+        |-- ProductCard.js
+        |-- BarcodeScanner.js
+        |-- PaymentOptions.js
+    |-- /screens
+        |-- HomeScreen.js
+        |-- ProductDetailScreen.js
+        |-- CartScreen.js
+        |-- LoginScreen.js
+        |-- RegisterScreen.js
+        |-- OrderTrackingScreen.js
+    |-- /navigation
+        |-- AppNavigator.js
+    |-- /services
+        |-- api.js           // Handles API calls to backend
+        |-- payment.js       // Payment gateway integration
+        |-- auth.js          // Authentication functions
+    |-- App.js               // Main app entry
+|-- package.json
+npm install react-native-camera react-native-permissions
+react-native link react-native-camera
+react-native link react-native-permissions
+<key>NSCameraUsageDescription</key>
+<string>Need camera access to scan barcodes</string>
+<uses-permission android:name="android.permission.CAMERA"/>
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { RNCamera } from 'react-native-camera';
+
+const BarcodeScanner = () => {
+  const [barcode, setBarcode] = useState(null);
+
+  const onBarCodeRead = (e) => {
+    if (e.data !== barcode) {  // avoid duplicate scans
+      setBarcode(e.data);
+      Alert.alert('Barcode detected', `Type: ${e.type}
+Data: ${e.data}`);
+      // You can perform any action with the barcode data here
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <RNCamera
+        style={styles.camera}
+        onBarCodeRead={onBarCodeRead}
+        captureAudio={false}
+      >
+        <View style={styles.scanBox} />
+      </RNCamera>
+      {barcode && <Text style={styles.barcodeText}>Scanned Barcode: {barcode}</Text>}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  camera: { flex: 1 },
+  scanBox: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: 'white',
+    margin: 30,
+    borderRadius: 10,
+  },
+  barcodeText: {
+    textAlign: 'center',
+    padding: 10,
+    fontSize: 16,
+  },
+});
+
+export default BarcodeScanner;
