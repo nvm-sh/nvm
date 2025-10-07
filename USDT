@@ -1,0 +1,26 @@
+const TronWeb = require('tronweb');
+
+const tronWeb = new TronWeb({
+  fullHost: 'https://api.trongrid.io', // mainnet
+  privateKey: process.env.DEPLOYER_PRIVATE_KEY
+});
+
+const tokenAddress = 'YOUR_DEPLOYED_CONTRACT_ADDRESS';
+const tokenAbi = [
+  { "constant": true, "inputs": [{"name":"account","type":"address"}], "name":"balanceOf", "outputs":[{"name":"","type":"uint256"}], "type":"function" },
+  { "constant": false, "inputs": [{"name":"to","type":"address"},{"name":"value","type":"uint256"}], "name":"transfer", "outputs":[{"name":"","type":"bool"}], "type":"function" },
+  { "constant": true, "inputs": [], "name": "decimals", "outputs": [{"name":"","type":"uint8"}], "type":"function" },
+  { "constant": true, "inputs": [], "name": "symbol", "outputs": [{"name":"","type":"string"}], "type":"function" }
+];
+
+const tokenContract = tronWeb.contract(tokenAbi, tokenAddress);
+
+async function checkBalance(address) {
+  const balance = await tokenContract.balanceOf(address).call();
+  const decimals = await tokenContract.decimals().call();
+  const symbol = await tokenContract.symbol().call();
+  console.log(`Balance of ${address}: ${balance / (10 ** decimals)} ${symbol}`);
+}
+
+// Example usage
+checkBalance('TARGET_WALLET_ADDRESS');
