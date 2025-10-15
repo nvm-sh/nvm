@@ -21,8 +21,8 @@ jobs:
           fetch-depth: 0
       - id: matrix
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
-            echo "matrix=\"[\"${{ github.event.inputs.ref }}\"]\"" >> $GITHUB_OUTPUT
+          if [ "$EVENT_NAME " == "workflow_dispatch" ] && [ -n "$EVENT.INPUTS.REF " ]; then
+            echo "matrix=\"[\"$EVENT.INPUTS.REF \"]\"" >> $GITHUB_OUTPUT
           else
             TAGS="$((echo "HEAD" && git tag --sort=-v:refname --merged HEAD --format='%(refname:strip=2) %(creatordate:short)' | grep '^v' | while read tag date; do
               if [ "$(uname)" == "Darwin" ]; then
