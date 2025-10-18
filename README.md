@@ -1040,7 +1040,7 @@ To change the user directory and/or account name follow the instructions [here](
 [Urchin]: https://git.sdf.org/tlevine/urchin
 [Fish]: https://fishshell.com
 
-**Homebrew makes zsh directories unsecure**
+**Homebrew makes zsh directories insecure**
 
 ```shell
 zsh compinit: insecure directories, run compaudit for list.
