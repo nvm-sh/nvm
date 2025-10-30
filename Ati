@@ -1,0 +1,70 @@
+import OpenAI from "openai";
+import dotenv from "dotenv";
+import record from "node-record-lpcm16";
+import gTTS from "gtts";
+import player from "play-sound";
+
+dotenv.config();
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Función para que Ati hable
+async function speak(text) {
+  const tts = new gTTS(text, "es");
+  const filePath = "ati_response.mp3";
+  await tts.save(filePath, () => {
+    player().play(filePath, err => {
+      if (err) console.error("Error al reproducir:", err);
+    });
+  });
+}
+
+// Función para preguntar a Ati
+async function askAti(message) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "Eres Ati, un asistente grosero pero útil." },
+        { role: "user", content: message }
+      ]
+    });
+    const reply = response.choices[0].message.content;
+    console.log("Ati:", reply);
+    await speak(reply);
+  } catch (err) {
+    console.error("Error con Ati:", err);
+  }
+}
+
+// Simulación de lenguaje secreto (puedes personalizarlo)
+function encodeSecret(text) {
+  // Ejemplo simple: invertir texto y reemplazar algunas letras
+  return text.split("").reverse().join("").replace(/a/g,"@").replace(/e/g,"3");
+}
+
+function decodeSecret(text) {
+  return text.split("").reverse().join("").replace(/@/g,"a").replace(/3/g,"e");
+}
+
+// Función principal: escucha continuamente
+function startListening() {
+  console.log("Ati está escuchando... di algo!");
+  
+  record
+    .start({
+      sampleRate: 16000,
+      threshold: 0.5,
+      verbose: false,
+      recordProgram: "rec", // Linux/Mac, Windows usa "sox"
+      silence: "1.0"
+    })
+    .on("data", async (chunk) => {
+      // Aquí en prototipo: convertir audio a texto usando Whisper API
+      const simulatedText = "Hola Ati, dime algo en nuestro lenguaje secreto";
+      const decodedText = decodeSecret(simulatedText);
+      await askAti(decodedText);
+    });
+}
+
+startListening();
