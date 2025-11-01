@@ -4000,7 +4000,7 @@ nvm() {
         fi
       fi
 
-      local NVM_IOJS
+      local NVM_IOJS=false
       if nvm_is_iojs_version "${VERSION}"; then
         NVM_IOJS=true
       fi
