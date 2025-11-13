@@ -1,0 +1,459 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 768px;
+  margin: 0 auto;
+  background-color: white;
+  min-height: 100vh;
+}
+
+.header {
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 15px;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 500;
+  flex: 1;
+  text-align: center;
+  margin-right: 40px;
+}
+
+.content {
+  padding: 30px 20px;
+}
+
+.welcome-section {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.welcome-section h2 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.welcome-section p {
+  color: #666;
+  font-size: 16px;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.primary-btn, .secondary-btn {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  color: white;
+}
+
+.primary-btn:hover {
+  background: linear-gradient(135deg, #357ABD, #2E6BA8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.secondary-btn {
+  background: white;
+  color: #4A90E2;
+  border: 2px solid #4A90E2;
+}
+
+.secondary-btn:hover {
+  background: #4A90E2;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #4A90E2;
+}
+
+.info-icon {
+  flex-shrink: 0;
+}
+
+.info-item span {
+  color: #555;
+  font-size: 14px;
+}
+
+/* Register Form Styles */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+  font-size: 16px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-group input {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+  width: 100%;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: white;
+  -webkit-border-radius: 6px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #4A90E2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.form-group input[readonly] {
+  background-color: #f8f9fa;
+  color: #666;
+}
+
+.dropdown-btn, .eye-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.dropdown-btn:hover, .eye-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.mobile-input {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.mobile-input input {
+  flex: 1;
+}
+
+.otp-btn {
+  background: #4A90E2;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.3s;
+}
+
+.otp-btn:hover {
+  background: #357ABD;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+}
+
+.checkbox-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.3s;
+}
+
+.checkbox-item input:checked ~ .checkmark {
+  background-color: #4A90E2;
+  border-color: #4A90E2;
+}
+
+.checkbox-item input:checked ~ .checkmark:after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-text {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.terms-link {
+  color: #4A90E2;
+  text-decoration: none;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #357ABD, #2E6BA8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .form-group input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Android Chrome specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .form-group input {
+    background-clip: padding-box;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .content {
+    padding: 20px 15px;
+  }
+  
+  .welcome-section h2 {
+    font-size: 24px;
+  }
+  
+  .primary-btn, .secondary-btn {
+    font-size: 16px;
+    padding: 12px 25px;
+    min-height: 44px; /* iOS touch target minimum */
+  }
+  
+  .mobile-input {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .otp-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+  
+  .form-group input {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .back-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 481px) and (max-width: 768px) {
+  .container {
+    max-width: 600px;
+  }
+  
+  .content {
+    padding: 40px 30px;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 769px) {
+  .container {
+    max-width: 768px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .content {
+    padding: 50px 40px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .header {
+    background: linear-gradient(135deg, #4A90E2, #357ABD);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .container {
+    background-color: #2d2d2d;
+  }
+  
+  .form-group input {
+    background-color: #3d3d3d;
+    border-color: #555;
+    color: #ffffff;
+  }
+  
+  .info-item {
+    background: #3d3d3d;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .content {
+    padding: 15px 20px;
+  }
+  
+  .welcome-section {
+    margin-bottom: 20px;
+  }
+  
+  .button-group {
+    margin-bottom: 20px;
+  }
+}

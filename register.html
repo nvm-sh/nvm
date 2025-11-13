@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <title>สมัครสมาชิก</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>สมัครสมาชิก</h1>
+    </div>
+
+    <div class="content">
+      <form class="register-form" onsubmit="handleRegister(event)">
+        <!-- Hidden referral code - CC398 is stored internally but not visible to user -->
+        <input type="hidden" id="referral-code" value="CC398">
+
+        <div class="form-group">
+          <label for="username-input">ยูสเซอร์เนม</label>
+          <input type="text" id="username-input" placeholder="เลขหรืออักษรอังกฤษ 4 ~ 10 ตัว" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">รหัสผ่าน</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" placeholder="เลขหรืออักษรอังกฤษ 6 ~ 10 ตัว" required>
+            <button type="button" class="eye-btn" onclick="togglePassword()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="#666" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" stroke="#666" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm-password">ชื่อเล่น</label>
+          <input type="text" id="confirm-password" placeholder="สามารถกรอกได้ไม่เกิน 8 ตัวอักษร" required>
+        </div>
+
+        <div class="form-group">
+          <label for="mobile">เบอร์มือถือ</label>
+          <div class="mobile-input">
+            <input type="tel" id="mobile" placeholder="ระบุเบอร์ 10 หลัก" required>
+            <button type="button" class="otp-btn">รับ OTP</button>
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" required>
+            <span class="checkmark"></span>
+            <span class="checkbox-text">ยอมรับข้าราชการผ่านข้อความหรือไม่</span>
+          </label>
+
+          <label class="checkbox-item">
+            <input type="checkbox" required>
+            <span class="checkmark"></span>
+            <span class="checkbox-text">ฉันอายุครบ 18 ปีบริบูรณ์ ได้อ่านข้อตกลงและยอมรับกฎการเดิมพันและ <a href="#" class="terms-link">เงื่อนไขการบริการ</a></span>
+          </label>
+        </div>
+
+        <button type="submit" class="submit-btn">ยืนยัน</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

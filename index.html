@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <title>เข้าสู่ระบบ</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>เข้าสู่ระบบ</h1>
+    </div>
+
+    <div class="content">
+      <div class="welcome-section">
+        <h2>ยินดีต้อนรับ</h2>
+        <p>เลือกวิธีการเข้าสู่ระบบของคุณ</p>
+      </div>
+
+      <div class="button-group">
+        <button class="primary-btn" onclick="redirectToLogin()">
+          เข้าสู่ระบบ
+        </button>
+        
+        <button class="secondary-btn" onclick="redirectToRegister()">
+          สมัครสมาชิก
+        </button>
+      </div>
+
+      <div class="info-section">
+        <div class="info-item">
+          <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="#4A90E2" stroke-width="2"/>
+            <path d="M12 6V12L16 14" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>ระบบปลอดภัย 24 ชั่วโมง</span>
+        </div>
+        
+        <div class="info-item">
+          <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 12L11 14L15 10" stroke="#4A90E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="10" stroke="#4A90E2" stroke-width="2"/>
+          </svg>
+          <span>การันตีความปลอดภัย</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
