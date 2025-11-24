@@ -781,6 +781,15 @@ nvm_remote_version() {
   else
     VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN}" | command tail -1)"
   fi
+
+  if [ -n "${PATTERN}" ] && [ "_${VERSION}" != "_N/A" ] && ! nvm_validate_implicit_alias "${PATTERN}" 2>/dev/null; then
+    local VERSION_NUM
+    VERSION_NUM="$(nvm_echo "${VERSION}" | command awk '{print $1}')"
+    if ! nvm_echo "${VERSION_NUM}" | nvm_grep -q "${PATTERN}"; then
+      VERSION='N/A'
+    fi
+  fi
+
   if [ -n "${NVM_VERSION_ONLY-}" ]; then
     command awk 'BEGIN {
       n = split(ARGV[1], a);
