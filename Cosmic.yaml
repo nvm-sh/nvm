@@ -1,0 +1,23 @@
+{
+  "node18_support": {
+    "oldest_supported_ubuntu": "Cosmic",
+    "ubuntu_version": "18.10",
+    "status": "EOL"
+  },
+  "travis_ci_distros": {
+    "previous": "Bionic",
+    "previous_version": "18.04",
+    "next": "Focal",
+    "next_version": "20.04",
+    "note": "Travis CI does not provide Cosmic; jumps directly from Bionic to Focal."
+  },
+  "implications": {
+    "environment_gap": true,
+    "description": "Node 18 supports Cosmic as the oldest Ubuntu base, but Travis CI skips Cosmic, so builds run on newer distros than Node's minimal baseline.",
+    "potential_issues": [
+      "dependency mismatch",
+      "GLIBC or system library differences",
+      "unexpected build behavior"
+    ]
+  }
+}
