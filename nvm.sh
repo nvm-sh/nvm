@@ -4088,7 +4088,7 @@ nvm() {
       local NVM_NO_COLORS
       local NVM_NO_ALIAS
 
-      if  ! tty -s <&1; then
+      if  ! command tty -s <&1; then
         set -- "$@" "--no-colors"
       fi
 
