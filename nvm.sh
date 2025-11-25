@@ -4089,7 +4089,7 @@ nvm() {
       local NVM_NO_ALIAS
 
       if  ! command tty -s <&1; then
-        set -- "$@" "--no-colors"
+        command set -- "$@" "--no-colors"
       fi
 
       while [ $# -gt 0 ]; do
