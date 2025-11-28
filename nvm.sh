@@ -1848,6 +1848,13 @@ nvm_get_checksum() {
     return 1
   fi
 
+  # Require GPG to be installed for signature verification
+  if ! nvm_has "gpg"; then
+    nvm_err 'gpg not found. GPG signature verification is required for downloading Node.js versions.'
+    nvm_err 'Install GPG to continue. For more details, see: https://gnupg.org/'
+    return 127
+  fi
+
   local SHASUMS_URL
   if [ "$(nvm_get_checksum_alg)" = 'sha-256' ]; then
     SHASUMS_URL="${MIRROR}/${3}/SHASUMS256.txt"
@@ -1855,7 +1862,48 @@ nvm_get_checksum() {
     SHASUMS_URL="${MIRROR}/${3}/SHASUMS.txt"
   fi
 
-  nvm_download -L -s "${SHASUMS_URL}" -o - | command awk "{ if (\"${4}.${5}\" == \$2) print \$1}"
+  # Download both SHASUMS file and its signature
+  local SHASUMS_SIGNATURE_URL="${SHASUMS_URL}.sig"
+  local SHASUMS_FILE
+  local SIGNATURE_FILE
+  local TMPDIR
+
+  TMPDIR="$(command mktemp -d)" || (
+    nvm_err "Failed to create temporary directory for GPG verification"
+    return 1
+  )
+
+  SHASUMS_FILE="${TMPDIR}/SHASUMS"
+  SIGNATURE_FILE="${TMPDIR}/SHASUMS.sig"
+
+  # Download SHASUMS file
+  if ! nvm_download -L -s "${SHASUMS_URL}" -o "${SHASUMS_FILE}"; then
+    nvm_err "Failed to download SHASUMS file from ${SHASUMS_URL}"
+    command rm -rf "${TMPDIR}"
+    return 1
+  fi
+
+  # Download GPG signature
+  if ! nvm_download -L -s "${SHASUMS_SIGNATURE_URL}" -o "${SIGNATURE_FILE}"; then
+    nvm_err "Failed to download GPG signature from ${SHASUMS_SIGNATURE_URL}"
+    command rm -rf "${TMPDIR}"
+    return 1
+  fi
+
+  # Verify GPG signature
+  if ! command gpg --verify "${SIGNATURE_FILE}" "${SHASUMS_FILE}" >/dev/null 2>&1; then
+    nvm_err "GPG signature verification failed for ${SHASUMS_URL}"
+    nvm_err "This could indicate a Man-in-the-Middle attack or a corrupted file."
+    command rm -rf "${TMPDIR}"
+    return 1
+  fi
+
+  # Extract checksum and clean up
+  local CHECKSUM
+  CHECKSUM="$(command awk "{ if (\"${4}.${5}\" == \$2) print \$1}" "${SHASUMS_FILE}")"
+  command rm -rf "${TMPDIR}"
+
+  nvm_echo "${CHECKSUM}"
 }
 
 nvm_print_versions() {
