@@ -21,7 +21,6 @@ jobs:
           fetch-depth: 0
       - id: matrix
         env:
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_REF: ${{ github.event.inputs.ref }}
         run: |
           if [ "$EVENT_NAME" == "workflow_dispatch" ] && [ -n "$INPUT_REF" ]; then
@@ -60,8 +59,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: resolve HEAD to sha
-        env:
-          MATRIX_REF: ${{ matrix.ref }}
         run: |
           if [ "$MATRIX_REF" = 'HEAD' ]; then
             REF="$(git rev-parse HEAD)"
