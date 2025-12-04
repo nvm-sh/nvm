@@ -2,12 +2,17 @@ name: 'Tests: release process'
 
 on: [pull_request, push]
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2
