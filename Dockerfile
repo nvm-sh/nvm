@@ -15,23 +15,22 @@ LABEL version="latest"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Prevent dialog during apt install
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND="noninteractive"
 
 # ShellCheck version
-ENV SHELLCHECK_VERSION=0.7.0
+ENV SHELLCHECK_VERSION=0.11.0
 
 # Pick a Ubuntu apt mirror site for better speed
 # ref: https://launchpad.net/ubuntu/+archivemirrors
-ENV UBUNTU_APT_SITE ubuntu.cs.utah.edu
+ENV UBUNTU_APT_SITE="archive.ubuntu.com"
 
 # Replace origin apt package site with the mirror site
 RUN sed -E -i "s/([a-z]+.)?archive.ubuntu.com/$UBUNTU_APT_SITE/g" /etc/apt/sources.list
 RUN sed -i "s/security.ubuntu.com/$UBUNTU_APT_SITE/g" /etc/apt/sources.list
 
 # Install apt packages
-RUN apt update         && \
-    apt upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"  && \
-    apt install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"     \
+RUN apt-get update         && \
+    apt-get install -y --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
         coreutils             \
         util-linux            \
         bsdutils              \
@@ -58,7 +57,8 @@ RUN apt update         && \
         xz-utils              \
         build-essential       \
         bash-completion       && \
-    apt-get clean
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN wget https://github.com/koalaman/shellcheck/releases/download/v$SHELLCHECK_VERSION/shellcheck-v$SHELLCHECK_VERSION.linux.x86_64.tar.xz -O- | \
     tar xJvf - shellcheck-v$SHELLCHECK_VERSION/shellcheck          && \
@@ -92,7 +92,7 @@ RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 USER nvm
 
 # Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV /home/nvm/.bash_env
+ENV BASH_ENV="/home/nvm/.bash_env"
 RUN touch "$BASH_ENV"
 RUN echo '. "$BASH_ENV"' >> "$HOME/.bashrc"
 
