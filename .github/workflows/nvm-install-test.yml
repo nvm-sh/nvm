@@ -101,4 +101,4 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test]
     steps:
-      - run: true
+      - run: 'true'
