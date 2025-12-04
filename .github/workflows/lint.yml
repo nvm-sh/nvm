@@ -2,12 +2,17 @@ name: 'Tests: linting'
 
 on: [pull_request, push]
 
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   eclint:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: step-security/harden-runner@v2
         with:
@@ -25,6 +30,7 @@ jobs:
 
   dockerfile_lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: step-security/harden-runner@v2
         with:
@@ -44,6 +50,7 @@ jobs:
 
   doctoc:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: step-security/harden-runner@v2
         with:
@@ -61,6 +68,7 @@ jobs:
 
   test_naming:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: step-security/harden-runner@v2
         with:
