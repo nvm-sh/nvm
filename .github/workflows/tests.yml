@@ -2,6 +2,10 @@ name: urchin tests
 
 on: [push, pull_request]
 
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -12,6 +16,7 @@ jobs:
 
     name: "tests"
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     defaults:
       run:
         shell: 'script -q -e -c "${{ matrix.shell }} {0}"'
@@ -77,4 +82,4 @@ jobs:
     needs: [tests]
     runs-on: ubuntu-latest
     steps:
-      - run: true
+      - run: 'true'
