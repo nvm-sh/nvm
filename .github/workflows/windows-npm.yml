@@ -2,6 +2,10 @@ name: 'Tests on Windows: `nvm install`'
 
 on: [pull_request, push]
 
+concurrency:
+  group: windows-npm-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -16,6 +20,7 @@ jobs:
       contents: none
     name: 'MSYS fail prefix nvm install'
     runs-on: windows-latest
+    timeout-minutes: 90
     steps:
       - name: Retrieve nvm
         shell: bash
@@ -29,6 +34,7 @@ jobs:
       contents: none
     name: 'MSYS nvm install'
     runs-on: windows-latest
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -55,6 +61,7 @@ jobs:
       contents: none
     name: 'Cygwin nvm install'
     runs-on: windows-latest
+    timeout-minutes: 90
     steps:
       - name: Install Cygwin
         shell: bash
@@ -100,6 +107,7 @@ jobs:
       run:
           shell: wsl-bash {0}
     runs-on: windows-latest
+    timeout-minutes: 90
     env:
       WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
     strategy:
@@ -161,6 +169,7 @@ jobs:
       run:
           shell: wsl-bash {0}
     runs-on: windows-latest
+    timeout-minutes: 90
     env:
       WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
       NVM_NODEJS_ORG_MIRROR: https://unofficial-builds.nodejs.org/download/release
@@ -212,5 +221,6 @@ jobs:
       contents: none
     needs: [wsl_matrix, wsl_matrix_unofficial, cygwin_matrix, msys_matrix, msys_fail_install]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - run: true
+      - run: 'true'
