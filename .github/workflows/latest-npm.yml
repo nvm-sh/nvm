@@ -2,6 +2,10 @@ name: 'Tests: `nvm install-latest-npm`'
 
 on: [pull_request, push]
 
+concurrency:
+  group: latest-npm-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -31,6 +35,7 @@ jobs:
       contents: read
     name: 'nvm install-latest-npm'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -83,4 +88,4 @@ jobs:
     needs: [nodes]
     runs-on: ubuntu-latest
     steps:
-      - run: true
+      - run: 'true'
