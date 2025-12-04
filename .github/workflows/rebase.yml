@@ -2,6 +2,10 @@ name: Automatic Rebase
 
 on: [pull_request_target]
 
+concurrency:
+  group: rebase-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions: read-all
 
 jobs:
@@ -9,6 +13,7 @@ jobs:
     name: "Automatic Rebase"
 
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v6
