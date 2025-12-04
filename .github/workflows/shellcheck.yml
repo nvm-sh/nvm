@@ -2,12 +2,17 @@ name: 'Tests: shellcheck'
 
 on: [pull_request, push]
 
+concurrency:
+  group: shellcheck-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   shellcheck_matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -48,9 +53,10 @@ jobs:
         run: shellcheck -s ${{ matrix.shell }} ${{ matrix.file }}
 
   shellcheck:
-      permissions:
-        contents: none
-      needs: [shellcheck_matrix]
-      runs-on: ubuntu-latest
-      steps:
-        - run: true
+    permissions:
+      contents: none
+    needs: [shellcheck_matrix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: 'true'
