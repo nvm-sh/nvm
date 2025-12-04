@@ -8,6 +8,13 @@ unset NVM_CD_FLAGS
 \. "$DIR/nvm.sh" --no-use
 
 if [ -n "$NODE_VERSION" ]; then
+  CURRENT_VERSION=$(nvm current)
+
+  if [ "$CURRENT_VERSION" == "$NODE_VERSION" ]; then
+    echo "Node.js version $NODE_VERSION is already active."
+    exit 0
+  fi
+  
   nvm use "$NODE_VERSION" > /dev/null || exit 127
 elif ! nvm use >/dev/null 2>&1; then
   echo "No NODE_VERSION provided; no .nvmrc file found" >&2
