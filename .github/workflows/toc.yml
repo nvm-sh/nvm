@@ -2,6 +2,10 @@ name: update readme TOC
 
 on: [push]
 
+concurrency:
+  group: toc-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -12,6 +16,7 @@ jobs:
     name: "update readme TOC"
 
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
     - name: Harden Runner
