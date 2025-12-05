@@ -1532,7 +1532,20 @@ nvm_ls() {
       SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's#\.#\\\.#g;')"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
-      VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
+      # Enable nullglob (bash-only) to avoid errors when directories are empty
+      # For other shells, stderr is suppressed to handle the case gracefully
+      # See: https://github.com/nvm-sh/nvm/issues/3727
+      if [ -n "${BASH_VERSION-}" ]; then
+        # shellcheck disable=SC3044
+        if shopt -q nullglob 2>/dev/null; then
+          NVM_NULLGLOB_WAS_SET=true
+        else
+          NVM_NULLGLOB_WAS_SET=false
+          # shellcheck disable=SC3044
+          shopt -s nullglob 2>/dev/null
+        fi
+      fi
+      VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" 2>/dev/null \
         | command sed -e "
             s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
             s#^${NVM_DIR}/##;
@@ -1547,6 +1560,11 @@ nvm_ls() {
         | command sed -e 's#\(.*\)\.\([^\.]\{1,\}\)$#\2-\1#;' \
                       -e "s#^${NVM_NODE_PREFIX}-##;" \
       )"
+      # Restore nullglob to its previous state (bash-only)
+      if [ -n "${BASH_VERSION-}" ] && [ "${NVM_NULLGLOB_WAS_SET-}" = 'false' ]; then
+        # shellcheck disable=SC3044
+        shopt -u nullglob 2>/dev/null
+      fi
     fi
   fi
 
