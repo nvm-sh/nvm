@@ -45,9 +45,9 @@
     "dockerfile_lint": "^0.3.4",
     "doctoc": "^2.2.1",
     "eclint": "^2.8.1",
-    "markdown-link-check": "^3.13.7",
+    "markdown-link-check": "^3.14.2",
     "replace": "^1.2.2",
-    "semver": "^7.7.1",
+    "semver": "^7.7.3",
     "urchin": "^0.0.5"
   }
 }
