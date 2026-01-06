@@ -1,0 +1,8 @@
+// This is for starting a simple proxy that requires basic auth. The only valid credentials will be 'test:123?45>6'. The
+// docker command to run is the following (assuming the current working directory is the directory with this .kdl file.)
+// $ docker run --rm --publish 8080:8080 --volume "$(pwd):/mnt/cwd" ferronserver/ferron:2 ferron --config /mnt/cwd/ferron-nodejs-mirror.kdl
+:8080 {
+  status 401 regex=".*" users="test"
+  user "test" "$argon2id$v=19$m=19456,t=2,p=1$emTillHaS3OqFuvITdXxzg$G00heP8QSXk5H/ruTiLt302Xk3uETfU5QO8hBIwUq08"
+  proxy "https://nodejs.org/"
+}
