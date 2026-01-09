@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Security test to verify that NVM_AUTH_HEADER is sanitized in wget path
+# This test ensures that command injection attacks are prevented
+
+cleanup () {
+  unset -f die cleanup
+  rm -f /tmp/nvm_security_test_file 2>/dev/null || true
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+set -ex
+
+# Skip test if wget is not available
+if ! nvm_has "wget"; then
+  echo "wget not available, skipping security test"
+  exit 0
+fi
+
+# Test 1: Verify that malicious command injection in NVM_AUTH_HEADER is sanitized
+# This should not execute the command, but should sanitize it
+MALICIOUS_HEADER="Bearer test-token; touch /tmp/nvm_security_test_file; echo malicious"
+NVM_AUTH_HEADER="${MALICIOUS_HEADER}" nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/dev/null 2>&1 || true
+
+# Verify that the malicious file was NOT created (sanitization worked)
+if [ -f /tmp/nvm_security_test_file ]; then
+  die "SECURITY FAILURE: Command injection succeeded! Malicious file was created."
+fi
+
+# Test 2: Verify that sanitized header still works for legitimate requests
+# The sanitized header should only contain safe characters
+SANITIZED=$(nvm_sanitize_auth_header "${MALICIOUS_HEADER}")
+# Verify that dangerous characters were removed
+case "${SANITIZED}" in
+  *";"*|*"touch"*|*"/tmp"*)
+    die "SECURITY FAILURE: Sanitization did not remove dangerous characters properly"
+    ;;
+esac
+
+# Test 3: Verify that legitimate header with safe characters still works
+LEGITIMATE_HEADER="Bearer test-token-123"
+NVM_AUTH_HEADER="${LEGITIMATE_HEADER}" nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/dev/null 2>&1 || true
+
+# Test 4: Test with backticks (command substitution)
+MALICIOUS_HEADER2="Bearer \`touch /tmp/nvm_security_test_file\`"
+NVM_AUTH_HEADER="${MALICIOUS_HEADER2}" nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/dev/null 2>&1 || true
+
+# Verify that the malicious file was NOT created
+if [ -f /tmp/nvm_security_test_file ]; then
+  die "SECURITY FAILURE: Command injection with backticks succeeded! Malicious file was created."
+fi
+
+# Test 5: Test with $(command substitution)
+MALICIOUS_HEADER3="Bearer \$(touch /tmp/nvm_security_test_file)"
+NVM_AUTH_HEADER="${MALICIOUS_HEADER3}" nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/dev/null 2>&1 || true
+
+# Verify that the malicious file was NOT created
+if [ -f /tmp/nvm_security_test_file ]; then
+  die "SECURITY FAILURE: Command injection with \$() succeeded! Malicious file was created."
+fi
+
+cleanup
+echo "All security tests passed: Command injection attacks are properly sanitized"
