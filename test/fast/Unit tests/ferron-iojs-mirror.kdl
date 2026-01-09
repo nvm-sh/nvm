@@ -6,4 +6,5 @@
   user "test" "$argon2id$v=19$m=19456,t=2,p=1$emTillHaS3OqFuvITdXxzg$G00heP8QSXk5H/ruTiLt302Xk3uETfU5QO8hBIwUq08"
   proxy "https://iojs.org/"
   proxy_request_header_remove "Authorization"
+  proxy_request_header_remove "Proxy-Authorization"
 }
