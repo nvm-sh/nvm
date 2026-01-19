@@ -63,7 +63,7 @@ jobs:
             iojs.org:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
         name: 'install node'
         with:

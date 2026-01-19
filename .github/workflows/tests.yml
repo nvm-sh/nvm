@@ -52,7 +52,7 @@ jobs:
             iojs.org:443
             azure.archive.ubuntu.com:80
             packages.microsoft.com:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: sudo apt-get update; sudo apt-get install ${{ matrix.shell }}
         if: matrix.shell == 'zsh' || matrix.shell == 'ksh'
         # zsh (https://github.com/actions/runner-images/issues/264) and ksh are not in the ubuntu image
