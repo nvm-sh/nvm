@@ -2273,6 +2273,9 @@ nvm_install_binary() {
   local nosource
   nosource="${4-}"
 
+  local NVM_ARCH
+  NVM_ARCH="${5-}"
+
   local VERSION
   VERSION="$(nvm_strip_iojs_prefix "${PREFIXED_VERSION}")"
 
@@ -2300,7 +2303,7 @@ nvm_install_binary() {
     PROGRESS_BAR="--progress-bar"
   fi
   nvm_echo "Downloading and installing ${NODE_OR_IOJS-} ${VERSION}..."
-  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
+  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" "${NVM_ARCH}" | command tail -1)"
   if [ -f "${TARBALL}" ]; then
     TMPDIR="$(dirname "${TARBALL}")/files"
   fi
@@ -2353,7 +2356,11 @@ nvm_get_download_slug() {
   NVM_OS="$(nvm_get_os)"
 
   local NVM_ARCH
-  NVM_ARCH="$(nvm_get_arch)"
+  NVM_ARCH="${4-}"
+  if [ -z "${NVM_ARCH}" ]; then
+    NVM_ARCH="$(nvm_get_arch)"
+  fi
+
   if ! nvm_is_merged_node_version "${VERSION}"; then
     if [ "${NVM_ARCH}" = 'armv6l' ] || [ "${NVM_ARCH}" = 'armv7l' ]; then
       NVM_ARCH="arm-pi"
@@ -2433,13 +2440,16 @@ nvm_download_artifact() {
     return 3
   fi
 
+  local NVM_ARCH
+  NVM_ARCH="${5-}"
+
   if [ "${KIND}" = 'binary' ] && ! nvm_binary_available "${VERSION}"; then
     nvm_err "No precompiled binary available for ${VERSION}."
     return
   fi
 
   local SLUG
-  SLUG="$(nvm_get_download_slug "${FLAVOR}" "${KIND}" "${VERSION}")"
+  SLUG="$(nvm_get_download_slug "${FLAVOR}" "${KIND}" "${VERSION}" "${NVM_ARCH}")"
 
   local COMPRESSION
   COMPRESSION="$(nvm_get_artifact_compression "${VERSION}")"
@@ -3303,6 +3313,7 @@ nvm() {
       local NVM_UPGRADE_NPM
       NVM_UPGRADE_NPM=0
       local NVM_WRITE_TO_NVMRC
+      local NVM_ARCH
       NVM_WRITE_TO_NVMRC=0
 
       local PROVIDED_REINSTALL_PACKAGES_FROM
@@ -3408,6 +3419,19 @@ nvm() {
               return 6
             fi
             NVM_WRITE_TO_NVMRC=1
+            shift
+          ;;
+          --arch=*)
+            if [ -n "${NVM_ARCH-}" ]; then
+              nvm_err '--arch may only be provided once'
+              return 6
+            fi
+            NVM_ARCH="$(nvm_echo "$1" | command cut -c 8-)"
+            echo "got --arch='${NVM_ARCH}'"
+            if [ -z "${NVM_ARCH}" ]; then
+              nvm_err 'If --arch is provided, it must refer to a valid architecture name.'
+              return 6
+            fi
             shift
           ;;
           *)
@@ -3615,7 +3639,7 @@ nvm() {
 
         # skip binary install if "nobinary" option specified.
         if [ $nobinary -ne 1 ] && nvm_binary_available "${VERSION}"; then
-          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_binary "${FLAVOR}" std "${VERSION}" "${nosource}"
+          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_binary "${FLAVOR}" std "${VERSION}" "${nosource}" "${NVM_ARCH}"
           EXIT_CODE=$?
         else
           EXIT_CODE=-1
