@@ -1,0 +1,35 @@
+#!/bin/sh
+# Regression test for issue #3727
+# This test ensures nvm ls works correctly when:
+# 1. nullglob is NOT set (default bash behavior)
+# 2. No node versions are installed (empty versions directory)
+# Previously, this would cause "find: ... No such file or directory" errors
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+# Ensure nullglob is OFF (to test the fix works without it)
+# This simulates a user who hasn't set nullglob in their shell
+if [ -n "${BASH_VERSION-}" ]; then
+  shopt -u nullglob 2>/dev/null || true
+fi
+
+# Make sure no fake versions exist - empty dir triggers the bug
+rm -rf "${NVM_DIR}/versions/node/"* 2>/dev/null
+mkdir -p "${NVM_DIR}/versions/node"
+
+# Run nvm ls and capture stderr
+OUTPUT="$(nvm ls 2>&1)"
+EXIT_CODE=$?
+
+# Should not contain "No such file or directory" error
+if echo "$OUTPUT" | grep -q "No such file or directory"; then
+  die "FAIL: nvm ls produced 'No such file or directory' error with empty versions directory"
+fi
+
+# Should succeed (exit 0)
+[ "$EXIT_CODE" = "0" ] || die "FAIL: nvm ls exited with code $EXIT_CODE, expected 0"
+
+echo "PASS: nvm ls works with empty versions directory and nullglob disabled"
