@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+make_fake_node v0.0.1
+
+output=$(nvm ls | cat)
+
+if printf '%s' "$output" | grep -Eq '\x1b\[[0-9;]*m'; then
+    die "FAIL: nvm ls printed colors when piped"
+    exit 1
+else
+    echo "PASS: no colors when piped"
+fi
