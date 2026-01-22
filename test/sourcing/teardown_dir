@@ -1,0 +1,8 @@
+#!/bin/sh
+
+rm -rf ../../alias
+rm -rf ../../v0.10.1
+rm -rf ../../v0.10.2
+rm -rf ../../v0.10.3
+rm -rf ../../versions/node/v4.1.0
+rm -f ../../.nvmrc

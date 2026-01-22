@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+nvm install 0.6.21 || die 'v0.6.21 installation failed'
+[ "_$(node -v)" = "_v0.6.21-pre" ] || die "v0.6.21-pre not installed with v0.6.21, got $(node -v)"
+[ "_$(nvm current)" = "_v0.6.21" ] || die "v0.6.21-pre not reported as v0.6.21, got $(nvm current)"

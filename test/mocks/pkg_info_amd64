@@ -1,0 +1,4 @@
+# On SmartOS 64bits setups, pkg_info outputs _both_ i386 and x86_64
+# architectures as architectures supported by pkg_install.
+echo "i386"
+echo "x86_64"

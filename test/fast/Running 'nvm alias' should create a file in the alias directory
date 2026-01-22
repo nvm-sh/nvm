@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -ex
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+\. ../../nvm.sh
+
+nvm alias test v0.1.2
+
+[ "$(cat "$(nvm_alias_path)/test")" = "v0.1.2" ]

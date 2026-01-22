@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+set +e # todo: fix
+\. ../../nvm.sh
+set -e
+
+nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 1'
+nvm install 12.12 >/dev/null 2>&1 || die 'install v12.12 failed'
+nvm install-latest-npm || die 'nvm install-latest-npm failed: 1'
+NPM_VERSION="$(npm --version)"
+nvm_version_greater_than_or_equal_to "${NPM_VERSION}" 7.0.0 \
+&& nvm_version_greater 8.0.0 "${NPM_VERSION}" || die "node v12.12 updates to ${NPM_VERSION}; expected v7"
+
+nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 1'
+nvm install 4 >/dev/null 2>&1 || die 'install v4 failed'
+nvm install-latest-npm || die 'nvm install-latest-npm failed: 1'
+NPM_VERSION="$(npm --version)"
+nvm_version_greater_than_or_equal_to "${NPM_VERSION}" 5.0.0 || die "node v4.x updates to ${NPM_VERSION}; expected >= v5"
+
+nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 2'
+nvm install 1.0 >/dev/null 2>&1 || die 'install v1.0 failed'
+nvm install-latest-npm || die 'nvm install-latest-npm failed: 2'
+NPM_VERSION="$(npm --version)"
+[ "${NPM_VERSION}" = '4.5.0' ] || die "io.js v1.0.x updates to ${NPM_VERSION}; expected v4.5.0"
+
+nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 3'
+nvm install 1 >/dev/null 2>&1 || die 'install v1 failed'
+nvm install-latest-npm || die 'nvm install-latest-npm failed: 3'
+NPM_VERSION="$(npm --version)"
+[ "${NPM_VERSION}" = '4.6.1' ] || die "io.js v1.x updates to ${NPM_VERSION}; expected v4.6.1"
+
+# export NPM_CONFIG_STRICT_SSL=false # the npm registry tightened up their SSL certs
+
+## Commented because TLS < 1.2 is dropped, and this breaks npm in node < 0.10
+## https://github.blog/2021-08-23-npm-registry-deprecating-tls-1-0-tls-1-1/#detailed-timeline
+# nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 4'
+# nvm install 0.8.27 >/dev/null 2>&1 || die 'install v0.8 failed'
+# nvm install-latest-npm || die 'nvm install-latest-npm failed: 4'
+# NPM_VERSION="$(npm --version)"
+# [ "${NPM_VERSION}" = '4.5.0' ] || die "node 0.8.27 updates to ${NPM_VERSION}; expected v4.5.0"
+
+## Commented to work around travis-ci breaking 0,6 installs
+# nvm deactivate >/dev/null 2>&1 || die 'unable to deactivate: 5'
+# nvm install 0.6.21 >/dev/null 2>&1 || die 'install v0.6 failed'
+# nvm install-latest-npm || die 'nvm install-latest-npm failed: 5'
+# NPM_VERSION="$(npm --version)"
+# [ "${NPM_VERSION}" = '1.3.26' ] || die "node 0.6.21 updates to ${NPM_VERSION}; expected v1.3.26"

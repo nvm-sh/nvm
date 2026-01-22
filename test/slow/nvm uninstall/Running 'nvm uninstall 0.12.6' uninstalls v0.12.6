@@ -1,0 +1,33 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+# Source nvm
+\. ../../../nvm.sh
+
+# Version to install/uninstall
+NVM_TEST_VERSION=0.12.6
+
+# Make sure it's not already here
+[ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
+
+# Install it
+nvm install $NVM_TEST_VERSION
+
+# Make sure it installed
+nvm ls | grep "$NVM_TEST_VERSION" || die "Failed to install node"
+
+# Switch to another version so we can uninstall
+nvm use 0.12.7
+
+# if zsh, set "nomatch" opt to reproduce failure from https://github.com/nvm-sh/nvm/issues/1228
+if nvm_has "setopt"; then
+  setopt nomatch
+fi
+
+# Uninstall it
+nvm uninstall $NVM_TEST_VERSION
+
+# Make sure it uninstalled
+nvm ls | grep "$NVM_TEST_VERSION"
+[ "$?" != "0" ] || die "Failed to uninstall node"

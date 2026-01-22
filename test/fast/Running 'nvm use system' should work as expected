@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -eux
+
+cleanup() {
+  unset -f nvm_has_system_node nvm_print_npm_version
+}
+die() { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../nvm.sh
+
+nvm_has_system_node() { return 0; }
+nvm_print_npm_version() { command printf ' (npm v1.2.3)'; }
+
+EXPECTED_OUTPUT="Now using system version of node: $(node -v)$(nvm_print_npm_version)"
+set +x # since stderr is needed
+OUTPUT="$(nvm use system 2>&1)"
+set -x
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "Could not use system version of node. Got >${OUTPUT}<, expected >${EXPECTED_OUTPUT}<"
+
+EXPECTED_OUTPUT=""
+set +x # since stderr is needed
+OUTPUT="$(nvm use --silent system 2>&1 | tail -1)"
+set -x
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "Could not use system version of node or --silent was not silent"
+
+nvm_has_system_node() { return 1; }
+nvm_print_npm_version() { command printf ''; }
+
+EXPECTED_OUTPUT="System version of node not found."
+set +x # since stderr is needed
+OUTPUT="$(nvm use system 2>&1 | tail -1)"
+set -x
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "Did not report error, system node not found"
+
+nvm use system 2>&1 > /dev/null || [ $? -eq 127 ] || die "Did not return error code, system node not found"
+EXPECTED_OUTPUT=""
+set +x # since stderr is needed
+OUTPUT="$(nvm use --silent system 2>&1 | tail -1)"
+set -x
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "Did not report error, system node not found or --silent was not silent"
+nvm use --silent system 2>&1 > /dev/null || [ $? -eq 127 ] || die "Did not return error code, system node not found or --silent was not silent"
+
+cleanup

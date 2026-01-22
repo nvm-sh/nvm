@@ -1,0 +1,24 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+[ "~$(nvm_num_version_groups)" = "~0" ] || die "no args should give 0"
+[ "~$(nvm_num_version_groups v)" = "~0" ] || die "just "v" should give 0"
+[ "~$(nvm_num_version_groups .)" = "~0" ] || die "just "." should give 0"
+[ "~$(nvm_num_version_groups a)" = "~1" ] || die "one letter should give 1"
+
+[ "~$(nvm_num_version_groups 1)" = "~1" ] || die "1 should give 1"
+[ "~$(nvm_num_version_groups 1.)" = "~1" ] || die "1. should give 1"
+[ "~$(nvm_num_version_groups v1)" = "~1" ] || die "v1 should give 1"
+[ "~$(nvm_num_version_groups v1.)" = "~1" ] || die "v1. should give 1"
+
+[ "~$(nvm_num_version_groups 1.2)" = "~2" ] || die "1.2 should give 2"
+[ "~$(nvm_num_version_groups 1.2.)" = "~2" ] || die "1.2. should give 2"
+[ "~$(nvm_num_version_groups v1.2)" = "~2" ] || die "v1.2 should give 2"
+[ "~$(nvm_num_version_groups v1.2.)" = "~2" ] || die "v1.2. should give 2"
+
+[ "~$(nvm_num_version_groups 1.2.3)" = "~3" ] || die "1.2.3 should give 3"
+[ "~$(nvm_num_version_groups v1.2.3)" = "~3" ] || die "v1.2.3 should give 3"
+[ "~$(nvm_num_version_groups v1.2.3.)" = "~3" ] || die "v1.2.3. should give 3"

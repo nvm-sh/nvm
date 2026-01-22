@@ -1,0 +1,26 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+
+die () { echo "$@" ; exit 1; }
+
+OUTPUT="$(nvm unalias foo/bar 2>&1)"
+EXPECTED_OUTPUT="Aliases in subdirectories are not supported."
+[ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "trying to remove an alias with a slash should fail with '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+EXIT_CODE="$(nvm unalias foo/bar >/dev/null 2>&1 ; echo $?)"
+[ "$EXIT_CODE" = "1" ] || die "trying to remove an alias with a slash should fail with code 1, got '$EXIT_CODE'"
+
+OUTPUT="$(nvm unalias foo/ 2>&1)"
+EXPECTED_OUTPUT="Aliases in subdirectories are not supported."
+[ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "trying to remove an alias ending with a slash should fail with '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+EXIT_CODE="$(nvm unalias foo/ >/dev/null 2>&1 ; echo $?)"
+[ "$EXIT_CODE" = "1" ] || die "trying to remove an alias ending with a slash should fail with code 1, got '$EXIT_CODE'"
+
+OUTPUT="$(nvm unalias /bar 2>&1)"
+EXPECTED_OUTPUT="Aliases in subdirectories are not supported."
+[ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "trying to remove an alias starting with a slash should fail with '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+EXIT_CODE="$(nvm unalias /bar >/dev/null 2>&1 ; echo $?)"
+[ "$EXIT_CODE" = "1" ] || die "trying to remove an alias starting with a slash should fail with code 1, got '$EXIT_CODE'"

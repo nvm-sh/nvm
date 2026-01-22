@@ -1,0 +1,11 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+nvm_has cat && type cat > /dev/null || die 'nvm_has locates "cat" properly'
+
+[ "~$(nvm_has foobarbaz 2>&1)" = "~" ] || die "nvm_has does not suppress error output"
+
+! nvm_has foobarbaz && ! type foobarbaz >/dev/null 2>&1 || die "nvm_has does not return a nonzero exit code when not found"

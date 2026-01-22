@@ -1,0 +1,65 @@
+#!/bin/sh
+
+cleanup () {
+  rm -rf "$npm_config_prefix/lib" >/dev/null 2>&1
+  unset npm_config_prefix
+
+  rm -f npm
+  PATH="$ORIGINAL_PATH"
+  NVM_DIR="$ORIGINAL_NVM_DIR"
+
+  unset -f setup cleanup die
+  unset message ORIGINAL_PATH ORIGINAL_NVM_DIR
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+setup () {
+  ORIGINAL_PATH="$PATH"
+  ORIGINAL_NVM_DIR="$NVM_DIR"
+
+  # Pretend we're not using NVM
+  unset NVM_DIR
+
+  npm_config_prefix="$(pwd)"
+  export npm_config_prefix
+  mkdir -p "$npm_config_prefix/lib"
+}
+
+setup
+
+npm install -g nop >/dev/null || die 'nvm_check_global_modules cannot be tested because `npm` cannot install the `nop` package'
+message=$(nvm_check_global_modules)
+[ ! -z "$message" ] || die "nvm_check_global_modules should have printed a notice when npm had global modules installed; got:\n${message}"
+
+if [ -n "${ORIGINAL_NVM_DIR}" ] && [ -z "${GITHUB_ACTIONS}" ]; then
+  # Admit we're using NVM, just for this one test
+  # TODO: fix this for GHA
+  message=$(NVM_DIR="${ORIGINAL_NVM_DIR}" nvm_check_global_modules)
+  [ -z "$message" ] || die "nvm_check_global_modules should not have printed a notice when npm is managed by nvm; got:\n${message}"
+fi
+
+npm uninstall -g nop >/dev/null
+message=$(nvm_check_global_modules)
+[ -z "$message" ] || die "nvm_check_global_modules should not have printed a notice when npm had no global modules installed; got:\n${message}"
+
+# Faking an installation of npm
+mkdir -p "$npm_config_prefix/lib/node_modules/npm"
+cat <<'JSON' >"$npm_config_prefix/lib/node_modules/npm/package.json"
+{ "name": "npm", "version": "0.0.1fake" }
+JSON
+
+message=$(nvm_check_global_modules)
+[ -z "$message" ] || die "nvm_check_global_modules should have not printed a notice when npm had only itself installed as a global module; got:\n${message}"
+
+# Faking the absence of npm
+PATH=".:$PATH"
+touch npm
+chmod +x npm
+
+message=$(nvm_check_global_modules)
+[ -z "$message" ] || die "nvm_check_global_modules should have not printed a notice when npm was unavailable; got:\n${message}"
+
+
+cleanup

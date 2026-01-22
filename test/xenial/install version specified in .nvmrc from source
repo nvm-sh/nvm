@@ -1,0 +1,20 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+NVM_TEST_VERSION=v0.10.7
+
+# Remove the stuff we're clobbering.
+[ -e ../../$NVM_TEST_VERSION ] && rm -R ../../$NVM_TEST_VERSION
+
+# Install from binary
+echo "$NVM_TEST_VERSION" > .nvmrc
+
+nvm install -s || "'nvm install -s' failed"
+
+# Check
+[ -d ../../$NVM_TEST_VERSION ] || die "$NVM_TEST_VERSION did not exist"
+nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION \
+  || die "'nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"

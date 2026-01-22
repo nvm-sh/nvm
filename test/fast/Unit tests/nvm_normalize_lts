@@ -1,0 +1,54 @@
+#!/bin/sh
+
+cleanup() {
+    unset nvm_get_os
+    rm -rf "${NVM_DIR}/alias/lts"
+    mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
+}
+
+die () { cleanup; echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+MOCKS_DIR="../Unit tests/mocks"
+
+LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
+
+STAR="$(cat "${MOCKS_DIR}/lts-star.txt")"
+
+mv "${NVM_DIR}/alias/lts" "${NVM_DIR}/alias/lts-backup" ||:
+mkdir -p "${NVM_DIR}/alias/lts"
+
+echo "${STAR}" > "${NVM_DIR}/alias/lts/\*"
+printf '%s\n' "$(cat "${LTS_NAMES_PATH}" | tail -n +1)" | while IFS= read -r LTS; do
+  cp "${NVM_DIR}/alias/lts-backup/${LTS}" "${NVM_DIR}/alias/lts/"
+done
+
+ACTUAL="$(nvm_normalize_lts "foo")"
+EXPECTED='foo'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "foo: expected >${EXPECTED}<, got >${ACTUAL}<"
+
+ACTUAL="$(nvm_normalize_lts "lts/*")"
+EXPECTED='lts/*'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "*: expected >${EXPECTED}<, got >${ACTUAL}<"
+
+if ACTUAL="$(nvm_normalize_lts lts/ARGON)"; then
+  die "ARGON: expected failure, got >${ACTUAL}<"
+fi
+
+ACTUAL="$(nvm_normalize_lts "${STAR}")"
+EXPECTED="${STAR}"
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "${STAR}: expected >${EXPECTED}<, got >${ACTUAL}<"
+
+LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
+
+INDEX=1
+printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
+    ACTUAL="$(nvm_normalize_lts "lts/-${INDEX}")"
+    MESSAGE="for lts/-${INDEX} (${LTS})"
+    EXPECTED="lts/$(echo "${LTS_LIST}" | tail -n +${INDEX} | head -n1)"
+    [ "${ACTUAL}" = "${EXPECTED}" ] || die "${MESSAGE}: expected >${EXPECTED}<, got >${ACTUAL}<"
+
+    INDEX=$(($INDEX + 1))
+done
+

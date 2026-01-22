@@ -1,0 +1,20 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+EXPECTED_MSG="Only implicit aliases 'stable', 'unstable', 'iojs', and 'node' are supported."
+[ "_$(nvm_validate_implicit_alias 2>&1)" = "_$EXPECTED_MSG" ] \
+  || die "nvm_validate_implicit_alias did not require stable|unstable|iojs|node"
+[ "_$(nvm_validate_implicit_alias foo 2>&1)" = "_$EXPECTED_MSG" ] \
+  || die "nvm_validate_implicit_alias did not require stable|unstable|iojs|node"
+
+EXIT_CODE="$(nvm_validate_implicit_alias >/dev/null 2>&1 ; echo $?)"
+[ "_$EXIT_CODE" = "_1" ] \
+  || die "nvm_validate_implicit_alias without stable|unstable|iojs|node had wrong exit code: expected 1, got $EXIT_CODE"
+
+nvm_validate_implicit_alias stable || die "nvm_validate_implicit_alias stable did not exit 0"
+nvm_validate_implicit_alias unstable || die "nvm_validate_implicit_alias unstable did not exit 0"
+nvm_validate_implicit_alias node || die "nvm_validate_implicit_alias node did not exit 0"
+nvm_validate_implicit_alias iojs || die "nvm_validate_implicit_alias iojs did not exit 0"

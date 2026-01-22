@@ -1,14 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DIR="$(command cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-source "$DIR/nvm.sh"
+unset NVM_CD_FLAGS
+
+# shellcheck disable=SC1090,SC1091
+\. "$DIR/nvm.sh" --no-use
 
 if [ -n "$NODE_VERSION" ]; then
-  nvm use $NODE_VERSION || (echo "NODE_VERSION not set" && exit 127)
+  nvm use "$NODE_VERSION" > /dev/null || exit 127
 else
-  nvm use || (echo "No .nvmrc file found" && exit 127)
+  nvm_rc_version > /dev/null && nvm_ensure_version_installed "$NVM_RC_VERSION";
+  if ! nvm use >/dev/null 2>&1; then
+    echo "No NODE_VERSION provided; no .nvmrc file found" >&2
+    exit 127
+  fi
 fi
 
-exec $@
-
+exec "$@"

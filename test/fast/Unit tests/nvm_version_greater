@@ -1,0 +1,15 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+nvm_version_greater 0.10.0 0.2.12 || die '"nvm_version_greater 0.10.0 0.2.12" did not return true'
+
+if nvm_version_greater 0.10.0 0.20.12; then
+  die '"nvm_version_greater 0.10.0 0.20.12" returned true'
+fi
+
+if nvm_version_greater 0.10.0 0.10.0; then
+  die '"nvm_version_greater" returned false for the same two versions'
+fi
