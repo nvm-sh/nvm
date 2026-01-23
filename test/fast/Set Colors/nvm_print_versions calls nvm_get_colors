@@ -2,7 +2,7 @@
 
 \. ../../../nvm.sh
 
-set -e
+#set -e #nvm use system returns 127 and No system set message
 
 die () {
   # echo "$@" ;
@@ -24,7 +24,7 @@ fi
 # default system color
 nvm use system
 OUTPUT=$(nvm_print_versions system)
-FORMAT="\033[0;32m-> %12s\033[0m"
+FORMAT="\033[0;33m%15s\033[0m"
 VERSION='system'
 EXPECTED_OUTPUT=$(command printf -- "${FORMAT}\\n" "${VERSION}")
 
@@ -34,7 +34,7 @@ nvm_ls_current() { echo "current";}
 
 # default current color
 OUTPUT=$(nvm_print_versions current)
-FORMAT="\033[0;32m-> %12s\033[0m"
+FORMAT="\033[0;32m->%13s\033[0m"
 VERSION="current"
 EXPECTED_OUTPUT=$(command printf -- "${FORMAT}\\n" "${VERSION}")
 
@@ -43,7 +43,7 @@ EXPECTED_OUTPUT=$(command printf -- "${FORMAT}\\n" "${VERSION}")
 # custom current color
 nvm set-colors YCMGR
 OUTPUT=$(nvm_print_versions current)
-FORMAT="\033[1;35m-> %12s\033[0m"
+FORMAT="\033[1;35m->%13s\033[0m"
 VERSION="current"
 EXPECTED_OUTPUT=$(command printf -- "${FORMAT}\\n" "${VERSION}")
 

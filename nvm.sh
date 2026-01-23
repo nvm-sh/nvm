@@ -781,6 +781,15 @@ nvm_remote_version() {
   else
     VERSION="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN}" | command tail -1)"
   fi
+
+  if [ -n "${PATTERN}" ] && [ "_${VERSION}" != "_N/A" ] && ! nvm_validate_implicit_alias "${PATTERN}" 2>/dev/null; then
+    local VERSION_NUM
+    VERSION_NUM="$(nvm_echo "${VERSION}" | command awk '{print $1}')"
+    if ! nvm_echo "${VERSION_NUM}" | nvm_grep -q "${PATTERN}"; then
+      VERSION='N/A'
+    fi
+  fi
+
   if [ -n "${NVM_VERSION_ONLY-}" ]; then
     command awk 'BEGIN {
       n = split(ARGV[1], a);
@@ -1294,7 +1303,7 @@ nvm_alias() {
     return 2
   fi
 
-  command awk 'NF' "${NVM_ALIAS_PATH}"
+  command sed 's/#.*//; s/[[:space:]]*$//' "${NVM_ALIAS_PATH}" | command awk 'NF'
 }
 
 nvm_ls_current() {
@@ -1529,7 +1538,7 @@ nvm_ls() {
       PATTERN='v'
       SEARCH_PATTERN='.*'
     else
-      SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's#\.#\\\.#g;')"
+      SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's#\.#\\\.#g; s|#|\\#|g')"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \

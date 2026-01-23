@@ -443,7 +443,7 @@ Node has a [schedule](https://github.com/nodejs/Release#release-schedule) for lo
 
 Any time your local copy of `nvm` connects to https://nodejs.org, it will re-create the appropriate local aliases for all available LTS lines. These aliases (stored under `$NVM_DIR/alias/lts`), are managed by `nvm`, and you should not modify, remove, or create these files - expect your changes to be undone, and expect meddling with these files to cause bugs that will likely not be supported.
 
-To get the latest LTS version of node and migrate your existing installed packages, use
+To get the latest LTS version of node and migrate your existing installed packages, use:
 
 ```sh
 nvm install --reinstall-packages-from=current 'lts/*'
@@ -496,7 +496,10 @@ stevemao/left-pad
 
 ### io.js
 
-If you want to install [io.js](https://github.com/iojs/io.js/):
+> [!WARNING]
+> io.js was a [fork of Node.js](https://en.wikipedia.org/wiki/Node.js#History), created in 2014 and merged back in 2015. io.js shipped v1, v2, and v3 release lines; post-merge, node.js began releasing with v4.
+
+If you want to install io.js:
 
 ```sh
 nvm install iojs
@@ -1040,7 +1043,7 @@ To change the user directory and/or account name follow the instructions [here](
 [Urchin]: https://git.sdf.org/tlevine/urchin
 [Fish]: https://fishshell.com
 
-**Homebrew makes zsh directories unsecure**
+**Homebrew makes zsh directories insecure**
 
 ```shell
 zsh compinit: insecure directories, run compaudit for list.

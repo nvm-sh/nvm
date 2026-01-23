@@ -19,10 +19,10 @@ jobs:
             raw.githubusercontent.com:443
             release-assets.githubusercontent.com:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-tags: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "14"
       - run: npm install

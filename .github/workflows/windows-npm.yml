@@ -125,23 +125,55 @@ jobs:
             npm-node-version: '21'
           - wsl-distrib: Ubuntu-18.04
             npm-node-version: '18'
+          # node v24+ doesn't work on WSL1 (exec format error)
+          - wsl-distrib: Debian
+            npm-node-version: '--lts'
+          - wsl-distrib: Ubuntu-20.04
+            npm-node-version: '--lts'
         method:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v3
+      # For Ubuntu: install with packages directly
+      - if: matrix.wsl-distrib != 'Debian'
+        uses: Vampire/setup-wsl@v3
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
 
-      # see https://github.com/Vampire/setup-wsl/issues/76#issuecomment-3258201135
-      - shell: 'wsl-bash {0}'
-        run: 'sed -i s/ftp.debian.org/archive.debian.org/ /etc/apt/sources.list'
-      - uses: Vampire/setup-wsl@v3
+      # For Debian: install without packages first (apt-get update fails due to stale sources.list)
+      # see https://github.com/Vampire/setup-wsl/issues/76
+      - if: matrix.wsl-distrib == 'Debian'
+        uses: Vampire/setup-wsl@v3
         with:
           distribution: ${{ matrix.wsl-distrib }}
-          additional-packages: bash git curl ca-certificates wget
-          update: 'true'
+      - if: matrix.wsl-distrib == 'Debian'
+        shell: 'wsl-bash {0}'
+        run: 'sed -i s/ftp.debian.org/archive.debian.org/ /etc/apt/sources.list'
+      - if: matrix.wsl-distrib == 'Debian'
+        name: 'Install packages with retries'
+        shell: 'wsl-bash {0}'
+        run: |
+          retry() {
+            local n=0
+            local max=3
+            local delay=5
+            while true; do
+              "$@" && break || {
+                n=$((n+1))
+                if [ $n -lt $max ]; then
+                  echo "Command failed. Attempt $n/$max. Retrying in $delay seconds..."
+                  sleep $delay
+                else
+                  echo "Command failed after $max attempts."
+                  return 1
+                fi
+              }
+            done
+          }
+          retry apt-get update
+          retry apt-get upgrade --yes
+          retry apt-get install --yes bash git curl ca-certificates wget
 
       - name: Retrieve nvm on WSL
         run: |
@@ -186,15 +218,6 @@ jobs:
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
-
-      # see https://github.com/Vampire/setup-wsl/issues/76#issuecomment-3258201135
-      - shell: 'wsl-bash {0}'
-        run: 'sed -i s/ftp.debian.org/archive.debian.org/ /etc/apt/sources.list'
-      - uses: Vampire/setup-wsl@v3
-        with:
-          distribution: ${{ matrix.wsl-distrib }}
-          additional-packages: bash git curl ca-certificates wget
-          update: 'true'
 
       - name: Retrieve nvm on WSL
         run: |
