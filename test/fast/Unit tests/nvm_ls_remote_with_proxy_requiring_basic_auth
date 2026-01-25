@@ -2,22 +2,62 @@
 # shellcheck shell=dash
 # shellcheck disable=SC2039 # local is non-POSIX
 
+temp_nodejs_tmp_root=""
+temp_iojs_tmp_root=""
 cleanup () {
   unset -f die cleanup NVM_NODEJS_ORG_MIRROR
   docker stop ferron-nodejs-mirror && docker rm ferron-nodejs-mirror
   docker stop ferron-iojs-mirror && docker rm ferron-iojs-mirror
+  if [ -n "${temp_nodejs_tmp_root}" ]; then
+    rm -rf -- "${temp_nodejs_tmp_root}"
+  fi
+  if [ -n "${temp_iojs_tmp_root}" ]; then
+    rm -rf -- "${temp_iojs_tmp_root}"
+  fi
 }
 die () { echo "$@" ; cleanup ; exit 1; }
 
 set -e
 
-{ [ -e "ferron-nodejs-mirror.kdl" ] && [ -e "ferron-iojs-mirror.kdl" ]; } || die nvm_ls_remote_with_proxy_requiring_basic_auth Need to set working directory of script to Unit tests directory.
-
 # shellcheck source=/dev/null # The nvm.sh script is checked separately.
 \. ../../../nvm.sh
 
-docker run --detach --name ferron-nodejs-mirror --publish 8080:8080 --volume "$(pwd):/mnt/cwd" ferronserver/ferron:2 ferron --config /mnt/cwd/ferron-nodejs-mirror.kdl
-docker run --detach --name ferron-iojs-mirror --publish 8081:8081 --volume "$(pwd):/mnt/cwd" ferronserver/ferron:2 ferron --config /mnt/cwd/ferron-iojs-mirror.kdl
+# Setup the temporary directories to host the mock nodejs and iojs mirrors.
+MOCKS_DIR="$PWD/mocks"
+temp_nodejs_tmp_root="$(mktemp --directory)"
+mkdir -p "${temp_nodejs_tmp_root}/dist"
+cp "$MOCKS_DIR/nodejs.org-dist-index.tab" "${temp_nodejs_tmp_root}/dist/index.tab"
+temp_iojs_tmp_root="$(mktemp --directory)"
+mkdir -p "${temp_iojs_tmp_root}/dist"
+cp "$MOCKS_DIR/iojs.org-dist-index.tab" "${temp_iojs_tmp_root}/dist/index.tab"
+
+# Add necessary ferron config file needed for both containers.
+# NOTE: The valid credentials for these test servers are 'test:123?45>6'.
+cat <<EOF >"${temp_nodejs_tmp_root}/ferron.kdl"
+:8080 {
+  log "/dev/stderr"
+  error_log "/dev/stderr"
+  status 401 users="test" brute_protection=#false
+  user "test" "\$argon2id\$v=19\$m=19456,t=2,p=1\$emTillHaS3OqFuvITdXxzg\$G00heP8QSXk5H/ruTiLt302Xk3uETfU5QO8hBIwUq08"
+  root "/mnt/www"
+}
+EOF
+cat <<EOF >"${temp_iojs_tmp_root}/ferron.kdl"
+:8081 {
+  log "/dev/stderr"
+  error_log "/dev/stderr"
+  status 401 users="test" brute_protection=#false
+  user "test" "\$argon2id\$v=19\$m=19456,t=2,p=1\$emTillHaS3OqFuvITdXxzg\$G00heP8QSXk5H/ruTiLt302Xk3uETfU5QO8hBIwUq08"
+  root "/mnt/www"
+}
+EOF
+# Need to adjust permissions to ensure ferron running under container can read the files in the temp directories.
+chmod a+rx "${temp_nodejs_tmp_root}"
+chmod a+rx "${temp_iojs_tmp_root}"
+
+# Start containers
+docker run --detach --name ferron-nodejs-mirror --publish 8080:8080 --volume "${temp_nodejs_tmp_root}:/mnt/www" --workdir "/mnt/www" ferronserver/ferron:2 ferron --config /mnt/www/ferron.kdl
+docker run --detach --name ferron-iojs-mirror --publish 8081:8081 --volume "${temp_iojs_tmp_root}:/mnt/www" --workdir "/mnt/www" ferronserver/ferron:2 ferron --config /mnt/www/ferron.kdl
 sleep 1 # wait for ferron containers to start
 
 export NVM_NODEJS_ORG_MIRROR="http://localhost:8080/dist"
