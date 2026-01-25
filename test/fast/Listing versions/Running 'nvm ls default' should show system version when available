@@ -1,0 +1,22 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  rm -f "$(nvm_alias_path)/default"
+  unset -f nvm_has_system_node node
+}
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+nvm_make_alias default system
+nvm_has_system_node() { return 0; }
+node() { command printf 'v0.0.0'; }
+
+OUTPUT="$(nvm ls default | strip_colors)"
+echo "${OUTPUT}" | command grep -q 'system' \
+  || die "Could not list system via alias. Got >${OUTPUT}<"
+echo "${OUTPUT}" | command grep -q 'v0.0.0' \
+  || die "Could not list system version via alias. Got >${OUTPUT}<"
+
+cleanup
