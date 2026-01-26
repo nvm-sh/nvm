@@ -2642,18 +2642,24 @@ nvm_install_source() {
   NVM_OS="$(nvm_get_os)"
 
   local make
-  make='make'
   local MAKE_CXX
+  # For old Node.js versions (< 0.12), explicitly set SHELL=/bin/sh to avoid
+  # issues with zsh's strict glob handling in Makefiles with unquoted globs
+  local MAKE_SHELL_OVERRIDE
+  if nvm_version_greater "0.12.0" "${VERSION}"; then
+    MAKE_SHELL_OVERRIDE=' SHELL=/bin/sh'
+  fi
+  make="make${MAKE_SHELL_OVERRIDE-}"
   case "${NVM_OS}" in
     'freebsd' | 'openbsd')
-      make='gmake'
+      make="gmake${MAKE_SHELL_OVERRIDE-}"
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     ;;
     'darwin')
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     ;;
     'aix')
-      make='gmake'
+      make="gmake${MAKE_SHELL_OVERRIDE-}"
     ;;
   esac
   if nvm_has "clang++" && nvm_has "clang" && nvm_version_greater_than_or_equal_to "$(nvm_clang_version)" 3.5; then
