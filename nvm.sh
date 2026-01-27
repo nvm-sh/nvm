@@ -978,13 +978,18 @@ nvm_strip_path() {
     nvm_err '${NVM_DIR} not set!'
     return 1
   fi
-  command printf %s "${1-}" | command awk -v NVM_DIR="${NVM_DIR}" -v RS=: '
+  local RESULT
+  RESULT="$(command printf %s "${1-}" | command awk -v NVM_DIR="${NVM_DIR}" -v RS=: '
   index($0, NVM_DIR) == 1 {
     path = substr($0, length(NVM_DIR) + 1)
     if (path ~ "^(/versions/[^/]*)?/[^/]*'"${2-}"'.*$") { next }
   }
-  # The final RT will contain a colon if the input has a trailing colon, or a null string otherwise
-  { printf "%s%s", sep, $0; sep=RS } END { printf "%s", RT }'
+  { printf "%s%s", sep, $0; sep=RS }')"
+  # mawk does not support RT, so preserve trailing colon manually
+  case "${1-}" in
+    *:) command printf '%s:' "${RESULT}" ;;
+    *) command printf '%s' "${RESULT}" ;;
+  esac
 }
 
 nvm_change_path() {
