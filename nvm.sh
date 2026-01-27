@@ -4530,9 +4530,9 @@ nvm_get_default_packages() {
   NVM_DEFAULT_PACKAGE_FILE="${NVM_DIR}/default-packages"
   if [ -f "${NVM_DEFAULT_PACKAGE_FILE}" ]; then
     command awk -v filename="${NVM_DEFAULT_PACKAGE_FILE}" '
-      /^[[:space:]]*#/ { next }                     # Skip lines that begin with #
-      /^[[:space:]]*$/ { next }                     # Skip empty lines
-      /[[:space:]]/ && !/^[[:space:]]*#/ {
+      /^[ \t]*#/ { next }                           # Skip lines that begin with #
+      /^[ \t]*$/ { next }                           # Skip empty lines
+      /[ \t]/ && !/^[ \t]*#/ {
         print "Only one package per line is allowed in `" filename "`. Please remove any lines with multiple space-separated values." > "/dev/stderr"
         err = 1
         exit 1
