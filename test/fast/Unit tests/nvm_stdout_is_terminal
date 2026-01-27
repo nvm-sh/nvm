@@ -5,6 +5,7 @@ tempfile=$(mktemp)
 die () { echo "$@" ; cleanup; exit 1; }
 cleanup() { rm -f "$tempfile"; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 if [ -t 1 ] ; then

@@ -2,6 +2,7 @@
 
 set -ex
 
+: nvm.sh
 \. ../../nvm.sh
 
 nvm

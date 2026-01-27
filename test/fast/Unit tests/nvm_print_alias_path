@@ -7,6 +7,7 @@ cleanup () {
   unset -f nvm_alias nvm_version
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 NVM_ALIAS_DIR='path/to/the alias/dir'

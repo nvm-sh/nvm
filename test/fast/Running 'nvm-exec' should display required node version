@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -x
+: nvm.sh
 \. ../../nvm.sh
 
 die () { echo "$@" ; rm .nvmrc ; exit 1; }

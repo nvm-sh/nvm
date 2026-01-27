@@ -6,6 +6,7 @@
 
 die () { echo "$@" ; cleanup ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 # The awk command from nvm_get_default_packages

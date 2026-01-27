@@ -9,6 +9,7 @@ cleanup() {
   mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 MOCKS_DIR="${PWD}/mocks"

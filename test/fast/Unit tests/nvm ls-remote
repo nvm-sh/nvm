@@ -12,6 +12,7 @@ cleanup() {
   mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 if [ -n "${NVM_COLORS-}" ]; then
   export TEMP_NVM_COLORS=NVM_COLORS

@@ -3,6 +3,7 @@
 TEST_PWD=$(pwd)
 TEST_DIR="$TEST_PWD/nvm_die_on_prefix_tmp"
 
+: nvm.sh
 \. ../../../nvm.sh
 
 TEST_VERSION_DIR="${TEST_DIR}/version"

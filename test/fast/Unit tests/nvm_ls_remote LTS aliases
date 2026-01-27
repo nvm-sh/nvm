@@ -14,6 +14,7 @@ cleanup() {
   rm -rf "$TEST_PATH"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 set -ex
