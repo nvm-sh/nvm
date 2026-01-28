@@ -70,3 +70,12 @@ jobs:
       - uses: actions/checkout@v6
       - name: check tests filenames
         run: ./rename_test.sh --check
+
+  all:
+    permissions:
+      contents: none
+    name: 'all linting'
+    needs: [eclint, dockerfile_lint, doctoc, test_naming]
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
