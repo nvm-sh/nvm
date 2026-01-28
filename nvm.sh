@@ -3750,7 +3750,13 @@ nvm() {
       fi
 
       if ! nvm_is_version_installed "${VERSION}"; then
-        nvm_err "${VERSION} version is not installed..."
+        local REQUESTED_VERSION
+        REQUESTED_VERSION="${PATTERN}"
+        if [ "_${VERSION}" != "_N/A" ] && [ "_${VERSION}" != "_${PATTERN}" ]; then
+          nvm_err "Version '${VERSION}' (inferred from ${PATTERN}) is not installed."
+        else
+          nvm_err "Version '${REQUESTED_VERSION}' is not installed."
+        fi
         return
       fi
 
