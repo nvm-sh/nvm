@@ -12,6 +12,7 @@ jobs:
 
     name: "tests"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: 'script -q -e -c "${{ matrix.shell }} {0}"'
