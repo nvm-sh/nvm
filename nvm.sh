@@ -4497,7 +4497,7 @@ nvm() {
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" | "-v")
-      nvm_echo '0.40.3'
+      nvm_echo '0.40.4'
     ;;
     "unload")
       nvm deactivate >/dev/null 2>&1
