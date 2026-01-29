@@ -5,7 +5,6 @@ set -x
 \. ../../nvm.sh
 
 cleanup() { rm -f .nvmrc; }
-
 die () { echo "$@" ; cleanup ; exit 1; }
 
 NVM_TEST_VERSION=v0.42
