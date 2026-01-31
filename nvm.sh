@@ -2406,15 +2406,10 @@ nvm_get_download_slug() {
     fi
   fi
 
-  # If running MAC M1 :: Node v14.17.0 was the first version to offer official experimental support:
-  # https://github.com/nodejs/node/issues/40126 (although binary distributions aren't available until v16)
-  if \
-    nvm_version_greater '14.17.0' "${VERSION}" \
-    || (nvm_version_greater_than_or_equal_to "${VERSION}" '15.0.0' && nvm_version_greater '16.0.0' "${VERSION}") \
-  ; then
-    if [ "_${NVM_OS}" = '_darwin' ] && [ "${NVM_ARCH}" = 'arm64' ]; then
-      NVM_ARCH=x64
-    fi
+  # If running MAC M1 :: ARM64 binaries are not available for Node < 16.0.0
+  # https://github.com/nodejs/node/issues/40126 (binary distributions aren't available until v16)
+  if nvm_version_greater '16.0.0' "${VERSION}" && [ "_${NVM_OS}" = '_darwin' ] && [ "${NVM_ARCH}" = 'arm64' ]; then
+    NVM_ARCH=x64
   fi
 
   if [ "${KIND}" = 'binary' ]; then
