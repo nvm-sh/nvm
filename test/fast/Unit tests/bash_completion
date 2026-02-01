@@ -1,0 +1,254 @@
+#!/bin/sh
+# shellcheck shell=bash
+
+# bash_completion targets bash and zsh; zsh is driven through zpty below.
+{ [ -n "${BASH_VERSION-}" ] && ! shopt -oq posix; } || exec bash "$0" "$@"
+set -e
+set -o pipefail
+
+die() { printf '%s\n' "$*" >&2; exit 1; }
+
+root="$(cd "$(dirname "$0")/../../.." && pwd)"
+NVM_DIR="$(mktemp -d)"
+export NVM_DIR
+# Under bash 3.2's set -e, a fatal error runs this trap with $? = 0.
+trap 'rm -rf "${NVM_DIR}"; [ -n "${finished-}" ]' EXIT
+# shellcheck disable=SC1091
+. "${root}/nvm.sh" --no-use
+# shellcheck disable=SC1091
+. "${root}/bash_completion"
+
+[ "$(complete -p nvm)" = 'complete -o default -F __nvm_complete_command nvm' ] \
+  || die "unexpected registration: $(complete -p nvm)"
+
+complete_for() {
+  COMP_WORDS=("$@")
+  COMP_CWORD=$(( $# - 1 ))
+  COMPREPLY=(stale)
+  __nvm
+}
+
+replies() { printf '%s\n' "${COMPREPLY[@]}" | LC_ALL=C sort -u; }
+
+expect() {
+  local actual expected
+  actual="$(replies)"
+  expected="$(printf '%s\n' "$@" | LC_ALL=C sort -u)"
+  [ "${actual}" = "${expected}" ] || die "${COMP_WORDS[*]}: expected [${expected}], got [${actual}]"
+}
+
+# Check the public completion entry point, not a second inventory of options.
+usage="$(nvm --help --no-colors | awk '
+  /^Usage:/ { usage = 1; next }
+  /^Example:/ { usage = 0 }
+  !usage { next }
+  /^  nvm / {
+    cmd = $2
+    print cmd
+    if ($3 !~ /^-/) next
+    flag = $3
+  }
+  /^    -/ { flag = $1 }
+  flag { sub(/=.*/, "=", flag); print cmd, flag; flag = "" }
+')"
+[[ "${usage}" == *'install --offline'* ]] || die 'did not find install options in nvm --help'
+for cmd in $(printf '%s\n' "${usage}" | awk 'NF == 1' | sort -u); do
+  complete_for nvm "${cmd}"
+  printf '%s\n' "${COMPREPLY[@]}" | grep -Fx -- "${cmd}" >/dev/null || die "missing command ${cmd}"
+  complete_for nvm "${cmd}" -
+  expected="$(printf '%s\n' "${usage}" | awk -v cmd="${cmd}" 'NF == 2 && $1 == cmd { print $2 }' | LC_ALL=C sort -u)"
+  [ "$(replies)" = "${expected}" ] || die "${cmd} options differ from help: expected [${expected}], got [$(replies)]"
+done
+
+mkdir -p "${NVM_DIR}/alias"
+: > "${NVM_DIR}/alias/team node"
+: > "${NVM_DIR}/alias/reader's node"
+: > "${NVM_DIR}/alias/shared build-alpha"
+: > "${NVM_DIR}/alias/shared build-beta"
+nvm_ls() {
+  case "${NVM_ONLY_SELECTED-}" in
+    alpha) printf '%s\n' v27.0.0-alpha.1 ;;
+    *) printf '%s\n' v22.0.0 'system v20.0.0' ;;
+  esac
+}
+
+complete_for nvm alias --no-colors team
+expect 'team node'
+__nvm_complete_command nvm team --no-colors
+expect 'team\ node'
+COMP_WORDS=(nvm alias '"te')
+COMP_CWORD=2
+__nvm_complete_command nvm te alias
+expect 'team node'
+COMP_WORDS=(nvm alias "'rea")
+__nvm_complete_command nvm rea alias
+expect "reader'\\''s node"
+COMP_WORDS=(nvm alias sha)
+__nvm_complete_command nvm sha alias
+expect 'shared\ build-alpha' 'shared\ build-beta'
+COMP_WORDS[2]='shared\ build-'
+__nvm_complete_command nvm "${COMP_WORDS[2]}" alias
+expect 'shared\ build-alpha' 'shared\ build-beta'
+complete_for nvm alias --no-colors my-team v
+expect v22.0.0
+complete_for nvm use --silent sys
+expect system
+complete_for nvm which cur
+expect current
+complete_for nvm cache c
+expect clear
+complete_for nvm cache -- cl
+expect
+complete_for nvm current ''
+expect
+complete_for nvm --no-colors --h
+expect --help
+complete_for nvm de
+expect debug deactivate
+
+complete_for nvm use te
+expect 'team node'
+complete_for nvm use cur
+expect current
+complete_for nvm uninstall cur
+expect
+complete_for nvm unalias te
+expect 'team node'
+complete_for nvm alias my-team no
+expect node
+complete_for nvm ls ''
+expect v22.0.0 system 'team node' "reader's node" 'shared build-alpha' 'shared build-beta' node stable unstable iojs
+complete_for nvm use -- --si
+expect
+COMP_LINE='nvm install --reinstall-packages-from=node --re' complete_for nvm install --reinstall-packages-from = node --re
+expect
+
+: > "${NVM_DIR}/alias/odd\$HOME\`x\`!"
+COMP_WORDS=(nvm unalias '"odd')
+COMP_CWORD=2
+__nvm_complete_command nvm odd unalias
+# shellcheck disable=SC2016
+expect 'odd\$HOME\`x\`"'"'"'!'"'"'"'
+COMP_WORDS=(nvm unalias odd)
+__nvm_complete_command nvm odd unalias
+# shellcheck disable=SC2016
+expect 'odd\$HOME\`x\`\!'
+command rm "${NVM_DIR}/alias/odd\$HOME\`x\`!"
+
+complete_for nvm ls --no-alias ''
+expect --no-colors --only=
+complete_for nvm list v22 --no
+expect --no-colors
+complete_for nvm ls -- --no-a
+expect --no-alias
+complete_for nvm install -j --of
+expect
+complete_for nvm i -j 4 --of
+expect --offline
+complete_for nvm install 22 -
+expect --only= --min= --no-progress --latest-npm --skip-default-packages --save --alias= --default --reinstall-packages-from=
+complete_for nvm install -s -b
+expect
+complete_for nvm install -w --sa
+expect
+complete_for nvm uninstall --lts --on
+expect --only=
+complete_for nvm uninstall v22 --lts
+expect
+complete_for nvm use -- v
+expect v22.0.0
+
+for cmd in run exec; do
+  complete_for nvm "${cmd}" --silent v
+  expect v22.0.0
+  complete_for nvm "${cmd}" --lts v
+  expect
+  complete_for nvm "${cmd}" v22 --si
+  expect
+  complete_for nvm "${cmd}" -- --si
+  expect
+done
+complete_for nvm install 22 -- --min
+expect
+
+# Real Readline splits versus a customized COMP_WORDBREAKS or bashcompinit.
+COMP_LINE='nvm use --only=alpha v' complete_for nvm use --only = alpha v
+expect v27.0.0-alpha.1
+COMP_LINE='nvm use --only="alpha" v' complete_for nvm use --only = '"alpha"' v
+expect v27.0.0-alpha.1
+complete_for nvm use --only=alpha v
+expect v27.0.0-alpha.1
+complete_for nvm use --only=non-lts --l
+expect
+complete_for nvm use --only=non-lts,lts --l
+expect --lts --lts=
+COMP_LINE='nvm install --alias=dev --of' complete_for nvm install --alias = dev --of
+expect --offline
+COMP_LINE='nvm install --alias=dev --de' complete_for nvm install --alias = dev --de
+expect
+COMP_LINE='nvm install --alias= 22 --of' complete_for nvm install --alias = 22 --of
+expect
+COMP_LINE='nvm install --alias dev --of' complete_for nvm install --alias dev --of
+expect
+COMP_LINE='nvm use --only=al' complete_for nvm use --only = al
+expect
+COMP_LINE='nvm which --only=' complete_for nvm which --only = ''
+expect
+COMP_LINE='nvm use --lts=' complete_for nvm use --lts = ''
+expect
+COMP_LINE='nvm use --only= ' complete_for nvm use --only = ''
+expect current v22.0.0 system 'team node' "reader's node" 'shared build-alpha' 'shared build-beta' node stable unstable iojs
+
+# Only real values, even where Bash 3 cannot suppress the space after '='.
+COMP_WORDS=(nvm install --al)
+COMP_CWORD=2
+__nvm_complete_command nvm --al install
+expect --alias=
+
+set -o posix
+complete_for nvm use --silent v
+expect v22.0.0
+complete_for nvm unalias te
+expect 'team node'
+set +o posix
+POSIXLY_CORRECT=1 bash -c '. "$1/nvm.sh" --no-use && . "$1/bash_completion"' - "${root}" \
+  || die 'bash_completion cannot be sourced in POSIX mode'
+
+# Bash passes the prefix up to the cursor as $2, even with more words to its right.
+COMP_WORDS=(nvm use --silent v22)
+COMP_CWORD=2
+COMPREPLY=(stale)
+__nvm nvm --si use
+expect --silent
+
+if command -v zsh >/dev/null; then
+  : > "${NVM_DIR}/alias/team\"quoted\""
+  : > "${NVM_DIR}/alias/team\\path"
+  # ZLE quotes common prefixes and closes quoted arguments. Check the argv
+  # delivered after Tab and Enter, not just the candidate strings.
+  actual="$(ZDOTDIR="${NVM_DIR}" ZSH_DISABLE_COMPFIX=true TERM=xterm \
+    NVM_TEST_COMPLETION="${root}/bash_completion" zsh -f <<'ZSH'
+zmodload zsh/zpty || exit 1
+# An unclosed quote would leave the inner shell waiting for input forever.
+{ sleep 60; kill -KILL $$; } >/dev/null 2>&1 &!
+watchdog=$!
+zpty terminal env TMOUT=10 zsh -f -i || exit 1
+trap 'zpty -d terminal' EXIT
+zpty -w terminal 'nvm() { { printf "<%s>" "$@"; echo; } >> "$NVM_DIR/zsh-argv"; }; . "$NVM_TEST_COMPLETION" || exit 1; printf "ready:%s\n" nvm'
+zpty -r -m terminal line '*ready:nvm*' || exit 1
+zpty -w terminal $'nvm --no-colors \t'
+zpty -w terminal $'nvm alias team\\"q\t'
+zpty -w terminal $'nvm alias sha\ta\t'
+zpty -w terminal $'nvm alias "team\\p\tnext'
+zpty -w terminal $'nvm install --onl\tlts'
+zpty -w terminal exit
+zpty -r terminal >/dev/null
+cat "$NVM_DIR/zsh-argv"
+kill $watchdog
+ZSH
+  )" || die 'could not run the interactive zsh completion test'
+  expected="$(printf '%s\n' '<--no-colors><--help>' '<alias><team"quoted">' '<alias><shared build-alpha>' '<alias><team\path><next>' '<install><--only=lts>')"
+  [ "${actual}" = "${expected}" ] || die "zsh: expected [${expected}], got [${actual}]"
+fi
+
+finished=1

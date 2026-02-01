@@ -6,99 +6,265 @@ if ! command -v nvm &> /dev/null; then
   return
 fi
 
-__nvm_generate_completion() {
-  declare current_word
-  declare word
-  declare glob_was_off
-  current_word="${COMP_WORDS[COMP_CWORD]}"
-  # not `compgen -W`: it expands every word (including command substitution),
-  # and the words include alias and version directory names
-  COMPREPLY=()
-  glob_was_off=false
-  case $- in
-    *f*) glob_was_off=true ;;
-  esac
-  set -f
-  for word in $1; do
-    case "${word}" in
-      "${current_word}"*) COMPREPLY+=("${word}") ;;
+__nvm_complete() {
+  local candidate
+  # Match data literally: compgen -W would expand alias and directory names.
+  for candidate in "$@"; do
+    case "${candidate}" in
+      "${match_prefix}"*) COMPREPLY+=("${candidate}") ;;
     esac
   done
-  if [ "${glob_was_off}" = false ]; then
-    set +f
-  fi
-  return 0
-}
-
-__nvm_commands() {
-  declare current_word
-  declare command
-
-  current_word="${COMP_WORDS[COMP_CWORD]}"
-
-  COMMANDS='
-    help install uninstall use run exec
-    alias unalias reinstall-packages
-    current list ls list-remote ls-remote
-    install-latest-npm
-    cache deactivate unload
-    version version-remote which'
-
-  if [ ${#COMP_WORDS[@]} == 4 ]; then
-
-    command="${COMP_WORDS[COMP_CWORD - 2]}"
-    case "${command}" in
-      alias) __nvm_installed_nodes ;;
-    esac
-
-  else
-
-    case "${current_word}" in
-      -*) __nvm_options ;;
-      *) __nvm_generate_completion "${COMMANDS}" ;;
-    esac
-
-  fi
-}
-
-__nvm_options() {
-  OPTIONS=''
-  __nvm_generate_completion "${OPTIONS}"
-}
-
-__nvm_installed_nodes() {
-  __nvm_generate_completion "$(nvm_ls) $(__nvm_aliases)"
-}
-
-__nvm_aliases() {
-  declare aliases
-  aliases=""
-  if [ -d "${NVM_DIR}/alias" ]; then
-    aliases="$(command cd "${NVM_DIR}/alias" && command find "${PWD}" -type f | command sed "s:${PWD}/::")"
-  fi
-  echo "${aliases} node stable unstable iojs"
 }
 
 __nvm_alias() {
-  __nvm_generate_completion "$(__nvm_aliases)"
+  local file
+  if [ -d "${NVM_DIR}/alias" ]; then
+    # Not process substitution, which POSIX-mode bash 3 rejects.
+    while IFS= read -r file; do
+      if [ -n "${file}" ]; then __nvm_complete "${file#./}"; fi
+    done <<EOF
+$(command cd "${NVM_DIR}/alias" && command find . -type f)
+EOF
+  fi
+  __nvm_complete node stable unstable iojs
 }
 
-__nvm() {
-  declare previous_word
-  previous_word="${COMP_WORDS[COMP_CWORD - 1]}"
+__nvm_installed_nodes() {
+  local version
+  while IFS= read -r version; do
+    case "${version}" in
+      '' | N/A) ;;
+      'system '*) __nvm_complete system ;;
+      *) __nvm_complete "${version}" ;;
+    esac
+  done <<EOF
+$(nvm_ls 2>/dev/null)
+EOF
+  __nvm_alias
+}
 
-  case "${previous_word}" in
-    use | run | exec | ls | list | uninstall) __nvm_installed_nodes ;;
-    alias | unalias) __nvm_alias ;;
-    *) __nvm_commands ;;
-  esac
+# Update the locals in __nvm_candidates from completed words only. A nonzero return
+# hands completion back to the shell (e.g. for an exec command or a -j value).
+__nvm_parse_context() {
+  local i word next rest
+  rest="${COMP_LINE-}"
+  rest="${rest#*"${COMP_WORDS[0]}"}"
+  rest="${rest#*"${subcommand}"}"
+  for (( i = 2; i < COMP_CWORD; i++ )); do
+    word="${COMP_WORDS[i]}"
+    rest="${rest#*"${word}"}"
+    # Readline splits --flag=value into --flag, =, value by default. Join
+    # adjacent pieces only: in "--flag= v20", v20 is a positional argument.
+    while (( i < COMP_CWORD )); do
+      next="${COMP_WORDS[i+1]}"
+      if [[ -z "${next}" ]]; then
+        # The word being completed is this option's value.
+        (( i + 1 < COMP_CWORD )) || [[ "${word}" != -*= || "${rest}" == [[:space:]]* ]] || return 1
+        break
+      fi
+      [[ "${rest}" == "${next}"* ]] || break
+      i=$((i + 1))
+      (( i < COMP_CWORD )) || return 1
+      word="${word}${next}"
+      rest="${rest#"${next}"}"
+    done
 
+    if (( end_options )); then
+      arg_count=$((arg_count + 1))
+      continue
+    fi
+    case "${subcommand}" in
+      run | exec)
+        case "${word}" in
+          --silent | --lts | --lts=* | --only | --only=*) ;;
+          *) return 1 ;;
+        esac
+        ;;
+    esac
+    case "${word}" in
+      --)
+        case "${subcommand}" in
+          use) end_options=1; arg_count=0 ;;
+          ls | list | ls-remote | list-remote | version-remote | alias | which | deactivate) ;;
+          *) return 1 ;;
+        esac
+        ;;
+      -j)
+        if [[ "${subcommand}" = install || "${subcommand}" = i ]]; then
+          i=$((i + 1))
+          (( i < COMP_CWORD )) || return 1
+          rest="${rest#*"${COMP_WORDS[i]}"}"
+        fi
+        ;;
+      --only=*)
+        only=''
+        NVM_ONLY_SELECTED="${word#--only=}"
+        # Readline retains shell quotes; a category name cannot contain one.
+        NVM_ONLY_SELECTED="${NVM_ONLY_SELECTED//[\"\']/}"
+        ;;
+      --only) only='' ;;
+      --lts | --lts=*) lts='' ;;
+      --no-alias) no_alias='' ;;
+      -s | -b) build_mode='' ;;
+      --save | -w) save='' ;;
+      --default | --alias=*) alias_target='' ;;
+      --reinstall-packages-from=* | --copy-packages-from=*) reinstall='' ;;
+      -*) ;;
+      *) arg_count=$((arg_count + 1)) ;;
+    esac
+  done
   return 0
 }
 
-# complete is a bash builtin, but recent versions of ZSH come with a function
-# called bashcompinit that will create a complete in ZSH. If the user is in
-# ZSH, load and run bashcompinit before calling the complete function.
+__nvm_options() {
+  local flags lts_flags="${lts}"
+  if [[ -z "${only}" && ",${NVM_ONLY_SELECTED}," != *,lts,* ]]; then
+    lts_flags=''
+  fi
+  case "${subcommand}" in
+    install | i)
+      flags="${only} --min= --no-progress --latest-npm --skip-default-packages ${save} ${alias_target} ${reinstall}"
+      if (( arg_count == 0 )); then
+        flags="${flags} ${build_mode} --offline ${lts_flags}"
+      fi
+      ;;
+    uninstall | use)
+      flags="${only}"
+      if (( arg_count == 0 )); then flags="${flags} ${lts_flags}"; fi
+      if [ "${subcommand}" = use ]; then flags="${flags} --silent ${save}"; fi
+      ;;
+    exec | run) flags="--silent ${lts_flags} ${only}" ;;
+    ls | list)
+      flags="--no-colors ${only}"
+      if (( arg_count == 0 )); then flags="${flags} ${no_alias}"; fi
+      ;;
+    ls-remote | list-remote) flags="--no-colors --min= ${lts_flags} ${only}" ;;
+    version-remote) flags="--min= ${lts_flags} ${only}" ;;
+    alias) flags="--no-colors ${lts_flags} ${only}" ;;
+    which) flags="--silent ${only}" ;;
+    version | reinstall-packages | copy-packages) flags="${only}" ;;
+    deactivate) flags='--silent' ;;
+    *) return 0 ;;
+  esac
+  # Only split our fixed option lists, never user-supplied words.
+  local IFS=' '
+  # shellcheck disable=SC2086
+  __nvm_complete ${flags}
+}
+
+# Bash needs literal prefix filtering; zsh's compadd matches the candidates itself.
+__nvm_candidates() {
+  if [[ -n ${ZSH_VERSION-} ]]; then emulate -L sh; fi
+  local current_word="${1}" match_prefix="${2-}"
+  COMPREPLY=()
+  if (( COMP_CWORD == 1 )); then
+    case "${current_word}" in
+      -*) __nvm_complete -h --help -v --version ;;
+      *)
+        __nvm_complete help install uninstall use run exec alias unalias \
+          reinstall-packages current list ls list-remote ls-remote install-latest-npm \
+          cache deactivate unload version version-remote which debug set-colors
+        ;;
+    esac
+    return 0
+  fi
+
+  local subcommand="${COMP_WORDS[1]}"
+  case "${subcommand}" in
+    help | -h | --help | --no-colors)
+      if (( COMP_CWORD == 2 )); then
+        case "${subcommand}" in
+          --no-colors) __nvm_complete --help ;;
+          *) __nvm_complete --no-colors ;;
+        esac
+      fi
+      return 0
+      ;;
+  esac
+
+  local arg_count=0 end_options=0
+  local only='--only=' lts='--lts --lts=' no_alias='--no-alias'
+  local build_mode='-s -b' save='--save' alias_target='--alias= --default' reinstall='--reinstall-packages-from='
+  local NVM_ONLY_SELECTED="${NVM_ONLY_SELECTED-}"
+  __nvm_parse_context || return 0
+  if (( ! end_options )); then
+    case "${current_word}" in
+      -*=*) return 0 ;;
+      -*) __nvm_options; return 0 ;;
+    esac
+  fi
+
+  case "${subcommand}" in
+    alias)
+      case "${arg_count}" in
+        0) __nvm_alias ;;
+        1) __nvm_installed_nodes ;;
+      esac
+      ;;
+    unalias) if (( arg_count == 0 )); then __nvm_alias; fi ;;
+    cache) if (( arg_count == 0 )); then __nvm_complete dir clear; fi ;;
+    use | run | exec | uninstall)
+      if (( arg_count == 0 )) && [ -n "${lts}" ]; then
+        if [ "${subcommand}" != uninstall ]; then __nvm_complete current; fi
+        __nvm_installed_nodes
+      fi
+      ;;
+    ls | list)
+      if (( arg_count == 0 )); then
+        if [ -n "${no_alias}" ]; then
+          __nvm_installed_nodes
+        elif (( ! end_options )); then
+          __nvm_options
+        fi
+      fi
+      ;;
+    which | version | reinstall-packages | copy-packages)
+      if (( arg_count == 0 )); then
+        if [ "${subcommand}" = which ]; then __nvm_complete current; fi
+        __nvm_installed_nodes
+      fi
+      ;;
+  esac
+  return 0
+}
+
+__nvm() {
+  local current_word="${2-${COMP_WORDS[COMP_CWORD]}}"
+  if [[ "${current_word}" == *\\* && "${COMP_WORDS[COMP_CWORD]}" == "${current_word}"* ]]; then
+    # Readline returns the escapes it inserted for an unquoted common prefix.
+    # shellcheck disable=SC2162
+    IFS= read current_word <<< "${current_word}" || :
+  fi
+  __nvm_candidates "${current_word}" "${current_word}"
+}
+
+__nvm_complete_command() {
+  __nvm "$@"
+  local i quoted single_quote_escape="'\\''" history_escape="\"'!'\""
+  for (( i = 0; i < ${#COMPREPLY[@]}; i++ )); do
+    # Quote for the argument Readline is inserting into, not as a path:
+    # a same-named directory must not add a slash to an alias.
+    quoted="${COMPREPLY[i]}"
+    case "${COMP_WORDS[COMP_CWORD]:0:1}" in
+      "'") quoted="${quoted//\'/${single_quote_escape}}" ;;
+      '"')
+        quoted="${quoted//\\/\\\\}"
+        quoted="${quoted//\"/\\\"}"
+        quoted="${quoted//\$/\\\$}"
+        quoted="${quoted//\`/\\\`}"
+        quoted="${quoted//\!/${history_escape}}"
+        ;;
+      *) printf -v quoted '%q' "${quoted}" ;;
+    esac
+    COMPREPLY[i]="${quoted}"
+  done
+  # Bash 3 has no compopt, so there a lone --flag= is followed by a space.
+  if (( ${#COMPREPLY[@]} == 1 && BASH_VERSINFO[0] >= 4 )) && [[ "${COMPREPLY[0]}" == -*= ]]; then
+    builtin compopt -o nospace 2>/dev/null || :
+  fi
+}
+
+# Keep Bash-compatible completion functions available to zsh callers.
 if [[ -n ${ZSH_VERSION-} ]]; then
   # First calling compinit (only if not called yet!)
   # and then bashcompinit as mentioned by zsh man page.
@@ -110,6 +276,28 @@ if [[ -n ${ZSH_VERSION-} ]]; then
     fi
   fi
   autoload -U +X bashcompinit && bashcompinit
-fi
+  # ZLE supplies words, CURRENT, and PREFIX when it invokes the completer.
+  # shellcheck disable=SC2154
+  __nvm_zsh_complete() {
+    local COMP_CWORD=$((CURRENT - 1)) COMP_LINE="${words[*]}"
+    local -a COMP_WORDS COMPREPLY value_flags arguments
+    COMP_WORDS=("${words[@]}")
+    __nvm_candidates "${PREFIX}"
 
-complete -o default -F __nvm nvm
+    local word ret=1
+    for word in "${COMPREPLY[@]}"; do
+      case "${word}" in
+        -*=) value_flags+=("${word}") ;;
+        *) arguments+=("${word}") ;;
+      esac
+    done
+    # Only option values need an explicit suffix. For everything else let
+    # the line editor match, quote, and close the argument before adding a space.
+    compadd -S '' -a value_flags && ret=0
+    compadd -a arguments && ret=0
+    (( ret == 0 )) || _default
+  }
+  compdef __nvm_zsh_complete nvm
+else
+  complete -o default -F __nvm_complete_command nvm
+fi
