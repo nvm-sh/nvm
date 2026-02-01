@@ -8,9 +8,53 @@ fi
 
 __nvm_generate_completion() {
   declare current_word
+  declare option
+  declare idx
+  declare word
+  declare filtered_options
+  declare found
+  declare noglob_set
   current_word="${COMP_WORDS[COMP_CWORD]}"
+  filtered_options=''
+  found=0
+  noglob_set=0
+  case "$-" in
+    *f*) noglob_set=1 ;;
+  esac
+  set -f
+  for option in $1; do
+    found=0
+    for idx in "${!COMP_WORDS[@]}"; do
+      if [ "${idx}" -eq "${COMP_CWORD}" ]; then
+        continue
+      fi
+      word="${COMP_WORDS[${idx}]}"
+      case "${option}" in
+        *=)
+          case "${word}" in
+            "${option}"*)
+              found=1
+              break
+              ;;
+          esac
+          ;;
+        *)
+          if [ "${word}" = "${option}" ]; then
+            found=1
+            break
+          fi
+          ;;
+      esac
+    done
+    if [ "${found}" -eq 0 ]; then
+      filtered_options="${filtered_options} ${option}"
+    fi
+  done
+  if [ "${noglob_set}" -eq 0 ]; then
+    set +f
+  fi
   # shellcheck disable=SC2207
-  COMPREPLY=($(compgen -W "$1" -- "${current_word}"))
+  COMPREPLY=($(compgen -W "${filtered_options}" -- "${current_word}"))
   return 0
 }
 
@@ -46,12 +90,119 @@ __nvm_commands() {
 }
 
 __nvm_options() {
+  declare OPTIONS
+  declare subcommand
+  declare i
+  declare word
+  declare found_subcommand
+  declare has_arg
+  declare allow_after_arg
+  declare install_post_arg
+  declare skip_next
+
   OPTIONS=''
+  subcommand=''
+  found_subcommand=0
+  has_arg=0
+  allow_after_arg=0
+  install_post_arg=0
+  skip_next=0
+
+  # Find the first non-flag word as subcommand (skip 'nvm' and current word)
+  for (( i=1; i < COMP_CWORD; i++ )); do
+    word="${COMP_WORDS[i]}"
+    if [ "${skip_next}" -eq 1 ]; then
+      skip_next=0
+      continue
+    fi
+    if [ "${found_subcommand}" -eq 0 ]; then
+      if [[ "${word}" != -* ]]; then
+        subcommand="${word}"
+        found_subcommand=1
+      fi
+    else
+      case "${word}" in
+        --) has_arg=1; break ;;
+        -j)
+          if [ "${subcommand}" = 'install' ]; then
+            skip_next=1
+            continue
+          fi
+          has_arg=1
+          break
+          ;;
+        -*) ;;
+        *) has_arg=1; break ;;
+      esac
+    fi
+  done
+
+  case "${subcommand}" in
+    use | ls | list | ls-remote | list-remote | version-remote | alias | which | deactivate)
+      allow_after_arg=1
+      ;;
+  esac
+
+  if [ "${subcommand}" = 'install' ] && [ "${has_arg}" -eq 1 ]; then
+    install_post_arg=1
+  fi
+
+  if [ "${found_subcommand}" -eq 1 ] && [ "${has_arg}" -eq 1 ] && [ "${allow_after_arg}" -ne 1 ] && [ "${install_post_arg}" -ne 1 ]; then
+    OPTIONS=''
+  else
+    case "${subcommand}" in
+    '')
+      # Top-level options
+      OPTIONS='--help --version'
+      ;;
+    install)
+      if [ "${install_post_arg}" -eq 1 ]; then
+        OPTIONS='--reinstall-packages-from= --skip-default-packages'
+      else
+        OPTIONS='-s -b -w -j --reinstall-packages-from= --lts --lts= --skip-default-packages --latest-npm --no-progress --alias= --default --save'
+      fi
+      ;;
+    uninstall)
+      OPTIONS='--lts --lts='
+      ;;
+    use)
+      OPTIONS='--silent --lts --lts= --save -w'
+      ;;
+    exec | run)
+      OPTIONS='--silent --lts --lts='
+      ;;
+    ls | list)
+      if [ "${has_arg}" -eq 1 ]; then
+        OPTIONS='--no-colors'
+      else
+        OPTIONS='--no-colors --no-alias'
+      fi
+      ;;
+    ls-remote | list-remote)
+      OPTIONS='--lts --lts= --no-colors'
+      ;;
+    version-remote)
+      OPTIONS='--lts --lts='
+      ;;
+    deactivate | which)
+      OPTIONS='--silent'
+      ;;
+    alias)
+      OPTIONS='--no-colors'
+      ;;
+    *)
+      OPTIONS=''
+      ;;
+    esac
+  fi
+
   __nvm_generate_completion "${OPTIONS}"
 }
 
 __nvm_installed_nodes() {
-  __nvm_generate_completion "$(nvm_ls) $(__nvm_aliases)"
+  declare nodes
+  nodes="$(nvm_ls 2>/dev/null || :)"
+  __nvm_generate_completion "${nodes} $(__nvm_aliases)"
 }
 
 __nvm_aliases() {
@@ -68,8 +219,112 @@ __nvm_alias() {
 }
 
 __nvm() {
+  declare current_word
   declare previous_word
+  declare subcommand
+  declare i
+  declare word
+  declare found_subcommand
+  declare arg_count
+  declare skip_next
+  declare lts_requested
+  declare end_of_options
+  declare seen_no_alias
+  current_word="${COMP_WORDS[COMP_CWORD]}"
   previous_word="${COMP_WORDS[COMP_CWORD - 1]}"
+  subcommand=''
+  found_subcommand=0
+  arg_count=0
+  skip_next=0
+  lts_requested=0
+  end_of_options=0
+  seen_no_alias=0
+
+  case "${current_word}" in
+    -*) __nvm_options; return 0 ;;
+  esac
+
+  for (( i=1; i < COMP_CWORD; i++ )); do
+    word="${COMP_WORDS[i]}"
+    if [ "${skip_next}" -eq 1 ]; then
+      skip_next=0
+      continue
+    fi
+    if [ "${found_subcommand}" -eq 0 ]; then
+      if [[ "${word}" != -* ]]; then
+        subcommand="${word}"
+        found_subcommand=1
+      fi
+    else
+      case "${word}" in
+        --) end_of_options=1; break ;;
+        --lts | --lts=*)
+          if [ "${subcommand}" = 'run' ] || [ "${subcommand}" = 'exec' ] || [ "${subcommand}" = 'uninstall' ] || [ "${subcommand}" = 'use' ]; then
+            lts_requested=1
+          fi
+          ;;
+        --no-alias)
+          if [ "${subcommand}" = 'ls' ] || [ "${subcommand}" = 'list' ]; then
+            seen_no_alias=1
+          fi
+          ;;
+        -j)
+          if [ "${subcommand}" = 'install' ]; then
+            skip_next=1
+            continue
+          fi
+          ;;
+        -*) ;;
+        *) arg_count=$((arg_count + 1)) ;;
+      esac
+    fi
+  done
+
+  if [ "${subcommand}" = 'run' ] || [ "${subcommand}" = 'exec' ]; then
+    if [ "${lts_requested}" -eq 1 ] || [ "${arg_count}" -ge 1 ] || [ "${end_of_options}" -eq 1 ]; then
+      COMPREPLY=()
+      return 0
+    fi
+  fi
+  if [ "${subcommand}" = 'uninstall' ] && [ "${lts_requested}" -eq 1 ]; then
+    COMPREPLY=()
+    return 0
+  fi
+  if [ "${subcommand}" = 'use' ] && [ "${lts_requested}" -eq 1 ]; then
+    __nvm_options
+    return 0
+  fi
+  if [ "${subcommand}" = 'ls' ] || [ "${subcommand}" = 'list' ]; then
+    if [ "${seen_no_alias}" -eq 1 ]; then
+      __nvm_options
+      return 0
+    fi
+  fi
+
+  case "${subcommand}" in
+    use | run | exec | ls | list | uninstall)
+      if [ "${arg_count}" -eq 0 ]; then
+        __nvm_installed_nodes
+        return 0
+      fi
+      ;;
+    alias)
+      if [ "${arg_count}" -eq 0 ]; then
+        __nvm_alias
+        return 0
+      fi
+      if [ "${arg_count}" -eq 1 ]; then
+        __nvm_installed_nodes
+        return 0
+      fi
+      ;;
+    unalias)
+      if [ "${arg_count}" -eq 0 ]; then
+        __nvm_alias
+        return 0
+      fi
+      ;;
+  esac
 
   case "${previous_word}" in
     use | run | exec | ls | list | uninstall) __nvm_installed_nodes ;;
