@@ -186,17 +186,24 @@ npm install  # Installs urchin, semver, and replace tools
 
 #### Run All Tests
 ```bash
-npm test               # Runs tests in current shell (sh, bash, dash, zsh, ksh)
-make test              # Runs tests in all supported shells (sh, bash, dash, zsh, ksh)
+npm test               # Runs tests in the current shell only (sh, bash, dash, zsh)
+make test              # Runs tests in default shells (sh, bash, dash, zsh)
 make test-sh           # Runs tests only in sh
 make test-bash         # Runs tests only in bash
 make test-dash         # Runs tests only in dash
 make test-zsh          # Runs tests only in zsh
-make test-ksh          # Runs tests only in ksh
+make SHELLS=ksh test   # Runs tests only in ksh (experimental, see issue #574)
 ```
 
 #### Run Specific Test Suites
 ```bash
+npm run test/fast                # Runs fast tests in the current shell
+npm run test/slow                # Runs slow tests in the current shell
+npm run test/sourcing            # Runs sourcing tests in the current shell
+npm run test/install_script      # Runs install script tests in the current shell
+npm run test/installation        # Runs installation tests (node + iojs) in the current shell
+npm run test/installation/node   # Runs Node installation tests in the current shell
+npm run test/installation/iojs   # Runs io.js installation tests in the current shell
 make TEST_SUITE=fast test        # Only fast tests
 make TEST_SUITE=slow test        # Only slow tests
 make SHELLS=bash test            # Only bash shell
@@ -209,6 +216,19 @@ make SHELLS=bash test            # Only bash shell
 ./node_modules/.bin/urchin 'test/fast/Unit tests/nvm_get_arch'  # Run single test safely without shell termination
 ./node_modules/.bin/urchin test/slow/                        # Run slow test suite
 ./node_modules/.bin/urchin test/sourcing/                    # Run sourcing test suite
+./node_modules/.bin/urchin test/install_script/              # Run install script test suite
+./node_modules/.bin/urchin test/installation_node/           # Run Node installation test suite
+./node_modules/.bin/urchin test/installation_iojs/           # Run io.js installation test suite
+```
+
+#### Linting and Docs Checks
+```bash
+npm run eclint               # Checks EditorConfig compliance
+npm run doctoc:check         # Verifies README table of contents
+npm run dockerfile_lint      # Lints the Dockerfile
+npm run test:check-exec      # Checks test files have executable permission
+npm run test:check-nonexec   # Checks non-test files don't have executable permission
+npm run markdown-link-check  # Validates markdown links (requires markdown-link-check)
 ```
 
 ### Test Writing Guidelines
