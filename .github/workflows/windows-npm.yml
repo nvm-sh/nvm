@@ -136,7 +136,7 @@ jobs:
     steps:
       # For Ubuntu: install with packages directly
       - if: matrix.wsl-distrib != 'Debian'
-        uses: Vampire/setup-wsl@v3
+        uses: Vampire/setup-wsl@v6
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
@@ -144,7 +144,7 @@ jobs:
       # For Debian: install without packages first (apt-get update fails due to stale sources.list)
       # see https://github.com/Vampire/setup-wsl/issues/76
       - if: matrix.wsl-distrib == 'Debian'
-        uses: Vampire/setup-wsl@v3
+        uses: Vampire/setup-wsl@v6
         with:
           distribution: ${{ matrix.wsl-distrib }}
       - if: matrix.wsl-distrib == 'Debian'
@@ -214,7 +214,7 @@ jobs:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v3
+      - uses: Vampire/setup-wsl@v6
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
