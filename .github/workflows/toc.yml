@@ -35,7 +35,7 @@ jobs:
     - run: npm install
     - run: npm run doctoc
     - name: commit changes
-      uses: ljharb/actions-js-build/commit@v3
+      uses: ljharb/actions-js-build/commit@v3+amendpush
       with:
         amend: true
         force: true
