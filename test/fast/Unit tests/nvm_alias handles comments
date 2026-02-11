@@ -8,6 +8,7 @@ cleanup () {
   rm -rf ../../../alias/test-comment-first
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 # Test: alias file with comment on separate line

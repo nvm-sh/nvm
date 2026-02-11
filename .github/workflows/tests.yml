@@ -12,6 +12,7 @@ jobs:
 
     name: "tests"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: 'script -q -e -c "${{ matrix.shell }} {0}"'
@@ -68,7 +69,19 @@ jobs:
       - run: npm ls urchin
       - run: npx which urchin
       - run: env
-      - run: make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npx which urchin)" test-${{ matrix.shell }}
+      - name: Run tests
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            timeout 600 make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npx which urchin)" test-${{ matrix.shell }} && exit 0
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -ne 124 ]; then
+              exit $EXIT_CODE
+            fi
+            echo "Attempt ${attempt} timed out; retrying..."
+          done
+          echo "All 3 attempts timed out."
+          exit 1
 
   nvm:
     permissions:

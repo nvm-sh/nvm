@@ -6,6 +6,7 @@ cleanup() {
   unset -f nvm_download
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 # sample output at the time the test was written

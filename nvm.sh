@@ -83,7 +83,7 @@ nvm_has_colors() {
   if nvm_has tput; then
     NVM_NUM_COLORS="$(command tput -T "${TERM:-vt100}" colors)"
   fi
-  [ "${NVM_NUM_COLORS:--1}" -ge 8 ] && [ "${NVM_NO_COLORS-}" != '--no-colors' ]
+  [ -t 1 ] && [ "${NVM_NUM_COLORS:--1}" -ge 8 ] && [ "${NVM_NO_COLORS-}" != '--no-colors' ]
 }
 
 nvm_curl_libz_support() {
@@ -149,7 +149,8 @@ nvm_download() {
     ")
 
     if [ -n "${NVM_AUTH_HEADER:-}" ]; then
-      ARGS="${ARGS} --header \"${NVM_AUTH_HEADER}\""
+      sanitized_header=$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")
+      ARGS="${ARGS} --header \"${sanitized_header}\""
     fi
     # shellcheck disable=SC2086
     eval wget $ARGS
@@ -758,6 +759,11 @@ nvm_version() {
     ;;
   esac
   VERSION="$(nvm_ls "${PATTERN}" | command tail -1)"
+  case "${VERSION}" in
+    system[[:blank:]]*)
+      VERSION='system'
+    ;;
+  esac
   if [ -z "${VERSION}" ] || [ "_${VERSION}" = "_N/A" ]; then
     nvm_echo "N/A"
     return 3
@@ -978,13 +984,18 @@ nvm_strip_path() {
     nvm_err '${NVM_DIR} not set!'
     return 1
   fi
-  command printf %s "${1-}" | command awk -v NVM_DIR="${NVM_DIR}" -v RS=: '
+  local RESULT
+  RESULT="$(command printf %s "${1-}" | command awk -v NVM_DIR="${NVM_DIR}" -v RS=: '
   index($0, NVM_DIR) == 1 {
     path = substr($0, length(NVM_DIR) + 1)
     if (path ~ "^(/versions/[^/]*)?/[^/]*'"${2-}"'.*$") { next }
   }
-  # The final RT will contain a colon if the input has a trailing colon, or a null string otherwise
-  { printf "%s%s", sep, $0; sep=RS } END { printf "%s", RT }'
+  { printf "%s%s", sep, $0; sep=RS }')"
+  # mawk does not support RT, so preserve trailing colon manually
+  case "${1-}" in
+    *:) command printf '%s:' "${RESULT}" ;;
+    *) command printf '%s' "${RESULT}" ;;
+  esac
 }
 
 nvm_change_path() {
@@ -1457,6 +1468,18 @@ nvm_ls() {
       PATTERN="${PATTERN}-"
     ;;
     *)
+      local ALIAS_TARGET
+      ALIAS_TARGET="$(nvm_resolve_alias "${PATTERN}" 2>/dev/null || nvm_echo)"
+      if [ "_${ALIAS_TARGET}" = '_system' ] && (nvm_has_system_iojs || nvm_has_system_node); then
+        local SYSTEM_VERSION
+        SYSTEM_VERSION="$(nvm deactivate >/dev/null 2>&1 && node -v 2>/dev/null)"
+        if [ -n "${SYSTEM_VERSION}" ]; then
+          nvm_echo "system ${SYSTEM_VERSION}"
+        else
+          nvm_echo "system"
+        fi
+        return
+      fi
       if nvm_resolve_local_alias "${PATTERN}"; then
         return
       fi
@@ -1560,13 +1583,24 @@ nvm_ls() {
   fi
 
   if [ "${NVM_ADD_SYSTEM-}" = true ]; then
+    local SYSTEM_VERSION
+    SYSTEM_VERSION="$(nvm deactivate >/dev/null 2>&1 && node -v 2>/dev/null)"
     case "${PATTERN}" in
       '' | v)
-        VERSIONS="${VERSIONS}
+        if [ -n "${SYSTEM_VERSION}" ]; then
+          VERSIONS="${VERSIONS}
+system ${SYSTEM_VERSION}"
+        else
+          VERSIONS="${VERSIONS}
 system"
+        fi
       ;;
       system)
-        VERSIONS="system"
+        if [ -n "${SYSTEM_VERSION}" ]; then
+          VERSIONS="system ${SYSTEM_VERSION}"
+        else
+          VERSIONS="system"
+        fi
       ;;
     esac
   fi
@@ -1908,6 +1942,7 @@ BEGIN {
 
   fmt_latest_lts = has_colors && latest_lts_color ? ("\033[" latest_lts_color " (Latest LTS: %s)\033[0m") : " (Latest LTS: %s)";
   fmt_old_lts = has_colors && old_lts_color ? ("\033[" old_lts_color " (LTS: %s)\033[0m") : " (LTS: %s)";
+  fmt_system_target = has_colors && system_color ? (" (\033[" system_color "-> %s\033[0m)") : " (-> %s)";
 
   split(remote_versions, lines, "|");
   split(installed_versions, installed, "|");
@@ -1939,6 +1974,8 @@ BEGIN {
 
     if (cols == 1) {
       formatted = sprintf(fmt_version, version);
+    } else if (version == "system" && cols >= 2) {
+      formatted = sprintf((fmt_version fmt_system_target), version, fields[2]);
     } else if (cols == 2) {
       formatted = sprintf((fmt_version padding fmt_old_lts), version, fields[2]);
     } else if (cols == 3 && fields[3] == "*") {
@@ -2642,18 +2679,24 @@ nvm_install_source() {
   NVM_OS="$(nvm_get_os)"
 
   local make
-  make='make'
   local MAKE_CXX
+  # For old Node.js versions (< 0.12), explicitly set SHELL=/bin/sh to avoid
+  # issues with zsh's strict glob handling in Makefiles with unquoted globs
+  local MAKE_SHELL_OVERRIDE
+  if nvm_version_greater "0.12.0" "${VERSION}"; then
+    MAKE_SHELL_OVERRIDE=' SHELL=/bin/sh'
+  fi
+  make="make${MAKE_SHELL_OVERRIDE-}"
   case "${NVM_OS}" in
     'freebsd' | 'openbsd')
-      make='gmake'
+      make="gmake${MAKE_SHELL_OVERRIDE-}"
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     ;;
     'darwin')
       MAKE_CXX="CC=${CC:-cc} CXX=${CXX:-c++}"
     ;;
     'aix')
-      make='gmake'
+      make="gmake${MAKE_SHELL_OVERRIDE-}"
     ;;
   esac
   if nvm_has "clang++" && nvm_has "clang" && nvm_version_greater_than_or_equal_to "$(nvm_clang_version)" 3.5; then
@@ -3708,7 +3751,13 @@ nvm() {
       fi
 
       if ! nvm_is_version_installed "${VERSION}"; then
-        nvm_err "${VERSION} version is not installed..."
+        local REQUESTED_VERSION
+        REQUESTED_VERSION="${PATTERN}"
+        if [ "_${VERSION}" != "_N/A" ] && [ "_${VERSION}" != "_${PATTERN}" ]; then
+          nvm_err "Version '${VERSION}' (inferred from ${PATTERN}) is not installed."
+        else
+          nvm_err "Version '${REQUESTED_VERSION}' is not installed."
+        fi
         return
       fi
 
@@ -4448,7 +4497,7 @@ nvm() {
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" | "-v")
-      nvm_echo '0.40.3'
+      nvm_echo '0.40.4'
     ;;
     "unload")
       nvm deactivate >/dev/null 2>&1
@@ -4524,9 +4573,9 @@ nvm_get_default_packages() {
   NVM_DEFAULT_PACKAGE_FILE="${NVM_DIR}/default-packages"
   if [ -f "${NVM_DEFAULT_PACKAGE_FILE}" ]; then
     command awk -v filename="${NVM_DEFAULT_PACKAGE_FILE}" '
-      /^[[:space:]]*#/ { next }                     # Skip lines that begin with #
-      /^[[:space:]]*$/ { next }                     # Skip empty lines
-      /[[:space:]]/ && !/^[[:space:]]*#/ {
+      /^[ \t]*#/ { next }                           # Skip lines that begin with #
+      /^[ \t]*$/ { next }                           # Skip empty lines
+      /[ \t]/ && !/^[ \t]*#/ {
         print "Only one package per line is allowed in `" filename "`. Please remove any lines with multiple space-separated values." > "/dev/stderr"
         err = 1
         exit 1

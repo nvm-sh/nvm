@@ -5,6 +5,7 @@ cleanup () {
   unset -f nvm_ls_current nvm_ls
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 nvm_ls_current() {
@@ -32,6 +33,9 @@ nvm_ls() {
 [ "_$(nvm_version foo)" = "_pattern: foo" ] || die '"nvm_version foo" did not pass the pattern to "nvm_ls", or return the last line'
 [ "_$(nvm_version node)" = "_pattern: stable" ] || die '"nvm_version node" did not pass "stable" to "nvm_ls"'
 [ "_$(nvm_version node-)" = "_pattern: stable" ] || die '"nvm_version node-" did not pass "stable" to "nvm_ls"'
+
+nvm_ls() { echo "system v20.0.0"; }
+[ "_$(nvm_version system)" = "_system" ] || die '"nvm_version system" did not return "system" when "nvm_ls" returns extra columns'
 
 nvm_ls() { echo "N/A"; }
 OUTPUT="$(nvm_version foo)"

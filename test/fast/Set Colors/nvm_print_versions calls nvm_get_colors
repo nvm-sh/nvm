@@ -1,5 +1,6 @@
 #!/bin/sh
 
+: nvm.sh
 \. ../../../nvm.sh
 
 #set -e #nvm use system returns 127 and No system set message
@@ -20,6 +21,8 @@ if [ -n ${NVM_COLORS} ]; then
   export TEMP_NVM_COLORS=NVM_COLORS
   unset NVM_COLORS
 fi
+
+nvm_has_colors() { return 0; }
 
 # default system color
 nvm use system

@@ -6,6 +6,7 @@ cleanup () {
   unset -f nvm_has_system_node nvm_has_system_iojs
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 \. ../../common.sh
 

@@ -11,6 +11,7 @@ cleanup () {
 
 die () { >&2 echo "$@" ; cleanup ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 cleanup

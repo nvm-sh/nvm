@@ -1,5 +1,6 @@
 #!/bin/sh
 
+: nvm.sh
 \. ../../../nvm.sh
 
 die () {
@@ -9,6 +10,8 @@ die () {
 }
 
 set -e
+
+nvm_has_colors() { return 0; }
 
 nvm_get_colors(){
     echo "0;95m"

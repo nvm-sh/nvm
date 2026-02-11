@@ -2,6 +2,7 @@
 
 export NVM_DIR="$(cd ../../.. && pwd)"
 
+: nvm.sh
 \. ../../../nvm.sh
 \. ../../common.sh
 

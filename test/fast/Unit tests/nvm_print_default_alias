@@ -7,6 +7,7 @@ cleanup () {
   unset -f nvm_print_implicit_alias nvm_version
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 nvm_print_implicit_alias() {
@@ -32,7 +33,7 @@ nvm_version() {
 }
 
 OUTPUT="$(nvm_print_default_alias blah | strip_colors)"
-EXPECTED_OUTPUT='blah -> "local-blah" (-> v"local-blah") (default)'
+EXPECTED_OUTPUT='blah -> "local-blah" (-> v"local-blah" *) (default)'
 [ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "'nvm_print_default_alias blah' should strip alias dir and print nvm_print_implicit_alias output; got '$OUTPUT', expected '$EXPECTED_OUTPUT'"
 
 cleanup

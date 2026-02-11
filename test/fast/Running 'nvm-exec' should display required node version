@@ -1,9 +1,11 @@
 #!/bin/bash
 
 set -x
+: nvm.sh
 \. ../../nvm.sh
 
-die () { echo "$@" ; rm .nvmrc ; exit 1; }
+cleanup() { rm -f .nvmrc; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 NVM_TEST_VERSION=v0.42
 
@@ -18,3 +20,5 @@ No NODE_VERSION provided; no .nvmrc file found";
 
 # Skip install, we want to test the error message
 [ "${EXPECTED}" = "${OUTPUT}" ] || die "expected >${EXPECTED}<, got >${OUTPUT}<"
+
+cleanup
