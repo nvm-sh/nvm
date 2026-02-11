@@ -30,7 +30,7 @@ out=$(nvm_source "anything" 2>&1 >/dev/null) || : #Saving the process here
 [ -z "$out" ] && die "nvm_source with invalid parameter should error out"
 
 #nvm_source should always return NVM_SOURCE no matter the parameters
-NVM_SOURCE="my_location"
+export NVM_SOURCE="my_location"
 out=$(nvm_source)
 [ "_$out" = "_my_location" ] || die "nvm_source without arguments should have returned \$NVM_SOURCE. Got \"$out\""
 out=$(nvm_source "git")

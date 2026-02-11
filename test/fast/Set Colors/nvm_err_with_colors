@@ -8,6 +8,7 @@ cleanup() {
   echo "Tested nvm_err_with_colors"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 set +ex

@@ -1,5 +1,6 @@
 #!/bin/sh
 
+: nvm.sh
 \. ../../../nvm.sh
 \. ../../common.sh
 
@@ -38,7 +39,13 @@ iojs-v0.10.2
 v0.12.9
 v0.12.87"
 if nvm_has_system_node || nvm_has_system_iojs; then
-  EXPECTED_OUTPUT="${EXPECTED_OUTPUT}
+  SYSTEM_VERSION="$(nvm deactivate >/dev/null 2>&1 && node -v 2>/dev/null)"
+  if [ -n "${SYSTEM_VERSION}" ]; then
+    EXPECTED_OUTPUT="${EXPECTED_OUTPUT}
+system ${SYSTEM_VERSION}"
+  else
+    EXPECTED_OUTPUT="${EXPECTED_OUTPUT}
 system"
+  fi
 fi
 [ "${OUTPUT-}" = "${EXPECTED_OUTPUT-}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"

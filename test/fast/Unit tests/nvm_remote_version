@@ -6,6 +6,7 @@ cleanup() {
   unset -f nvm_ls_remote nvm_ls_remote_iojs
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 nvm_ls_remote() {
@@ -74,5 +75,25 @@ EXIT_CODE="$(nvm_remote_version node >/dev/null 2>&1 ; echo $?)"
 [ "_$OUTPUT" = "_$(nvm_ls_remote node)" ] \
   || die "nvm_remote_version node did not return contents of nvm_ls_remote node; got $OUTPUT"
 [ "_$EXIT_CODE" = "_0" ] || die "nvm_remote_version node did not exit with 0, got $EXIT_CODE"
+
+# Test LTS name rejection (Issue #3474)
+# When nvm_remote_versions returns a line with LTS name in description,
+# nvm_remote_version should reject it if the pattern doesn't match the version number
+
+nvm_remote_versions() {
+    echo "v4.9.1 Argon *"
+}
+OUTPUT="$(nvm_remote_version Argon)"
+EXIT_CODE="$(nvm_remote_version Argon >/dev/null 2>&1 ; echo $?)"
+[ "_$OUTPUT" = "_N/A" ] || die "nvm_remote_version Argon should return N/A (LTS name not in version), got $OUTPUT"
+[ "_$EXIT_CODE" = "_3" ] || die "nvm_remote_version Argon should exit with code 3, got $EXIT_CODE"
+
+nvm_remote_versions() {
+  echo "v4.9.1"
+}
+OUTPUT="$(nvm_remote_version 4)"
+EXIT_CODE="$(nvm_remote_version 4 >/dev/null 2>&1 ; echo $?)"
+[ "_$OUTPUT" = "_v4.9.1" ] || die "nvm_remote_version 4 should return v4.9.1, got $OUTPUT"
+[ "_$EXIT_CODE" = "_0" ] || die "nvm_remote_version 4 should exit with code 0, got $EXIT_CODE"
 
 cleanup

@@ -6,7 +6,7 @@
 # Please note that it'll use about 1.2 GB disk space and about 15 minutes to
 # build this image, it depends on your hardware.
 
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 LABEL maintainer="Peter Dave Hello <hsu@peterdavehello.org>"
 LABEL name="nvm-dev-env"
 LABEL version="latest"
@@ -23,9 +23,6 @@ ENV SHELLCHECK_VERSION=0.7.0
 # Pick a Ubuntu apt mirror site for better speed
 # ref: https://launchpad.net/ubuntu/+archivemirrors
 ENV UBUNTU_APT_SITE ubuntu.cs.utah.edu
-
-# Disable src package source
-RUN sed -i 's/^deb-src\ /\#deb-src\ /g' /etc/apt/sources.list
 
 # Replace origin apt package site with the mirror site
 RUN sed -E -i "s/([a-z]+.)?archive.ubuntu.com/$UBUNTU_APT_SITE/g" /etc/apt/sources.list
@@ -56,8 +53,8 @@ RUN apt update         && \
         jq                    \
         zsh                   \
         ksh                   \
-        gcc-4.8               \
-        g++-4.8               \
+        gcc                   \
+        g++                   \
         xz-utils              \
         build-essential       \
         bash-completion       && \
@@ -86,7 +83,7 @@ RUN useradd -ms /bin/bash nvm
 
 # Copy and set permission for nvm directory
 COPY . /home/nvm/.nvm/
-RUN chown nvm:nvm -R "home/nvm/.nvm"
+RUN chown nvm:nvm -R "/home/nvm/.nvm"
 
 # Set sudoer for "nvm"
 RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
@@ -94,16 +91,20 @@ RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 # Switch to user "nvm" from now
 USER nvm
 
+# Create a script file sourced by both interactive and non-interactive bash shells
+ENV BASH_ENV /home/nvm/.bash_env
+RUN touch "$BASH_ENV"
+RUN echo '. "$BASH_ENV"' >> "$HOME/.bashrc"
+
 # nvm
-RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$HOME/.bashrc"
-RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$HOME/.bashrc"
-RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$HOME/.bashrc"
+RUN echo 'export NVM_DIR="$HOME/.nvm"'                                       >> "$BASH_ENV"
+RUN echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm' >> "$BASH_ENV"
+RUN echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> "$BASH_ENV"
 
 # nodejs and tools
-RUN bash -c 'source $HOME/.nvm/nvm.sh   && \
-    nvm install node                    && \
-    npm install -g doctoc urchin eclint dockerfile_lint && \
-    npm install --prefix "$HOME/.nvm/"'
+RUN nvm install node
+RUN npm install -g doctoc urchin eclint dockerfile_lint
+RUN npm install --prefix "$HOME/.nvm/"
 
 # Set WORKDIR to nvm directory
 WORKDIR /home/nvm/.nvm

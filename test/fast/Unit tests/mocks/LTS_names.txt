@@ -1,3 +1,6 @@
+jod
+iron
+hydrogen
 gallium
 fermium
 erbium

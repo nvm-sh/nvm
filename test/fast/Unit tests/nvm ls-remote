@@ -1,32 +1,47 @@
 #!/bin/sh
 
-set -e
-
 die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
   unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs
-  if [ -n TEMP_NVM_COLORS ]; then
+  if [ -n "${TEMP_NVM_COLORS-}" ]; then
     export NVM_COLORS=TEMP_NVM_COLORS
   fi
   unset TEMP_NVM_COLORS
+  rm -rf "${NVM_DIR}/alias/lts"
+  mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
-if [ -n ${NVM_COLORS} ]; then
+if [ -n "${NVM_COLORS-}" ]; then
   export TEMP_NVM_COLORS=NVM_COLORS
   unset NVM_COLORS
 fi
+
+MOCKS_DIR="../Unit tests/mocks"
+
+LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
+
+STAR="$(cat "${MOCKS_DIR}/lts-star.txt")"
+
+mv "${NVM_DIR}/alias/lts" "${NVM_DIR}/alias/lts-backup" ||:
+mkdir -p "${NVM_DIR}/alias/lts"
+
+echo "${STAR}" > "${NVM_DIR}/alias/lts/\*"
+printf '%s\n' "$(cat "${LTS_NAMES_PATH}" | tail -n +1)" | while IFS= read -r LTS; do
+  cp "${NVM_DIR}/alias/lts-backup/${LTS}" "${NVM_DIR}/alias/lts/"
+done
+
+nvm_has_colors() { return 0; }
 
 nvm deactivate 2>/dev/null || die 'unable to deactivate'
 
 \. ../../common.sh
 
-MOCKS_DIR="$PWD/mocks"
-
 nvm_download() {
   if [ "$*" = "-L -s $(nvm_get_mirror node std)/index.tab -o -" ]; then
-    cat "$MOCKS_DIR/nodejs.org-dist-index.tab"
+    cat "${MOCKS_DIR}/nodejs.org-dist-index.tab"
     return
   fi
   return 42
@@ -34,16 +49,14 @@ nvm_download() {
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote lts.txt"
 OUTPUT="$(nvm ls-remote --lts | sed 's/[ \t]*$//')"
-EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote --lts did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}" | sed 's/[ \t]*$//' )"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote --lts did not output expected sorted versions; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote lts.txt"
 OUTPUT="$(nvm ls-remote "lts/*" | sed 's/[ \t]*$//')"
-EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}" | sed 's/[ \t]*$//' )"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/* did not output expected sorted versions; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
-MOCKS_DIR="$PWD/mocks"
-LTS_NAMES_PATH="${MOCKS_DIR}/LTS_names.txt"
 LTS_LIST="$(cat "${LTS_NAMES_PATH}" | tail -n +2)"
 
 INDEX=1
@@ -56,18 +69,28 @@ printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
   INDEX=$(($INDEX + 1))
 done
 
-REMOTE="$PWD/mocks/nvm_ls_remote.txt"
+nvm_has_colors() { return 1; }
+OUTPUT="$(nvm ls-remote lts/ARGON 2>&1)"
+EXIT_CODE=$?
+nvm_has_colors() { return 0; }
+[ $EXIT_CODE -eq 3 ] || die "nvm ls-remote lts/ARGON did not exit 3, got '${EXIT_CODE}'"
+
+EXPECTED_OUTPUT="LTS names must be lowercase
+            N/A *"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/ARGON did not output expected error message; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
+REMOTE="${PWD}/mocks/nvm_ls_remote.txt"
 nvm_ls_remote() {
-  cat "$REMOTE"
+  cat "${REMOTE}"
 }
-REMOTE_IOJS="$PWD/mocks/nvm_ls_remote_iojs.txt"
+REMOTE_IOJS="${PWD}/mocks/nvm_ls_remote_iojs.txt"
 nvm_ls_remote_iojs() {
-  cat "$REMOTE_IOJS"
+  cat "${REMOTE_IOJS}"
 }
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote.txt"
 OUTPUT="$(nvm ls-remote | sed 's/[ \t]*$//')"
-EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH" | sed 's/[ \t]*$//' )"
-[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "bare nvm ls-remote did not output expected sorted versions; got $(echo ">$OUTPUT<") expected $(echo ">$EXPECTED_OUTPUT<")"
+EXPECTED_OUTPUT="$(cat "${EXPECTED_OUTPUT_PATH}" | sed 's/[ \t]*$//' )"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "bare nvm ls-remote did not output expected sorted versions; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 cleanup

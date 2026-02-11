@@ -10,6 +10,12 @@ nvm_echo() {
   command printf %s\\n "$*" 2>/dev/null
 }
 
+if [ -z "${BASH_VERSION}" ] || [ -n "${ZSH_VERSION}" ]; then
+  # shellcheck disable=SC2016
+  nvm_echo >&2 'Error: the install instructions explicitly say to pipe the install script to `bash`; please follow them'
+  exit 1
+fi
+
 nvm_grep() {
   GREP_OPTIONS='' command grep "$@"
 }
@@ -27,14 +33,14 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  nvm_echo "v0.39.1"
+  nvm_echo "v0.40.4"
 }
 
 nvm_profile_is_bash_or_zsh() {
   local TEST_PROFILE
   TEST_PROFILE="${1-}"
   case "${TEST_PROFILE-}" in
-    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc")
+    *"/.bashrc" | *"/.bash_profile" | *"/.zshrc" | *"/.zprofile")
       return
     ;;
     *)
@@ -46,12 +52,28 @@ nvm_profile_is_bash_or_zsh() {
 #
 # Outputs the location to NVM depending on:
 # * The availability of $NVM_SOURCE
+# * The presence of $NVM_INSTALL_GITHUB_REPO
 # * The method used ("script" or "git" in the script, defaults to "git")
 # NVM_SOURCE always takes precedence unless the method is "script-nvm-exec"
 #
 nvm_source() {
   local NVM_GITHUB_REPO
   NVM_GITHUB_REPO="${NVM_INSTALL_GITHUB_REPO:-nvm-sh/nvm}"
+  if [ "${NVM_GITHUB_REPO}" != 'nvm-sh/nvm' ]; then
+    { nvm_echo >&2 "$(cat)" ; } << EOF
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE REPO IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+
+The default repository for this install is \`nvm-sh/nvm\`,
+but the environment variables \`\$NVM_INSTALL_GITHUB_REPO\` is
+currently set to \`${NVM_GITHUB_REPO}\`.
+
+If this is not intentional, interrupt this installation and
+verify your environment variables.
+EOF
+  fi
   local NVM_VERSION
   NVM_VERSION="${NVM_INSTALL_VERSION:-$(nvm_latest_version)}"
   local NVM_METHOD
@@ -141,7 +163,7 @@ install_nvm_from_git() {
       }
     else
       # Cloning repo
-      command git clone "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
+      command git clone -o origin "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
         nvm_echo >&2 'Failed to clone nvm repo. Please report this!'
         exit 2
       }
@@ -274,15 +296,17 @@ nvm_detect_profile() {
       DETECTED_PROFILE="$HOME/.bash_profile"
     fi
   elif [ "${SHELL#*zsh}" != "$SHELL" ]; then
-    if [ -f "$HOME/.zshrc" ]; then
-      DETECTED_PROFILE="$HOME/.zshrc"
+    if [ -f "${ZDOTDIR:-${HOME}}/.zshrc" ]; then
+      DETECTED_PROFILE="${ZDOTDIR:-${HOME}}/.zshrc"
+    elif [ -f "${ZDOTDIR:-${HOME}}/.zprofile" ]; then
+      DETECTED_PROFILE="${ZDOTDIR:-${HOME}}/.zprofile"
     fi
   fi
 
   if [ -z "$DETECTED_PROFILE" ]; then
-    for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zshrc"
+    for EACH_PROFILE in ".profile" ".bashrc" ".bash_profile" ".zprofile" ".zshrc"
     do
-      if DETECTED_PROFILE="$(nvm_try_profile "${HOME}/${EACH_PROFILE}")"; then
+      if DETECTED_PROFILE="$(nvm_try_profile "${ZDOTDIR:-${HOME}}/${EACH_PROFILE}")"; then
         break
       fi
     done
@@ -334,7 +358,7 @@ nvm_check_global_modules() {
     command printf %s\\n "$NPM_GLOBAL_MODULES"
     nvm_echo '=> If you wish to uninstall them at a later point (or re-install them under your'
     # shellcheck disable=SC2016
-    nvm_echo '=> `nvm` Nodes), you can remove them from the system Node as follows:'
+    nvm_echo '=> `nvm` node installs), you can remove them from the system Node as follows:'
     nvm_echo
     nvm_echo '     $ nvm use system'
     nvm_echo '     $ npm uninstall -g a_module'
@@ -356,6 +380,8 @@ nvm_do_install() {
       exit 1
     fi
   fi
+  # Disable the optional which check, https://www.shellcheck.net/wiki/SC2230
+  # shellcheck disable=SC2230
   if nvm_has xcode-select && [ "$(xcode-select -p >/dev/null 2>/dev/null ; echo $?)" = '2' ] && [ "$(which git)" = '/usr/bin/git' ] && [ "$(which curl)" = '/usr/bin/curl' ]; then
     nvm_echo >&2 'You may be on a Mac, and need to install the Xcode Command Line Developer Tools.'
     # shellcheck disable=SC2016
@@ -402,12 +428,15 @@ nvm_do_install() {
   COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion\n'
   BASH_OR_ZSH=false
 
-  if [ -z "${NVM_PROFILE-}" ] ; then
+  if [ "${PROFILE-}" = '/dev/null' ] ; then
+    # the user has specifically requested NOT to have nvm touch their profile
+    echo
+  elif [ -z "${NVM_PROFILE-}" ] ; then
     local TRIED_PROFILE
     if [ -n "${PROFILE}" ]; then
       TRIED_PROFILE="${NVM_PROFILE} (as defined in \$PROFILE), "
     fi
-    nvm_echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
+    nvm_echo "=> Profile not found. Tried ${TRIED_PROFILE-}~/.bashrc, ~/.bash_profile, ~/.zprofile, ~/.zshrc, and ~/.profile."
     nvm_echo "=> Create one of them and run this script again"
     nvm_echo "   OR"
     nvm_echo "=> Append the following lines to the correct file yourself:"

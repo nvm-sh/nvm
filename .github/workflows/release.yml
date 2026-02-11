@@ -2,20 +2,27 @@ name: 'Tests: release process'
 
 on: [pull_request, push]
 
+permissions:
+  contents: read
+
 jobs:
   release:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
+            api.github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+      - uses: actions/setup-node@v6
         with:
           node-version: "14"
       - run: npm install

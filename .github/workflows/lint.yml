@@ -2,19 +2,21 @@ name: 'Tests: linting'
 
 on: [pull_request, push]
 
+permissions:
+  contents: read
+
 jobs:
   eclint:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
+            raw.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -22,19 +24,18 @@ jobs:
       - run: npm run eclint
 
   dockerfile_lint:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             ghcr.io:443
             github.com:443
+            raw.githubusercontent.com:443
             pkg-containers.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -42,17 +43,16 @@ jobs:
       - run: npm run dockerfile_lint
 
   doctoc:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
+            raw.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -60,14 +60,22 @@ jobs:
       - run: npm run doctoc:check
 
   test_naming:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v1
+      - uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
-      - uses: actions/checkout@v2
+            raw.githubusercontent.com:443
+      - uses: actions/checkout@v6
       - name: check tests filenames
         run: ./rename_test.sh --check
+
+  all:
+    permissions:
+      contents: none
+    name: 'all linting'
+    needs: [eclint, dockerfile_lint, doctoc, test_naming]
+    runs-on: ubuntu-latest
+    steps:
+      - run: true

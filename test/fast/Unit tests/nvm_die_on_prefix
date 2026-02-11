@@ -3,6 +3,7 @@
 TEST_PWD=$(pwd)
 TEST_DIR="$TEST_PWD/nvm_die_on_prefix_tmp"
 
+: nvm.sh
 \. ../../../nvm.sh
 
 TEST_VERSION_DIR="${TEST_DIR}/version"
@@ -11,7 +12,7 @@ cleanup () {
   rm -rf "$TEST_DIR"
   alias nvm_has='\nvm_has'
   alias npm='\npm'
-  unset -f nvm_has npm
+  unset -f nvm_has npm node
 }
 
 die () {
@@ -57,6 +58,12 @@ npm() {
   args="$@"
   if [ "_$args" = "_config --loglevel=warn get prefix" ]; then
     echo "$TEST_DIR/node"
+  fi
+}
+
+node() {
+  if [ "_$1" = "_-v" ]; then
+    echo "v0.0.0"
   fi
 }
 

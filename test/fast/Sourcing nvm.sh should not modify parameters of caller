@@ -3,5 +3,6 @@
 set -ex
 
 set -- yes
+: nvm.sh
 \. ../../nvm.sh
 [ "$1" = yes ]

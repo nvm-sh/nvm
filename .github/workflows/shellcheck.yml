@@ -2,10 +2,11 @@ name: 'Tests: shellcheck'
 
 on: [pull_request, push]
 
+permissions:
+  contents: read
+
 jobs:
   shellcheck_matrix:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -27,18 +28,22 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             ghcr.io:443
             github.com:443
             pkg-containers.githubusercontent.com:443
-      - uses: actions/checkout@v2
-      - name: Install shellcheck
+            formulae.brew.sh:443
+      - uses: actions/checkout@v6
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+      - name: Install latest shellcheck
         run: brew install shellcheck
         env:
           HOMEBREW_NO_ANALYTICS: 1
-      - run: "shellcheck --version"
+      - run: which shellcheck
+      - run: shellcheck --version
       - name: Run shellcheck on ${{ matrix.file }}
         run: shellcheck -s ${{ matrix.shell }} ${{ matrix.file }}
 
@@ -48,8 +53,4 @@ jobs:
       needs: [shellcheck_matrix]
       runs-on: ubuntu-latest
       steps:
-        - name: Harden Runner
-          uses: step-security/harden-runner@v1
-          with:
-            egress-policy: block
-        - run: 'echo tests completed'
+        - run: true

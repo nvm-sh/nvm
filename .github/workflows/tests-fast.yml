@@ -1,0 +1,101 @@
+name: 'Tests: fast'
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  fast:
+    permissions:
+      contents: read
+
+    name: 'fast (${{ matrix.shell }}, ${{ matrix.awk }})'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: 'script -q -e -c "${{ matrix.shell }} {0}"'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shell:
+          - sh
+          - bash
+          - dash
+          - zsh
+          # - ksh
+        awk:
+          - gawk
+          - mawk
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            registry.npmjs.org:443
+            raw.githubusercontent.com:443
+            nodejs.org:443
+            iojs.org:443
+            unofficial-builds.nodejs.org:443
+            azure.archive.ubuntu.com:80
+            packages.microsoft.com:443
+            registry-1.docker.io:443
+            auth.docker.io:443
+            production.cloudflare.docker.com:443
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - name: Install zsh, additional shells, and awk variant
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh ${{ matrix.awk }}
+          if [ "${{ matrix.shell }}" != "sh" ] && [ "${{ matrix.shell }}" != "bash" ] && [ "${{ matrix.shell }}" != "zsh" ]; then
+            sudo apt-get install -y ${{ matrix.shell }}
+          fi
+          # Set the selected awk as the default
+          sudo update-alternatives --set awk /usr/bin/${{ matrix.awk }}
+        shell: bash
+      - run: sudo ${{ matrix.shell }} --version 2> /dev/null || dpkg -s ${{ matrix.shell }} 2> /dev/null || which ${{ matrix.shell }}
+      - run: awk --version 2>&1 | head -1 || awk -W version 2>&1 | head -1
+      - run: curl --version
+      - run: wget --version
+      - uses: ljharb/actions/node/install@main
+        name: 'npm install && version checks'
+        with:
+          node-version: 'lts/*'
+          skip-ls-check: true
+      - run: npm ls urchin
+      - run: npx which urchin
+      - run: env
+      - name: Hide system node
+        run: |
+          if [ -f /usr/local/bin/node ]; then sudo mv /usr/local/bin/node /usr/local/bin/node.bak; fi
+          if [ -f /usr/local/bin/npm ]; then sudo mv /usr/local/bin/npm /usr/local/bin/npm.bak; fi
+          if [ -f /usr/local/bin/npx ]; then sudo mv /usr/local/bin/npx /usr/local/bin/npx.bak; fi
+        shell: bash
+      - name: Run fast tests
+        run: |
+          URCHIN_PATH="$(npx which urchin)"
+          unset NVM_CD_FLAGS NVM_BIN NVM_INC
+          export NVM_DIR="${{ github.workspace }}"
+          export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '\.nvm' | grep -v 'toolcache' | tr '\n' ':')"
+          make TERM=xterm-256color TEST_SUITE="fast" SHELL="${{ matrix.shell }}" URCHIN="$URCHIN_PATH" test-${{ matrix.shell }}
+      - name: Restore system node
+        if: always()
+        run: |
+          if [ -f /usr/local/bin/node.bak ]; then sudo mv /usr/local/bin/node.bak /usr/local/bin/node; fi
+          if [ -f /usr/local/bin/npm.bak ]; then sudo mv /usr/local/bin/npm.bak /usr/local/bin/npm; fi
+          if [ -f /usr/local/bin/npx.bak ]; then sudo mv /usr/local/bin/npx.bak /usr/local/bin/npx; fi
+        shell: bash
+
+  all:
+    permissions:
+      contents: none
+    name: 'all fast tests'
+    needs: [fast]
+    runs-on: ubuntu-latest
+    steps:
+      - run: true

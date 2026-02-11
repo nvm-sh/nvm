@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -x
+: nvm.sh
+\. ../../nvm.sh
+
+cleanup() { rm -f .nvmrc; }
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_TEST_VERSION=v0.42
+
+# Write it to nvmrc
+echo "$NVM_TEST_VERSION" > .nvmrc
+
+OUTPUT="$(../../nvm-exec 2>&1)";
+EXPECTED="N/A: version \"${NVM_TEST_VERSION}\" is not yet installed.
+
+You need to run \`nvm install ${NVM_TEST_VERSION}\` to install and use it.
+No NODE_VERSION provided; no .nvmrc file found";
+
+# Skip install, we want to test the error message
+[ "${EXPECTED}" = "${OUTPUT}" ] || die "expected >${EXPECTED}<, got >${OUTPUT}<"
+
+cleanup

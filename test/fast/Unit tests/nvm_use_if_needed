@@ -3,6 +3,7 @@
 cleanup() { unset -f nvm_ls_current nvm; }
 die () { echo "$@" ; cleanup ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 nvm_ls_current() { echo foo; }

@@ -2,6 +2,9 @@ name: 'Tests: `nvm install-latest-npm`'
 
 on: [pull_request, push]
 
+permissions:
+  contents: read
+
 jobs:
   matrix:
     runs-on: ubuntu-latest
@@ -9,11 +12,12 @@ jobs:
       latest: ${{ steps.set-matrix.outputs.requireds }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             iojs.org:443
             nodejs.org:443
+            raw.githubusercontent.com:443
       - uses: ljharb/actions/node/matrix@main
         id: set-matrix
         with:
@@ -33,6 +37,11 @@ jobs:
       matrix:
         node-version: ${{ fromJson(needs.matrix.outputs.latest) }}
         include:
+          - node-version: "21"
+          - node-version: "20.5"
+          - node-version: "20.4"
+          - node-version: "14.17"
+          - node-version: "14.16"
           - node-version: "9.2"
           - node-version: "9.1"
           - node-version: "9.0"
@@ -46,20 +55,25 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2
         with:
           allowed-endpoints:
             github.com:443
+            raw.githubusercontent.com:443
             iojs.org:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
-        name: 'nvm install-latest-npm'
+        name: 'install node'
         with:
           node-version: ${{ matrix.node-version }}
           skip-ls-check: true
           skip-install: true
+          skip-latest-npm: true
+      - run: npm --version
+      - run: '. ./nvm.sh ; nvm install-latest-npm'
+        name: 'nvm install-latest-npm'
       - run: npm --version
 
   node:
@@ -69,8 +83,4 @@ jobs:
     needs: [nodes]
     runs-on: ubuntu-latest
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@v1
-        with:
-          egress-policy: block
-      - run: 'echo tests completed'
+      - run: true
