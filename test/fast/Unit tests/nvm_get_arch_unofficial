@@ -15,6 +15,7 @@ die() {
   exit 1
 }
 
+: nvm.sh
 . ../../../nvm.sh
 
 # Sets the PATH for these tests to include the symlinks to the mocked binaries

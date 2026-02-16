@@ -7,6 +7,7 @@ cleanup() {
 
 die () { cleanup; echo "$@" ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 [ "$(nvm_get_download_slug 2>/dev/null ; echo $?)" = '1' ] || die 'invalid flavor did not fail with exit code 1'

@@ -11,6 +11,7 @@ cleanup() {
   echo "Tested nvm_echo_with_colors"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 OUTPUT="$(nvm_echo_with_colors "\033[0;36mCyan-colored text")"

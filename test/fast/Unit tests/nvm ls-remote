@@ -12,6 +12,7 @@ cleanup() {
   mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 if [ -n "${NVM_COLORS-}" ]; then
   export TEMP_NVM_COLORS=NVM_COLORS
@@ -31,6 +32,8 @@ echo "${STAR}" > "${NVM_DIR}/alias/lts/\*"
 printf '%s\n' "$(cat "${LTS_NAMES_PATH}" | tail -n +1)" | while IFS= read -r LTS; do
   cp "${NVM_DIR}/alias/lts-backup/${LTS}" "${NVM_DIR}/alias/lts/"
 done
+
+nvm_has_colors() { return 0; }
 
 nvm deactivate 2>/dev/null || die 'unable to deactivate'
 
@@ -66,12 +69,14 @@ printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
   INDEX=$(($INDEX + 1))
 done
 
+nvm_has_colors() { return 1; }
 OUTPUT="$(nvm ls-remote lts/ARGON 2>&1)"
 EXIT_CODE=$?
+nvm_has_colors() { return 0; }
 [ $EXIT_CODE -eq 3 ] || die "nvm ls-remote lts/ARGON did not exit 3, got '${EXIT_CODE}'"
 
 EXPECTED_OUTPUT="LTS names must be lowercase
-            N/A"
+            N/A *"
 [ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/ARGON did not output expected error message; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 REMOTE="${PWD}/mocks/nvm_ls_remote.txt"

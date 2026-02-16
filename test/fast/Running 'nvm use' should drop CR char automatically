@@ -9,6 +9,7 @@ cleanup() {
   rm .nvmrc
 }
 
+: nvm.sh
 \. ../../nvm.sh
 
 # normal .nvmrc

@@ -6,6 +6,7 @@ cleanup() {
 
 die() { cleanup; echo "$@" ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 curl() {

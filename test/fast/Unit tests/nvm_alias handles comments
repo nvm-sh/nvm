@@ -1,0 +1,34 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup () {
+  rm -rf ../../../alias/test-comment
+  rm -rf ../../../alias/test-inline-comment
+  rm -rf ../../../alias/test-comment-first
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# Test: alias file with comment on separate line
+echo "v0.10
+# this is a comment" > ../../../alias/test-comment
+OUTPUT="$(nvm_alias test-comment)"
+EXPECTED_OUTPUT="v0.10"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias test-comment' should ignore comment line; expected '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+# Test: alias file with inline comment
+echo "v0.11 # inline comment" > ../../../alias/test-inline-comment
+OUTPUT="$(nvm_alias test-inline-comment)"
+EXPECTED_OUTPUT="v0.11"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias test-inline-comment' should strip inline comment; expected '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+# Test: alias file with comment as first line
+echo "# comment first
+v0.12" > ../../../alias/test-comment-first
+OUTPUT="$(nvm_alias test-comment-first)"
+EXPECTED_OUTPUT="v0.12"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias test-comment-first' should skip comment-only first line; expected '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+cleanup

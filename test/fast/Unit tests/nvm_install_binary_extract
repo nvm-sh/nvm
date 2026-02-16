@@ -40,6 +40,7 @@ test_archi() {
   [ "$(cat "${NVM_DIR}/versions/node/${version}/bin/node")" = "node ${version}" ] || die "Unable to extract ${ext} file"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 set -ex

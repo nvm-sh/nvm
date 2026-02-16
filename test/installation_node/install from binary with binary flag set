@@ -43,6 +43,13 @@ nvm_install_source() {
   return 1
 }
 
+# Override nvm_get_make_jobs to produce predictable output regardless of actual CPU count
+nvm_get_make_jobs() {
+  NVM_MAKE_JOBS=1
+  nvm_echo "Detected that you have 2 CPU core(s)"
+  nvm_echo 'Number of CPU core(s) less than or equal to 2, running in single-threaded mode'
+}
+
 # binary fails, falls back to source if -b is not set
 OUTPUT="$(nvm install 9.0.0 2>&1)"
 EXPECTED_OUTPUT="binary failed

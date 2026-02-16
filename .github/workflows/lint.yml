@@ -16,7 +16,7 @@ jobs:
             raw.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -35,7 +35,7 @@ jobs:
             pkg-containers.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -52,7 +52,7 @@ jobs:
             raw.githubusercontent.com:443
             nodejs.org:443
             registry.npmjs.org:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ljharb/actions/node/install@main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
@@ -67,6 +67,15 @@ jobs:
           allowed-endpoints:
             github.com:443
             raw.githubusercontent.com:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: check tests filenames
         run: ./rename_test.sh --check
+
+  all:
+    permissions:
+      contents: none
+    name: 'all linting'
+    needs: [eclint, dockerfile_lint, doctoc, test_naming]
+    runs-on: ubuntu-latest
+    steps:
+      - run: true

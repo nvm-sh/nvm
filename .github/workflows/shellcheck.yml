@@ -35,7 +35,7 @@ jobs:
             github.com:443
             pkg-containers.githubusercontent.com:443
             formulae.brew.sh:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install latest shellcheck

@@ -12,6 +12,7 @@ jobs:
 
     name: "tests"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: 'script -q -e -c "${{ matrix.shell }} {0}"'
@@ -52,7 +53,7 @@ jobs:
             iojs.org:443
             azure.archive.ubuntu.com:80
             packages.microsoft.com:443
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: sudo apt-get update; sudo apt-get install ${{ matrix.shell }}
         if: matrix.shell == 'zsh' || matrix.shell == 'ksh'
         # zsh (https://github.com/actions/runner-images/issues/264) and ksh are not in the ubuntu image
@@ -68,7 +69,19 @@ jobs:
       - run: npm ls urchin
       - run: npx which urchin
       - run: env
-      - run: make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npx which urchin)" test-${{ matrix.shell }}
+      - name: Run tests
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            timeout 600 make TERM=xterm-256color TEST_SUITE="${{ matrix.suite }}" SHELL="${{ matrix.shell }}" URCHIN="$(npx which urchin)" test-${{ matrix.shell }} && exit 0
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -ne 124 ]; then
+              exit $EXIT_CODE
+            fi
+            echo "Attempt ${attempt} timed out; retrying..."
+          done
+          echo "All 3 attempts timed out."
+          exit 1
 
   nvm:
     permissions:

@@ -7,6 +7,7 @@ cleanup () {
 }
 die () { echo "$@" ; cleanup ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 set -ex
@@ -31,7 +32,7 @@ check_version() {
   mkdir -p "$NODE_PATH/$VERSION/bin" && cd "$NODE_PATH/$VERSION/bin" && touch "$NODE_PATH/$VERSION/bin/$BINARY"
   ! nvm_is_version_installed "$VERSION" || die "nvm_is_version_installed $VERSION should fail with non executable existing version"
 
-  # nvm_is_version_installed whould work
+  # nvm_is_version_installed would work
   chmod +x "$NODE_PATH/$VERSION/bin/$BINARY"
   nvm_is_version_installed "$VERSION" || die "nvm_is_version_installed $VERSION should work"
 }

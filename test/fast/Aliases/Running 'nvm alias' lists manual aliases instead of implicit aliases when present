@@ -1,5 +1,6 @@
 #!/bin/sh
 
+: nvm.sh
 \. ../../../nvm.sh
 \. ../../common.sh
 
@@ -34,16 +35,16 @@ nvm alias iojs unstable
 
 NVM_ALIAS_OUTPUT=$(nvm alias | strip_colors)
 
-echo "$NVM_ALIAS_OUTPUT" | command grep -F "stable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION)" \
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "stable -> $EXPECTED_UNSTABLE (-> $UNSTABLE_VERSION *)" \
   || die "nvm alias did not contain the overridden 'stable' alias; got '$NVM_ALIAS_OUTPUT'"
 
-echo "$NVM_ALIAS_OUTPUT" | command grep -F "unstable -> $EXPECTED_STABLE (-> $STABLE_VERSION)" \
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "unstable -> $EXPECTED_STABLE (-> $STABLE_VERSION *)" \
   || die "nvm alias did not contain the overridden 'unstable' alias; got '$NVM_ALIAS_OUTPUT'"
 
-echo "$NVM_ALIAS_OUTPUT" | command grep -F "node -> stable (-> $UNSTABLE_VERSION)" \
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "node -> stable (-> $UNSTABLE_VERSION *)" \
   || die "nvm alias did not contain the overridden 'node' alias; got '$NVM_ALIAS_OUTPUT'"
 
-echo "$NVM_ALIAS_OUTPUT" | command grep -F "iojs -> unstable (-> $STABLE_VERSION)" \
+echo "$NVM_ALIAS_OUTPUT" | command grep -F "iojs -> unstable (-> $STABLE_VERSION *)" \
   || die "nvm alias did not contain the overridden 'iojs' alias; got '$NVM_ALIAS_OUTPUT'"
 
 cleanup

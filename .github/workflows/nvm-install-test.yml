@@ -12,13 +12,16 @@ on:
         required: false
         default: 'HEAD'
 
+permissions:
+  contents: read
+
 jobs:
   matrix:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - id: matrix
@@ -57,7 +60,7 @@ jobs:
           - 2 shlvls
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: resolve HEAD to sha
         run: |
           if [ '${{ matrix.ref }}' = 'HEAD' ]; then

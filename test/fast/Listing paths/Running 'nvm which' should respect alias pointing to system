@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup() {
+  rm -f "$(nvm_alias_path)/default"
+  if [ -n "${SYSTEM_DIR-}" ]; then
+    rm -rf "${SYSTEM_DIR}"
+  fi
+  if [ -n "${ORIG_PATH-}" ]; then
+    PATH="${ORIG_PATH}"
+  fi
+}
+
+\. ../../../nvm.sh
+
+nvm_make_alias default system
+
+ORIG_PATH="${PATH}"
+SYSTEM_DIR="$(mktemp -d)"
+cat > "${SYSTEM_DIR}/node" <<'EOF'
+#!/bin/sh
+echo v0.0.0
+EOF
+chmod +x "${SYSTEM_DIR}/node"
+PATH="${SYSTEM_DIR}:${PATH}"
+export PATH
+
+EXPECTED_OUTPUT="$(command which node)"
+set +ex # since stderr is needed
+OUTPUT="$(nvm which default 2>&1)"
+set -ex
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "Could not use system via alias for nvm which. Got >${OUTPUT}<, expected >${EXPECTED_OUTPUT}<"
+
+cleanup

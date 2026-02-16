@@ -7,6 +7,7 @@ cleanup () {
   unset -f nvm_alias nvm_version
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 NVM_ALIAS_DIR='path/to/the alias/dir'
@@ -38,7 +39,7 @@ nvm_version() {
 }
 
 OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" "$NVM_ALIAS_DIR/blah" | strip_colors)"
-EXPECTED_OUTPUT='blah -> "blah" (-> v"blah")'
+EXPECTED_OUTPUT='blah -> "blah" (-> v"blah" *)'
 [ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" \"\$NVM_ALIAS_DIR/blah\"' should strip alias dir and print nvm_alias output; got '$OUTPUT', expected '$EXPECTED_OUTPUT'"
 
 cleanup

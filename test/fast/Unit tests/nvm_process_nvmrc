@@ -6,6 +6,7 @@ cleanup() {
   echo 'cleaned up'
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 \. ../../common.sh

@@ -8,6 +8,7 @@ cleanup() {
   unset -f nvm_remote_version
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 \. ../../common.sh

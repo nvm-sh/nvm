@@ -1,5 +1,6 @@
 #!/bin/sh
 
+: nvm.sh
 \. ../../../nvm.sh
 
 die () {
@@ -8,6 +9,9 @@ die () {
 }
 
 set -e
+
+nvm_has_colors() { return 0; }
+
 # # # expecting in red and two grays:
 OUTPUT=$(echo $(nvm_print_formatted_alias fakealias fakedest) | awk '{ print substr($0, 1, 21); }')
 EXPECTED_OUTPUT="$(command printf %b "\033[0;31mfakealias\033[0m ")"

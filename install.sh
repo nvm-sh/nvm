@@ -33,7 +33,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  nvm_echo "v0.40.3"
+  nvm_echo "v0.40.4"
 }
 
 nvm_profile_is_bash_or_zsh() {
@@ -428,7 +428,10 @@ nvm_do_install() {
   COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion\n'
   BASH_OR_ZSH=false
 
-  if [ -z "${NVM_PROFILE-}" ] ; then
+  if [ "${PROFILE-}" = '/dev/null' ] ; then
+    # the user has specifically requested NOT to have nvm touch their profile
+    echo
+  elif [ -z "${NVM_PROFILE-}" ] ; then
     local TRIED_PROFILE
     if [ -n "${PROFILE}" ]; then
       TRIED_PROFILE="${NVM_PROFILE} (as defined in \$PROFILE), "

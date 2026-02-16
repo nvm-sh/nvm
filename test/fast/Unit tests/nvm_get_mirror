@@ -8,6 +8,7 @@ unset NVM_NODEJS_ORG_MIRROR
 unset NVM_IOJS_ORG_MIRROR
 
 set +e # TODO: fix
+: nvm.sh
 \. ../../../nvm.sh
 set -e
 

@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -ex
+
+\. ../../nvm.sh
+\. ../common.sh
+
+VERSION='v0.0.1'
+PATTERN='0.0'
+
+mkdir -p "${NVM_DIR}/${VERSION}"
+
+set +ex # needed for stderr
+RETURN_MESSAGE="$(nvm uninstall "${PATTERN}" 2>&1 || echo)"
+set -ex
+EXPECTED_MESSAGE="Version '${VERSION}' (inferred from ${PATTERN}) is not installed."
+
+[ "${RETURN_MESSAGE}" = "${EXPECTED_MESSAGE}" ]

@@ -5,6 +5,7 @@ tempfile=$(mktemp)
 die () { echo "$@" ; cleanup; exit 1; }
 cleanup() { rm -f "$tempfile"; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 if [ -t 1 ] ; then
@@ -24,7 +25,7 @@ fi
 ! nvm_stdout_is_terminal >"$tempfile" || die 'nvm_stdout_is_terminal should be false when stdout goes to a file'
 [ "$(nvm_stdout_is_terminal; echo $?)" = "1" ] || die 'nvm_stdout_is_terminal should be false in command substitution'
 
-# also test the 'true' case while running on travis-ci or similar environments
+# also test the 'true' case while running on CI or similar environments
 nvm_stdout_is_terminal >/dev/tty || die 'nvm_stdout_is_terminal should be true when stdout goes to /dev/tty'
 nvm_stdout_is_terminal >/dev/tty 2>/dev/null || die 'nvm_stdout_is_terminal should be true when stdout goes to /dev/tty and stderr is redirected'
 nvm_stdout_is_terminal >/dev/tty </dev/null || die 'nvm_stdout_is_terminal should be true when stdout goes to /dev/tty and stdin is redirected'
