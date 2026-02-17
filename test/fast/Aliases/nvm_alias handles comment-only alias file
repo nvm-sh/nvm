@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file containing only comments
+printf '# this is a comment\n# another comment\n' > ../../../alias/test-edge-comments
+ACTUAL="$(nvm_alias test-edge-comments 2>/dev/null)"
+EXIT_CODE="$(nvm_alias test-edge-comments 2>/dev/null; echo $?)"
+[ -z "${ACTUAL}" ] || die "expected empty output for comment-only alias file, got >${ACTUAL}<"
+[ "${EXIT_CODE}" = '0' ] || die "expected exit code 0, got ${EXIT_CODE}"
+
+rm -f ../../../alias/test-edge-comments
