@@ -1323,7 +1323,22 @@ nvm_alias() {
     return 2
   fi
 
-  command sed 's/#.*//; s/[[:space:]]*$//' "${NVM_ALIAS_PATH}" | command awk 'NF'
+  local NVM_ALIAS_LINE
+  while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
+    case "${NVM_ALIAS_LINE}" in
+      *[!\ \	]*) ;;
+      *) continue ;;
+    esac
+    while : ; do
+      case "${NVM_ALIAS_LINE}" in
+        *' ') NVM_ALIAS_LINE="${NVM_ALIAS_LINE% }" ;;
+        *'	') NVM_ALIAS_LINE="${NVM_ALIAS_LINE%	}" ;;
+        *) break ;;
+      esac
+    done
+    nvm_echo "${NVM_ALIAS_LINE}"
+  done < "${NVM_ALIAS_PATH}"
 }
 
 nvm_ls_current() {
@@ -1356,13 +1371,14 @@ nvm_resolve_alias() {
   local ALIAS
   ALIAS="${PATTERN}"
   local ALIAS_TEMP
+  local ALIAS_OUTPUT
 
   local SEEN_ALIASES
-  SEEN_ALIASES="${ALIAS}"
-  local NVM_ALIAS_INDEX
-  NVM_ALIAS_INDEX=1
+  SEEN_ALIASES=" ${ALIAS} "
   while true; do
-    ALIAS_TEMP="$( (nvm_alias "${ALIAS}" 2>/dev/null | command head -n "${NVM_ALIAS_INDEX}" | command tail -n 1) || nvm_echo)"
+    ALIAS_OUTPUT="$(nvm_alias "${ALIAS}" 2>/dev/null)" || ALIAS_OUTPUT=''
+    ALIAS_TEMP="${ALIAS_OUTPUT%%
+*}"
 
     if [ -z "${ALIAS_TEMP}" ]; then
       break
@@ -1373,7 +1389,7 @@ nvm_resolve_alias() {
       break
     fi
 
-    SEEN_ALIASES="${SEEN_ALIASES}\\n${ALIAS_TEMP}"
+    SEEN_ALIASES="${SEEN_ALIASES}${ALIAS_TEMP} "
     ALIAS="${ALIAS_TEMP}"
   done
 
