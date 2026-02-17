@@ -1,0 +1,19 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias pointing to a version that does not exist as an alias
+echo '99.99.99' > ../../../alias/test-edge-noexist
+
+ACTUAL="$(nvm_resolve_alias test-edge-noexist)"
+EXPECTED='v99.99.99'
+EXIT_CODE="$(nvm_resolve_alias test-edge-noexist >/dev/null 2>&1; echo $?)"
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+[ "${EXIT_CODE}" = '0' ] || die "expected exit code 0, got ${EXIT_CODE}"
+
+rm -f ../../../alias/test-edge-noexist

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create a 4-deep alias chain: hop1 -> hop2 -> hop3 -> hop4 -> 0.0.99
+echo 'hop2' > ../../../alias/hop1
+echo 'hop3' > ../../../alias/hop2
+echo 'hop4' > ../../../alias/hop3
+echo '0.0.99' > ../../../alias/hop4
+
+ACTUAL="$(nvm_resolve_alias hop1)"
+EXPECTED='v0.0.99'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for 4-deep chain, got >${ACTUAL}<"
+
+rm -f ../../../alias/hop1 ../../../alias/hop2 ../../../alias/hop3 ../../../alias/hop4
