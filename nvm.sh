@@ -1318,13 +1318,12 @@ nvm_alias() {
   while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
     NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
     case "${NVM_ALIAS_LINE}" in
-      *[!\ \	]*) ;;
+      *[![:space:]]*) ;;
       *) continue ;;
     esac
     while : ; do
       case "${NVM_ALIAS_LINE}" in
-        *' ') NVM_ALIAS_LINE="${NVM_ALIAS_LINE% }" ;;
-        *'	') NVM_ALIAS_LINE="${NVM_ALIAS_LINE%	}" ;;
+        *[[:space:]]) NVM_ALIAS_LINE="${NVM_ALIAS_LINE%[[:space:]]}" ;;
         *) break ;;
       esac
     done

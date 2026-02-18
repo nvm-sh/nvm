@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file with a very long line (version followed by a long comment)
+LONG_COMMENT="$(printf '%0*d' 10000 0 | command tr '0' 'x')"
+printf 'v22.1.0 #%s\n' "${LONG_COMMENT}" > ../../../alias/test-edge-long
+ACTUAL="$(nvm_alias test-edge-long)"
+EXPECTED='v22.1.0'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+rm -f ../../../alias/test-edge-long
