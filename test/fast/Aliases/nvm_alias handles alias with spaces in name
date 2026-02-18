@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file whose name contains spaces
+mkdir -p ../../../alias
+printf 'v22.1.0\n' > "../../../alias/test edge spaces"
+ACTUAL="$(nvm_alias "test edge spaces")"
+EXPECTED='v22.1.0'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+rm -f "../../../alias/test edge spaces"
