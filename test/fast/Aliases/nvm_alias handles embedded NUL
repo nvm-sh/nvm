@@ -1,0 +1,22 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file with an embedded NUL byte after the version.
+# NUL handling varies by shell: some stop at NUL, others read through it.
+# The function must not crash, and must emit output starting with the version.
+printf 'v22.1.0\000garbage\n' > ../../../alias/test-edge-nul
+ACTUAL="$(nvm_alias test-edge-nul)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '0' ] || die "expected exit code 0, got ${EXIT_CODE}"
+case "${ACTUAL}" in
+  v22.1.0*) ;; # OK — starts with the version regardless of NUL handling
+  *) die "expected output starting with >v22.1.0<, got >${ACTUAL}<" ;;
+esac
+
+rm -f ../../../alias/test-edge-nul
