@@ -1,0 +1,150 @@
+name: 'Update nodejs.org'
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'nvm version tag (e.g., v0.40.4). Defaults to latest release.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  update-nodejs-org:
+    if: github.repository == 'nvm-sh/nvm' && github.actor == 'ljharb'
+    permissions:
+      contents: none
+    name: 'Create PR to nodejs/nodejs.org'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            api.github.com:443
+
+      - name: Extract and validate version
+        id: version
+        run: |
+          set -euo pipefail
+
+          INPUT_VERSION="${{ inputs.version }}"
+
+          if [ -n "${INPUT_VERSION}" ]; then
+            TAG="${INPUT_VERSION}"
+          elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')"
+          fi
+
+          if ! printf '%s\n' "${TAG}" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::notice::Tag '${TAG}' does not match expected format vX.Y.Z, skipping"
+            exit 0
+          fi
+
+          printf 'tag=%s\n' "${TAG}" >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Set up fork
+        if: steps.version.outputs.tag
+        id: fork
+        run: |
+          set -euo pipefail
+
+          gh repo fork nodejs/nodejs.org --clone=false 2>&1 || true
+
+          FORK_OWNER="$(gh api user --jq '.login')"
+
+          DEFAULT_BRANCH="$(gh repo view nodejs/nodejs.org --json defaultBranchRef --jq '.defaultBranchRef.name')"
+          gh repo sync "${FORK_OWNER}/nodejs.org" --source nodejs/nodejs.org --branch "${DEFAULT_BRANCH}"
+
+          printf 'fork_owner=%s\n' "${FORK_OWNER}" >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
+
+      - name: Clone fork
+        if: steps.version.outputs.tag
+        run: git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${{ steps.fork.outputs.fork_owner }}/nodejs.org.git" nodejs.org
+        env:
+          GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
+
+      - name: Update nvm version in English snippet
+        if: steps.version.outputs.tag
+        run: |
+          set -euo pipefail
+
+          NEW_VERSION="${{ steps.version.outputs.tag }}"
+          FILE="nodejs.org/apps/site/snippets/en/download/nvm.bash"
+          PATTERN='nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install\.sh'
+          REPLACEMENT="nvm-sh/nvm/${NEW_VERSION}/install.sh"
+
+          if [ ! -f "${FILE}" ]; then
+            echo "::error::English snippet not found at ${FILE}"
+            exit 1
+          fi
+
+          MATCH_COUNT="$(grep -cE "${PATTERN}" "${FILE}" || true)"
+
+          if [ "${MATCH_COUNT}" -eq 0 ]; then
+            echo "::error::No nvm version pattern found in ${FILE}"
+            exit 1
+          fi
+
+          if [ "${MATCH_COUNT}" -ne 1 ]; then
+            echo "::error::Expected exactly 1 nvm version match in ${FILE}, found ${MATCH_COUNT}"
+            exit 1
+          fi
+
+          sed -i -E "s|${PATTERN}|${REPLACEMENT}|g" "${FILE}"
+
+          if ! grep -qF "${REPLACEMENT}" "${FILE}"; then
+            echo "::error::Replacement verification failed in ${FILE}"
+            exit 1
+          fi
+
+          echo "Updated: ${FILE}"
+
+      - name: Create pull request
+        if: steps.version.outputs.tag
+        run: |
+          set -euo pipefail
+
+          NEW_VERSION="${{ steps.version.outputs.tag }}"
+          BRANCH="nvm-${NEW_VERSION}"
+          FORK_OWNER="${{ steps.fork.outputs.fork_owner }}"
+
+          cd nodejs.org
+
+          git checkout -b "${BRANCH}"
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "::notice::English snippet already has version ${NEW_VERSION}"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "meta: bump nvm to ${NEW_VERSION}"
+
+          git push -u origin "${BRANCH}"
+
+          BODY="Updates the English nvm install snippet to [\`${NEW_VERSION}\`](https://github.com/nvm-sh/nvm/releases/tag/${NEW_VERSION}). The translation system handles other locales.
+
+          Ref: https://github.com/nodejs/nodejs.org/issues/8628"
+
+          gh pr create \
+            --repo nodejs/nodejs.org \
+            --head "${FORK_OWNER}:${BRANCH}" \
+            --title "meta: bump nvm to ${NEW_VERSION}" \
+            --body "${BODY}"
+        env:
+          GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
