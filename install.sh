@@ -370,7 +370,6 @@ nvm_profile_info() {
   local NVM_PROFILE
   local PROFILE_PERMISSIONS
   local PROFILE_OWNER
-  local WHOAMI
   local REAL_PROFILE
 
   NVM_PROFILE=$1
@@ -381,7 +380,13 @@ nvm_profile_info() {
     REAL_PROFILE="$NVM_PROFILE"
   fi
   # Get info about profile: https://unix.stackexchange.com/a/7733/161355
+  # Get info about profile:
+  # Tools that specifically get this info are not cross-platform, so we rely on
+  # `ls`, which has consistent output on POSIX systems.
+  # https://unix.stackexchange.com/a/7733/161355
+  # shellcheck disable=SC2012
   PROFILE_PERMISSIONS="$(ls -ld "$REAL_PROFILE" | awk 'NR==1 {print $1}')"
+  # shellcheck disable=SC2012
   PROFILE_OWNER="$(ls -ld "$REAL_PROFILE" | awk 'NR==1 {print $3}')"
 
   nvm_echo "=> Info about $NVM_PROFILE:"
