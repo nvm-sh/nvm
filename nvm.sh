@@ -159,7 +159,7 @@ nvm_download() {
 
 nvm_sanitize_auth_header() {
     # Remove potentially dangerous characters
-    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9:;_. -]//g'
+    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9:;_./+=~ -]//g'
 }
 
 nvm_has_system_node() {
