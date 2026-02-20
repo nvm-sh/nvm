@@ -2162,7 +2162,7 @@ nvm_get_arch() {
   fi
 
   if [ -f "/etc/alpine-release" ]; then
-    NVM_ARCH=x64-musl
+    NVM_ARCH="${NVM_ARCH}-musl"
   fi
 
   nvm_echo "${NVM_ARCH}"
