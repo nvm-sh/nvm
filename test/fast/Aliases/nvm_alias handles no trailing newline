@@ -1,0 +1,16 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file with no trailing newline
+printf 'v22.1.0' > ../../../alias/test-edge-no-newline
+ACTUAL="$(nvm_alias test-edge-no-newline)"
+EXPECTED='v22.1.0'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+rm -f ../../../alias/test-edge-no-newline
