@@ -101,7 +101,7 @@ nvm_get_latest() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
+    NVM_LATEST_URL="$(command curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
     NVM_LATEST_URL="$(wget -q https://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
@@ -133,7 +133,7 @@ nvm_download() {
     for arg in "$@"; do
       NVM_DOWNLOAD_ARGS="${NVM_DOWNLOAD_ARGS} \"$arg\""
     done
-    eval "curl -q --fail ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} ${NVM_DOWNLOAD_ARGS}"
+    eval "command curl -q --fail ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} ${NVM_DOWNLOAD_ARGS}"
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(nvm_echo "$@" | command sed "
