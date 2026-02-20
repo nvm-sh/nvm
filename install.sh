@@ -376,6 +376,10 @@ nvm_profile_info() {
   NVM_PROFILE=$1
   # readlink should be available on Linux, BSDs and macOS
   REAL_PROFILE=$(readlink "$NVM_PROFILE")
+  # If output is empty, then it wasn't a symlink
+  if [ -z "$REAL_PROFILE" ]; then
+    REAL_PROFILE="$NVM_PROFILE"
+  fi
   # Get info about profile: https://unix.stackexchange.com/a/7733/161355
   PROFILE_PERMISSIONS="$(ls -ld "$REAL_PROFILE" | awk 'NR==1 {print $1}')"
   PROFILE_OWNER="$(ls -ld "$REAL_PROFILE" | awk 'NR==1 {print $3}')"
