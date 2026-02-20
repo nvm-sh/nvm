@@ -379,7 +379,6 @@ nvm_profile_info() {
   if [ -z "$REAL_PROFILE" ]; then
     REAL_PROFILE="$NVM_PROFILE"
   fi
-  # Get info about profile: https://unix.stackexchange.com/a/7733/161355
   # Get info about profile:
   # Tools that specifically get this info are not cross-platform, so we rely on
   # `ls`, which has consistent output on POSIX systems.
