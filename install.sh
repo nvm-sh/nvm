@@ -366,6 +366,38 @@ nvm_check_global_modules() {
   fi
 }
 
+nvm_profile_info() {
+  local NVM_PROFILE
+  local PROFILE_PERMISSIONS
+  local PROFILE_OWNER
+  local REAL_PROFILE
+
+  NVM_PROFILE=$1
+  # readlink should be available on Linux, BSDs and macOS
+  REAL_PROFILE=$(readlink "$NVM_PROFILE")
+  # If output is empty, then it wasn't a symlink
+  if [ -z "$REAL_PROFILE" ]; then
+    REAL_PROFILE="$NVM_PROFILE"
+  fi
+  # Get info about profile:
+  # Tools that specifically get this info are not cross-platform, so we rely on
+  # `ls`, which has consistent output on POSIX systems.
+  # https://unix.stackexchange.com/a/7733/161355
+  # shellcheck disable=SC2012
+  PROFILE_PERMISSIONS="$(ls -ld "$REAL_PROFILE" | awk 'NR==1 {print $1}')"
+  # shellcheck disable=SC2012
+  PROFILE_OWNER="$(ls -ld "$REAL_PROFILE" | awk 'NR==1 {print $3}')"
+
+  nvm_echo "=> Info about $NVM_PROFILE:"
+  if [ "$NVM_PROFILE" != "$REAL_PROFILE" ]; then
+    nvm_echo "   Real path of $NVM_PROFILE: $REAL_PROFILE"
+  fi
+  nvm_echo "   Owner: $PROFILE_OWNER (you are $(whoami))"
+  nvm_echo "   Permissions: $PROFILE_PERMISSIONS"
+  nvm_echo "=> You may need to modify the file owner or permissions to grant $(whoami)"
+  nvm_echo "   write access."
+}
+
 nvm_do_install() {
   if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
     if [ -e "${NVM_DIR}" ]; then
@@ -448,14 +480,27 @@ nvm_do_install() {
     fi
     if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
       nvm_echo "=> Appending nvm source string to $NVM_PROFILE"
-      command printf "${SOURCE_STR}" >> "$NVM_PROFILE"
+      command printf "${SOURCE_STR}" >> "$NVM_PROFILE" || {
+        nvm_echo "=> Failed to add nvm source string to $NVM_PROFILE"
+        nvm_profile_info "$NVM_PROFILE"
+        nvm_echo "=> Or, you can the following lines to the file yourself:"
+        command printf "${SOURCE_STR}"
+        nvm_echo
+      }
     else
       nvm_echo "=> nvm source string already in ${NVM_PROFILE}"
     fi
     # shellcheck disable=SC2016
     if ${BASH_OR_ZSH} && ! command grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
       nvm_echo "=> Appending bash_completion source string to $NVM_PROFILE"
-      command printf "$COMPLETION_STR" >> "$NVM_PROFILE"
+      command printf "$COMPLETION_STR" >> "$NVM_PROFILE" || {
+        nvm_echo "=> Failed to add nvm source string to $NVM_PROFILE"
+        nvm_profile_info "$NVM_PROFILE"
+        nvm_echo "=> Or, you can the following lines to the file yourself:"
+        nvm_echo
+        command printf "${COMPLETION_STR}"
+        nvm_echo
+      }
     else
       nvm_echo "=> bash_completion source string already in ${NVM_PROFILE}"
     fi
