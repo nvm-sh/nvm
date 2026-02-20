@@ -2142,6 +2142,7 @@ nvm_get_arch() {
     x86_64 | amd64) NVM_ARCH="x64" ;;
     i*86) NVM_ARCH="x86" ;;
     aarch64 | armv8l) NVM_ARCH="arm64" ;;
+    loongarch64) NVM_ARCH="loong64" ;;
     *) NVM_ARCH="${HOST_ARCH}" ;;
   esac
 
