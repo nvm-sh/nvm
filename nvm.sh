@@ -1314,7 +1314,14 @@ nvm_alias() {
     return 2
   fi
 
-  command sed 's/#.*//; s/[[:space:]]*$//' "${NVM_ALIAS_PATH}" | command awk 'NF'
+  while IFS= read -r line; do
+    # Remove comments
+    line="${line%%#*}"
+    # Trim trailing whitespace
+    line="${line%% }"
+    line="${line%%	}"
+    [ -n "${line}" ] && nvm_echo "${line}"
+  done < "${NVM_ALIAS_PATH}"
 }
 
 nvm_ls_current() {
@@ -1353,7 +1360,16 @@ nvm_resolve_alias() {
   local NVM_ALIAS_INDEX
   NVM_ALIAS_INDEX=1
   while true; do
-    ALIAS_TEMP="$( (nvm_alias "${ALIAS}" 2>/dev/null | command head -n "${NVM_ALIAS_INDEX}" | command tail -n 1) || nvm_echo)"
+    # Use a more efficient approach with a counter and while loop instead of head/tail
+    ALIAS_TEMP=""
+    local COUNT=0
+    while IFS= read -r line; do
+      COUNT=$((COUNT + 1))
+      if [ "${COUNT}" -eq "${NVM_ALIAS_INDEX}" ]; then
+        ALIAS_TEMP="${line}"
+        break
+      fi
+    done <<< "$(nvm_alias "${ALIAS}" 2>/dev/null || nvm_echo)"
 
     if [ -z "${ALIAS_TEMP}" ]; then
       break
