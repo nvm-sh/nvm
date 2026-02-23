@@ -1632,6 +1632,109 @@ nvm_ls_remote() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab node std "${PATTERN}"
 }
 
+nvm_prune() {
+  local NVM_DRY_RUN
+  NVM_DRY_RUN=0
+  local ARG
+  for ARG in "$@"; do
+    case "${ARG}" in
+      --dry-run)
+        NVM_DRY_RUN=1
+        ;;
+      *)
+        nvm_err "Unknown argument: ${ARG}"
+        return 127
+        ;;
+    esac
+  done
+
+  nvm_echo "Pruning old installed versions..."
+  if [ "${NVM_DRY_RUN}" -eq 1 ]; then
+    nvm_echo "Dry run mode: no versions will be removed."
+  fi
+
+  local SORT_COMMAND
+  if command sort -V </dev/null >/dev/null 2>&1; then
+    SORT_COMMAND='command sort -V'
+  else
+    # Fallback to numeric sort on fields roughly for POSIX compliance
+    # v1.2.3 -> field 1 (1.2n ignores 'v'), field 2, field 3
+    SORT_COMMAND='command sort -t. -k 1.2,1n -k 2,2n -k 3,3n'
+  fi
+
+  local VERSIONS
+  VERSIONS="$(nvm_ls --no-colors --no-alias | nvm_grep -v "iojs" | command awk '{ for(i=1;i<=NF;i++) if($i ~ /^v[0-9]+\.[0-9]+\.[0-9]+$/) print $i }' | $SORT_COMMAND)"
+
+  if [ -z "${VERSIONS}" ]; then
+    nvm_echo "No versions installed to prune."
+    return 0
+  fi
+
+  local CURRENT_VERSION
+  CURRENT_VERSION="$(nvm_ls_current)"
+  if [ "${CURRENT_VERSION}" = "system" ] || [ "${CURRENT_VERSION}" = "none" ]; then
+    CURRENT_VERSION=""
+  fi
+
+  local PREV_MAJOR
+  PREV_MAJOR=""
+  local GROUP_VERSIONS
+  GROUP_VERSIONS=""
+
+  # Append a dummy line to flush the last group
+  VERSIONS="${VERSIONS}
+END"
+
+  nvm_echo "${VERSIONS}" | while read -r VERSION; do
+    local MAJOR
+    MAJOR=""
+    if [ "${VERSION}" != "END" ] && [ -n "${VERSION}" ]; then
+      MAJOR="$(nvm_echo "${VERSION}" | command cut -d. -f1)"
+    fi
+
+    if [ "${MAJOR}" != "${PREV_MAJOR}" ] && [ -n "${PREV_MAJOR}" ]; then
+      # Process previous group
+      local LATEST_IN_GROUP
+      # Get the last word in GROUP_VERSIONS
+      LATEST_IN_GROUP=""
+      for V in ${GROUP_VERSIONS}; do
+        LATEST_IN_GROUP="${V}"
+      done
+
+      for V in ${GROUP_VERSIONS}; do
+        if [ "${V}" = "${LATEST_IN_GROUP}" ]; then
+           # It's the latest, keep it
+           # nvm_echo "Keeping latest: ${V}"
+           continue
+        fi
+        if [ "${V}" = "${CURRENT_VERSION}" ]; then
+           nvm_echo "Keeping current version: ${V}"
+           continue
+        fi
+
+        # Prune V
+        if [ "${NVM_DRY_RUN}" -eq 1 ]; then
+          nvm_echo "[Dry Run] Uninstalling ${V}..."
+        else
+          nvm_echo "Uninstalling ${V}..."
+          nvm uninstall "${V}" >/dev/null
+        fi
+      done
+      
+      GROUP_VERSIONS=""
+    fi
+    
+    if [ "${VERSION}" = "END" ]; then
+      break
+    fi
+
+    if [ -n "${VERSION}" ]; then
+      PREV_MAJOR="${MAJOR}"
+      GROUP_VERSIONS="${GROUP_VERSIONS} ${VERSION}"
+    fi
+  done
+}
+
 nvm_ls_remote_iojs() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "${1-}"
 }
@@ -3136,6 +3239,8 @@ nvm() {
         nvm_echo '  nvm uninstall <version>                     Uninstall a version'
         nvm_echo '  nvm uninstall --lts                         Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '  nvm uninstall --lts=<LTS name>              Uninstall using automatic alias for provided LTS line, if available.'
+        nvm_echo '  nvm prune                                   Uninstall all versions except the latest one for each major version.'
+        nvm_echo '    --dry-run                                 Preview deletions without executing them.'
         nvm_echo '  nvm use [<version>]                         Modify PATH to use <version>. Uses .nvmrc if available and version is omitted.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm use`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
@@ -3802,6 +3907,9 @@ nvm() {
       for ALIAS in $(nvm_grep -l "${VERSION}" "$(nvm_alias_path)/*" 2>/dev/null); do
         nvm unalias "$(command basename "${ALIAS}")"
       done
+    ;;
+    "prune")
+      nvm_prune "$@"
     ;;
     "deactivate")
       local NVM_SILENT
