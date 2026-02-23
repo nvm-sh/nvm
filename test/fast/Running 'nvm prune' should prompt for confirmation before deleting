@@ -1,0 +1,56 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+nvm_ls() {
+  echo "       v18.20.5"
+  echo "       v18.20.7"
+}
+
+# Ignore any aliases in the real NVM_DIR.
+nvm_alias_path() {
+  echo /nonexistent
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  return 0
+}
+
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+for ANSWER in n N no '' yy 'y '; do
+  OUTPUT="$(printf '%s\n' "${ANSWER}" | { nvm_prune; echo "exit: $?"; echo "uninstalled:${UNINSTALLED_VERSIONS}"; })"
+  case "${OUTPUT}" in
+    *'Proceed? (y/N)'*'Aborted.'*'exit: 0'*'uninstalled:') ;;
+    *) die "answering >${ANSWER}< should abort, got: ${OUTPUT}" ;;
+  esac
+done
+
+OUTPUT="$({ nvm_prune; echo "exit: $?"; echo "uninstalled:${UNINSTALLED_VERSIONS}"; } </dev/null)"
+case "${OUTPUT}" in
+  *'Aborted.'*'exit: 0'*'uninstalled:') ;;
+  *) die "no answer should abort, got: ${OUTPUT}" ;;
+esac
+
+for ANSWER in y Y yes Yes YES; do
+  OUTPUT="$(printf '%s\n' "${ANSWER}" | { nvm_prune; echo "exit: $?"; echo "uninstalled:${UNINSTALLED_VERSIONS}"; })"
+  case "${OUTPUT}" in
+    *'Proceed? (y/N)'*'Pruned 1 version(s).'*'exit: 0'*'uninstalled: v18.20.5') ;;
+    *) die "answering >${ANSWER}< should uninstall v18.20.5, got: ${OUTPUT}" ;;
+  esac
+done
+
+echo "All tests passed"

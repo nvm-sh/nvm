@@ -1,0 +1,56 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+nvm_ls() {
+  echo "       iojs-v3.3.0"
+  echo "       iojs-v3.3.1"
+}
+
+# Ignore any aliases in the real NVM_DIR.
+nvm_alias_path() {
+  echo /nonexistent
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  case "$1" in
+    iojs-*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+nvm_prune --force
+
+EXPECTED=" iojs-v3.3.0"
+if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then
+  die "Expected uninstalled: '${EXPECTED}', got: '${UNINSTALLED_VERSIONS}'"
+fi
+
+# The current io.js version is kept even when it is not the newest.
+nvm_ls_current() {
+  echo "iojs-v3.3.0"
+}
+
+UNINSTALLED_VERSIONS=""
+nvm_prune --force
+
+if [ -n "${UNINSTALLED_VERSIONS}" ]; then
+  die "Expected nothing uninstalled, got: '${UNINSTALLED_VERSIONS}'"
+fi
+
+echo "All tests passed"

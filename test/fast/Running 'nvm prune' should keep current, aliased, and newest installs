@@ -1,0 +1,95 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+TEMP_NVM_DIR="$(mktemp -d)"
+[ -n "${TEMP_NVM_DIR}" ] && [ -d "${TEMP_NVM_DIR}" ] || die 'mktemp failed'
+trap 'rm -rf "${TEMP_NVM_DIR}"' EXIT
+NVM_DIR="${TEMP_NVM_DIR}"
+export NVM_DIR
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+[ "${NVM_DIR}" = "${TEMP_NVM_DIR}" ] || die "NVM_DIR changed to ${NVM_DIR}"
+
+for v in v0.10.48 v0.12.18 v12.0.0 v12.1.0 v12.2.0 v16.0.0 v16.1.0 v18.20.5 v18.20.7 v20.0.0 v20.1.0 v22.0.0 v22.1.0 v22.2.0; do
+  make_fake_node "${v}" || die "make_fake_node ${v} failed"
+done
+# An incomplete install, with no node binary, is not offered for removal.
+mkdir -p "$(nvm_version_path v14.0.0)"
+make_fake_node v14.1.0 || die 'make_fake_node v14.1.0 failed'
+make_fake_iojs v3.3.0 || die 'make_fake_iojs v3.3.0 failed'
+make_fake_iojs v3.3.1 || die 'make_fake_iojs v3.3.1 failed'
+
+# Symlinked alias files and directories count too.
+mkdir -p "${TEMP_NVM_DIR}/linked/lts" "${NVM_DIR}/alias"
+printf 'v18.20.5\n' > "${TEMP_NVM_DIR}/linked/default"
+ln -s "${TEMP_NVM_DIR}/linked/default" "${NVM_DIR}/alias/default"
+ln -s "${TEMP_NVM_DIR}/linked/lts" "${NVM_DIR}/alias/lts"
+printf '12.1\n' > "${NVM_DIR}/alias/partial"
+printf 'second\n' > "${NVM_DIR}/alias/first"
+printf 'v16.0.0\n' > "${NVM_DIR}/alias/second"
+printf 'v20.0.0\n' > "${NVM_DIR}/alias/lts/foo"
+ln -s "$(nvm_version_path v22.0.0)" "${NVM_DIR}/current"
+
+GLOBALS="$(nvm_version_path v22.1.0)/lib/node_modules"
+mkdir -p "${GLOBALS}/npm" "${GLOBALS}/corepack" "${GLOBALS}/.bin" "${GLOBALS}/foo" "${GLOBALS}/@scope/a" "${GLOBALS}/@scope/b"
+mkdir -p "${TEMP_NVM_DIR}/linked-scope/c"
+ln -s "${TEMP_NVM_DIR}/linked-scope" "${GLOBALS}/@linked"
+
+# A system node newer than every install of its major is not an install.
+mkdir "${TEMP_NVM_DIR}/system-bin"
+printf '#!/bin/sh\necho v22.3.0\n' > "${TEMP_NVM_DIR}/system-bin/node"
+chmod +x "${TEMP_NVM_DIR}/system-bin/node"
+PATH="${TEMP_NVM_DIR}/system-bin:${PATH}"
+nvm_ls | grep -q '^ *system' || die "the system node stub is not listed: $(nvm_ls)"
+
+OUTPUT="$(nvm prune --bogus 2>&1 </dev/null)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 127 ] || die "an unknown argument should exit 127, got ${EXIT_CODE}"
+case "${OUTPUT}" in
+  *'Unknown argument: --bogus'*) ;;
+  *) die "unexpected unknown-argument output: ${OUTPUT}" ;;
+esac
+
+EXPECTED_DRY_RUN="Pruning old versions...
+Dry run: nothing will be removed.
+These versions would be removed:
+  iojs-v3.3.0
+  v12.0.0
+  v22.1.0 (warning: also removes 4 global module(s))"
+OUTPUT="$(set -u; nvm prune --dry-run 2>&1 </dev/null)" || die "dry run failed: ${OUTPUT}"
+[ "${OUTPUT}" = "${EXPECTED_DRY_RUN}" ] || die "dry run: expected >${EXPECTED_DRY_RUN}<, got >${OUTPUT}<"
+for v in v12.0.0 v22.1.0 iojs-v3.3.0; do
+  nvm_is_version_installed "${v}" || die "the dry run removed ${v}"
+done
+
+EXPECTED_OUTPUT="Pruning old versions...
+These versions will be removed:
+  iojs-v3.3.0
+  v12.0.0
+  v22.1.0 (warning: also removes 4 global module(s))
+Uninstalled iojs-v3.3.0.
+Uninstalled v12.0.0.
+Uninstalled v22.1.0.
+Pruned 3 version(s)."
+OUTPUT="$(set -u; nvm prune --force 2>&1 </dev/null)" || die "prune failed: ${OUTPUT}"
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+for v in v12.0.0 v22.1.0 iojs-v3.3.0; do
+  ! nvm_is_version_installed "${v}" || die "${v} should have been removed"
+done
+for v in v0.10.48 v0.12.18 v12.1.0 v12.2.0 v16.0.0 v16.1.0 v18.20.5 v18.20.7 v20.0.0 v20.1.0 v22.0.0 v22.2.0 iojs-v3.3.1; do
+  nvm_is_version_installed "${v}" || die "${v} should have been kept"
+done
+for a in default partial first second lts/foo; do
+  [ -f "${NVM_DIR}/alias/${a}" ] || die "alias ${a} should have been kept"
+done
+
+OUTPUT="$(nvm prune --force 2>&1 </dev/null)" || die "second prune failed: ${OUTPUT}"
+case "${OUTPUT}" in
+  *'Nothing to prune'*) ;;
+  *) die "expected nothing left to prune, got: ${OUTPUT}" ;;
+esac

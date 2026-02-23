@@ -2853,6 +2853,161 @@ nvm_ls_remote() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab node std "${PATTERN}"
 }
 
+nvm_prune() {
+  local NVM_PRUNE_ARG
+  local NVM_DRY_RUN
+  local NVM_FORCE
+  local NVM_KEEP_MINOR
+  local NVM_CANDIDATES
+  local NVM_PROTECTED
+  local NVM_ALIAS_DIR
+  local NVM_ALIAS_FILE
+  local NVM_PRUNE_VERSION
+  local NVM_VERSION_PATH
+  local NVM_GLOBALS_DIR
+  local NVM_GLOBAL
+  local NVM_GLOBALS_COUNT
+  local NVM_REMOVE
+  local NVM_REMOVE_LIST
+  local NVM_ANSWER
+  local NVM_REMOVED_COUNT
+  local NVM_FAILED_COUNT
+
+  NVM_DRY_RUN=0
+  NVM_FORCE=0
+  NVM_KEEP_MINOR=0
+  for NVM_PRUNE_ARG in "$@"; do
+    case "${NVM_PRUNE_ARG}" in
+      --dry-run) NVM_DRY_RUN=1 ;;
+      --force) NVM_FORCE=1 ;;
+      --minor) NVM_KEEP_MINOR=1 ;;
+      *)
+        nvm_err "Unknown argument: ${NVM_PRUNE_ARG}"
+        nvm_err 'Usage: nvm prune [--minor] [--dry-run] [--force]'
+        return 127
+      ;;
+    esac
+  done
+
+  nvm_echo 'Pruning old versions...'
+  if [ "${NVM_DRY_RUN}" = 1 ]; then
+    nvm_echo 'Dry run: nothing will be removed.'
+  fi
+
+  # Every installed version except the newest in its group. For 0.x, each minor is its own release line.
+  NVM_CANDIDATES="$(nvm_ls | command awk '{
+    if ($1 == "system") next
+    for (i = 1; i <= NF; i++) {
+      if ($i ~ /^(iojs-)?v[0-9]+\.[0-9]+\.[0-9]+$/) {
+        v = $i
+        sub(/^(iojs-)?v/, "", v)
+        split(v, p, ".")
+        print p[1], p[2], p[3], $i
+      }
+    }
+  }' | command sort -k1,1n -k2,2n -k3,3n | command awk -v minor="${NVM_KEEP_MINOR}" '{
+    key = ($4 ~ /^iojs-/ ? "iojs" : "node") " " $1
+    if (minor == 1 || $1 == 0) key = key "." $2
+    if (key == prev) print last
+    prev = key
+    last = $4
+  }')"
+
+  NVM_PROTECTED=" $(nvm_ls_current) "
+  NVM_ALIAS_DIR="$(nvm_alias_path)"
+  while IFS= read -r NVM_ALIAS_FILE; do
+    if [ -n "${NVM_ALIAS_FILE}" ]; then
+      NVM_PROTECTED="${NVM_PROTECTED}$(nvm_resolve_local_alias "${NVM_ALIAS_FILE#"${NVM_ALIAS_DIR}/"}" 2>/dev/null) "
+    fi
+  done <<EOF
+$(command find -L "${NVM_ALIAS_DIR}" -type f 2>/dev/null)
+EOF
+
+  NVM_REMOVE=''
+  NVM_REMOVE_LIST=''
+  while IFS= read -r NVM_PRUNE_VERSION; do
+    case "${NVM_PRUNE_VERSION}" in '') continue ;; esac
+    case "${NVM_PROTECTED}" in *" ${NVM_PRUNE_VERSION} "*) continue ;; esac
+    nvm_is_version_installed "${NVM_PRUNE_VERSION}" || continue
+    NVM_VERSION_PATH="$(nvm_version_path "${NVM_PRUNE_VERSION}")"
+    # Another shell may have pointed the NVM_SYMLINK_CURRENT symlink here.
+    if [ "${NVM_DIR}/current" -ef "${NVM_VERSION_PATH}" ]; then
+      continue
+    fi
+
+    NVM_GLOBALS_DIR="${NVM_VERSION_PATH}/lib/node_modules"
+    NVM_GLOBALS_COUNT=0
+    while IFS= read -r NVM_GLOBAL; do
+      case "${NVM_GLOBAL#"${NVM_GLOBALS_DIR}/"}" in
+        '' | .* | npm | corepack) ;;
+        @*) NVM_GLOBALS_COUNT=$((NVM_GLOBALS_COUNT + $(command find "${NVM_GLOBAL}/" -mindepth 1 -maxdepth 1 ! -name '.*' 2>/dev/null | command wc -l))) ;;
+        *) NVM_GLOBALS_COUNT=$((NVM_GLOBALS_COUNT + 1)) ;;
+      esac
+    done <<GLOBALS
+$(command find "${NVM_GLOBALS_DIR}" -mindepth 1 -maxdepth 1 2>/dev/null)
+GLOBALS
+
+    NVM_REMOVE="${NVM_REMOVE}${NVM_PRUNE_VERSION}
+"
+    if [ "${NVM_GLOBALS_COUNT}" -gt 0 ]; then
+      NVM_REMOVE_LIST="${NVM_REMOVE_LIST}  ${NVM_PRUNE_VERSION} (warning: also removes ${NVM_GLOBALS_COUNT} global module(s))
+"
+    else
+      NVM_REMOVE_LIST="${NVM_REMOVE_LIST}  ${NVM_PRUNE_VERSION}
+"
+    fi
+  done <<EOF
+${NVM_CANDIDATES}
+EOF
+
+  if [ -z "${NVM_REMOVE}" ]; then
+    nvm_echo 'Nothing to prune: every installed version is the newest in its group, the current version, or aliased.'
+    return 0
+  fi
+
+  if [ "${NVM_DRY_RUN}" = 1 ]; then
+    nvm_echo 'These versions would be removed:'
+    command printf '%s' "${NVM_REMOVE_LIST}"
+    return 0
+  fi
+
+  nvm_echo 'These versions will be removed:'
+  command printf '%s' "${NVM_REMOVE_LIST}"
+  if [ "${NVM_FORCE}" != 1 ]; then
+    nvm_echo 'Proceed? (y/N)'
+    NVM_ANSWER=''
+    IFS= read -r NVM_ANSWER || :
+    case "${NVM_ANSWER}" in
+      y | Y | yes | Yes | YES) ;;
+      *)
+        nvm_echo 'Aborted.'
+        return 0
+      ;;
+    esac
+  fi
+
+  NVM_REMOVED_COUNT=0
+  NVM_FAILED_COUNT=0
+  while IFS= read -r NVM_PRUNE_VERSION; do
+    case "${NVM_PRUNE_VERSION}" in '') continue ;; esac
+    if nvm uninstall "${NVM_PRUNE_VERSION}" </dev/null >/dev/null; then
+      nvm_echo "Uninstalled ${NVM_PRUNE_VERSION}."
+      NVM_REMOVED_COUNT=$((NVM_REMOVED_COUNT + 1))
+    else
+      nvm_err "Failed to uninstall ${NVM_PRUNE_VERSION}."
+      NVM_FAILED_COUNT=$((NVM_FAILED_COUNT + 1))
+    fi
+  done <<EOF
+${NVM_REMOVE}
+EOF
+
+  if [ "${NVM_FAILED_COUNT}" -gt 0 ]; then
+    nvm_err "Pruned ${NVM_REMOVED_COUNT} version(s); ${NVM_FAILED_COUNT} failed."
+    return 1
+  fi
+  nvm_echo "Pruned ${NVM_REMOVED_COUNT} version(s)."
+}
+
 nvm_ls_remote_iojs() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "${1-}"
 }
@@ -5146,6 +5301,11 @@ nvm() {
         nvm_echo '  nvm uninstall --lts                         Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '  nvm uninstall --lts=<LTS name>              Uninstall using automatic alias for provided LTS line, if available.'
         nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
+        nvm_echo '  nvm prune                                   Uninstall old versions, keeping the newest install per major version (per minor for 0.x), the current version, and any version an alias points to.'
+        nvm_echo '                                              Versions that only an .nvmrc file needs are not detected.'
+        nvm_echo '    --minor                                   Keep the newest install per minor version instead of per major version'
+        nvm_echo '    --dry-run                                 Preview what would be removed, without prompting or deleting anything'
+        nvm_echo '    --force                                   Skip the confirmation prompt before deleting (for scripts)'
         nvm_echo '  nvm use [current | <version>]               Modify PATH to use <version>. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm use`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
@@ -6126,6 +6286,9 @@ nvm() {
           nvm unalias "$(command basename "${NVM_ALIAS_FILE}")"
         fi
       done
+    ;;
+    "prune")
+      nvm_prune "$@"
     ;;
     "deactivate")
       local NVM_SILENT
@@ -7202,6 +7365,7 @@ nvm() {
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
         nvm_process_nvmrc nvm_process_nvmrc_content nvm_nvmrc_invalid_msg nvm_is_version_or_alias \
         nvm_write_nvmrc nvm_hash_reset \
+        nvm_prune \
         >/dev/null 2>&1
       unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS NVM_INSTALL_LOCK \

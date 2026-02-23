@@ -1,0 +1,45 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+nvm_ls() {
+  echo "       v18.20.5"
+  echo "       v18.20.7"
+}
+
+# Ignore any aliases in the real NVM_DIR.
+nvm_alias_path() {
+  echo /nonexistent
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  return 0
+}
+
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+# Closed stdin: a prompt would read nothing and abort.
+OUTPUT="$(nvm_prune --dry-run </dev/null; echo "exit: $?"; echo "uninstalled:${UNINSTALLED_VERSIONS}")"
+
+EXPECTED="Pruning old versions...
+Dry run: nothing will be removed.
+These versions would be removed:
+  v18.20.5
+exit: 0
+uninstalled:"
+[ "${OUTPUT}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${OUTPUT}<"
+
+echo "All tests passed"
