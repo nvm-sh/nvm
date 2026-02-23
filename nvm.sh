@@ -1694,7 +1694,12 @@ nvm_prune() {
   VERSIONS="${VERSIONS}
 END"
 
-  nvm_echo "${VERSIONS}" | while read -r VERSION; do
+  local IFS
+  IFS='
+'
+  # shellcheck disable=SC2013
+  for VERSION in ${VERSIONS}; do
+    unset IFS
     local MAJOR
     MAJOR=""
     if [ "${VERSION}" != "END" ] && [ -n "${VERSION}" ]; then
