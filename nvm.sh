@@ -1708,13 +1708,13 @@ END"
 
       for V in ${GROUP_VERSIONS}; do
         if [ "${V}" = "${LATEST_IN_GROUP}" ]; then
-           # It's the latest, keep it
-           # nvm_echo "Keeping latest: ${V}"
-           continue
+          # It's the latest, keep it
+          # nvm_echo "Keeping latest: ${V}"
+          continue
         fi
         if [ "${V}" = "${CURRENT_VERSION}" ]; then
-           nvm_echo "Keeping current version: ${V}"
-           continue
+          nvm_echo "Keeping current version: ${V}"
+          continue
         fi
 
         # Prune V
@@ -1725,10 +1725,10 @@ END"
           nvm uninstall "${V}" >/dev/null
         fi
       done
-      
+
       GROUP_VERSIONS=""
     fi
-    
+
     if [ "${VERSION}" = "END" ]; then
       break
     fi
