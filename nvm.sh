@@ -1717,6 +1717,7 @@ nvm_prune() {
   VERSIONS="${VERSIONS}
 END"
 
+  nvm_is_zsh && setopt local_options shwordsplit
   local IFS
   IFS='
 '
