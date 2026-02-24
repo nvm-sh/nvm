@@ -1676,11 +1676,11 @@ nvm_prune() {
 
   local VERSIONS
   if [ "${HAS_SORT_V}" -eq 1 ]; then
-    VERSIONS="$(nvm_ls --no-colors --no-alias | command awk "${AWK_CMD}" | command sort -V)"
+    VERSIONS="$(nvm_ls | command awk "${AWK_CMD}" | command sort -V)"
   else
     # Fallback to numeric sort on fields roughly for POSIX compliance
     # v1.2.3 -> field 1 (1.2n ignores 'v'), field 2, field 3
-    VERSIONS="$(nvm_ls --no-colors --no-alias | command awk "${AWK_CMD}" | command sort -t. -k 1.2,1n -k 2,2n -k 3,3n)"
+    VERSIONS="$(nvm_ls | command awk "${AWK_CMD}" | command sort -t. -k 1.2,1n -k 2,2n -k 3,3n)"
   fi
 
   if [ -z "${VERSIONS}" ]; then
