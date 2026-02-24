@@ -3295,6 +3295,7 @@ nvm() {
         nvm_echo '  nvm uninstall --lts=<LTS name>              Uninstall using automatic alias for provided LTS line, if available.'
         nvm_echo '  nvm prune                                   Uninstall all versions except the latest one for each major version.'
         nvm_echo '    --dry-run                                 Preview deletions without executing them.'
+        nvm_echo '    --minor                                   Uninstall all versions except the latest one for each minor version.'
         nvm_echo '  nvm use [<version>]                         Modify PATH to use <version>. Uses .nvmrc if available and version is omitted.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm use`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
