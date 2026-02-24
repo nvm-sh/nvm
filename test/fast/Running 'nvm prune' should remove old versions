@@ -27,6 +27,11 @@ nvm_ls_current() {
   echo "v22.22.0"
 }
 
+# Mock nvm_is_version_installed
+nvm_is_version_installed() {
+  return 0
+}
+
 # Mock nvm function to intercept uninstall calls
 # nvm_prune calls `nvm uninstall`.
 UNINSTALLED_VERSIONS=""
@@ -50,7 +55,7 @@ nvm_prune
 # v24.13.0 (Keep: Only one v24)
 
 # Wait, my logic for nvm_prune was to keep latest per major.
-# v18.20.5 and v18.20.7 are Major 18. 
+# v18.20.5 and v18.20.7 are Major 18.
 # Latest is v18.20.7.
 # So v18.20.5 should be pruned.
 
