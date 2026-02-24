@@ -1632,6 +1632,164 @@ nvm_ls_remote() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab node std "${PATTERN}"
 }
 
+nvm_prune() {
+  local NVM_DRY_RUN
+  NVM_DRY_RUN=0
+  local KEEP_MINOR
+  KEEP_MINOR=0
+  local ARG
+  for ARG in "$@"; do
+    case "${ARG}" in
+      --dry-run)
+        NVM_DRY_RUN=1
+        ;;
+      --minor)
+        KEEP_MINOR=1
+        ;;
+      *)
+        nvm_err "Unknown argument: ${ARG}"
+        return 127
+        ;;
+    esac
+  done
+
+  nvm_echo "Pruning old installed versions..."
+  if [ "${NVM_DRY_RUN}" -eq 1 ]; then
+    nvm_echo "Dry run mode: no versions will be removed."
+  fi
+
+  local HAS_SORT_V
+  HAS_SORT_V=0
+  if command sort -V </dev/null >/dev/null 2>&1; then
+    HAS_SORT_V=1
+  fi
+
+  local AWK_CMD
+  AWK_CMD='{
+    for(i=1;i<=NF;i++) {
+      if ($i ~ /^(iojs-)?v[0-9]+\.[0-9]+\.[0-9]+$/) {
+        sub(/^iojs-/, "", $i)
+        print $i
+      }
+    }
+  }'
+
+  local VERSIONS
+  if [ "${HAS_SORT_V}" -eq 1 ]; then
+    VERSIONS="$(nvm_ls | command awk "${AWK_CMD}" | command sort -V)"
+  else
+    # Fallback to numeric sort on fields roughly for POSIX compliance
+    # v1.2.3 -> field 1 (1.2n ignores 'v'), field 2, field 3
+    VERSIONS="$(nvm_ls | command awk "${AWK_CMD}" | command sort -t. -k 1.2,1n -k 2,2n -k 3,3n)"
+  fi
+
+  if [ -z "${VERSIONS}" ]; then
+    nvm_echo "No versions installed to prune."
+    return 0
+  fi
+
+  # Ensure the current version is stripped of iojs prefix to match our clean list
+  local CURRENT_VERSION
+  CURRENT_VERSION="$(nvm_strip_iojs_prefix "$(nvm_ls_current)")"
+  if [ "${CURRENT_VERSION}" = "system" ] || [ "${CURRENT_VERSION}" = "none" ]; then
+    CURRENT_VERSION=""
+  fi
+
+  local PREV_MAJOR
+  PREV_MAJOR=""
+  local GROUP_VERSIONS
+  GROUP_VERSIONS=""
+
+  # Append a dummy line to flush the last group
+  VERSIONS="${VERSIONS}
+END"
+
+  nvm_is_zsh && setopt local_options shwordsplit
+  local IFS
+  IFS='
+'
+  # shellcheck disable=SC2013
+  for VERSION in ${VERSIONS}; do
+    unset IFS
+    local MAJOR
+    MAJOR=""
+    if [ "${VERSION}" != "END" ] && [ -n "${VERSION}" ]; then
+      if [ "${KEEP_MINOR}" -eq 1 ]; then
+        MAJOR="$(nvm_echo "${VERSION}" | command cut -d. -f1,2)"
+      else
+        MAJOR="$(nvm_echo "${VERSION}" | command cut -d. -f1)"
+      fi
+    fi
+
+    if [ "${MAJOR}" != "${PREV_MAJOR}" ] && [ -n "${PREV_MAJOR}" ]; then
+      # Process previous group
+      local LATEST_IN_GROUP
+      # Get the last word in GROUP_VERSIONS
+      LATEST_IN_GROUP=""
+      for V in ${GROUP_VERSIONS}; do
+        LATEST_IN_GROUP="${V}"
+      done
+
+      for V in ${GROUP_VERSIONS}; do
+        if [ "${V}" = "${LATEST_IN_GROUP}" ]; then
+          # It's the latest, keep it
+          # nvm_echo "Keeping latest: ${V}"
+          continue
+        fi
+        if [ "${V}" = "${CURRENT_VERSION}" ]; then
+          nvm_echo "Keeping current version: ${V}"
+          continue
+        fi
+
+        # Re-resolve if the version is actually iojs
+        local UNINSTALL_V
+        UNINSTALL_V="${V}"
+        if ! nvm_is_version_installed "${UNINSTALL_V}" >/dev/null 2>&1; then
+          UNINSTALL_V="$(nvm_add_iojs_prefix "${V}")"
+        fi
+
+        # Check for global npm modules explicitly
+        local NODE_MODULES_DIR
+        NODE_MODULES_DIR="$(nvm_version_path "${UNINSTALL_V}")/lib/node_modules"
+        local HAS_GLOBALS
+        HAS_GLOBALS=0
+        if [ -d "${NODE_MODULES_DIR}" ]; then
+          local NUM_GLOBALS
+          NUM_GLOBALS="$(command ls -1 "${NODE_MODULES_DIR}" 2>/dev/null | nvm_grep -v '^npm$' | command wc -l | command awk '{print $1}')"
+          if [ "${NUM_GLOBALS}" -gt 0 ]; then
+            HAS_GLOBALS="${NUM_GLOBALS}"
+          fi
+        fi
+
+        local MSG_SUFFIX
+        MSG_SUFFIX=""
+        if [ "${HAS_GLOBALS}" -gt 0 ]; then
+          MSG_SUFFIX=" (Warning: replacing ${HAS_GLOBALS} global module(s))"
+        fi
+
+        # Prune V
+        if [ "${NVM_DRY_RUN}" -eq 1 ]; then
+          nvm_echo "[Dry Run] Uninstalling ${UNINSTALL_V}...${MSG_SUFFIX}"
+        else
+          nvm_echo "Uninstalling ${UNINSTALL_V}...${MSG_SUFFIX}"
+          nvm uninstall "${UNINSTALL_V}" >/dev/null
+        fi
+      done
+
+      GROUP_VERSIONS=""
+    fi
+
+    if [ "${VERSION}" = "END" ]; then
+      break
+    fi
+
+    if [ -n "${VERSION}" ]; then
+      PREV_MAJOR="${MAJOR}"
+      GROUP_VERSIONS="${GROUP_VERSIONS} ${VERSION}"
+    fi
+  done
+}
+
 nvm_ls_remote_iojs() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "${1-}"
 }
@@ -3136,6 +3294,9 @@ nvm() {
         nvm_echo '  nvm uninstall <version>                     Uninstall a version'
         nvm_echo '  nvm uninstall --lts                         Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '  nvm uninstall --lts=<LTS name>              Uninstall using automatic alias for provided LTS line, if available.'
+        nvm_echo '  nvm prune                                   Uninstall all versions except the latest one for each major version.'
+        nvm_echo '    --dry-run                                 Preview deletions without executing them.'
+        nvm_echo '    --minor                                   Uninstall all versions except the latest one for each minor version.'
         nvm_echo '  nvm use [<version>]                         Modify PATH to use <version>. Uses .nvmrc if available and version is omitted.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm use`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
@@ -3802,6 +3963,9 @@ nvm() {
       for ALIAS in $(nvm_grep -l "${VERSION}" "$(nvm_alias_path)/*" 2>/dev/null); do
         nvm unalias "$(command basename "${ALIAS}")"
       done
+    ;;
+    "prune")
+      nvm_prune "$@"
     ;;
     "deactivate")
       local NVM_SILENT
@@ -4544,6 +4708,7 @@ nvm() {
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
         nvm_process_nvmrc nvm_nvmrc_invalid_msg \
         nvm_write_nvmrc \
+        nvm_prune \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
