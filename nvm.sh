@@ -1635,11 +1635,16 @@ nvm_ls_remote() {
 nvm_prune() {
   local NVM_DRY_RUN
   NVM_DRY_RUN=0
+  local KEEP_MINOR
+  KEEP_MINOR=0
   local ARG
   for ARG in "$@"; do
     case "${ARG}" in
       --dry-run)
         NVM_DRY_RUN=1
+        ;;
+      --minor)
+        KEEP_MINOR=1
         ;;
       *)
         nvm_err "Unknown argument: ${ARG}"
@@ -1653,25 +1658,39 @@ nvm_prune() {
     nvm_echo "Dry run mode: no versions will be removed."
   fi
 
-  local SORT_COMMAND
+  local HAS_SORT_V
+  HAS_SORT_V=0
   if command sort -V </dev/null >/dev/null 2>&1; then
-    SORT_COMMAND='command sort -V'
+    HAS_SORT_V=1
+  fi
+
+  local AWK_CMD
+  AWK_CMD='{
+    for(i=1;i<=NF;i++) {
+      if ($i ~ /^(iojs-)?v[0-9]+\.[0-9]+\.[0-9]+$/) {
+        sub(/^iojs-/, "", $i)
+        print $i
+      }
+    }
+  }'
+
+  local VERSIONS
+  if [ "${HAS_SORT_V}" -eq 1 ]; then
+    VERSIONS="$(nvm_ls --no-colors --no-alias | command awk "${AWK_CMD}" | command sort -V)"
   else
     # Fallback to numeric sort on fields roughly for POSIX compliance
     # v1.2.3 -> field 1 (1.2n ignores 'v'), field 2, field 3
-    SORT_COMMAND='command sort -t. -k 1.2,1n -k 2,2n -k 3,3n'
+    VERSIONS="$(nvm_ls --no-colors --no-alias | command awk "${AWK_CMD}" | command sort -t. -k 1.2,1n -k 2,2n -k 3,3n)"
   fi
-
-  local VERSIONS
-  VERSIONS="$(nvm_ls --no-colors --no-alias | nvm_grep -v "iojs" | command awk '{ for(i=1;i<=NF;i++) if($i ~ /^v[0-9]+\.[0-9]+\.[0-9]+$/) print $i }' | $SORT_COMMAND)"
 
   if [ -z "${VERSIONS}" ]; then
     nvm_echo "No versions installed to prune."
     return 0
   fi
 
+  # Ensure the current version is stripped of iojs prefix to match our clean list
   local CURRENT_VERSION
-  CURRENT_VERSION="$(nvm_ls_current)"
+  CURRENT_VERSION="$(nvm_strip_iojs_prefix "$(nvm_ls_current)")"
   if [ "${CURRENT_VERSION}" = "system" ] || [ "${CURRENT_VERSION}" = "none" ]; then
     CURRENT_VERSION=""
   fi
@@ -1694,7 +1713,11 @@ END"
     local MAJOR
     MAJOR=""
     if [ "${VERSION}" != "END" ] && [ -n "${VERSION}" ]; then
-      MAJOR="$(nvm_echo "${VERSION}" | command cut -d. -f1)"
+      if [ "${KEEP_MINOR}" -eq 1 ]; then
+        MAJOR="$(nvm_echo "${VERSION}" | command cut -d. -f1,2)"
+      else
+        MAJOR="$(nvm_echo "${VERSION}" | command cut -d. -f1)"
+      fi
     fi
 
     if [ "${MAJOR}" != "${PREV_MAJOR}" ] && [ -n "${PREV_MAJOR}" ]; then
@@ -1717,12 +1740,38 @@ END"
           continue
         fi
 
+        # Re-resolve if the version is actually iojs
+        local UNINSTALL_V
+        UNINSTALL_V="${V}"
+        if ! nvm_is_version_installed "${UNINSTALL_V}" >/dev/null 2>&1; then
+          UNINSTALL_V="$(nvm_add_iojs_prefix "${V}")"
+        fi
+
+        # Check for global npm modules explicitly
+        local NODE_MODULES_DIR
+        NODE_MODULES_DIR="$(nvm_version_path "${UNINSTALL_V}")/lib/node_modules"
+        local HAS_GLOBALS
+        HAS_GLOBALS=0
+        if [ -d "${NODE_MODULES_DIR}" ]; then
+          local NUM_GLOBALS
+          NUM_GLOBALS="$(command ls -1 "${NODE_MODULES_DIR}" 2>/dev/null | nvm_grep -v '^npm$' | command wc -l | command awk '{print $1}')"
+          if [ "${NUM_GLOBALS}" -gt 0 ]; then
+            HAS_GLOBALS="${NUM_GLOBALS}"
+          fi
+        fi
+
+        local MSG_SUFFIX
+        MSG_SUFFIX=""
+        if [ "${HAS_GLOBALS}" -gt 0 ]; then
+          MSG_SUFFIX=" (Warning: replacing ${HAS_GLOBALS} global module(s))"
+        fi
+
         # Prune V
         if [ "${NVM_DRY_RUN}" -eq 1 ]; then
-          nvm_echo "[Dry Run] Uninstalling ${V}..."
+          nvm_echo "[Dry Run] Uninstalling ${UNINSTALL_V}...${MSG_SUFFIX}"
         else
-          nvm_echo "Uninstalling ${V}..."
-          nvm uninstall "${V}" >/dev/null
+          nvm_echo "Uninstalling ${UNINSTALL_V}...${MSG_SUFFIX}"
+          nvm uninstall "${UNINSTALL_V}" >/dev/null
         fi
       done
 
