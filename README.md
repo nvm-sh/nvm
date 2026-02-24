@@ -35,6 +35,7 @@
   - [io.js](#iojs)
   - [System Version of Node](#system-version-of-node)
   - [Listing Versions](#listing-versions)
+  - [Pruning old versions](#pruning-old-versions)
   - [Setting Custom Colors](#setting-custom-colors)
     - [Persisting custom colors](#persisting-custom-colors)
     - [Suppressing colorized output](#suppressing-colorized-output)
@@ -535,6 +536,21 @@ If you want to see what versions are available to install:
 ```sh
 nvm ls-remote
 ```
+
+### Pruning old versions
+
+To clean up old, unused Node.js versions, use `nvm prune`:
+
+```sh
+nvm prune
+```
+
+This will uninstall all installed versions except for the latest one within each major version group (e.g., if you have `v16.1.0` and `v16.2.0`, it will keep `v16.2.0`).
+
+- **Safety**: The currently active version is **never** removed, even if it is not the latest in its group.
+- **Global Modules**: `nvm prune` will warn you if it's about to uninstall a version that contains global npm modules (other than `npm` itself).
+- **Preview**: Use `nvm prune --dry-run` to see which versions would be removed without actually uninstalling them.
+- **Minor Version Retention**: Use `nvm prune --minor` to keep the latest version of each **minor** release group instead of major.
 
 ### Setting Custom Colors
 
