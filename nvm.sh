@@ -4708,6 +4708,7 @@ nvm() {
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
         nvm_process_nvmrc nvm_nvmrc_invalid_msg \
         nvm_write_nvmrc \
+        nvm_prune \
         >/dev/null 2>&1
       unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
