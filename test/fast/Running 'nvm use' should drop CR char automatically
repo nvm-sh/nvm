@@ -14,20 +14,17 @@ cleanup() {
 
 # normal .nvmrc
 printf '0.999.0\n'   > .nvmrc
-nvm_rc_version
-VERSION1="${NVM_RC_VERSION}"
+{ VERSION1="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
 
 # .nvmrc with CR char
 printf '0.999.0\r\n' > .nvmrc
-nvm_rc_version
-VERSION2="${NVM_RC_VERSION}"
+{ VERSION2="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
 
 [ "${VERSION1}" = "${VERSION2}" ]
 
 # .nvmrc without any newline char
 printf '0.999.0' > .nvmrc
-nvm_rc_version
-VERSION3="${NVM_RC_VERSION}"
+{ VERSION3="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
 
 [ "${VERSION1}" = "${VERSION3}" ]
 
