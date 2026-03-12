@@ -602,7 +602,6 @@ EOF
 }
 
 nvm_rc_version() {
-  export NVM_RC_VERSION=''
   local NVMRC_PATH
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ ! -e "${NVMRC_PATH}" ]; then
@@ -612,7 +611,7 @@ nvm_rc_version() {
     return 1
   fi
 
-
+  local NVM_RC_VERSION
   if ! NVM_RC_VERSION="$(nvm_process_nvmrc "${NVMRC_PATH}")"; then
     return 1
   fi
@@ -626,6 +625,7 @@ nvm_rc_version() {
   if [ "${NVM_SILENT:-0}" -ne 1 ]; then
     nvm_echo "Found '${NVMRC_PATH}' with version <${NVM_RC_VERSION}>"
   fi
+  nvm_echo "${NVM_RC_VERSION}" >&3
 }
 
 nvm_clang_version() {
@@ -3560,14 +3560,11 @@ nvm() {
             shift
           fi
         else
-          nvm_rc_version
-          if [ $version_not_provided -eq 1 ] && [ -z "${NVM_RC_VERSION}" ]; then
-            unset NVM_RC_VERSION
+          { provided_version="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
+          if [ $version_not_provided -eq 1 ] && [ -z "${provided_version}" ]; then
             >&2 nvm --help
             return 127
           fi
-          provided_version="${NVM_RC_VERSION}"
-          unset NVM_RC_VERSION
         fi
       elif [ $# -gt 0 ]; then
         shift
@@ -3998,13 +3995,11 @@ nvm() {
       if [ -n "${NVM_LTS-}" ]; then
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
       elif [ -z "${PROVIDED_VERSION-}" ]; then
-        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version
-        if [ -n "${NVM_RC_VERSION-}" ]; then
-          PROVIDED_VERSION="${NVM_RC_VERSION}"
+        { PROVIDED_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1
+        if [ -n "${PROVIDED_VERSION}" ]; then
           IS_VERSION_FROM_NVMRC=1
           VERSION="$(nvm_version "${PROVIDED_VERSION}")"
         fi
-        unset NVM_RC_VERSION
         if [ -z "${VERSION}" ]; then
           nvm_err 'Please see `nvm --help` or https://github.com/nvm-sh/nvm#nvmrc for more information.'
           return 127
@@ -4132,11 +4127,11 @@ nvm() {
       done
 
       if [ $# -lt 1 ] && [ -z "${NVM_LTS-}" ]; then
-        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
-        if [ -n "${NVM_RC_VERSION-}" ]; then
-          VERSION="$(nvm_version "${NVM_RC_VERSION-}")" ||:
+        local NVM_RC_VERSION
+        { NVM_RC_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
+        if [ -n "${NVM_RC_VERSION}" ]; then
+          VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
         fi
-        unset NVM_RC_VERSION
         if [ "${VERSION:-N/A}" = 'N/A' ]; then
           >&2 nvm --help
           return 127
@@ -4150,12 +4145,11 @@ nvm() {
           if [ "_${VERSION:-N/A}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
             provided_version=''
             if [ $has_checked_nvmrc -ne 1 ]; then
-              NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
+              { NVM_RC_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
             fi
             provided_version="${NVM_RC_VERSION}"
             IS_VERSION_FROM_NVMRC=1
             VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
-            unset NVM_RC_VERSION
           else
             shift
           fi
@@ -4216,9 +4210,7 @@ nvm() {
       elif [ -n "${provided_version}" ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
         if [ "_${VERSION}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
-          NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version && has_checked_nvmrc=1
-          provided_version="${NVM_RC_VERSION}"
-          unset NVM_RC_VERSION
+          { provided_version="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
           VERSION="$(nvm_version "${provided_version}")" ||:
         else
           shift
@@ -4349,12 +4341,10 @@ nvm() {
         shift
       done
       if [ -z "${provided_version-}" ]; then
-        NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version
-        if [ -n "${NVM_RC_VERSION}" ]; then
-          provided_version="${NVM_RC_VERSION}"
-          VERSION=$(nvm_version "${NVM_RC_VERSION}") ||:
+        { provided_version="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1
+        if [ -n "${provided_version}" ]; then
+          VERSION=$(nvm_version "${provided_version}") ||:
         fi
-        unset NVM_RC_VERSION
       elif [ "${provided_version}" != 'system' ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
       else
@@ -4649,7 +4639,7 @@ nvm() {
         nvm_process_nvmrc nvm_nvmrc_invalid_msg \
         nvm_write_nvmrc \
         >/dev/null 2>&1
-      unset NVM_RC_VERSION NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
+      unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
         NVM_COLORS INSTALLED_COLOR SYSTEM_COLOR \
         CURRENT_COLOR NOT_INSTALLED_COLOR DEFAULT_COLOR LTS_COLOR \
@@ -4781,7 +4771,7 @@ nvm_auto() {
           else
             return 0
           fi
-        elif nvm_rc_version >/dev/null 2>&1; then
+        elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
           nvm use --silent >/dev/null
         fi
       else
@@ -4793,7 +4783,7 @@ nvm_auto() {
       VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
       if [ -n "${VERSION}" ] && [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
         nvm install "${VERSION}" >/dev/null
-      elif nvm_rc_version >/dev/null 2>&1; then
+      elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
         nvm install >/dev/null
       else
         return 0
