@@ -24,12 +24,11 @@ nvm_alias() {
   echo ''
 }
 
-OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" foo | strip_colors)"
+try nvm_print_alias_path "$NVM_ALIAS_DIR" foo
+OUTPUT="$(echo "$CAPTURED_STDOUT" | strip_colors)"
 EXPECTED_OUTPUT=''
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" foo' should produce no output when nvm_alias does not; got '$OUTPUT'"
-
-EXIT_CODE="$(nvm_print_alias_path "$NVM_ALIAS_DIR" foo >/dev/null 2>&1 ; echo $?)"
-[ "$EXIT_CODE" = '0' ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" foo' should exit zero when nvm_alias produces no output; got $EXIT_CODE"
+[ "$CAPTURED_EXIT_CODE" = '0' ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" foo' should exit zero when nvm_alias produces no output; got $CAPTURED_EXIT_CODE"
 
 nvm_alias() {
   echo "\"$1\""

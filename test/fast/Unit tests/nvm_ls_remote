@@ -19,10 +19,11 @@ nvm_download() {
 
 EXPECTED_OUTPUT_PATH="$MOCKS_DIR/nvm_ls_remote.txt"
 
-OUTPUT="$(nvm_ls_remote foo)"
-EXIT_CODE="$(nvm_ls_remote foo >/dev/null 2>&1 ; echo $?)"
-[ "_$OUTPUT" = "_N/A" ] || die "nonexistent version did not report N/A"
-[ "_$EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $EXIT_CODE"
+\. ../../common.sh
+
+try nvm_ls_remote foo
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nonexistent version did not report N/A"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $CAPTURED_EXIT_CODE"
 
 OUTPUT="$(nvm_ls_remote)"
 EXPECTED_OUTPUT="$(cat "$EXPECTED_OUTPUT_PATH")"
