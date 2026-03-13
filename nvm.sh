@@ -1153,7 +1153,7 @@ nvm_print_formatted_alias() {
   fi
   local ARROW
   ARROW='->'
-  if nvm_has_colors; then
+  if [ "${NVM_HAS_COLORS-}" = 1 ] || nvm_has_colors; then
     ARROW='\033[0;90m->\033[0m'
     if [ "_${DEFAULT}" = '_true' ]; then
       NEWLINE=" \033[${DEFAULT_COLOR}(default)\033[0m\n"
@@ -1254,11 +1254,17 @@ nvm_list_aliases() {
     return $?
   fi
 
+  local NVM_HAS_COLORS
+  NVM_HAS_COLORS=0
+  if nvm_has_colors; then
+    NVM_HAS_COLORS=1
+  fi
+
   nvm_is_zsh && unsetopt local_options nomatch
   (
     local ALIAS_PATH
     for ALIAS_PATH in "${NVM_ALIAS_DIR}/${ALIAS}"*; do
-      NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}" &
+      NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_HAS_COLORS="${NVM_HAS_COLORS}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}" &
     done
     wait
   ) | command sort
@@ -1269,7 +1275,7 @@ nvm_list_aliases() {
       {
         # shellcheck disable=SC2030,SC2031 # (https://github.com/koalaman/shellcheck/issues/2217)
         if [ ! -f "${NVM_ALIAS_DIR}/${ALIAS_NAME}" ] && { [ -z "${ALIAS}" ] || [ "${ALIAS_NAME}" = "${ALIAS}" ]; }; then
-          NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
+          NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_HAS_COLORS="${NVM_HAS_COLORS}" NVM_CURRENT="${NVM_CURRENT}" nvm_print_default_alias "${ALIAS_NAME}"
         fi
       } &
     done
@@ -1281,7 +1287,7 @@ nvm_list_aliases() {
     # shellcheck disable=SC2030,SC2031 # (https://github.com/koalaman/shellcheck/issues/2217)
     for ALIAS_PATH in "${NVM_ALIAS_DIR}/lts/${ALIAS}"*; do
       {
-        LTS_ALIAS="$(NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_LTS=true nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}")"
+        LTS_ALIAS="$(NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_HAS_COLORS="${NVM_HAS_COLORS}" NVM_LTS=true nvm_print_alias_path "${NVM_ALIAS_DIR}" "${ALIAS_PATH}")"
         if [ -n "${LTS_ALIAS}" ]; then
           nvm_echo "${LTS_ALIAS}"
         fi
