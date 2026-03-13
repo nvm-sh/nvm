@@ -482,6 +482,22 @@ nvm install-latest-npm
 If you've already gotten an error to the effect of "npm does not support Node.js", you'll need to (1) revert to a previous node version (`nvm ls` & `nvm use <your latest _working_ version from the ls>`), (2) delete the newly created node version (`nvm uninstall <your _broken_ version of node from the ls>`), then (3) rerun your `nvm install` with the `--latest-npm` flag.
 
 
+### Offline Install
+
+If you've previously downloaded a node version (or it's still in the cache), you can install it without any network access using the `--offline` flag:
+
+```sh
+nvm install --offline 14.7.0
+```
+
+This resolves versions using only locally installed versions and cached downloads. It will not attempt to download anything. This is useful in air-gapped environments, on planes, or when you want to avoid network latency.
+
+You can combine `--offline` with `--lts` to install the latest cached LTS version (as long as LTS aliases have been populated by a prior `nvm ls-remote --lts`):
+
+```sh
+nvm install --offline --lts
+```
+
 ### Default Global Packages From File While Installing
 
 If you have a list of default packages you want installed every time you install a new version, we support that too -- just add the package names, one per line, to the file `$NVM_DIR/default-packages`. You can add anything npm would accept as a package argument on the command line.
