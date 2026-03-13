@@ -2490,22 +2490,35 @@ nvm_download_artifact() {
   local COMPRESSION
   COMPRESSION="$(nvm_get_artifact_compression "${VERSION}")"
 
-  local CHECKSUM
-  CHECKSUM="$(nvm_get_checksum "${FLAVOR}" "${TYPE}" "${VERSION}" "${SLUG}" "${COMPRESSION}")"
-
   local tmpdir
   if [ "${KIND}" = 'binary' ]; then
     tmpdir="$(nvm_cache_dir)/bin/${SLUG}"
   else
     tmpdir="$(nvm_cache_dir)/src/${SLUG}"
   fi
+
+  local TARBALL
+  TARBALL="${tmpdir}/${SLUG}.${COMPRESSION}"
+
+  if [ "${NVM_OFFLINE-}" = 1 ]; then
+    # In offline mode, use cached tarball without checksum or download
+    if [ -r "${TARBALL}" ]; then
+      nvm_err "Offline: using cached archive $(nvm_sanitize_path "${TARBALL}")"
+      nvm_echo "${TARBALL}"
+      return 0
+    fi
+    nvm_err "Offline: no cached archive found for ${SLUG}"
+    return 4
+  fi
+
+  local CHECKSUM
+  CHECKSUM="$(nvm_get_checksum "${FLAVOR}" "${TYPE}" "${VERSION}" "${SLUG}" "${COMPRESSION}")"
+
   command mkdir -p "${tmpdir}/files" || (
     nvm_err "creating directory ${tmpdir}/files failed"
     return 3
   )
 
-  local TARBALL
-  TARBALL="${tmpdir}/${SLUG}.${COMPRESSION}"
   local TARBALL_URL
   if nvm_version_greater_than_or_equal_to "${VERSION}" 0.1.14; then
     TARBALL_URL="${MIRROR}/${VERSION}/${SLUG}.${COMPRESSION}"
@@ -3050,6 +3063,57 @@ nvm_cache_dir() {
   nvm_echo "${NVM_DIR}/.cache"
 }
 
+# args: pattern
+# Lists versions available in the local cache (not yet installed).
+# Returns version numbers like "v18.20.4", one per line, sorted.
+nvm_ls_cached() {
+  local PATTERN
+  PATTERN="${1-}"
+  local CACHE_BIN_DIR
+  CACHE_BIN_DIR="$(nvm_cache_dir)/bin"
+  if [ ! -d "${CACHE_BIN_DIR}" ]; then
+    return
+  fi
+  local NVM_OS
+  NVM_OS="$(nvm_get_os)"
+  local NVM_ARCH
+  NVM_ARCH="$(nvm_get_arch)"
+  local SUFFIX
+  SUFFIX="${NVM_OS}-${NVM_ARCH}"
+  # shellcheck disable=SC2010
+  command ls -1 "${CACHE_BIN_DIR}" \
+    | nvm_grep "^node-v.*-${SUFFIX}\$" \
+    | command sed "s/^node-\\(v[0-9][0-9.]*\\)-${SUFFIX}\$/\\1/" \
+    | nvm_grep "$(nvm_ensure_version_prefix "${PATTERN}")" \
+    | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n
+}
+
+# args: pattern
+# Resolves a version pattern to a single version using only locally
+# installed versions and cached downloads. No network access.
+nvm_offline_version() {
+  local PATTERN
+  PATTERN="${1-}"
+
+  # First try locally installed versions
+  local VERSION
+  VERSION="$(nvm_version "${PATTERN}")"
+  if [ "_${VERSION}" != '_N/A' ]; then
+    nvm_echo "${VERSION}"
+    return 0
+  fi
+
+  # Then try cached downloads
+  VERSION="$(nvm_ls_cached "${PATTERN}" | command tail -1)"
+  if [ -n "${VERSION}" ]; then
+    nvm_echo "${VERSION}"
+    return 0
+  fi
+
+  nvm_echo 'N/A'
+  return 3
+}
+
 nvm() {
   if [ "$#" -lt 1 ]; then
     nvm --help
@@ -3130,6 +3194,7 @@ nvm() {
         nvm_echo '    --skip-default-packages                   When installing, skip the default-packages file if it exists'
         nvm_echo '    --latest-npm                              After installing, attempt to upgrade to the latest working npm on the given node version'
         nvm_echo '    --no-progress                             Disable the progress bar on any downloads'
+        nvm_echo '    --offline                                  Install from cache only, without downloading anything'
         nvm_echo '    --alias=<name>                            After installing, set the alias specified to the version specified. (same as: nvm alias <name> <version>)'
         nvm_echo '    --default                                 After installing, set default alias to the version specified. (same as: nvm alias default <version>)'
         nvm_echo '    --save                                    After installing, write the specified version to .nvmrc'
@@ -3335,11 +3400,6 @@ nvm() {
       local NVM_OS
       NVM_OS="$(nvm_get_os)"
 
-      if ! nvm_has "curl" && ! nvm_has "wget"; then
-        nvm_err 'nvm needs curl or wget to proceed.'
-        return 1
-      fi
-
       if [ $# -lt 1 ]; then
         version_not_provided=1
       fi
@@ -3347,9 +3407,11 @@ nvm() {
       local nobinary
       local nosource
       local noprogress
+      local NVM_OFFLINE
       nobinary=0
       noprogress=0
       nosource=0
+      NVM_OFFLINE=0
       local LTS
       local ALIAS
       local NVM_UPGRADE_NPM
@@ -3390,6 +3452,10 @@ nvm() {
           ;;
           --no-progress)
             noprogress=1
+            shift
+          ;;
+          --offline)
+            NVM_OFFLINE=1
             shift
           ;;
           --lts)
@@ -3468,6 +3534,11 @@ nvm() {
         esac
       done
 
+      if [ "${NVM_OFFLINE}" != 1 ] && ! nvm_has "curl" && ! nvm_has "wget"; then
+        nvm_err 'nvm needs curl or wget to proceed.'
+        return 1
+      fi
+
       local provided_version
       provided_version="${1-}"
 
@@ -3508,8 +3579,27 @@ nvm() {
       esac
 
       local EXIT_CODE
-      VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "${provided_version}")"
-      EXIT_CODE="$?"
+
+      if [ "${NVM_OFFLINE}" = 1 ]; then
+        local OFFLINE_PATTERN
+        OFFLINE_PATTERN="${provided_version}"
+        if [ -n "${LTS-}" ]; then
+          if [ "${LTS}" = '*' ]; then
+            OFFLINE_PATTERN="$(nvm_resolve_alias 'lts/*' 2>/dev/null || nvm_echo)"
+          else
+            OFFLINE_PATTERN="$(nvm_resolve_alias "lts/${LTS}" 2>/dev/null || nvm_echo)"
+          fi
+          if [ -z "${OFFLINE_PATTERN}" ]; then
+            nvm_err "LTS alias '${LTS}' not found locally. Run \`nvm ls-remote --lts\` first to populate LTS aliases."
+            return 3
+          fi
+        fi
+        VERSION="$(nvm_offline_version "${OFFLINE_PATTERN}")"
+        EXIT_CODE="$?"
+      else
+        VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "${provided_version}")"
+        EXIT_CODE="$?"
+      fi
 
       if [ "${VERSION}" = 'N/A' ] || [ $EXIT_CODE -ne 0 ]; then
         local LTS_MSG
@@ -3525,9 +3615,17 @@ nvm() {
             return 3
           fi
         else
-          REMOTE_CMD='nvm ls-remote'
+          if [ "${NVM_OFFLINE}" = 1 ]; then
+            REMOTE_CMD='nvm ls'
+          else
+            REMOTE_CMD='nvm ls-remote'
+          fi
         fi
-        nvm_err "Version '${provided_version}' ${LTS_MSG-}not found - try \`${REMOTE_CMD}\` to browse available versions."
+        if [ "${NVM_OFFLINE}" = 1 ]; then
+          nvm_err "Version '${provided_version}' ${LTS_MSG-}not found locally or in cache - try \`${REMOTE_CMD}\` to browse available versions."
+        else
+          nvm_err "Version '${provided_version}' ${LTS_MSG-}not found - try \`${REMOTE_CMD}\` to browse available versions."
+        fi
         return 3
       fi
 
@@ -3667,7 +3765,7 @@ nvm() {
 
         # skip binary install if "nobinary" option specified.
         if [ $nobinary -ne 1 ] && nvm_binary_available "${VERSION}"; then
-          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_binary "${FLAVOR}" std "${VERSION}" "${nosource}"
+          NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" NVM_OFFLINE="${NVM_OFFLINE}" nvm_install_binary "${FLAVOR}" std "${VERSION}" "${nosource}"
           EXIT_CODE=$?
         else
           EXIT_CODE=-1
@@ -3686,7 +3784,7 @@ nvm() {
             nvm_err 'Installing from source on non-WSL Windows is not supported'
             EXIT_CODE=87
           else
-            NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"
+            NVM_NO_PROGRESS="${NVM_NO_PROGRESS:-${noprogress}}" NVM_OFFLINE="${NVM_OFFLINE}" nvm_install_source "${FLAVOR}" std "${VERSION}" "${NVM_MAKE_JOBS}" "${ADDITIONAL_PARAMETERS}"
             EXIT_CODE=$?
           fi
         fi
@@ -4520,7 +4618,7 @@ nvm() {
         nvm_binary_available nvm_change_path nvm_strip_path \
         nvm_num_version_groups nvm_format_version nvm_ensure_version_prefix \
         nvm_normalize_version nvm_is_valid_version nvm_normalize_lts \
-        nvm_ensure_version_installed nvm_cache_dir \
+        nvm_ensure_version_installed nvm_cache_dir nvm_ls_cached nvm_offline_version \
         nvm_version_path nvm_alias_path nvm_version_dir \
         nvm_find_nvmrc nvm_find_up nvm_find_project_dir nvm_tree_contains_path \
         nvm_version_greater nvm_version_greater_than_or_equal_to \
