@@ -5,6 +5,8 @@ die () { echo "$@" ; exit 1; }
 : nvm.sh
 \. ../../../nvm.sh
 
+\. ../../common.sh
+
 expect () {
   INPUT="$1"
   EXPECTED_OUTPUT="$2"
@@ -20,8 +22,8 @@ fail_with () {
   INPUT="$1"
   EXPECTED_CODE="$2"
 
-  EXIT_CODE="$(nvm_get_minor_version "$INPUT" >/dev/null 2>&1; echo $?)"
-  [ "_$EXIT_CODE" = "_$EXPECTED_CODE" ] || die "nvm_get_minor_version "$INPUT" did not fail with code "$EXPECTED_CODE"; got $EXIT_CODE"
+  try nvm_get_minor_version "$INPUT"
+  [ "_$CAPTURED_EXIT_CODE" = "_$EXPECTED_CODE" ] || die "nvm_get_minor_version "$INPUT" did not fail with code "$EXPECTED_CODE"; got $CAPTURED_EXIT_CODE"
 }
 
 expect 1 1.0

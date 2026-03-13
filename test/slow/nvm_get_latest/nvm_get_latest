@@ -90,12 +90,13 @@ wget() {
   fi
 }
 
-OUTPUT="$(nvm_get_latest)"
-EXIT_CODE="$(nvm_get_latest >/dev/null 2>&1 ; echo $?)"
-[ "_$OUTPUT" = "_$EXPECTED_VERSION" ] \
-  || die "success path did not return version '$EXPECTED_VERSION', got '$OUTPUT'"
-[ "_$EXIT_CODE" = "_0" ] \
-  || die "success path did not exit with code 0, got $EXIT_CODE"
+\. ../../common.sh
+
+try nvm_get_latest
+[ "_$CAPTURED_STDOUT" = "_$EXPECTED_VERSION" ] \
+  || die "success path did not return version '$EXPECTED_VERSION', got '$CAPTURED_STDOUT'"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] \
+  || die "success path did not exit with code 0, got $CAPTURED_EXIT_CODE"
 
 
 cleanup

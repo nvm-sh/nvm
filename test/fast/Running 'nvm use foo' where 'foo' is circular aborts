@@ -11,30 +11,20 @@ cleanup() {
 : nvm.sh
 \. ../../nvm.sh
 
+\. ../common.sh
+
 nvm_make_alias foo foo
 
-set +ex # needed for stderr
-OUTPUT="$(nvm use foo 2>&1)"
-set -ex
+try_err nvm use foo
 EXPECTED_OUTPUT='The alias "foo" leads to an infinite loop. Aborting.'
-[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
-  || die "'nvm use foo' did not output >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
+[ "_${CAPTURED_STDERR}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "'nvm use foo' did not output >${EXPECTED_OUTPUT}<; got >${CAPTURED_STDERR}<"
+[ "_$CAPTURED_EXIT_CODE" = "_8" ] || die "Expected exit code 8; got ${CAPTURED_EXIT_CODE}"
 
-set +ex # needed for stderr
-EXIT_CODE="$(nvm use foo 2>/dev/null ; echo $?)"
-set -ex
-[ "_$EXIT_CODE" = "_8" ] || die "Expected exit code 8; got ${EXIT_CODE}"
-
-set +ex # needed for stderr
-OUTPUT="$(nvm use --silent foo 2>&1)"
-set -ex
+try_err nvm use --silent foo
 EXPECTED_OUTPUT=''
-[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
-  || die "'nvm use --silent foo' did not output >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
-
-set +ex # needed for stderr
-EXIT_CODE="$(nvm use --silent foo 2>/dev/null ; echo $?)"
-set -ex
-[ $EXIT_CODE -eq 8 ] || die "Expected exit code 8 from 'nvm use --silent foo'; got ${EXIT_CODE}"
+[ "_${CAPTURED_STDERR}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "'nvm use --silent foo' did not output >${EXPECTED_OUTPUT}<; got >${CAPTURED_STDERR}<"
+[ $CAPTURED_EXIT_CODE -eq 8 ] || die "Expected exit code 8 from 'nvm use --silent foo'; got ${CAPTURED_EXIT_CODE}"
 
 cleanup

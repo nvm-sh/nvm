@@ -22,11 +22,10 @@ npm() {
   echo '1.2.3'
 }
 
-OUTPUT="$(nvm_install_latest_npm 2>&1 >/dev/null)"
-EXIT_CODE="$(nvm_install_latest_npm >/dev/null 2>&1 ; echo $?)"
+try_err nvm_install_latest_npm
 
 EXPECTED="Unable to obtain node version."
-[ "${OUTPUT}" = "${EXPECTED}" ] || die "When node is unavailable, expected >${EXPECTED}<; got >${OUTPUT}"
+[ "${CAPTURED_STDERR}" = "${EXPECTED}" ] || die "When node is unavailable, expected >${EXPECTED}<; got >${CAPTURED_STDERR}"
 
 node() {
   echo 'v4.5.6'
@@ -37,11 +36,10 @@ nvm_ls_current() {
 npm() {
   return 1
 }
-OUTPUT="$(nvm_install_latest_npm 2>&1 >/dev/null)"
-EXIT_CODE="$(nvm_install_latest_npm >/dev/null 2>&1 ; echo $?)"
+try_err nvm_install_latest_npm
 
 EXPECTED="Unable to obtain npm version."
-[ "${OUTPUT}" = "${EXPECTED}" ] || die "When node is available and npm is unavailable, expected >${EXPECTED}<; got >${OUTPUT}"
+[ "${CAPTURED_STDERR}" = "${EXPECTED}" ] || die "When node is available and npm is unavailable, expected >${EXPECTED}<; got >${CAPTURED_STDERR}"
 
 node() {
   echo 'v4.5.6'
@@ -52,8 +50,7 @@ nvm_ls_current() {
 npm() {
   return 1
 }
-OUTPUT="$(nvm_install_latest_npm 2>&1 >/dev/null)"
-EXIT_CODE="$(nvm_install_latest_npm >/dev/null 2>&1 ; echo $?)"
+try_err nvm_install_latest_npm
 
 EXPECTED="Unable to obtain npm version."
-[ "${OUTPUT}" = "${EXPECTED}" ] || die "When node is system and npm is unavailable, expected >${EXPECTED}<; got >${OUTPUT}"
+[ "${CAPTURED_STDERR}" = "${EXPECTED}" ] || die "When node is system and npm is unavailable, expected >${EXPECTED}<; got >${CAPTURED_STDERR}"
