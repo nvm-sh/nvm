@@ -3439,7 +3439,7 @@ nvm() {
             shift # consume "-s"
             nobinary=1
             if [ $nosource -eq 1 ]; then
-                nvm err '-s and -b cannot be set together since they would skip install from both binary and source'
+                nvm_err '-s and -b cannot be set together since they would skip install from both binary and source'
                 return 6
             fi
           ;;
@@ -3447,7 +3447,7 @@ nvm() {
             shift # consume "-b"
             nosource=1
             if [ $nobinary -eq 1 ]; then
-                nvm err '-s and -b cannot be set together since they would skip install from both binary and source'
+                nvm_err '-s and -b cannot be set together since they would skip install from both binary and source'
                 return 6
             fi
           ;;
