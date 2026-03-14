@@ -878,7 +878,10 @@ ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^ *$/d'
   # the `sed` is to remove trailing whitespaces (see "weird behavior" ~25 lines up)
   nvm_echo "${VERSIONS}" | command sed 's/ *$//g'
   # shellcheck disable=SC2317
-  return $NVM_LS_REMOTE_EXIT_CODE || $NVM_LS_REMOTE_IOJS_EXIT_CODE
+  if [ "${NVM_LS_REMOTE_EXIT_CODE}" != '0' ]; then
+    return "${NVM_LS_REMOTE_EXIT_CODE}"
+  fi
+  return "${NVM_LS_REMOTE_IOJS_EXIT_CODE}"
 }
 
 nvm_is_valid_version() {
