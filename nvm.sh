@@ -1368,7 +1368,7 @@ nvm_resolve_alias() {
       break
     fi
 
-    if command printf "${SEEN_ALIASES}" | nvm_grep -q -e "^${ALIAS_TEMP}$"; then
+    if command printf '%b' "${SEEN_ALIASES}" | nvm_grep -q -e "^${ALIAS_TEMP}$"; then
       ALIAS="∞"
       break
     fi
