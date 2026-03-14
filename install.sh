@@ -149,7 +149,10 @@ install_nvm_from_git() {
     fetch_error="Failed to fetch origin with $NVM_VERSION. Please report this!"
     nvm_echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf '\r=> '
-    mkdir -p "${INSTALL_DIR}"
+    mkdir -p "${INSTALL_DIR}" || {
+      nvm_echo >&2 "Failed to create directory '${INSTALL_DIR}'"
+      exit 2
+    }
     if [ "$(ls -A "${INSTALL_DIR}")" ]; then
       # Initializing repo
       command git init "${INSTALL_DIR}" || {
@@ -234,7 +237,10 @@ install_nvm_as_script() {
   NVM_BASH_COMPLETION_SOURCE="$(nvm_source script-nvm-bash-completion)"
 
   # Downloading to $INSTALL_DIR
-  mkdir -p "$INSTALL_DIR"
+  mkdir -p "$INSTALL_DIR" || {
+    nvm_echo >&2 "Failed to create directory '$INSTALL_DIR'"
+    return 1
+  }
   if [ -f "$INSTALL_DIR/nvm.sh" ]; then
     nvm_echo "=> nvm is already installed in $INSTALL_DIR, trying to update the script"
   else
@@ -374,7 +380,10 @@ nvm_do_install() {
     fi
 
     if [ "${NVM_DIR}" = "$(nvm_default_install_dir)" ]; then
-      mkdir "${NVM_DIR}"
+      mkdir "${NVM_DIR}" || {
+        nvm_echo >&2 "Failed to create directory '${NVM_DIR}'"
+        exit 2
+      }
     else
       nvm_echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
       exit 1
