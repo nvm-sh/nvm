@@ -77,18 +77,18 @@
 
 **Example:**
 ```sh
-$ nvm use 16
-Now using node v16.9.1 (npm v7.21.1)
+$ nvm install 24
+Now using node v24.14.0 (npm v11.9.0)
 $ node -v
-v16.9.1
-$ nvm use 14
-Now using node v14.18.0 (npm v6.14.15)
+v24.14.0
+$ nvm use 22
+Now using node v22.22.1 (npm v10.9.4)
 $ node -v
-v14.18.0
-$ nvm install 12
-Now using node v12.22.6 (npm v6.14.5)
+v22.22.1
+$ nvm use 20
+Now using node v20.20.1 (npm v10.8.2)
 $ node -v
-v12.22.6
+v20.20.1
 ```
 
 Simple as that!
