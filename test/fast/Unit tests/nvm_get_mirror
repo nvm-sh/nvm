@@ -46,3 +46,9 @@ testMirrors '`do something bad`'
 testMirrors 'https://nodejs.org/dist; xdg-open http://www.google.com;'
 testMirrors 'https://nodejs.org/dist&&xdg-open http://www.google.com;'
 testMirrors 'https://nodejs.org/dist|xdg-open http://www.google.com;'
+
+# Test that awk URL validation rejects non-URL values
+testMirrors 'not a url'
+testMirrors 'ftp://wrong-scheme'
+testMirrors 'http://'
+testMirrors 'javascript:alert(1)'

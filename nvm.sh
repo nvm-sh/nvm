@@ -2247,7 +2247,7 @@ nvm_get_mirror() {
   esac
 
 
-  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ $0 ~ "^https?://[a-zA-Z0-9./_-]+$" }'; then
+  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ if ($0 !~ /^https?:\/\/[a-zA-Z0-9.\/_-]+$/) exit 1 }'; then
       nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
       return 2
   fi
