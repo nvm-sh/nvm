@@ -4374,7 +4374,7 @@ nvm() {
         nvm_err 'System version of node not found.'
         return 127
       elif [ "${VERSION}" = '∞' ]; then
-        nvm_err "The alias \"${2}\" leads to an infinite loop. Aborting."
+        nvm_err "The alias \"${provided_version}\" leads to an infinite loop. Aborting."
         return 8
       fi
 
