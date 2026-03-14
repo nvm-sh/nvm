@@ -2171,7 +2171,10 @@ nvm_get_arch() {
   fi
 
   if [ -f "/etc/alpine-release" ]; then
-    NVM_ARCH=x64-musl
+    # Alpine Linux uses musl libc; only x64-musl binaries are available
+    case "${NVM_ARCH}" in
+      x64) NVM_ARCH=x64-musl ;;
+    esac
   fi
 
   nvm_echo "${NVM_ARCH}"
