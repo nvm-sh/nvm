@@ -2162,7 +2162,7 @@ nvm_get_arch() {
 
   # If running a 64bit ARM kernel but a 32bit ARM userland,
   # change ARCH to 32bit ARM (armv7l) if /sbin/init is 32bit executable
-  if [ "$(uname)" = "Linux" ] \
+  if [ "$(command uname)" = "Linux" ] \
     && [ "${NVM_ARCH}" = arm64 ] \
     && [ "$(command od -An -t x1 -j 4 -N 1 "/sbin/init" 2>/dev/null)" = ' 01' ]\
   ; then
