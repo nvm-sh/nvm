@@ -10,6 +10,10 @@ assert_not_ok nvm_iojs_version_has_solaris_binary ""
 assert_not_ok nvm_iojs_version_has_solaris_binary "foo"
 assert_not_ok nvm_iojs_version_has_solaris_binary "v1.1.0"
 
+# Non-iojs versions should fail (version is unchanged after stripping iojs prefix)
+assert_not_ok nvm_iojs_version_has_solaris_binary "v4.0.0"
+assert_not_ok nvm_iojs_version_has_solaris_binary "v8.0.0"
+
 assert_ok nvm_iojs_version_has_solaris_binary "v3.3.1"
 assert_ok nvm_iojs_version_has_solaris_binary "iojs-v3.3.1"
 assert_ok nvm_iojs_version_has_solaris_binary "v3.3.2"

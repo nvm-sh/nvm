@@ -2967,7 +2967,7 @@ nvm_iojs_version_has_solaris_binary() {
   IOJS_VERSION="$1"
   local STRIPPED_IOJS_VERSION
   STRIPPED_IOJS_VERSION="$(nvm_strip_iojs_prefix "${IOJS_VERSION}")"
-  if [ "_${STRIPPED_IOJS_VERSION}" = "${IOJS_VERSION}" ]; then
+  if [ "_${STRIPPED_IOJS_VERSION}" = "_${IOJS_VERSION}" ]; then
     return 1
   fi
 
