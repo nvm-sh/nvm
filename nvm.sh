@@ -3906,7 +3906,7 @@ nvm() {
       nvm_echo "${NVM_SUCCESS_MSG}"
 
       # rm any aliases that point to uninstalled version.
-      for ALIAS in $(nvm_grep -l "${VERSION}" "$(nvm_alias_path)/*" 2>/dev/null); do
+      for ALIAS in $(nvm_grep -l "${VERSION}" "$(nvm_alias_path)"/* 2>/dev/null); do
         nvm unalias "$(command basename "${ALIAS}")"
       done
     ;;

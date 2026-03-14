@@ -1,0 +1,24 @@
+#!/bin/sh
+
+die() { echo "$@" >&2; exit 1; }
+
+set -ex
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+make_fake_node v0.0.1
+
+nvm alias test_alias v0.0.1
+
+# Verify alias was created
+[ -f "$(nvm_alias_path)/test_alias" ] || die "alias file should exist before uninstall"
+
+nvm uninstall v0.0.1
+
+# Verify the version directory was removed
+[ ! -d "$(nvm_version_path v0.0.1)" ] || die "version directory should be removed"
+
+# Verify the alias was cleaned up
+[ ! -f "$(nvm_alias_path)/test_alias" ] || die "alias file should be removed after uninstalling the version it points to"
