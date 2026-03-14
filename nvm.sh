@@ -2374,7 +2374,7 @@ nvm_install_binary() {
   # Read nosource from arguments
   if [ "${nosource-}" = '1' ]; then
     nvm_err 'Binary download failed. Download from source aborted.'
-    return 0
+    return 2
   fi
 
   nvm_err 'Binary download failed, trying source.'
