@@ -2526,10 +2526,10 @@ nvm_download_artifact() {
   local CHECKSUM
   CHECKSUM="$(nvm_get_checksum "${FLAVOR}" "${TYPE}" "${VERSION}" "${SLUG}" "${COMPRESSION}")"
 
-  command mkdir -p "${tmpdir}/files" || (
+  command mkdir -p "${tmpdir}/files" || {
     nvm_err "creating directory ${tmpdir}/files failed"
     return 3
-  )
+  }
 
   local TARBALL_URL
   if nvm_version_greater_than_or_equal_to "${VERSION}" 0.1.14; then
@@ -2552,11 +2552,11 @@ nvm_download_artifact() {
     command rm -rf "${TARBALL}"
   fi
   nvm_err "Downloading ${TARBALL_URL}..."
-  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || (
+  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || {
     command rm -rf "${TARBALL}" "${tmpdir}"
     nvm_err "download from ${TARBALL_URL} failed"
     return 4
-  )
+  }
 
   if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
     command rm -rf "${TARBALL}" "${tmpdir}"
@@ -2564,10 +2564,10 @@ nvm_download_artifact() {
     return 5
   fi
 
-  nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" || (
+  nvm_compare_checksum "${TARBALL}" "${CHECKSUM}" || {
     command rm -rf "${tmpdir}/files"
     return 6
-  )
+  }
 
   nvm_echo "${TARBALL}"
 }

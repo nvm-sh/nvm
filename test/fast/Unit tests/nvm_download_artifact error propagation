@@ -1,0 +1,55 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+# Test that mkdir failure propagates from brace group (not subshell)
+nvm_download_artifact_mkdir_test() {
+  local tmpdir
+  tmpdir="/nonexistent/path/that/cannot/exist"
+  command mkdir -p "${tmpdir}/files" || {
+    return 3
+  }
+}
+nvm_download_artifact_mkdir_test 2>/dev/null
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = "3" ] || die "Expected mkdir failure to propagate with exit code 3, got ${EXIT_CODE}"
+
+# Test that download failure propagates with exit code 4
+nvm_get_mirror() { echo "http://example.com"; }
+nvm_binary_available() { return 0; }
+nvm_get_download_slug() { echo "node-v20.0.0-linux-x64"; }
+nvm_get_artifact_compression() { echo "tar.gz"; }
+nvm_cache_dir() { echo "${TMPDIR:-/tmp}/nvm_test_cache_$$"; }
+nvm_get_checksum() { echo "fake_checksum"; }
+nvm_version_greater_than_or_equal_to() { return 0; }
+nvm_download() { return 1; }
+nvm_grep() { return 1; }
+
+nvm_download_artifact node binary std v20.0.0 2>/dev/null
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = "4" ] || die "Expected download failure to propagate with exit code 4, got ${EXIT_CODE}"
+
+# clean up any dirs created by the download failure test
+command rm -rf "$(nvm_cache_dir)"
+
+# Test that checksum failure propagates with exit code 6
+nvm_download() {
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = "-o" ]; then command touch "$2"; return 0; fi
+    shift
+  done
+  return 0
+}
+nvm_compare_checksum() { return 1; }
+
+nvm_download_artifact node binary std v20.0.0 2>/dev/null
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = "6" ] || die "Expected checksum failure to propagate with exit code 6, got ${EXIT_CODE}"
+
+# clean up
+command rm -rf "$(nvm_cache_dir)"
