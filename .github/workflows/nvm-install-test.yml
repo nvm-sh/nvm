@@ -1,4 +1,6 @@
 name: 'Tests: nvm install with set -e'
+permissions:
+  contents: read
 
 on:
   pull_request:
