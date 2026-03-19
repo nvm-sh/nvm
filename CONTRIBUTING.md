@@ -26,7 +26,7 @@ Explain the problem and include additional details to help maintainers reproduce
 * **Provide specific examples to demonstrate the steps**. Include links to files or Github projects, or copy/pasteable snippets, which you use in those examples. If you're providing snippets in the issue, use [Markdown code blocks](https://help.github.com/articles/markdown-basics/#multiple-lines).
 * **Describe the behavior you observed after following the steps** and point out what exactly is the problem with that behavior.
 * **Explain which behavior you expected to see instead and why.**
-* **Provide as much context as possible** in order to help others verify and ultimately fix the issue. This includes giving us as much details as possible about your environment, so we can more easily confirm the problem.
+* **Provide as much context as possible** in order to help others verify and ultimately fix the issue. This includes giving us as many details as possible about your environment, so we can more easily confirm the problem.
 
 ## Documentation
 
