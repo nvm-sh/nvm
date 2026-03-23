@@ -67,7 +67,7 @@ nvm_source() {
 IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
 
 The default repository for this install is \`nvm-sh/nvm\`,
-but the environment variables \`\$NVM_INSTALL_GITHUB_REPO\` is
+but the environment variable \`\$NVM_INSTALL_GITHUB_REPO\` is
 currently set to \`${NVM_GITHUB_REPO}\`.
 
 If this is not intentional, interrupt this installation and

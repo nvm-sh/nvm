@@ -2282,7 +2282,7 @@ nvm_install_binary_extract() {
   command mkdir -p "${TMPDIR}" && \
   VERSION_PATH="$(nvm_version_path "${PREFIXED_VERSION}")" || return 1
 
-  # For Windows system (GitBash with MSYS, Cygwin)
+  # For Windows system (Git Bash with MSYS, Cygwin)
   if [ "${NVM_OS}" = 'win' ]; then
     VERSION_PATH="${VERSION_PATH}/bin"
     command unzip -q "${TARBALL}" -d "${TMPDIR}" || return 1

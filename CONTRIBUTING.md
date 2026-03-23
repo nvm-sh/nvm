@@ -23,7 +23,7 @@ Explain the problem and include additional details to help maintainers reproduce
 * **Use a clear and descriptive title** for the issue to identify the problem.
 
 * **Describe the exact steps which reproduce the problem** in as many details as possible. For example, start by explaining which command exactly you used in the terminal. When listing steps, **don't just say what you did, but explain how you did it**. For example, if you moved the cursor to the end of a line, explain if you used the mouse, or a keyboard shortcut or a command, and if so which one?
-* **Provide specific examples to demonstrate the steps**. Include links to files or Github projects, or copy/pasteable snippets, which you use in those examples. If you're providing snippets in the issue, use [Markdown code blocks](https://help.github.com/articles/markdown-basics/#multiple-lines).
+* **Provide specific examples to demonstrate the steps**. Include links to files or GitHub projects, or copy/pasteable snippets, which you use in those examples. If you're providing snippets in the issue, use [Markdown code blocks](https://help.github.com/articles/markdown-basics/#multiple-lines).
 * **Describe the behavior you observed after following the steps** and point out what exactly is the problem with that behavior.
 * **Explain which behavior you expected to see instead and why.**
 * **Provide as much context as possible** in order to help others verify and ultimately fix the issue. This includes giving us as many details as possible about your environment, so we can more easily confirm the problem.

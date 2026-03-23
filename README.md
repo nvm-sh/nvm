@@ -95,7 +95,7 @@ Simple as that!
 
 
 ## About
-nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [windows WSL](https://github.com/nvm-sh/nvm#important-notes).
+nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [Windows WSL](https://github.com/nvm-sh/nvm#important-notes).
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
@@ -279,7 +279,7 @@ which should output `nvm` if the installation was successful. Please note that `
 
 If you're running a system without prepackaged binary available, which means you're going to install node or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
-**Note:** `nvm` also supports Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [GitBash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` also supports Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [Git Bash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
 
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
@@ -940,7 +940,7 @@ Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [Bu
 
 There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally.
 
-If installing nvm on Alpine Linux *is* still what you want or need to do, you should be able to achieve this by running the following from you Alpine Linux shell, depending on which version you are using:
+If installing nvm on Alpine Linux *is* still what you want or need to do, you should be able to achieve this by running the following from your Alpine Linux shell, depending on which version you are using:
 
 ### Alpine Linux 3.13+
 ```sh
