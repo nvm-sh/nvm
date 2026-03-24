@@ -23,7 +23,7 @@ if [ "${OUTPUT#*$EXPECTED_OUTPUT}" = "${OUTPUT}" ]; then
   die "No source binary flag is active and should have returned >${EXPECTED_OUTPUT}<. Instead it returned >${OUTPUT}<"
 fi
 
-EXIT_CODE="$(nvm_install_binary node std 8.0.0 1 2>/dev/null; echo $?)"
+nvm_install_binary node std 8.0.0 1 >/dev/null 2>&1; EXIT_CODE=$?
 [ "${EXIT_CODE}" = "2" ] || die "Expected exit code 2 when nosource=1 and binary fails, got ${EXIT_CODE}"
 
 # Unit test to check if the function errors out when the flag is set

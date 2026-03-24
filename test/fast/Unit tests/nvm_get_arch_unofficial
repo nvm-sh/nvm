@@ -37,11 +37,12 @@ setup_chroot() {
 
   # Files and binaries
   cp ../../../nvm.sh "${chroot_dir}/"
-  cp /bin/sh /usr/bin/dirname "${chroot_dir}/bin/"
+  cp /bin/sh /usr/bin/dirname /usr/bin/uname "${chroot_dir}/usr/bin/"
+  ln -sf ../usr/bin/sh "${chroot_dir}/bin/sh"
   [ "${chroot_dir}" = "${CHROOT_WITH_ALPINE}" ] && touch "${chroot_dir}/etc/alpine-release"
 
   # Libraries
-  for binary in /bin/sh /usr/bin/dirname; do
+  for binary in /bin/sh /usr/bin/dirname /usr/bin/uname; do
     for lib in $(ldd $binary | awk '{print $3}' | grep "^/"); do
       dir=$(dirname "${lib}")
       mkdir -p "${chroot_dir}${dir}"
