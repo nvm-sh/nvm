@@ -259,7 +259,7 @@ You can use a task:
   ansible.builtin.shell: >
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
   args:
-    creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
+    creates: "{{ ansible_facts.env.HOME }}/.nvm/nvm.sh"
 ```
 
 ### Verify Installation
