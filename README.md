@@ -31,6 +31,7 @@
 - [Usage](#usage)
   - [Long-term Support](#long-term-support)
   - [Migrating Global Packages While Installing](#migrating-global-packages-while-installing)
+  - [Offline Install](#offline-install)
   - [Default Global Packages From File While Installing](#default-global-packages-from-file-while-installing)
   - [io.js](#iojs)
   - [System Version of Node](#system-version-of-node)
