@@ -20,7 +20,12 @@ nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/de
 # nvm_download should pass when calling with auth header
 docker pull kennethreitz/httpbin && SHELL=bash docker run -d --name httpbin -p 80:80 kennethreitz/httpbin
 sleep 1 # wait for httpbin to start
-NVM_AUTH_HEADER="Bearer test-token" nvm_download "http://127.0.0.1/bearer" > /dev/null || die 'nvm_download with auth header should send correctly'
+# NOTE: The test token here is derived from the RFC at https://datatracker.ietf.org/doc/html/rfc6750#section-2.1 and includes additional
+# valid bearer token characters.
+expected='{"authenticated":true,"token":"mF_9.B5f-4.1JqM~+/="}'
+actual="$(NVM_AUTH_HEADER="Bearer mF_9.B5f-4.1JqM~+/=" nvm_download "http://127.0.0.1/bearer" | tr -d "[:space:]")"
+[ "$?" = "0" ] || die 'nvm_download with auth header should send correctly'
+[ "${expected}" = "${actual}" ] || die 'nvm_download with auth header should send correct bearer token'
 
 # nvm_download should fail when calling without auth header
 nvm_download "http://127.0.0.1/bearer" > /dev/null && die 'nvm_download with no auth header should not send the header and should fail'
