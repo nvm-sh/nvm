@@ -1662,9 +1662,11 @@ nvm_prune() {
     esac
   done
 
-  nvm_echo "Pruning old installed versions..."
-  if [ "${NVM_DRY_RUN}" -eq 1 ]; then
-    nvm_echo "Dry run mode: no versions will be removed."
+  if [ "${NVM_DEBUG-}" = 1 ]; then
+    nvm_echo "Pruning old installed versions..."
+    if [ "${NVM_DRY_RUN}" -eq 1 ]; then
+      nvm_echo "Dry run mode: no versions will be removed."
+    fi
   fi
 
   local HAS_SORT_V
@@ -1746,7 +1748,9 @@ END"
           continue
         fi
         if [ "${V}" = "${CURRENT_VERSION}" ]; then
-          nvm_echo "Keeping current version: ${V}"
+          if [ "${NVM_DEBUG-}" = 1 ]; then
+            nvm_echo "Keeping current version: ${V}"
+          fi
           continue
         fi
 
@@ -1754,7 +1758,15 @@ END"
         local UNINSTALL_V
         UNINSTALL_V="${V}"
         if ! nvm_is_version_installed "${UNINSTALL_V}" >/dev/null 2>&1; then
-          UNINSTALL_V="$(nvm_add_iojs_prefix "${V}")"
+          local IOJS_V
+          IOJS_V="$(nvm_add_iojs_prefix "${V}")"
+          if nvm_is_version_installed "${IOJS_V}" >/dev/null 2>&1; then
+            UNINSTALL_V="${IOJS_V}"
+          fi
+        fi
+
+        if ! nvm_is_version_installed "${UNINSTALL_V}" >/dev/null 2>&1; then
+          continue
         fi
 
         # Check for global npm modules explicitly
