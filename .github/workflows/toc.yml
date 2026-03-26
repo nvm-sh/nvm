@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@v2
+      uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2
       with:
         allowed-endpoints:
           github.com:443
@@ -35,7 +35,7 @@ jobs:
     - run: npm install
     - run: npm run doctoc
     - name: commit changes
-      uses: ljharb/actions-js-build/commit@v3+amendpush
+      uses: ljharb/actions-js-build/commit@2b0d6d3e176fd0c188f0182fdc024527bf960692 # v3+amendpush
       with:
         amend: true
         force: true

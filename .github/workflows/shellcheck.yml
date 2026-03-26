@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2
         with:
           allowed-endpoints:
             ghcr.io:443
@@ -37,7 +37,7 @@ jobs:
             formulae.brew.sh:443
       - uses: actions/checkout@v6
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@4ebd32341e5b59ae7e1581111aa99d5d34cef962 # master
       - name: Install latest shellcheck
         run: brew install shellcheck
         env:

@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2
         with:
           allowed-endpoints:
             github.com:443
@@ -61,7 +61,7 @@ jobs:
       - run: sudo ${{ matrix.shell }} --version 2> /dev/null || dpkg -s ${{ matrix.shell }} 2> /dev/null || which ${{ matrix.shell }}
       - run: curl --version
       - run: wget --version
-      - uses: ljharb/actions/node/install@main
+      - uses: ljharb/actions/node/install@46bd9bc79196ec7b5c336b66bc3f5d99c6d2e828 # main
         name: 'npm install && version checks'
         with:
           node-version: 'lts/*'

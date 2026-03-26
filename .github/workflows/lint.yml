@@ -9,7 +9,7 @@ jobs:
   eclint:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v2
+      - uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2
         with:
           allowed-endpoints:
             github.com:443
@@ -17,7 +17,7 @@ jobs:
             nodejs.org:443
             registry.npmjs.org:443
       - uses: actions/checkout@v6
-      - uses: ljharb/actions/node/install@main
+      - uses: ljharb/actions/node/install@46bd9bc79196ec7b5c336b66bc3f5d99c6d2e828 # main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
           node-version: 'lts/*'
@@ -26,7 +26,7 @@ jobs:
   dockerfile_lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v2
+      - uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2
         with:
           allowed-endpoints:
             ghcr.io:443
@@ -36,7 +36,7 @@ jobs:
             nodejs.org:443
             registry.npmjs.org:443
       - uses: actions/checkout@v6
-      - uses: ljharb/actions/node/install@main
+      - uses: ljharb/actions/node/install@46bd9bc79196ec7b5c336b66bc3f5d99c6d2e828 # main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
           node-version: 'lts/*'
@@ -45,7 +45,7 @@ jobs:
   doctoc:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v2
+      - uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2
         with:
           allowed-endpoints:
             github.com:443
@@ -53,7 +53,7 @@ jobs:
             nodejs.org:443
             registry.npmjs.org:443
       - uses: actions/checkout@v6
-      - uses: ljharb/actions/node/install@main
+      - uses: ljharb/actions/node/install@46bd9bc79196ec7b5c336b66bc3f5d99c6d2e828 # main
         name: 'nvm install ${{ matrix.node-version }} && npm install'
         with:
           node-version: 'lts/*'
@@ -62,7 +62,7 @@ jobs:
   test_naming:
     runs-on: ubuntu-latest
     steps:
-      - uses: step-security/harden-runner@v2
+      - uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2
         with:
           allowed-endpoints:
             github.com:443
