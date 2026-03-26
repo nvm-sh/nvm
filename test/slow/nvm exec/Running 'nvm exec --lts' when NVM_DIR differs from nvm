@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+INSTPATH="$(mktemp -p "$(pwd)" -d)"
+trap 'test ! -z "${INSTPATH-}" && test -d "$INSTPATH" && rm -rf "$INSTPATH"' EXIT
+declare -x NVM_DIR=$INSTPATH
+\. ../../../nvm.sh
+
+nvm install --lts || die 'nvm install --lts failed'
+nvm exec --lts npm --version || die "`nvm exec` failed to run"
+declare -x NODE_VERSION="$(nvm exec --lts --silent node --version)"
+
+ln -s ../../../../nvm-exec "$INSTPATH/nvm-exec" || die "failed to create a symlink to $INSTPATH/"
+"$INSTPATH/nvm-exec" npm ls > /dev/null || die "`nvm exec` failed to run using nvm-exec helper"
+
