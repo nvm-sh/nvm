@@ -1,0 +1,32 @@
+#!/bin/sh
+
+: nvm.sh
+\. ../../../nvm.sh
+
+die () {
+  echo "$@"
+  exit 1
+}
+
+set -e
+
+# Override nvm_has_colors to always return false, simulating a pipeline context
+# where [ -t 1 ] is false (the bug condition from 2eb8bbd0)
+nvm_has_colors() { return 1; }
+
+# Without NVM_HAS_COLORS, output should have no color codes (plain arrow)
+OUTPUT="$(nvm_print_formatted_alias fakealias fakedest)"
+case "${OUTPUT}" in
+  *'\033['*) die "Expected no color codes without NVM_HAS_COLORS, got >${OUTPUT}<" ;;
+esac
+
+# With NVM_HAS_COLORS=1, output should contain color codes even though
+# nvm_has_colors returns false (regression test for the pipeline fix)
+NVM_HAS_COLORS=1
+export NVM_HAS_COLORS
+OUTPUT="$(nvm_print_formatted_alias fakealias fakedest)"
+ARROW="$(command printf %b '\033[0;90m->\033[0m')"
+case "${OUTPUT}" in
+  *"${ARROW}"*) : ;; # pass - colored arrow present
+  *) die "Expected colored arrow with NVM_HAS_COLORS=1, got >${OUTPUT}<" ;;
+esac

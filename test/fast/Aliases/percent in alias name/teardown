@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm -f ../../../../alias/test-%s-alias
+rm -f ../../../../alias/test-pct-chain

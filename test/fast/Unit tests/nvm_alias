@@ -1,0 +1,31 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup () {
+  rm -rf ../../../alias/test
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+try_err nvm_alias
+EXPECTED_OUTPUT='An alias is required.'
+[ "_$CAPTURED_STDERR" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias' produced wrong output; got $CAPTURED_STDERR"
+[ "_$CAPTURED_EXIT_CODE" = "_1" ] || die "'nvm_alias' exited with $CAPTURED_EXIT_CODE, expected 1"
+
+rm -rf ../../../alias/nonexistent
+
+try_err nvm_alias nonexistent
+EXPECTED_OUTPUT='Alias does not exist.'
+[ "_$CAPTURED_STDERR" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias nonexistent' produced wrong output; got $CAPTURED_STDERR"
+[ "_$CAPTURED_EXIT_CODE" = "_2" ] || die "'nvm_alias nonexistent' exited with $CAPTURED_EXIT_CODE, expected 2"
+
+EXPECTED_OUTPUT="0.10"
+nvm alias test "$EXPECTED_OUTPUT" || die "'nvm alias test $EXPECTED_OUTPUT' failed"
+OUTPUT="$(nvm_alias test)"
+[ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias test' produced wrong output; got $OUTPUT"
+
+cleanup

@@ -1,0 +1,91 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_ls_remote nvm_ls_remote_iojs
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+nvm_ls_remote() {
+  echo "N/A"
+}
+try nvm_remote_version foo
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nonexistent version did not report N/A"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $CAPTURED_EXIT_CODE"
+
+nvm_ls_remote_iojs() {
+  echo "N/A"
+}
+try nvm_remote_version iojs-foo
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nonexistent version did not report N/A"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nonexistent version did not exit with code 3, got $CAPTURED_EXIT_CODE"
+
+
+nvm_ls_remote() {
+  if [ -z "$1" ] || ! nvm_is_iojs_version "$1"; then
+    echo "test_output"
+    echo "more_test_output"
+    echo "pattern_received:_$1_"
+  fi
+}
+nvm_ls_remote_iojs() {
+  if [ -z "$1" ] || nvm_is_iojs_version "$1"; then
+    echo "test_iojs_output"
+    echo "more_iojs_test_output"
+    echo "iojs_pattern_received:_$1_"
+  fi
+}
+try nvm_remote_version foo
+[ "_$CAPTURED_STDOUT" = "_pattern_received:_foo_" ] \
+  || die "nvm_remote_version foo did not return last line only of nvm_ls_remote foo; got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version foo did not exit with 0, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version iojs-foo
+[ "_$CAPTURED_STDOUT" = "_iojs_pattern_received:_iojs-foo_" ] \
+  || die "nvm_remote_version iojs-foo did not return last line only of nvm_ls_remote_iojs foo; got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version iojs-foo did not exit with 0, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version iojs
+[ "_$CAPTURED_STDOUT" = "_iojs_pattern_received:__" ] \
+  || die "nvm_remote_version iojs did not return last line only of nvm_ls_remote_iojs; got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version iojs did not exit with 0, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version stable
+[ "_$CAPTURED_STDOUT" = "_$(nvm_ls_remote stable)" ] \
+  || die "nvm_remote_version stable did not return contents of nvm_ls_remote stable; got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version stable did not exit with 0, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version unstable
+[ "_$CAPTURED_STDOUT" = "_$(nvm_ls_remote unstable)" ] \
+  || die "nvm_remote_version unstable did not return contents of nvm_ls_remote unstable; got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version unstable did not exit with 0, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version node
+[ "_$CAPTURED_STDOUT" = "_$(nvm_ls_remote node)" ] \
+  || die "nvm_remote_version node did not return contents of nvm_ls_remote node; got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version node did not exit with 0, got $CAPTURED_EXIT_CODE"
+
+# Test LTS name rejection (Issue #3474)
+# When nvm_remote_versions returns a line with LTS name in description,
+# nvm_remote_version should reject it if the pattern doesn't match the version number
+
+nvm_remote_versions() {
+    echo "v4.9.1 Argon *"
+}
+try nvm_remote_version Argon
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nvm_remote_version Argon should return N/A (LTS name not in version), got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nvm_remote_version Argon should exit with code 3, got $CAPTURED_EXIT_CODE"
+
+nvm_remote_versions() {
+  echo "v4.9.1"
+}
+try nvm_remote_version 4
+[ "_$CAPTURED_STDOUT" = "_v4.9.1" ] || die "nvm_remote_version 4 should return v4.9.1, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 4 should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+cleanup

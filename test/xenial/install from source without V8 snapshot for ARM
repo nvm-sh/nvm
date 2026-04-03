@@ -1,0 +1,25 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+NVM_TEST_VERSION=v0.10.7
+
+# Remove the stuff we're clobbering.
+[ -e ../../$NVM_TEST_VERSION ] && rm -R ../../$NVM_TEST_VERSION
+
+# Fake ARM arch
+nvm_get_arch() {
+  echo "armv7l"
+}
+
+# Install from source
+nvm install -s $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
+
+# Check Install
+[ -d ../../$NVM_TEST_VERSION ]
+node --version | grep $NVM_TEST_VERSION || "'node --version | grep $NVM_TEST_VERSION' failed"
+
+# Check V8 snapshot isn't compiled
+node -p "if(! process.config.variables.v8_use_snapshot) { console.log('no-snapshot'); }" | grep "no-snapshot" || "'node -p \"if(! process.config.variables.v8_use_snapshot) { console.log('no-snapshot'); }\" | grep \"no-snapshot\"' failed"

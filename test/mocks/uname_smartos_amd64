@@ -1,0 +1,5 @@
+if [ "_$1" = "_-m" ]; then
+  echo "i86pc"
+else
+  echo "SunOS dev 5.11 joyent_20150219T102159Z i86pc i386 i86pc Solaris"
+fi

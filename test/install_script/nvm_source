@@ -1,0 +1,43 @@
+#!/bin/sh
+
+cleanup () {
+  unset -f die cleanup
+  unset NVM_SOURCE out
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+# nvm_source with no parameter returns the git endpoint
+[ "$(nvm_source)" = "https://github.com/nvm-sh/nvm.git" ] || die "nvm_source without arguments should return the location of the git repo"
+NVM_INSTALL_GITHUB_REPO="other-user/other-nvm" nvm_source | grep "https://github.com/other-user/other-nvm.git$" > /dev/null || die "NVM_INSTALL_GITHUB_REPO=... nvm_source without arguments should return the location of the given git repo"
+
+# nvm_source with git parameter returns the location of the nvm repo
+[ "$(nvm_source "git")" = "https://github.com/nvm-sh/nvm.git" ] || die "nvm_source \"git\" should return the location of the git repo"
+NVM_INSTALL_GITHUB_REPO="other-user/other-nvm" nvm_source "git" | grep "https://github.com/other-user/other-nvm.git$" > /dev/null || die "NVM_INSTALL_GITHUB_REPO=... nvm_source \"git\" should return the location of the given git repo"
+
+# nvm_source with script parameter returns the location of nvm.sh
+[ "$(nvm_source "script")" = "https://raw.githubusercontent.com/nvm-sh/nvm/$(nvm_latest_version)/nvm.sh" ] || die "nvm_source \"script\" should return the location of nvm.sh"
+NVM_INSTALL_GITHUB_REPO="other-user/other-nvm" NVM_INSTALL_VERSION="v0.37.0" nvm_source "script" | grep "https://raw.githubusercontent.com/other-user/other-nvm/v0.37.0/nvm.sh$" > /dev/null || die "NVM_INSTALL_GITHUB_REPO=... NVM_INSTALL_VERSION=... nvm_source \"script\" should return the location of nvm.sh"
+
+# nvm_source with script-nvm-exec parameter returns the location of nvm-exec
+[ "$(nvm_source "script-nvm-exec")" = "https://raw.githubusercontent.com/nvm-sh/nvm/$(nvm_latest_version)/nvm-exec" ] || die "nvm_source \"script-nvm-exec\" should return the location of nvm.sh"
+NVM_INSTALL_GITHUB_REPO="other-user/other-nvm" NVM_INSTALL_VERSION="v0.37.0" nvm_source "script-nvm-exec" | grep "https://raw.githubusercontent.com/other-user/other-nvm/v0.37.0/nvm-exec$" > /dev/null || die "NVM_INSTALL_GITHUB_REPO=... NVM_INSTALL_VERSION=... nvm_source \"script-nvm-exec\" should return the location of nvm.sh"
+
+# nvm_source with any other parameter errors out and exits
+nvm_source "anything" 2> /dev/null && die "nvm_source with invalid parameter should exit"
+out=$(nvm_source "anything" 2>&1 >/dev/null) || : #Saving the process here
+[ -z "$out" ] && die "nvm_source with invalid parameter should error out"
+
+#nvm_source should always return NVM_SOURCE no matter the parameters
+export NVM_SOURCE="my_location"
+out=$(nvm_source)
+[ "_$out" = "_my_location" ] || die "nvm_source without arguments should have returned \$NVM_SOURCE. Got \"$out\""
+out=$(nvm_source "git")
+[ "_$out" = "_my_location" ] || die "nvm_source git should have returned \$NVM_SOURCE. Got \"$out\""
+out=$(nvm_source "script")
+[ "_$out" = "_my_location" ] || die "nvm_source script should have returned \$NVM_SOURCE. Got \"$out\""
+out=$(nvm_source "anything")
+[ "_$out" = "_my_location" ] || die "nvm_source script should have returned \$NVM_SOURCE. Got \"$out\""
+
+cleanup

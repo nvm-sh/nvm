@@ -1,0 +1,22 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_has
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+nvm_has() { return 1 ; }
+
+try_err nvm_get_latest
+[ "_$CAPTURED_STDERR" = "_nvm needs curl or wget to proceed." ] \
+  || die "no curl/wget did not report correct error message, got '$CAPTURED_STDERR'"
+[ "_$CAPTURED_EXIT_CODE" = "_1" ] \
+  || die "no curl/wget did not exit with code 1, got $CAPTURED_EXIT_CODE"
+
+cleanup

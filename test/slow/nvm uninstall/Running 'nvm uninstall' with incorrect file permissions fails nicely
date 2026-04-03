@@ -1,0 +1,30 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+# Source nvm
+\. ../../../nvm.sh
+
+# Version to install/uninstall
+NVM_TEST_VERSION=5.10.1
+
+# Make sure it's not already here
+[ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
+
+# Install it
+nvm install $NVM_TEST_VERSION
+
+# Make sure it installed
+nvm ls | grep "$NVM_TEST_VERSION" || die "Failed to install node"
+
+# Install global module as root
+npm_path=$(which npm)
+sudo -n "$npm_path" install jspm@'<2' -g || die 'either sudo failed, or `npm install jspm -g` failed`'
+
+# Switch to another version so we can uninstall
+nvm use 0.12.7
+
+# Attempt to uninstall it
+RETURN_MESSAGE="$(nvm uninstall $NVM_TEST_VERSION 2>&1)"
+CHECK_FOR="Cannot uninstall, incorrect permissions on installation folder"
+test "${RETURN_MESSAGE#*$CHECK_FOR}" != "$RETURN_MESSAGE" || die "Failed to show error message"

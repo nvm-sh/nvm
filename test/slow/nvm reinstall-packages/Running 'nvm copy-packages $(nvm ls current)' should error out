@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+nvm use 0.10.28 > /dev/null
+
+nvm install-latest-npm || die 'nvm install-latest-npm failed'
+
+EXPECTED_MSG="Can not reinstall packages from the current version of node."
+ACTUAL_MSG="$(nvm reinstall-packages 0.10.28 2>&1 > /dev/null)"
+[ "~$ACTUAL_MSG" = "~$EXPECTED_MSG" ] || die "'nvm use 0.10.28 && nvm reinstall-packages 0.10.28' did not fail with the right message: '$ACTUAL_MESSAGE'"
+
+EXPECTED_ERROR_CODE="2"
+ACTUAL_ERROR_CODE="$(nvm reinstall-packages 0.10.28  > /dev/null 2>&1 ; echo $?)"
+[ "~$ACTUAL_ERROR_CODE" = "~$EXPECTED_ERROR_CODE" ] || die "'nvm use 0.10.28 && nvm reinstall-packages 0.10.28' did not fail with the right error code: expected '$EXPECTED_ERROR_CODE', got '$ACTUAL_ERROR_CODE'"

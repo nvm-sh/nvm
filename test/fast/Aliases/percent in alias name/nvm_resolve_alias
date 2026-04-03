@@ -1,0 +1,17 @@
+#!/bin/sh
+\. ../../../common.sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../../nvm.sh
+
+# An alias whose name contains % should resolve directly
+try nvm_resolve_alias 'test-%s-alias'
+[ "$CAPTURED_EXIT_CODE" = "0" ] || die "nvm_resolve_alias test-%s-alias failed with exit code $CAPTURED_EXIT_CODE"
+[ "$CAPTURED_STDOUT" = "v0.0.1" ] || die "nvm_resolve_alias test-%s-alias was not v0.0.1; got $CAPTURED_STDOUT"
+
+# An alias chain that passes through a %-containing alias name should resolve
+try nvm_resolve_alias test-pct-chain
+[ "$CAPTURED_EXIT_CODE" = "0" ] || die "nvm_resolve_alias test-pct-chain failed with exit code $CAPTURED_EXIT_CODE"
+[ "$CAPTURED_STDOUT" = "v0.0.1" ] || die "nvm_resolve_alias test-pct-chain was not v0.0.1; got $CAPTURED_STDOUT"

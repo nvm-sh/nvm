@@ -1,0 +1,13 @@
+#!/bin/sh
+
+\. ../../../nvm.sh
+nvm deactivate
+nvm uninstall v0.10.7
+nvm uninstall v1.0.0
+nvm uninstall --lts
+
+rm .nvmrc
+
+if [ -f ".nvmrc.bak" ]; then
+  mv .nvmrc.bak .nvmrc
+fi

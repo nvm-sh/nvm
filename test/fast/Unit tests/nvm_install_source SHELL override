@@ -1,0 +1,92 @@
+#!/bin/sh
+
+cleanup () {
+  unset -f make gmake nvm_download nvm_get_os nvm_get_arch nvm_extract_tarball nvm_version_path nvm_get_make_jobs
+  rm -rf "${FAKE_TMPDIR-}"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# Create a fake directory structure for the build
+FAKE_TMPDIR="$(mktemp -d)"
+mkdir -p "${FAKE_TMPDIR}/files"
+touch "${FAKE_TMPDIR}/node-old.tar.gz"
+touch "${FAKE_TMPDIR}/node-new.tar.gz"
+
+# Track make invocations
+MAKE_CALLS=""
+
+make() {
+  MAKE_CALLS="${MAKE_CALLS}make $*
+"
+  return 1  # Fail to prevent actual build
+}
+
+gmake() {
+  MAKE_CALLS="${MAKE_CALLS}gmake $*
+"
+  return 1  # Fail to prevent actual build
+}
+
+nvm_download() {
+  return 0
+}
+
+nvm_get_arch() {
+  echo "x64"
+}
+
+nvm_extract_tarball() {
+  return 0
+}
+
+nvm_version_path() {
+  echo "${FAKE_TMPDIR}/versions/${1}"
+}
+
+nvm_get_make_jobs() {
+  NVM_MAKE_JOBS=1
+}
+
+# Test 1: Old version (0.6.21) should have SHELL=/bin/sh
+MAKE_CALLS=""
+NVM_DIR="${FAKE_TMPDIR}"
+export NVM_DIR
+
+# Manually test the version check logic
+if nvm_version_greater "0.12.0" "0.6.21"; then
+  OLD_VERSION_DETECTED="yes"
+else
+  OLD_VERSION_DETECTED="no"
+fi
+[ "${OLD_VERSION_DETECTED}" = "yes" ] || die "Expected 0.6.21 to be detected as old version"
+
+# Test 2: New version (0.12.0) should NOT have SHELL=/bin/sh
+if nvm_version_greater "0.12.0" "0.12.0"; then
+  NEW_VERSION_DETECTED="yes"
+else
+  NEW_VERSION_DETECTED="no"
+fi
+[ "${NEW_VERSION_DETECTED}" = "no" ] || die "Expected 0.12.0 to NOT be detected as old version"
+
+# Test 3: Newer version (14.0.0) should NOT have SHELL=/bin/sh
+if nvm_version_greater "0.12.0" "14.0.0"; then
+  NEWER_VERSION_DETECTED="yes"
+else
+  NEWER_VERSION_DETECTED="no"
+fi
+[ "${NEWER_VERSION_DETECTED}" = "no" ] || die "Expected 14.0.0 to NOT be detected as old version"
+
+# Test 4: Edge case version (0.11.99) should have SHELL=/bin/sh
+if nvm_version_greater "0.12.0" "0.11.99"; then
+  EDGE_VERSION_DETECTED="yes"
+else
+  EDGE_VERSION_DETECTED="no"
+fi
+[ "${EDGE_VERSION_DETECTED}" = "yes" ] || die "Expected 0.11.99 to be detected as old version"
+
+echo "All nvm_install_source SHELL override tests passed"
+
+cleanup

@@ -1,0 +1,70 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f install_nvm_from_git install_nvm_as_script nvm_detect_profile nvm_has nvm_install_dir
+  unset -f nvm_check_global_modules nvm_install_node
+  unset -f setup cleanup die
+  unset NVM_ENV METHOD PROFILE
+  rm -rf "${TMPDIR_FOR_TEST-}" 2>/dev/null
+}
+
+setup() {
+  NVM_ENV=testing \. ../../install.sh
+
+  # Mock installation functions to do nothing
+  install_nvm_from_git() { :; }
+  install_nvm_as_script() { :; }
+  nvm_check_global_modules() { :; }
+  nvm_install_node() { :; }
+
+  # Mock nvm_has to return true for git
+  nvm_has() {
+    case "$1" in
+      git) return 0 ;;
+      xcode-select) return 1 ;;
+      *) return 1 ;;
+    esac
+  }
+}
+
+setup
+
+#
+# Test: printf calls in nvm_do_install should not interpret % in paths
+# When NVM_DIR contains printf format specifiers like %s or %d,
+# the output should contain them literally, not interpret them.
+#
+
+TMPDIR_FOR_TEST="$(mktemp -d)"
+PERCENT_DIR="${TMPDIR_FOR_TEST}/nvm_%s_test"
+mkdir -p "${PERCENT_DIR}"
+
+# Copy nvm.sh to the temp dir so sourcing succeeds
+cp ../../nvm.sh "${PERCENT_DIR}/nvm.sh"
+
+# Mock nvm_install_dir to return our percent-containing path
+nvm_install_dir() {
+  nvm_echo "${PERCENT_DIR}"
+}
+
+# Mock nvm_detect_profile to return empty so we hit the "Profile not found" branch
+# which calls: command printf '%b' "${SOURCE_STR}"
+nvm_detect_profile() {
+  echo ""
+}
+
+OUTPUT="$(PROFILE='' METHOD='' NVM_DIR="${PERCENT_DIR}" nvm_do_install 2>&1)"
+
+# The SOURCE_STR should contain the %s from the path literally
+if ! echo "${OUTPUT}" | grep -q '%s'; then
+  die "printf should not have consumed the %s in the path. Output: ${OUTPUT}"
+fi
+
+# Also verify via the "Profile not found" branch that SOURCE_STR was printed correctly
+if ! echo "${OUTPUT}" | grep -q 'nvm_%s_test'; then
+  die "Expected nvm_%s_test in output but got: ${OUTPUT}"
+fi
+
+cleanup

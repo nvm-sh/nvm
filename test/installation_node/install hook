@@ -1,0 +1,45 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+VERSION='v0.11.0'
+VERSION_PATH="$(nvm_version_path "${VERSION}")"
+
+succeed() {
+  nvm_echo "$@"
+  NVM_INSTALL_THIRD_PARTY_HOOK= nvm install "${VERSION}"
+}
+
+fail() {
+  succeed "$@"
+  return 11
+}
+
+! nvm_is_version_installed "${VERSION}" || nvm uninstall "${VERSION}" || die 'uninstall failed'
+
+# an existing but empty VERSION_PATH directory should not be enough to satisfy nvm_is_version_installed
+rm -rf "${VERSION_PATH}"
+mkdir -p "${VERSION_PATH}"
+nvm_is_version_installed "${VERSION}" && die 'nvm_is_version_installed check not strict enough'
+rmdir "${VERSION_PATH}"
+
+OUTPUT="$(NVM_INSTALL_THIRD_PARTY_HOOK=succeed nvm install "${VERSION}")"
+USE_OUTPUT="$(nvm use "${VERSION}")"
+EXPECTED_OUTPUT="${VERSION} node std binary ${VERSION_PATH}
+Downloading and installing node ${VERSION}...
+${USE_OUTPUT}"
+
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
+
+! nvm_is_version_installed "${VERSION}" || nvm uninstall "${VERSION}" || die 'uninstall 2 failed'
+
+OUTPUT="$(NVM_INSTALL_THIRD_PARTY_HOOK=fail nvm install "${VERSION}" || echo 'failed')"
+USE_OUTPUT="$(nvm use "${VERSION}")"
+EXPECTED_OUTPUT="${VERSION} node std binary ${VERSION_PATH}
+Downloading and installing node ${VERSION}...
+${USE_OUTPUT}
+failed"
+
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"

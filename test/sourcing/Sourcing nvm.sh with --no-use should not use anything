@@ -1,0 +1,31 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+supports_source_options () {
+  [ "_$(echo 'echo $1' | . /dev/stdin yes)" = "_yes" ]
+}
+
+if ! supports_source_options; then
+  echo 'this shell does not support passing options on sourcing'
+  exit 0;
+fi
+
+\. ../../nvm.sh
+nvm install 4.1.0 || die 'install of v4.1.0 failed'
+nvm_version 4.1.0 >/dev/null 2>&1 || die "v4.1.0 not installed: $(nvm ls)"
+nvm deactivate || die 'nvm deactivate failed'
+
+NVM_CURRENT="$(nvm current)"
+[ "_$NVM_CURRENT" = '_none' ] || [ "_$NVM_CURRENT" = '_system' ] || die "'nvm current' did not return 'none' or 'system', got '$NVM_CURRENT' `nvm ls`"
+
+nvm unload || die 'nvm unload failed'
+
+\. ../../nvm.sh --no-use
+EXIT_CODE="$(echo $?)"
+
+echo 'sourcing complete.'
+
+[ "_$EXIT_CODE" = "_0" ] || die "sourcing returned nonzero exit code: $EXIT_CODE"
+
+NVM_CURRENT="$(nvm current)"
+[ "_$NVM_CURRENT" = '_none' ] || [ "_$NVM_CURRENT" = '_system' ] || die "'nvm current' did not return 'none' or 'system', got '$NVM_CURRENT' `nvm ls`"

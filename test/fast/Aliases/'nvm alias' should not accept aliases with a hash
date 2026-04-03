@@ -1,0 +1,23 @@
+#!/bin/sh
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+die () { echo "$@" ; exit 1; }
+
+try_err nvm alias foo#bar baz
+EXPECTED_OUTPUT="Aliases with a comment delimiter (#) are not supported."
+[ "$CAPTURED_STDERR" = "$EXPECTED_OUTPUT" ] || die "trying to create an alias with a hash should fail with '$EXPECTED_OUTPUT', got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" = "1" ] || die "trying to create an alias with a hash should fail with code 1, got '$CAPTURED_EXIT_CODE'"
+
+try_err nvm alias foo# baz
+EXPECTED_OUTPUT="Aliases with a comment delimiter (#) are not supported."
+[ "$CAPTURED_STDERR" = "$EXPECTED_OUTPUT" ] || die "trying to create an alias ending with a hash should fail with '$EXPECTED_OUTPUT', got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" = "1" ] || die "trying to create an alias ending with a hash should fail with code 1, got '$CAPTURED_EXIT_CODE'"
+
+try_err nvm alias \#bar baz
+EXPECTED_OUTPUT="Aliases with a comment delimiter (#) are not supported."
+[ "$CAPTURED_STDERR" = "$EXPECTED_OUTPUT" ] || die "trying to create an alias starting with a hash should fail with '$EXPECTED_OUTPUT', got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" = "1" ] || die "trying to create an alias starting with a hash should fail with code 1, got '$CAPTURED_EXIT_CODE'"
