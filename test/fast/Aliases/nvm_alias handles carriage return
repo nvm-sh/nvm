@@ -1,0 +1,22 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file with Windows-style line endings (CRLF)
+printf 'v22.1.0\r\n' > ../../../alias/test-edge-cr
+ACTUAL="$(nvm_alias test-edge-cr)"
+EXPECTED='v22.1.0'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+# Create an alias file with bare carriage return (no newline)
+printf 'v22.2.0\r' > ../../../alias/test-edge-cr-bare
+ACTUAL="$(nvm_alias test-edge-cr-bare)"
+EXPECTED='v22.2.0'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for bare CR, got >${ACTUAL}<"
+
+rm -f ../../../alias/test-edge-cr ../../../alias/test-edge-cr-bare
