@@ -1,4 +1,4 @@
-# Code of Conduct
+CODE_OF_CONDUCT.md# Code of Conduct
 
 `nvm`, as a member project of the OpenJS Foundation, uses [Contributor Covenant v2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) as their code of conduct. The full text is included [below](#contributor-covenant-code-of-conduct) in English, and translations are available from the Contributor Covenant organisation:
 
