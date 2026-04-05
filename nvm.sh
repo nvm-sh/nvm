@@ -464,6 +464,29 @@ else
 fi
 unset NVM_SCRIPT_SOURCE 2>/dev/null
 
+# Convert NVM_DIR to actual path if symlinked
+export NVM_DIR=$(nvm_real_dir "${NVM_DIR}")
+
+nvm_real_dir() {
+  local NVM_DIR_INPUT
+  NVM_DIR_INPUT="${1}"
+
+  if [ -z "${NVM_DIR_INPUT}" ]; then
+    nvm_err '$NVM_DIR cannot be empty'
+    return 2
+  fi
+
+  local NVM_REAL_DIR
+  NVM_REAL_DIR=$(command cd "${NVM_DIR_INPUT}" && command pwd -P)
+
+  if [ -z "${NVM_REAL_DIR}" ] || [ ! -d "${NVM_REAL_DIR}" ]; then
+    nvm_err "NVM_DIR is not a valid path"
+    return 2
+  fi
+
+  nvm_echo "${NVM_REAL_DIR}"
+}
+
 nvm_tree_contains_path() {
   local tree
   tree="${1-}"
