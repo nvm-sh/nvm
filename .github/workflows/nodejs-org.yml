@@ -34,8 +34,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          INPUT_VERSION="${{ inputs.version }}"
-
           if [ -n "${INPUT_VERSION}" ]; then
             TAG="${INPUT_VERSION}"
           elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
@@ -52,6 +50,7 @@ jobs:
           printf 'tag=%s\n' "${TAG}" >> "${GITHUB_OUTPUT}"
         env:
           GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
 
       - name: Set up fork and branch
         if: steps.version.outputs.tag
@@ -59,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          BRANCH="nvm-${{ steps.version.outputs.tag }}"
+          BRANCH="nvm-${NVM_VERSION_TAG}"
 
           gh repo fork nodejs/nodejs.org --clone=false 2>&1 || true
           FORK_OWNER="$(gh api user --jq '.login')"
@@ -81,6 +80,7 @@ jobs:
           printf 'branch=%s\n' "${BRANCH}" >> "${GITHUB_OUTPUT}"
         env:
           GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
+          NVM_VERSION_TAG: ${{ steps.version.outputs.tag }}
 
       - name: Update nvm version in English snippet
         if: steps.version.outputs.tag
@@ -88,9 +88,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          NEW_VERSION="${{ steps.version.outputs.tag }}"
-          FORK_OWNER="${{ steps.fork.outputs.fork_owner }}"
-          BRANCH="${{ steps.fork.outputs.branch }}"
+          NEW_VERSION="${NVM_VERSION_TAG}"
+          FORK_OWNER="${NVM_FORK_OWNER}"
+          BRANCH="${NVM_BRANCH}"
           FILE_PATH="apps/site/snippets/en/download/nvm.bash"
           PATTERN='nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install\.sh'
           REPLACEMENT="nvm-sh/nvm/${NEW_VERSION}/install.sh"
@@ -141,15 +141,18 @@ jobs:
           printf 'updated=true\n' >> "${GITHUB_OUTPUT}"
         env:
           GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
+          NVM_VERSION_TAG: ${{ steps.version.outputs.tag }}
+          NVM_FORK_OWNER: ${{ steps.fork.outputs.fork_owner }}
+          NVM_BRANCH: ${{ steps.fork.outputs.branch }}
 
       - name: Create pull request
         if: steps.update.outputs.updated
         run: |
           set -euo pipefail
 
-          NEW_VERSION="${{ steps.version.outputs.tag }}"
-          FORK_OWNER="${{ steps.fork.outputs.fork_owner }}"
-          BRANCH="${{ steps.fork.outputs.branch }}"
+          NEW_VERSION="${NVM_VERSION_TAG}"
+          FORK_OWNER="${NVM_FORK_OWNER}"
+          BRANCH="${NVM_BRANCH}"
 
           BODY="Updates the English nvm install snippet to [\`${NEW_VERSION}\`](https://github.com/nvm-sh/nvm/releases/tag/${NEW_VERSION}). The translation system handles other locales.
 
@@ -162,3 +165,6 @@ jobs:
             --body "${BODY}"
         env:
           GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
+          NVM_VERSION_TAG: ${{ steps.version.outputs.tag }}
+          NVM_FORK_OWNER: ${{ steps.fork.outputs.fork_owner }}
+          NVM_BRANCH: ${{ steps.fork.outputs.branch }}
