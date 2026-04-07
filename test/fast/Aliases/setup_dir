@@ -1,6 +1,0 @@
-#!/bin/sh
-
-for i in $(seq 1 10)
-  do
-  echo v0.0.$i > ../../../alias/test$i
-done

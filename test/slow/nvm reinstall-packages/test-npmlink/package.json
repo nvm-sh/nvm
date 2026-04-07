@@ -1,0 +1,10 @@
+{
+  "name": "test-npmlink",
+  "version": "0.0.1",
+  "description": "Stub package for testing npm link",
+  "bin": {
+    "test-npmlink": "index.js"
+  },
+  "author": "hax",
+  "license": "ISC"
+}

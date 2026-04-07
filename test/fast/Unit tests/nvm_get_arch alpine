@@ -1,0 +1,48 @@
+#!/bin/sh
+
+ORIG_PATH="${PATH}"
+
+cleanup() {
+  rm -f ./uname
+  export PATH="${ORIG_PATH}"
+}
+
+die () { cleanup; echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+MOCKS_DIR="$(pwd)/../../mocks"
+export PATH=".:${PATH}"
+
+# On Alpine (where /etc/alpine-release exists), x64 should get -musl suffix
+# and arm64 should NOT get -musl suffix.
+# On non-Alpine, neither should get -musl.
+
+if [ -f "/etc/alpine-release" ]; then
+  # x64 on Alpine should produce x64-musl
+  ln -sf "${MOCKS_DIR}/uname_linux_x86_64" ./uname
+  OUTPUT="$(nvm_get_arch)"
+  rm -f ./uname
+  [ "_${OUTPUT}" = "_x64-musl" ] || die "x64 on Alpine should be x64-musl, got ${OUTPUT}"
+
+  # aarch64 on Alpine should produce arm64, NOT arm64-musl
+  ln -sf "${MOCKS_DIR}/uname_linux_aarch64" ./uname
+  OUTPUT="$(nvm_get_arch)"
+  rm -f ./uname
+  [ "_${OUTPUT}" = "_arm64" ] || die "aarch64 on Alpine should be arm64 (no musl suffix), got ${OUTPUT}"
+else
+  # x64 on non-Alpine should produce x64 (no musl suffix)
+  ln -sf "${MOCKS_DIR}/uname_linux_x86_64" ./uname
+  OUTPUT="$(nvm_get_arch)"
+  rm -f ./uname
+  [ "_${OUTPUT}" = "_x64" ] || die "x64 on non-Alpine should be x64, got ${OUTPUT}"
+
+  # aarch64 on non-Alpine should produce arm64
+  ln -sf "${MOCKS_DIR}/uname_linux_aarch64" ./uname
+  OUTPUT="$(nvm_get_arch)"
+  rm -f ./uname
+  [ "_${OUTPUT}" = "_arm64" ] || die "aarch64 on non-Alpine should be arm64, got ${OUTPUT}"
+fi
+
+cleanup

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+try_err nvm_make_alias
+EXPECTED_OUTPUT='an alias name is required'
+
+[ "_$CAPTURED_STDERR" = "_$EXPECTED_OUTPUT" ] || die "\`nvm_make_alias\` did not error with '$EXPECTED_OUTPUT'; got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" -eq 1 ] || die "\`nvm_make_alias\` did not exit with 1, got '$CAPTURED_EXIT_CODE'"
+
+try_err nvm_make_alias foo
+EXPECTED_OUTPUT='an alias target version is required'
+
+[ "_$CAPTURED_STDERR" = "_$EXPECTED_OUTPUT" ] || die "\`nvm_make_alias foo\` did not error with '$EXPECTED_OUTPUT'; got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" -eq 2 ] || die "\`nvm_make_alias foo\` did not exit with 2, got '$CAPTURED_EXIT_CODE'"

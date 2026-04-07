@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo v0.0.1 > ../../../../alias/test-%s-alias
+echo test-%s-alias > ../../../../alias/test-pct-chain

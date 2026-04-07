@@ -1,0 +1,39 @@
+name: 'Tests: release process'
+
+on: [pull_request, push]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            api.github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+            registry.npmjs.org:443
+      - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "14"
+      - run: npm install
+      - name: Configure git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch --unshallow --tags -f || git fetch --tags -f
+      - name: Attempt `make release` process
+        run: echo proceed | make TAG=99.99.99 release
+        env:
+          GIT_EDITOR: "sed -i '1 s/^/99.99.99 make release test/'"
+      - name: Ensure tag is created
+        run: git tag | grep v99.99.99

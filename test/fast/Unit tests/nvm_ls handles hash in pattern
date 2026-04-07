@@ -1,0 +1,24 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# Test: nvm_ls with pattern containing # should not cause sed error
+# This is a regression test for https://github.com/nvm-sh/nvm/issues/3761
+
+# The pattern with # should not cause sed "unterminated regular expression" error
+# It's OK if it returns N/A (no match), but it should not produce sed errors
+OUTPUT="$(nvm_ls 'foo#bar' 2>&1)"
+EXIT_CODE=$?
+
+# Check that output doesn't contain sed error message
+echo "$OUTPUT" | grep -q "unterminated regular expression" && \
+  die "nvm_ls with # in pattern caused sed 'unterminated regular expression' error: $OUTPUT"
+echo "$OUTPUT" | grep -q "invalid command code" && \
+  die "nvm_ls with # in pattern caused sed 'invalid command code' error: $OUTPUT"
+
+# Should return N/A with exit code 3 (not found)
+[ "$EXIT_CODE" = "3" ] || die "nvm_ls 'foo#bar' should exit with code 3, got $EXIT_CODE"
+echo "$OUTPUT" | grep -q "N/A" || die "nvm_ls 'foo#bar' should output N/A, got: $OUTPUT"

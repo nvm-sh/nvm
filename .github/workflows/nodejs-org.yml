@@ -1,0 +1,164 @@
+name: 'Update nodejs.org'
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'nvm version tag (e.g., v0.40.4). Defaults to latest release.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  update-nodejs-org:
+    if: github.repository == 'nvm-sh/nvm' && github.actor == 'ljharb'
+    permissions:
+      contents: none
+    name: 'Create PR to nodejs/nodejs.org'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            api.github.com:443
+
+      - name: Extract and validate version
+        id: version
+        run: |
+          set -euo pipefail
+
+          INPUT_VERSION="${{ inputs.version }}"
+
+          if [ -n "${INPUT_VERSION}" ]; then
+            TAG="${INPUT_VERSION}"
+          elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')"
+          fi
+
+          if ! printf '%s\n' "${TAG}" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::notice::Tag '${TAG}' does not match expected format vX.Y.Z, skipping"
+            exit 0
+          fi
+
+          printf 'tag=%s\n' "${TAG}" >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Set up fork and branch
+        if: steps.version.outputs.tag
+        id: fork
+        run: |
+          set -euo pipefail
+
+          BRANCH="nvm-${{ steps.version.outputs.tag }}"
+
+          gh repo fork nodejs/nodejs.org --clone=false 2>&1 || true
+          FORK_OWNER="$(gh api user --jq '.login')"
+
+          DEFAULT_BRANCH="$(gh api repos/nodejs/nodejs.org --jq '.default_branch')"
+          UPSTREAM_SHA="$(gh api "repos/nodejs/nodejs.org/git/ref/heads/${DEFAULT_BRANCH}" --jq '.object.sha')"
+
+          # Create or reset branch on fork to upstream HEAD
+          if ! gh api "repos/${FORK_OWNER}/nodejs.org/git/refs" \
+            -f "ref=refs/heads/${BRANCH}" \
+            -f "sha=${UPSTREAM_SHA}" > /dev/null 2>&1; then
+            gh api "repos/${FORK_OWNER}/nodejs.org/git/refs/heads/${BRANCH}" \
+              -X PATCH \
+              -f "sha=${UPSTREAM_SHA}" \
+              -f "force=true" > /dev/null
+          fi
+
+          printf 'fork_owner=%s\n' "${FORK_OWNER}" >> "${GITHUB_OUTPUT}"
+          printf 'branch=%s\n' "${BRANCH}" >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
+
+      - name: Update nvm version in English snippet
+        if: steps.version.outputs.tag
+        id: update
+        run: |
+          set -euo pipefail
+
+          NEW_VERSION="${{ steps.version.outputs.tag }}"
+          FORK_OWNER="${{ steps.fork.outputs.fork_owner }}"
+          BRANCH="${{ steps.fork.outputs.branch }}"
+          FILE_PATH="apps/site/snippets/en/download/nvm.bash"
+          PATTERN='nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install\.sh'
+          REPLACEMENT="nvm-sh/nvm/${NEW_VERSION}/install.sh"
+
+          # Get file content via API
+          FILE_RESPONSE="$(gh api "repos/${FORK_OWNER}/nodejs.org/contents/${FILE_PATH}?ref=${BRANCH}")"
+          FILE_SHA="$(printf '%s' "${FILE_RESPONSE}" | jq -r '.sha')"
+          printf '%s' "${FILE_RESPONSE}" | jq -r '.content' | base64 -d > "${RUNNER_TEMP}/nvm.bash"
+
+          # Validate exactly 1 match
+          MATCH_COUNT="$(grep -cE "${PATTERN}" "${RUNNER_TEMP}/nvm.bash" || true)"
+
+          if [ "${MATCH_COUNT}" -eq 0 ]; then
+            echo "::error::No nvm version pattern found in ${FILE_PATH}"
+            exit 1
+          fi
+
+          if [ "${MATCH_COUNT}" -ne 1 ]; then
+            echo "::error::Expected exactly 1 nvm version match in ${FILE_PATH}, found ${MATCH_COUNT}"
+            exit 1
+          fi
+
+          # Replace and check for changes
+          cp "${RUNNER_TEMP}/nvm.bash" "${RUNNER_TEMP}/nvm.bash.orig"
+          sed -i -E "s|${PATTERN}|${REPLACEMENT}|g" "${RUNNER_TEMP}/nvm.bash"
+
+          if cmp -s "${RUNNER_TEMP}/nvm.bash" "${RUNNER_TEMP}/nvm.bash.orig"; then
+            echo "::notice::English snippet already has version ${NEW_VERSION}"
+            exit 0
+          fi
+
+          if ! grep -qF "${REPLACEMENT}" "${RUNNER_TEMP}/nvm.bash"; then
+            echo "::error::Replacement verification failed in ${FILE_PATH}"
+            exit 1
+          fi
+
+          # Update file via GitHub API (avoids git push workflow scope requirement)
+          NEW_CONTENT_B64="$(base64 -w 0 < "${RUNNER_TEMP}/nvm.bash")"
+          gh api "repos/${FORK_OWNER}/nodejs.org/contents/${FILE_PATH}" \
+            -X PUT \
+            -f "message=meta: bump nvm to ${NEW_VERSION}" \
+            -f "content=${NEW_CONTENT_B64}" \
+            -f "sha=${FILE_SHA}" \
+            -f "branch=${BRANCH}" \
+            -f "committer[name]=github-actions[bot]" \
+            -f "committer[email]=41898282+github-actions[bot]@users.noreply.github.com" > /dev/null
+
+          printf 'updated=true\n' >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}
+
+      - name: Create pull request
+        if: steps.update.outputs.updated
+        run: |
+          set -euo pipefail
+
+          NEW_VERSION="${{ steps.version.outputs.tag }}"
+          FORK_OWNER="${{ steps.fork.outputs.fork_owner }}"
+          BRANCH="${{ steps.fork.outputs.branch }}"
+
+          BODY="Updates the English nvm install snippet to [\`${NEW_VERSION}\`](https://github.com/nvm-sh/nvm/releases/tag/${NEW_VERSION}). The translation system handles other locales.
+
+          Ref: https://github.com/nodejs/nodejs.org/issues/8628"
+
+          gh pr create \
+            --repo nodejs/nodejs.org \
+            --head "${FORK_OWNER}:${BRANCH}" \
+            --title "meta: bump nvm to ${NEW_VERSION}" \
+            --body "${BODY}"
+        env:
+          GH_TOKEN: ${{ secrets.NODEJS_ORG_TOKEN }}

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+[ "$(nvm run 0.10.7 --version | tail -1)" = "v0.10.7" ] || die "\`nvm run\` failed to run with the correct version"

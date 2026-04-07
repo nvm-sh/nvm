@@ -1,0 +1,23 @@
+#!/bin/sh
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+die () { echo "$@" ; exit 1; }
+
+try_err nvm unalias foo/bar
+EXPECTED_OUTPUT="Aliases in subdirectories are not supported."
+[ "$CAPTURED_STDERR" = "$EXPECTED_OUTPUT" ] || die "trying to remove an alias with a slash should fail with '$EXPECTED_OUTPUT', got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" = "1" ] || die "trying to remove an alias with a slash should fail with code 1, got '$CAPTURED_EXIT_CODE'"
+
+try_err nvm unalias foo/
+EXPECTED_OUTPUT="Aliases in subdirectories are not supported."
+[ "$CAPTURED_STDERR" = "$EXPECTED_OUTPUT" ] || die "trying to remove an alias ending with a slash should fail with '$EXPECTED_OUTPUT', got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" = "1" ] || die "trying to remove an alias ending with a slash should fail with code 1, got '$CAPTURED_EXIT_CODE'"
+
+try_err nvm unalias /bar
+EXPECTED_OUTPUT="Aliases in subdirectories are not supported."
+[ "$CAPTURED_STDERR" = "$EXPECTED_OUTPUT" ] || die "trying to remove an alias starting with a slash should fail with '$EXPECTED_OUTPUT', got '$CAPTURED_STDERR'"
+[ "$CAPTURED_EXIT_CODE" = "1" ] || die "trying to remove an alias starting with a slash should fail with code 1, got '$CAPTURED_EXIT_CODE'"

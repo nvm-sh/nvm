@@ -1,0 +1,50 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  unset -f nvm_ls_current nvm_ls
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+nvm_ls_current() {
+  echo "CURRENT!"
+  return 7
+}
+
+try nvm_version current
+EXPECTED_OUTPUT="CURRENT!"
+[ "_$CAPTURED_STDOUT" = "_$EXPECTED_OUTPUT" ] || die '"nvm_version current" did not return nvm_ls_current output'
+[ "_$CAPTURED_EXIT_CODE" = "_7" ] || die '"nvm_version current" did not return nvm_ls_current exit code'
+
+try nvm_version
+EXPECTED_OUTPUT="CURRENT!"
+[ "_$CAPTURED_STDOUT" = "_$EXPECTED_OUTPUT" ] || die '"nvm_version" did not return nvm_ls_current output'
+[ "_$CAPTURED_EXIT_CODE" = "_7" ] || die '"nvm_version" did not return nvm_ls_current exit code'
+
+nvm_ls() {
+  echo "line 1"
+  echo "line 2"
+  echo "pattern: $1"
+}
+[ "_$(nvm_version foo)" = "_pattern: foo" ] || die '"nvm_version foo" did not pass the pattern to "nvm_ls", or return the last line'
+[ "_$(nvm_version node)" = "_pattern: stable" ] || die '"nvm_version node" did not pass "stable" to "nvm_ls"'
+[ "_$(nvm_version node-)" = "_pattern: stable" ] || die '"nvm_version node-" did not pass "stable" to "nvm_ls"'
+
+nvm_ls() { echo "system v20.0.0"; }
+[ "_$(nvm_version system)" = "_system" ] || die '"nvm_version system" did not return "system" when "nvm_ls" returns extra columns'
+
+nvm_ls() { echo "N/A"; }
+try nvm_version foo
+EXPECTED_OUTPUT="N/A"
+[ "_$CAPTURED_STDOUT" = "_$EXPECTED_OUTPUT" ] || die '"nvm_version" did not return N/A when nvm_ls returns N/A'
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die '"nvm_version" returning N/A did not exit code with code 3'
+
+nvm_ls() { echo; }
+try nvm_version foo
+EXPECTED_OUTPUT="N/A"
+[ "_$CAPTURED_STDOUT" = "_$EXPECTED_OUTPUT" ] || die '"nvm_version" did not return N/A when nvm_ls returns nothing'
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die '"nvm_version" returning N/A did not exit code with code 3'

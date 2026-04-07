@@ -1,0 +1,49 @@
+#!/bin/sh
+
+cleanup () {
+  if [ -n "${SAVE_NVM_DIR-}" ]; then
+    NVM_DIR="$SAVE_NVM_DIR"
+  fi
+  unset -f die cleanup
+  unset SAVE_NVM_DIR
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+SAVE_NVM_DIR="$NVM_DIR"
+
+NVM_ENV=testing \. ../../install.sh
+
+# install_nvm_from_git is available
+type install_nvm_from_git > /dev/null 2>&1 || die 'install_nvm_from_git is not available'
+
+# install_nvm_as_script is available
+type install_nvm_as_script > /dev/null 2>&1 || die 'install_nvm_as_script is not available'
+
+# nvm_do_install is available
+type nvm_do_install > /dev/null 2>&1 || die 'nvm_do_install is not available'
+
+IMPOSSIBLE_DIR="/dev/null/impossible_path"
+
+## install_nvm_from_git: mkdir failure should exit with code 2 and print error
+OUTPUT="$(NVM_DIR="${IMPOSSIBLE_DIR}" install_nvm_from_git 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '2' ] || die "install_nvm_from_git should exit 2 on mkdir failure, got ${EXIT_CODE}"
+echo "${OUTPUT}" | grep -q "Failed to create directory" || die "install_nvm_from_git should print mkdir error message, got: ${OUTPUT}"
+
+## install_nvm_as_script: mkdir failure should return 1 and print error
+OUTPUT="$(NVM_DIR="${IMPOSSIBLE_DIR}" install_nvm_as_script 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '1' ] || die "install_nvm_as_script should return 1 on mkdir failure, got ${EXIT_CODE}"
+echo "${OUTPUT}" | grep -q "Failed to create directory" || die "install_nvm_as_script should print mkdir error message, got: ${OUTPUT}"
+
+## nvm_do_install: mkdir failure for default dir should exit with code 2 and print error
+# Override nvm_default_install_dir to return the impossible path so the mkdir branch is taken
+nvm_default_install_dir() {
+  printf %s "${IMPOSSIBLE_DIR}"
+}
+OUTPUT="$(NVM_DIR="${IMPOSSIBLE_DIR}" nvm_do_install 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '2' ] || die "nvm_do_install should exit 2 on mkdir failure, got ${EXIT_CODE}"
+echo "${OUTPUT}" | grep -q "Failed to create directory" || die "nvm_do_install should print mkdir error message, got: ${OUTPUT}"
+
+cleanup

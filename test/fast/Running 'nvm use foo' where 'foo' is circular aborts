@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "$(nvm_alias_path)/foo"
+}
+
+: nvm.sh
+\. ../../nvm.sh
+
+\. ../common.sh
+
+nvm_make_alias foo foo
+
+try_err nvm use foo
+EXPECTED_OUTPUT='The alias "foo" leads to an infinite loop. Aborting.'
+[ "_${CAPTURED_STDERR}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "'nvm use foo' did not output >${EXPECTED_OUTPUT}<; got >${CAPTURED_STDERR}<"
+[ "_$CAPTURED_EXIT_CODE" = "_8" ] || die "Expected exit code 8; got ${CAPTURED_EXIT_CODE}"
+
+try_err nvm use --silent foo
+EXPECTED_OUTPUT=''
+[ "_${CAPTURED_STDERR}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "'nvm use --silent foo' did not output >${EXPECTED_OUTPUT}<; got >${CAPTURED_STDERR}<"
+[ $CAPTURED_EXIT_CODE -eq 8 ] || die "Expected exit code 8 from 'nvm use --silent foo'; got ${CAPTURED_EXIT_CODE}"
+
+cleanup

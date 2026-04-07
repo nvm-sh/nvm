@@ -1,0 +1,39 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TEST_DIR="$(pwd)/nvm_offline_version_tmp"
+
+cleanup() {
+  rm -rf "${TEST_DIR}"
+}
+
+[ ! -e "${TEST_DIR}" ] && mkdir -p "${TEST_DIR}"
+
+# nvm_offline_version should find installed versions
+INSTALLED_VERSION="$(nvm_version node)"
+if [ "_${INSTALLED_VERSION}" != '_N/A' ] && [ "_${INSTALLED_VERSION}" != '_system' ]; then
+  try nvm_offline_version "${INSTALLED_VERSION}"
+  [ "_$CAPTURED_STDOUT" = "_${INSTALLED_VERSION}" ] \
+    || die "nvm_offline_version '${INSTALLED_VERSION}' should return '${INSTALLED_VERSION}'; got '$CAPTURED_STDOUT'"
+  [ "_$CAPTURED_EXIT_CODE" = "_0" ] \
+    || die "nvm_offline_version '${INSTALLED_VERSION}' should exit 0; got '$CAPTURED_EXIT_CODE'"
+fi
+
+# nvm_offline_version with nonexistent version should return N/A
+try nvm_offline_version "999.999.999"
+[ "_$CAPTURED_STDOUT" = "_N/A" ] \
+  || die "nvm_offline_version '999.999.999' should return 'N/A'; got '$CAPTURED_STDOUT'"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] \
+  || die "nvm_offline_version '999.999.999' should exit 3; got '$CAPTURED_EXIT_CODE'"
+
+# nvm_ls_cached with nonexistent pattern should return nothing
+try nvm_ls_cached "999.999"
+[ -z "$CAPTURED_STDOUT" ] \
+  || die "nvm_ls_cached '999.999' should return empty; got '$CAPTURED_STDOUT'"
+
+cleanup

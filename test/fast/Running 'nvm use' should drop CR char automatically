@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset VERSION1 VERSION2 VERSION3
+  rm .nvmrc
+}
+
+: nvm.sh
+\. ../../nvm.sh
+
+# normal .nvmrc
+printf '0.999.0\n'   > .nvmrc
+{ VERSION1="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
+
+# .nvmrc with CR char
+printf '0.999.0\r\n' > .nvmrc
+{ VERSION2="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
+
+[ "${VERSION1}" = "${VERSION2}" ]
+
+# .nvmrc without any newline char
+printf '0.999.0' > .nvmrc
+{ VERSION3="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
+
+[ "${VERSION1}" = "${VERSION3}" ]
+
+cleanup

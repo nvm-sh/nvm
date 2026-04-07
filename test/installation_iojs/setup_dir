@@ -1,0 +1,5 @@
+#!/bin/sh
+
+if [ -f ".nvmrc" ]; then
+  mv .nvmrc .nvmrc.bak
+fi

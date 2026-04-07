@@ -1,0 +1,3 @@
+[submodule "test/fixtures/nvmrc"]
+  path = test/fixtures/nvmrc
+  url = git@github.com:nvm-sh/nvmrc.git

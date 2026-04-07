@@ -1,6 +1,0 @@
-#!/bin/sh
-
-die () { echo $@ ; exit 1; }
-
-. ../../nvm.sh
-[ "$(nvm current)" = "$(node -v)" ] || die "Failed to find current version"

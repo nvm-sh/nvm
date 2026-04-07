@@ -1,0 +1,68 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f install_nvm_from_git install_nvm_as_script nvm_detect_profile nvm_has
+  unset -f nvm_check_global_modules nvm_install_node
+  unset -f setup cleanup die
+  unset NVM_ENV METHOD PROFILE
+}
+
+setup() {
+  NVM_ENV=testing \. ../../install.sh
+
+  # Mock installation functions to do nothing
+  install_nvm_from_git() { :; }
+  install_nvm_as_script() { :; }
+  nvm_check_global_modules() { :; }
+  nvm_install_node() { :; }
+
+  # Mock nvm_has to return true for git
+  nvm_has() {
+    case "$1" in
+      git) return 0 ;;
+      xcode-select) return 1 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  # Mock nvm_detect_profile to return empty (profile not found)
+  nvm_detect_profile() {
+    echo ""
+  }
+}
+
+setup
+
+#
+# Test: When PROFILE is set to a non-/dev/null value but nvm_detect_profile
+# returns empty, the "Profile not found" message should include the PROFILE
+# value in the TRIED_PROFILE string.
+#
+# Before the fix, TRIED_PROFILE was set to "${NVM_PROFILE} (as defined in $PROFILE)"
+# but NVM_PROFILE is known to be empty at that point, so the message would say
+# " (as defined in $PROFILE)" instead of "/some/path (as defined in $PROFILE)".
+#
+
+OUTPUT="$(PROFILE='/my/custom/profile' METHOD='' NVM_DIR="$(mktemp -d)" nvm_do_install 2>&1)"
+
+# The output should mention /my/custom/profile in the "Tried" line
+if ! echo "${OUTPUT}" | grep -q '/my/custom/profile (as defined in \$PROFILE)'; then
+  # Check without the escaped dollar sign too
+  if ! echo "${OUTPUT}" | grep -q '/my/custom/profile'; then
+    die "Expected TRIED_PROFILE to contain '/my/custom/profile', got: ${OUTPUT}"
+  fi
+fi
+
+# Verify the "Profile not found" message appears
+if ! echo "${OUTPUT}" | grep -q 'Profile not found'; then
+  die "Expected 'Profile not found' message, got: ${OUTPUT}"
+fi
+
+# The message should NOT start with " (as defined" (which would indicate empty TRIED_PROFILE prefix)
+if echo "${OUTPUT}" | grep -q 'Tried  (as defined'; then
+  die "TRIED_PROFILE appears to have an empty prefix (NVM_PROFILE instead of PROFILE), got: ${OUTPUT}"
+fi
+
+cleanup

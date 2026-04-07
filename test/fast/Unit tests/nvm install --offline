@@ -1,0 +1,38 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+# Mock nvm_download to ensure no network access
+nvm_download() {
+  die "nvm_download should not be called in offline mode"
+}
+
+# --offline with an already-installed version should succeed
+INSTALLED_VERSION="$(nvm ls | command tail -1 | command awk '{print $1}' | command sed 's/\x1b\[[0-9;]*m//g')"
+if [ -n "${INSTALLED_VERSION}" ] && [ "_${INSTALLED_VERSION}" != '_N/A' ] && [ "_${INSTALLED_VERSION}" != '_system' ]; then
+  try nvm install --offline "${INSTALLED_VERSION}"
+  [ "_$CAPTURED_EXIT_CODE" = "_0" ] \
+    || die "nvm install --offline with installed version '${INSTALLED_VERSION}' should succeed, got exit code $CAPTURED_EXIT_CODE"
+fi
+
+# --offline with a nonexistent version should fail
+try_err nvm install --offline 999.999.999
+[ "_$CAPTURED_EXIT_CODE" != "_0" ] \
+  || die "nvm install --offline with nonexistent version should fail"
+
+EXPECTED_ERR="not found locally or in cache"
+nvm_echo "$CAPTURED_STDERR" | nvm_grep -q "${EXPECTED_ERR}" \
+  || die "nvm install --offline error should mention 'not found locally or in cache'; got '$CAPTURED_STDERR'"
+
+# --offline should not require curl or wget
+nvm_has() { return 1; }
+try_err nvm install --offline 999.999.999
+# Should fail with "not found" not "nvm needs curl or wget"
+nvm_echo "$CAPTURED_STDERR" | nvm_grep -q "curl or wget" \
+  && die "nvm install --offline should not require curl or wget"
+alias nvm_has='\nvm_has'
+unset -f nvm_has

@@ -1,0 +1,18 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+EXPECTED_ERR='-s and -b cannot be set together since they would skip install from both binary and source'
+
+try_err nvm install -s -b 0.10.0
+[ "${CAPTURED_EXIT_CODE}" = "6" ] || die "Expected exit code 6 for -s -b, got ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDERR}" = "${EXPECTED_ERR}" ] || die "Expected >${EXPECTED_ERR}<, got >${CAPTURED_STDERR}<"
+
+try_err nvm install -b -s 0.10.0
+[ "${CAPTURED_EXIT_CODE}" = "6" ] || die "Expected exit code 6 for -b -s, got ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDERR}" = "${EXPECTED_ERR}" ] || die "Expected >${EXPECTED_ERR}<, got >${CAPTURED_STDERR}<"

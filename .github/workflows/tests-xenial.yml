@@ -1,0 +1,112 @@
+name: 'Tests: xenial'
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  xenial:
+    permissions:
+      contents: read
+
+    name: 'xenial (${{ matrix.shell }})'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shell:
+          - sh
+          - bash
+          - dash
+          - zsh
+          # - ksh
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            registry.npmjs.org:443
+            raw.githubusercontent.com:443
+            nodejs.org:443
+            iojs.org:443
+            azure.archive.ubuntu.com:80
+            packages.microsoft.com:443
+            archive.ubuntu.com:80
+            security.ubuntu.com:80
+            production.cloudflare.docker.com:443
+            registry-1.docker.io:443
+            auth.docker.io:443
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ljharb/actions/node/install@main
+        name: 'npm install && version checks'
+        with:
+          node-version: 'lts/*'
+          skip-ls-check: true
+      - run: npm ls urchin
+      - run: npx which urchin
+      - name: Run xenial tests in container
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e "TEST_SHELL=${{ matrix.shell }}" \
+            -e "TERM=xterm-256color" \
+            -e "DEBIAN_FRONTEND=noninteractive" \
+            -e "GITHUB_ACTIONS=true" \
+            ubuntu:16.04 \
+            bash -c '
+              set -ex
+
+              # Retry apt-get update up to 5 times due to flaky Ubuntu mirrors
+              # apt-get update can return 0 even with partial failures, so check for warnings
+              for i in 1 2 3 4 5; do
+                if apt-get update 2>&1 | tee /tmp/apt-update.log | grep -qE "^(W:|E:|Err:)"; then
+                  echo "apt-get update had warnings/errors, attempt $i/5"
+                  cat /tmp/apt-update.log
+                  sleep $((i * 5))
+                else
+                  break
+                fi
+              done
+
+              apt-get install -y git curl wget make build-essential python zsh libssl-dev
+              if [ "$TEST_SHELL" != "sh" ] && [ "$TEST_SHELL" != "bash" ]; then
+                apt-get install -y $TEST_SHELL || true
+              fi
+
+              # Use nvm to install Node.js for running urchin
+              # Node 16 is the last version supporting GLIBC 2.23 (Ubuntu 16.04)
+              export NVM_DIR="/workspace"
+              . /workspace/nvm.sh
+              nvm install 16
+              nvm use 16
+
+              npm ls urchin
+              URCHIN_PATH="$(npx which urchin)"
+
+              # Now clean up nvm state for the actual tests, but keep NVM_DIR set
+              nvm deactivate || true
+              nvm unalias default || true
+              unset NVM_CD_FLAGS NVM_BIN NVM_INC
+              export PATH="$(echo "$PATH" | tr ":" "\n" | grep -v "\.nvm" | grep -v "toolcache" | tr "\n" ":")"
+
+              # Clean any cached files from the nvm install above
+              rm -rf "$NVM_DIR/.cache" "$NVM_DIR/versions" "$NVM_DIR/alias"
+
+              make TEST_SUITE="xenial" SHELL="$TEST_SHELL" URCHIN="$URCHIN_PATH" test-$TEST_SHELL
+            '
+
+  all:
+    permissions:
+      contents: none
+    name: 'all xenial tests'
+    needs: [xenial]
+    runs-on: ubuntu-latest
+    steps:
+      - run: true

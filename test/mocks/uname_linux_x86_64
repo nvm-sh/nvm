@@ -1,0 +1,5 @@
+if [ "_$1" = "_-m" ]; then
+  echo "x86_64"
+else
+  echo "Linux hostname 5.15.0-1 #1 SMP x86_64 x86_64 x86_64 GNU/Linux"
+fi

@@ -1,4 +1,0 @@
-#!/bin/sh
-
-. ../../../nvm.sh
-[ $(nvm alias test1 | wc -l) = '2' ]

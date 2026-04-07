@@ -1,0 +1,34 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  echo 'cleaned up'
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+for f in ../../../test/fixtures/nvmrc/test/fixtures/valid/*; do
+  try nvm_process_nvmrc $f/.nvmrc
+
+  EXPECTED="$(nvm_json_extract node < "${f}/expected.json" | tr -d '"')"
+
+  [ "${CAPTURED_EXIT_CODE}" = "0" ] || die "$(basename "${f}"): expected exit code of 0 but got ${CAPTURED_EXIT_CODE}"
+
+  [ "${CAPTURED_STDOUT}" = "${EXPECTED}" ] || die "$(basename "${f}"): expected STDOUT of \`${EXPECTED}\` but got \`${CAPTURED_STDOUT}\`"
+done
+
+for f in ../../../test/fixtures/nvmrc/test/fixtures/invalid/*; do
+  try nvm_process_nvmrc $f/.nvmrc
+  try_err nvm_process_nvmrc $f/.nvmrc
+  STDERR="$(echo "$CAPTURED_STDERR" | awk '{if(NR > 8) print $0}' | strip_colors)"
+
+  EXPECTED="$(nvm_json_extract < "${f}/expected.json" | tr -d '"')"
+
+  [ "${CAPTURED_EXIT_CODE}" != "0" ] || die "$(basename "${f}"): expected exit code of 'not 0' but got ${CAPTURED_EXIT_CODE}"
+
+  [ "${STDERR}" = "${EXPECTED}" ] || die "$(basename "${f}"): expected STDERR of \`${EXPECTED}\` but got \`${STDERR}\`"
+done
