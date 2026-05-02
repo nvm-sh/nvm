@@ -60,7 +60,7 @@ nvm_check_file_writable(){
   if [ -f "$1" ]; then 
     if ! [ -w "$1" ]; then
       local OWNER_NAME
-      OWNER_NAME=$(command id -un "$(command stat -c '%U' "$1"  2>/dev/null|| command stat -f '%Su' "$1" 2>/dev/null)")
+      OWNER_NAME=$(command id -un "$(command stat -c '%u' "$1"  2>/dev/null|| command stat -f '%u' "$1" 2>/dev/null)")
       nvm_echo >&2 "=> Error: $1 is not writable!"
       nvm_echo >&2 "=> This file is currently owned by $OWNER_NAME."
       nvm_echo >&2 "=> Please ensure you have write access to this file."
