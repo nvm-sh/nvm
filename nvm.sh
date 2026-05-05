@@ -622,7 +622,7 @@ nvm_rc_version() {
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ ! -e "${NVMRC_PATH}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-      nvm_err "No .nvmrc file found"
+      nvm_err "No version provided and no .nvmrc file found"
     fi
     return 1
   fi
