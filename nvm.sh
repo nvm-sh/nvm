@@ -3338,7 +3338,9 @@ nvm() {
           fi
         ;;
         *)
-          >&2 nvm --help
+          nvm_err 'Usage: nvm cache dir'
+          nvm_err '       nvm cache clear'
+          nvm_err '  Run `nvm --help` for full help.'
           return 127
         ;;
       esac
@@ -3594,7 +3596,9 @@ nvm() {
         else
           { provided_version="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
           if [ $version_not_provided -eq 1 ] && [ -z "${provided_version}" ]; then
-            >&2 nvm --help
+            nvm_err 'Usage: nvm install [<version>]'
+            nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+            nvm_err '  Run `nvm --help` for full help.'
             return 127
           fi
         fi
@@ -3852,7 +3856,10 @@ nvm() {
     ;;
     "uninstall")
       if [ $# -ne 1 ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm uninstall <version>'
+        nvm_err '       nvm uninstall --lts'
+        nvm_err '       nvm uninstall --lts=<LTS name>'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4041,7 +4048,9 @@ nvm() {
       fi
 
       if [ -z "${VERSION}" ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm use [<version>]'
+        nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4165,7 +4174,9 @@ nvm() {
           VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
         fi
         if [ "${VERSION:-N/A}" = 'N/A' ]; then
-          >&2 nvm --help
+          nvm_err 'Usage: nvm run [<version>] [<args>]'
+          nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+          nvm_err '  Run `nvm --help` for full help.'
           return 127
         fi
       fi
@@ -4408,7 +4419,9 @@ nvm() {
         VERSION="${provided_version-}"
       fi
       if [ -z "${VERSION}" ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm which [current | <version>]'
+        nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4505,7 +4518,8 @@ nvm() {
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "${NVM_ALIAS_DIR}"
       if [ $# -ne 1 ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm unalias <name>'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
       if [ "${1#*\/}" != "${1-}" ]; then
@@ -4542,7 +4556,8 @@ nvm() {
     ;;
     "install-latest-npm")
       if [ $# -ne 0 ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm install-latest-npm'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4550,7 +4565,8 @@ nvm() {
     ;;
     "reinstall-packages" | "copy-packages")
       if [ $# -ne 1 ]; then
-        >&2 nvm --help
+        nvm_err "Usage: nvm ${COMMAND} <version>"
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
