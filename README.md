@@ -429,6 +429,7 @@ In place of a version pointer like "14.7" or "16.3" or "12.22.1", you can use th
   - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
   - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
   - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in SemVer, versions communicate breakage, not stability).
+  - `current`: the version currently active in this shell (i.e. what `node` resolves to via `$PATH`). It is **not** affected by `.nvmrc`. Useful when you want to refer to the active version explicitly &mdash; e.g. `nvm which current` always prints the path to the active `node`, regardless of whether an `.nvmrc` file is present.
 
 ### Long-term Support
 
@@ -645,7 +646,7 @@ NVM_AUTH_HEADER="Bearer secret-token" nvm install node
 ### .nvmrc
 
 You can create a `.nvmrc` file containing a node version number (or any other string that `nvm` understands; see `nvm --help` for details) in the project root directory (or any parent directory).
-Afterwards, `nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will use the version specified in the `.nvmrc` file if no version is supplied on the command line.
+Afterwards, `nvm use`, `nvm install`, and `nvm which` will use the version specified in the `.nvmrc` file if no version is supplied on the command line; if no `.nvmrc` is found either, they exit with status `127`. (`nvm exec` and `nvm run` follow the same `.nvmrc` lookup, but currently fall back to the active node if neither resolves &mdash; treat that fallback as undefined behavior; pass an explicit version if you need predictable scripting.) If you want the currently active version, pass `current` explicitly (e.g. `nvm which current`) &mdash; `current` is not affected by `.nvmrc`.
 
 For example, to make nvm default to the latest 5.9 release, the latest LTS version, or the latest node version for the current directory:
 
