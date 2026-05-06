@@ -1377,12 +1377,7 @@ nvm_alias() {
       *[![:space:]]*) ;;
       *) continue ;;
     esac
-    while : ; do
-      case "${NVM_ALIAS_LINE}" in
-        *[[:space:]]) NVM_ALIAS_LINE="${NVM_ALIAS_LINE%[[:space:]]}" ;;
-        *) break ;;
-      esac
-    done
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%"${NVM_ALIAS_LINE##*[![:space:]]}"}"
     nvm_echo "${NVM_ALIAS_LINE}"
   done < "${NVM_ALIAS_PATH}"
 }
