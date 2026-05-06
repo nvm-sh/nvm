@@ -17,6 +17,8 @@ nvm install $NVM_TEST_VERSION || die "install $NVM_TEST_VERSION failed"
 # Check
 [ -d ../../$NVM_TEST_VERSION ]
 nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || die "'nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION' failed"
+[ -O "${NVM_DIR}/${NVM_TEST_VERSION}/bin/node" ] || die "Extracted file is not owned by effective user"
+[ -G "${NVM_DIR}/${NVM_TEST_VERSION}/bin/node" ] || die "Extracted file is not owned by effective group"
 
 # ensure default is set
 NVM_CURRENT_DEFAULT="$(nvm_alias default)"

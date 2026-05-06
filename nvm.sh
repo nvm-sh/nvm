@@ -123,6 +123,7 @@ nvm_download() {
   if nvm_has "curl"; then
     local CURL_COMPRESSED_FLAG=""
     local CURL_HEADER_FLAG=""
+    local sanitized_header
 
     if [ -n "${NVM_AUTH_HEADER:-}" ]; then
       sanitized_header=$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")
@@ -2618,7 +2619,7 @@ nvm_extract_tarball() {
       command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" -s '/[^\/]*\///' || return 1
     fi
   else
-    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 || return 1
+    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 --no-same-owner || return 1
   fi
 }
 
