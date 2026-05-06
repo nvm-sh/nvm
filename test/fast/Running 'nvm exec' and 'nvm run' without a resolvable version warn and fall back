@@ -1,0 +1,63 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  cd "${ORIG_PWD}" 2>/dev/null || true
+  [ -n "${TMP_DIR-}" ] && rm -rf "${TMP_DIR}"
+}
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+
+\. ../common.sh
+
+ORIG_PWD="$(pwd)"
+
+# Run from a fresh, empty directory so no ambient .nvmrc above the test dir
+# can satisfy the lookup and mask the warning.
+TMP_DIR="$(mktemp -d)"
+cd "${TMP_DIR}" || die "could not cd to temp dir"
+
+EXEC_WARNING='WARNING: `nvm exec` was invoked without a version argument and without an .nvmrc file.'
+RUN_WARNING='WARNING: `nvm run` was invoked without a version argument and without an .nvmrc file.'
+
+# `nvm exec` with no version and no .nvmrc should warn on stderr (and fall back).
+set +ex # needed for stderr
+EXEC_STDERR="$(nvm exec </dev/null 2>&1 1>/dev/null)"
+set -ex
+case "${EXEC_STDERR}" in
+  *"${EXEC_WARNING}"*) ;;
+  *) die "'nvm exec' with no version did not warn; got >${EXEC_STDERR}<" ;;
+esac
+
+# `--silent` should suppress the warning.
+set +ex # needed for stderr
+EXEC_SILENT_STDERR="$(nvm exec --silent </dev/null 2>&1 1>/dev/null)"
+set -ex
+case "${EXEC_SILENT_STDERR}" in
+  *WARNING*) die "'nvm exec --silent' should not warn; got >${EXEC_SILENT_STDERR}<" ;;
+esac
+
+# `nvm run` with an unresolvable version and no .nvmrc should warn (and fall back).
+set +ex # needed for stderr
+RUN_STDERR="$(nvm run bogusversion </dev/null 2>&1 1>/dev/null)"
+set -ex
+case "${RUN_STDERR}" in
+  *"${RUN_WARNING}"*) ;;
+  *) die "'nvm run' with no resolvable version did not warn; got >${RUN_STDERR}<" ;;
+esac
+
+# `--silent` should suppress the warning.
+set +ex # needed for stderr
+RUN_SILENT_STDERR="$(nvm run --silent bogusversion </dev/null 2>&1 1>/dev/null)"
+set -ex
+case "${RUN_SILENT_STDERR}" in
+  *WARNING*) die "'nvm run --silent' should not warn; got >${RUN_SILENT_STDERR}<" ;;
+esac
+
+cleanup

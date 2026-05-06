@@ -4179,6 +4179,14 @@ nvm() {
             if [ $has_checked_nvmrc -ne 1 ]; then
               { NVM_RC_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
             fi
+            if [ -z "${NVM_RC_VERSION-}" ]; then
+              if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+                nvm_err 'WARNING: `nvm run` was invoked without a version argument and without an .nvmrc file.'
+                nvm_err '  Falling back to the active node version; this will become an error in a future release.'
+                nvm_err '  Pass `current` explicitly (e.g. `nvm run current ...`) to silence this warning.'
+              fi
+              NVM_RC_VERSION="$(nvm_version current)" ||:
+            fi
             provided_version="${NVM_RC_VERSION}"
             IS_VERSION_FROM_NVMRC=1
             VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
@@ -4236,17 +4244,34 @@ nvm() {
 
       local provided_version
       provided_version="$1"
+      local VERSION_SOURCE
+      VERSION_SOURCE=''
       if [ "${NVM_LTS-}" != '' ]; then
         provided_version="lts/${NVM_LTS:-*}"
         VERSION="${provided_version}"
+        VERSION_SOURCE='lts'
       elif [ -n "${provided_version}" ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
         if [ "_${VERSION}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
           { provided_version="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
           VERSION="$(nvm_version "${provided_version}")" ||:
+          if [ -n "${provided_version}" ]; then
+            VERSION_SOURCE='nvmrc'
+          fi
         else
+          VERSION_SOURCE='arg'
           shift
         fi
+      fi
+
+      if [ -z "${VERSION_SOURCE}" ]; then
+        if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+          nvm_err 'WARNING: `nvm exec` was invoked without a version argument and without an .nvmrc file.'
+          nvm_err '  Falling back to the active node version; this will become an error in a future release.'
+          nvm_err '  Pass `current` explicitly (e.g. `nvm exec current ...`) to silence this warning.'
+        fi
+        provided_version='current'
+        VERSION="$(nvm_version current)" ||:
       fi
 
       nvm_ensure_version_installed "${provided_version}"
