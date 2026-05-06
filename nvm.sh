@@ -1330,12 +1330,7 @@ nvm_alias() {
       *[![:space:]]*) ;;
       *) continue ;;
     esac
-    while : ; do
-      case "${NVM_ALIAS_LINE}" in
-        *[[:space:]]) NVM_ALIAS_LINE="${NVM_ALIAS_LINE%[[:space:]]}" ;;
-        *) break ;;
-      esac
-    done
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%"${NVM_ALIAS_LINE##*[![:space:]]}"}"
     nvm_echo "${NVM_ALIAS_LINE}"
   done < "${NVM_ALIAS_PATH}"
 }
@@ -1373,7 +1368,9 @@ nvm_resolve_alias() {
   local ALIAS_OUTPUT
 
   local SEEN_ALIASES
-  SEEN_ALIASES=" ${ALIAS} "
+  SEEN_ALIASES="
+${ALIAS}
+"
   while true; do
     ALIAS_OUTPUT="$(nvm_alias "${ALIAS}" 2>/dev/null)" || ALIAS_OUTPUT=''
     ALIAS_TEMP="${ALIAS_OUTPUT%%
@@ -1383,12 +1380,17 @@ nvm_resolve_alias() {
       break
     fi
 
-    if command printf '%b' "${SEEN_ALIASES}" | nvm_grep -q -e "^${ALIAS_TEMP}$"; then
-      ALIAS="∞"
-      break
-    fi
+    case "${SEEN_ALIASES}" in
+      *"
+${ALIAS_TEMP}
+"*)
+        ALIAS="∞"
+        break
+      ;;
+    esac
 
-    SEEN_ALIASES="${SEEN_ALIASES}${ALIAS_TEMP} "
+    SEEN_ALIASES="${SEEN_ALIASES}${ALIAS_TEMP}
+"
     ALIAS="${ALIAS_TEMP}"
   done
 
