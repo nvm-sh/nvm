@@ -106,7 +106,7 @@ nvm_node_version() {
 
 nvm_download() {
   if nvm_has "curl"; then
-    curl --fail --compressed -q "$@"
+    command curl --fail --compressed -q "$@"
   elif nvm_has "wget"; then
     # Emulate curl with wget
     ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
