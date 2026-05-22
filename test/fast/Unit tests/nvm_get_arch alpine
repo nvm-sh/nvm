@@ -15,8 +15,8 @@ die () { cleanup; echo "$@" ; exit 1; }
 MOCKS_DIR="$(pwd)/../../mocks"
 export PATH=".:${PATH}"
 
-# On Alpine (where /etc/alpine-release exists), x64 should get -musl suffix
-# and arm64 should NOT get -musl suffix.
+# On Alpine (where /etc/alpine-release exists), both x64 and arm64 should get
+# the -musl suffix, since unofficial-builds publishes musl binaries for both.
 # On non-Alpine, neither should get -musl.
 
 if [ -f "/etc/alpine-release" ]; then
@@ -26,11 +26,11 @@ if [ -f "/etc/alpine-release" ]; then
   rm -f ./uname
   [ "_${OUTPUT}" = "_x64-musl" ] || die "x64 on Alpine should be x64-musl, got ${OUTPUT}"
 
-  # aarch64 on Alpine should produce arm64, NOT arm64-musl
+  # aarch64 on Alpine should produce arm64-musl
   ln -sf "${MOCKS_DIR}/uname_linux_aarch64" ./uname
   OUTPUT="$(nvm_get_arch)"
   rm -f ./uname
-  [ "_${OUTPUT}" = "_arm64" ] || die "aarch64 on Alpine should be arm64 (no musl suffix), got ${OUTPUT}"
+  [ "_${OUTPUT}" = "_arm64-musl" ] || die "aarch64 on Alpine should be arm64-musl, got ${OUTPUT}"
 else
   # x64 on non-Alpine should produce x64 (no musl suffix)
   ln -sf "${MOCKS_DIR}/uname_linux_x86_64" ./uname
