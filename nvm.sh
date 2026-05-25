@@ -186,8 +186,13 @@ nvm_download() {
 }
 
 nvm_sanitize_auth_header() {
-    # Remove potentially dangerous characters
-    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9:;_. -]//g'
+    # Remove potentially dangerous characters; allow the full base64 (A-Za-z0-9+/=)
+    # and base64url (A-Za-z0-9-_=) charsets, plus the space, colon, dot, and
+    # underscore the previous allowlist already permitted, so that values like
+    # `Basic <base64>` and `Bearer <token>` survive intact.
+    # token68's '~' is still stripped.
+    # Note: '-' must be at the end of the bracket expression to be treated as a literal.
+    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=-]//g'
 }
 
 nvm_has_system_node() {
