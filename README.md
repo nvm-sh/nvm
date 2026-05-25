@@ -692,7 +692,7 @@ Run [`npx nvmrc`](https://npmjs.com/nvmrc) to validate an `.nvmrc` file. If that
 
 You can use [`nvshim`](https://github.com/iamogbz/nvshim) to shim the `node`, `npm`, and `npx` bins to automatically use the `nvm` config in the current directory. `nvshim` is **not** supported by the `nvm` maintainers. Please [report issues to the `nvshim` team](https://github.com/iamogbz/nvshim/issues/new).
 
-If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` maintainers. We are, however, accepting pull requests for more examples.
+If you prefer a lighter-weight solution, the recipes below have been contributed by `nvm` users. They are **not** supported by the `nvm` maintainers. We are, however, accepting pull requests for more examples
 
 #### Calling `nvm use` automatically in a directory with a `.nvmrc` file
 
