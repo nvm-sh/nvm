@@ -381,13 +381,13 @@ nvm install node # "node" is an alias for the latest version
 To install a specific version of node:
 
 ```sh
-nvm install 14.7.0 # or 16.3.0, 12.22.1, etc
+nvm install 22.11.0 # or 24.0.0, etc
 ```
 
 To set an alias:
 
 ```sh
-nvm alias my_alias v14.4.0
+nvm alias my_alias v22.11.0
 ```
 Make sure that your alias does not contain any spaces or slashes.
 
@@ -414,16 +414,16 @@ nvm run node --version
 Or, you can run any arbitrary command in a subshell with the desired version of node:
 
 ```sh
-nvm exec 4.2 node --version
+nvm exec 22.11 node --version
 ```
 
 You can also get the path to the executable to where it was installed:
 
 ```sh
-nvm which 12.22
+nvm which 22.11
 ```
 
-In place of a version pointer like "14.7" or "16.3" or "12.22.1", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
+In place of a version pointer like "22" or "24.0" or "22.11.0", you can use the following special default aliases with `nvm install`, `nvm use`, `nvm run`, `nvm exec`, `nvm which`, etc:
 
   - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
   - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
@@ -488,7 +488,7 @@ If you've already gotten an error to the effect of "npm does not support Node.js
 If you've previously downloaded a node version (or it's still in the cache), you can install it without any network access using the `--offline` flag:
 
 ```sh
-nvm install --offline 14.7.0
+nvm install --offline 22.11.0
 ```
 
 This resolves versions using only locally installed versions and cached downloads. It will not attempt to download anything. This is useful in air-gapped environments, on planes, or when you want to avoid network latency.
@@ -610,8 +610,8 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 
 ```sh
 nvm alias default node # this refers to the latest installed version of node
-nvm alias default 18 # this refers to the latest installed v18.x version of node
-nvm alias default 18.12  # this refers to the latest installed v18.12.x version of node
+nvm alias default 22 # this refers to the latest installed v22.x version of node
+nvm alias default 22.11  # this refers to the latest installed v22.11.x version of node
 ```
 
 ### Use a mirror of node binaries
@@ -621,7 +621,7 @@ To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:
 export NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist
 nvm install node
 
-NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 4.2
+NVM_NODEJS_ORG_MIRROR=https://nodejs.org/dist nvm install 22.11
 ```
 
 To use a mirror of the io.js binaries, set `$NVM_IOJS_ORG_MIRROR`:
@@ -647,10 +647,10 @@ NVM_AUTH_HEADER="Bearer secret-token" nvm install node
 You can create a `.nvmrc` file containing a node version number (or any other string that `nvm` understands; see `nvm --help` for details) in the project root directory (or any parent directory).
 Afterwards, `nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will use the version specified in the `.nvmrc` file if no version is supplied on the command line.
 
-For example, to make nvm default to the latest 5.9 release, the latest LTS version, or the latest node version for the current directory:
+For example, to make nvm default to the latest 22.11 release, the latest LTS version, or the latest node version for the current directory:
 
 ```sh
-$ echo "5.9" > .nvmrc
+$ echo "22.11" > .nvmrc
 
 $ echo "lts/*" > .nvmrc # to default to the latest LTS version
 
@@ -663,17 +663,17 @@ Then when you run nvm use:
 
 ```sh
 $ nvm use
-Found '/path/to/project/.nvmrc' with version <5.9>
-Now using node v5.9.1 (npm v3.7.3)
+Found '/path/to/project/.nvmrc' with version <22.11>
+Now using node v22.11.0 (npm v10.9.0)
 ```
 
 Running nvm install will also switch over to the correct version, but if the correct node version isn't already installed, it will install it for you.
 
 ```sh
 $ nvm install
-Found '/path/to/project/.nvmrc' with version <5.9>
-Downloading and installing node v5.9.1...
-Downloading https://nodejs.org/dist/v5.9.1/node-v5.9.1-linux-x64.tar.xz...
+Found '/path/to/project/.nvmrc' with version <22.11>
+Downloading and installing node v22.11.0...
+Downloading https://nodejs.org/dist/v22.11.0/node-v22.11.0-linux-x64.tar.xz...
 #################################################################################### 100.0%
 Computing checksum with sha256sum
 Checksums matched!
