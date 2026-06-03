@@ -2506,10 +2506,16 @@ nvm_download_artifact() {
   local VERSION
   VERSION="${4}"
 
-  if [ -z "${VERSION}" ]; then
-    nvm_err 'A version number is required.'
-    return 3
-  fi
+  case "${VERSION}" in
+    '')
+      nvm_err 'A version number is required.'
+      return 3
+    ;;
+    *[!0-9A-Za-z._+-]*)
+      nvm_err 'Invalid version: contains disallowed characters'
+      return 3
+    ;;
+  esac
 
   if [ "${KIND}" = 'binary' ] && ! nvm_binary_available "${VERSION}"; then
     nvm_err "No precompiled binary available for ${VERSION}."

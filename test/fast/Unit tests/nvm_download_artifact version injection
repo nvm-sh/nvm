@@ -1,0 +1,46 @@
+#!/bin/sh
+
+WORK="${TMPDIR:-/tmp}/nvm_version_injection.$$"
+PROOF="${WORK}/PWNED"
+
+cleanup () {
+  unset -f die cleanup nvm_download
+  rm -rf "${WORK}"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+mkdir -p "${WORK}"
+export NVM_DIR="${WORK}"
+
+# GHSA-3c52-35h2-gfmm: a mirror-supplied version with shell/awk metacharacters
+# must be rejected before it is used in URLs, paths, or awk. Neutralize network.
+nvm_download () { return 0; }
+
+# given a version containing command-substitution syntax
+# when nvm_download_artifact is asked to download it
+# then it is rejected for disallowed characters and nothing is executed
+rm -f "${PROOF}"
+out="$(nvm_download_artifact node source std 'v1$(touch '"${PROOF}"')' 2>&1 </dev/null)"
+case "${out}" in
+  *'disallowed characters'*) : ;;
+  *) die "command-substitution version was not rejected; got: ${out}" ;;
+esac
+[ ! -e "${PROOF}" ] || die 'command-substitution payload executed via nvm_download_artifact'
+
+# and an awk-breakout version is likewise rejected
+out="$(nvm_download_artifact node source std 'v1"==$2){system("x")}#' 2>&1 </dev/null)"
+case "${out}" in
+  *'disallowed characters'*) : ;;
+  *) die "awk-style version was not rejected; got: ${out}" ;;
+esac
+
+# and a legitimate nightly version must NOT be rejected by the character guard
+out="$(nvm_download_artifact node source std 'v22.0.0-nightly20240101abcdef' 2>&1 </dev/null)"
+case "${out}" in
+  *'disallowed characters'*) die 'a legitimate nightly version was wrongly rejected by the guard' ;;
+esac
+
+cleanup
+echo 'nvm_download_artifact version injection: passed'
