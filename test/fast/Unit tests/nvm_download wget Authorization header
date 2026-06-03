@@ -1,0 +1,43 @@
+#!/bin/sh
+
+OLDPATH="$PATH"
+WORK="$PWD/nvm_download-wgetauth-work.$$"
+TEST_BIN="$WORK/bin"
+ARGV_LOG="$WORK/argv.log"
+
+cleanup() {
+  unset -f die cleanup nvm_has
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+OLDPATH="$PATH"
+
+mkdir -p "$TEST_BIN"
+
+# fake wget: record each received argument verbatim, then succeed
+{
+  echo '#!/bin/sh'
+  echo ': > "$ARGV_LOG"'
+  echo 'for a in "$@"; do printf "%s\n" "$a" >> "$ARGV_LOG"; done'
+  echo 'exit 0'
+} > "$TEST_BIN/wget"
+chmod +x "$TEST_BIN/wget"
+
+export ARGV_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+# force the wget path while keeping system tools (sed) available for sanitization
+nvm_has() { [ "$1" != curl ] && command -v "$1" >/dev/null 2>&1; }
+
+# given an Authorization credential in NVM_AUTH_HEADER
+# when nvm_download uses the wget path
+NVM_AUTH_HEADER='Bearer test-token' nvm_download "https://nodejs.org/dist/x" -o - || die 'nvm_download (wget) returned nonzero'
+# then wget receives a well-formed Authorization header (with the header name, like the curl path)
+grep -Fxqe '--header' "$ARGV_LOG" || die "wget did not receive --header; got: $(cat "$ARGV_LOG")"
+grep -Fxq 'Authorization: Bearer test-token' "$ARGV_LOG" || die "wget did not receive a well-formed Authorization header; got: $(cat "$ARGV_LOG")"
+
+cleanup
+echo "nvm_download wget Authorization header: passed"

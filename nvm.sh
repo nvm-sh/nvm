@@ -151,7 +151,7 @@ nvm_download() {
 
     if [ -n "${NVM_AUTH_HEADER:-}" ]; then
       sanitized_header=$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")
-      ARGS="${ARGS} --header \"${sanitized_header}\""
+      ARGS="${ARGS} --header \"Authorization: ${sanitized_header}\""
     fi
     # shellcheck disable=SC2086
     eval wget $ARGS
