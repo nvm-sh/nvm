@@ -61,7 +61,7 @@ test_install_data() {
   fi
 
   local head_ref="$(git for-each-ref --points-at HEAD --format='%(refname:short)' 'refs/tags/')"
-  if [ -n "${avoid_ref}" ] && [ "${head_ref}" != "${avoid_ref}"]; then
+  if [ -n "${avoid_ref}" ] && [ "${head_ref}" != "${avoid_ref}" ]; then
     echo "${current_ref}" | grep -q "$avoid_ref" && die "install_nvm_from_git ${message} did clone with unwanted ref ${avoid_ref}"
   fi
 
