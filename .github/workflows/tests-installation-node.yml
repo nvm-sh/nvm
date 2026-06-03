@@ -55,6 +55,12 @@ jobs:
       - run: npx which urchin
       - name: Run installation_node tests in container
         run: |
+          # Retry the image pull to tolerate transient Docker registry failures
+          for i in 1 2 3 4 5; do
+            docker pull ubuntu:16.04 && break
+            echo "docker pull failed, attempt $i/5"
+            sleep $((i * 5))
+          done
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \

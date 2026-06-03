@@ -2,7 +2,7 @@
 
 cleanup () {
   unset -f die cleanup
-  docker stop httpbin && docker rm httpbin
+  docker rm -f httpbin >/dev/null 2>&1 || true
 }
 die () { echo "$@" ; cleanup ; exit 1; }
 
@@ -17,13 +17,24 @@ nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" >/de
 # nvm_download should fail to download wrong_install.sh
 ! nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/wrong_install.sh" >/dev/null || die "nvm_download should fail to download no existing file"
 
-# nvm_download should pass when calling with auth header
-docker pull kennethreitz/httpbin && SHELL=bash docker run -d --name httpbin -p 80:80 kennethreitz/httpbin
-sleep 1 # wait for httpbin to start
-NVM_AUTH_HEADER="Bearer test-token" nvm_download "http://127.0.0.1/bearer" > /dev/null || die 'nvm_download with auth header should send correctly'
-
-# nvm_download should fail when calling without auth header
-nvm_download "http://127.0.0.1/bearer" > /dev/null && die 'nvm_download with no auth header should not send the header and should fail'
+# the auth header checks need a local httpbin container; retry the pull, and
+# skip (rather than fail) if the image cannot be pulled or run, so a transient
+# Docker registry outage does not fail the suite
+httpbin_pulled=0
+for i in 1 2 3 4 5; do
+  if docker pull kennethreitz/httpbin; then httpbin_pulled=1; break; fi
+  echo "docker pull httpbin failed, attempt $i/5"
+  sleep $((i * 5))
+done
+if [ "${httpbin_pulled}" = 1 ] && SHELL=bash docker run -d --name httpbin -p 80:80 kennethreitz/httpbin; then
+  sleep 1 # wait for httpbin to start
+  # nvm_download should pass when calling with auth header
+  NVM_AUTH_HEADER="Bearer test-token" nvm_download "http://127.0.0.1/bearer" > /dev/null || die 'nvm_download with auth header should send correctly'
+  # nvm_download should fail when calling without auth header
+  nvm_download "http://127.0.0.1/bearer" > /dev/null && die 'nvm_download with no auth header should not send the header and should fail'
+else
+  echo 'skipping auth header checks: unable to pull or run httpbin'
+fi
 
 # ensure quoted extra args remain quoted
 nvm_download "https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh" -o "; die quoted-command-not-quoted" || die 'command failed'
