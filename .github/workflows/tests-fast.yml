@@ -45,6 +45,7 @@ jobs:
             registry-1.docker.io:443
             auth.docker.io:443
             production.cloudflare.docker.com:443
+            production.cloudfront.docker.com:443
       - uses: actions/checkout@v6
         with:
           submodules: true
