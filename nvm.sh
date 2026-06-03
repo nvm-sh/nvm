@@ -115,47 +115,62 @@ nvm_get_latest() {
   nvm_echo "${NVM_LATEST_URL##*/}"
 }
 
+# Every argument is passed through as a literal argv element so that untrusted,
+# mirror-supplied version strings in the URLs are never re-parsed by the shell
+# (which would allow command substitution / OS command injection).
 nvm_download() {
-  if nvm_has "curl"; then
-    local CURL_COMPRESSED_FLAG=""
-    local CURL_HEADER_FLAG=""
-    local sanitized_header
-
-    if [ -n "${NVM_AUTH_HEADER:-}" ]; then
-      sanitized_header=$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")
-      CURL_HEADER_FLAG="--header \"Authorization: ${sanitized_header}\""
-    fi
-
-    if nvm_curl_use_compression; then
-      CURL_COMPRESSED_FLAG="--compressed"
-    fi
-    local NVM_DOWNLOAD_ARGS
-    NVM_DOWNLOAD_ARGS=''
-    for arg in "$@"; do
-      NVM_DOWNLOAD_ARGS="${NVM_DOWNLOAD_ARGS} \"$arg\""
-    done
-    eval "curl -q --fail ${CURL_COMPRESSED_FLAG:-} ${CURL_HEADER_FLAG:-} ${NVM_DOWNLOAD_ARGS}"
-  elif nvm_has "wget"; then
-    # Emulate curl with wget
-    ARGS=$(nvm_echo "$@" | command sed "
-      s/--progress-bar /--progress=bar /
-      s/--compressed //
-      s/--fail //
-      s/-L //
-      s/-I /--server-response /
-      s/-s /-q /
-      s/-sS /-nv /
-      s/-o /-O /
-      s/-C - /-c /
-    ")
-
-    if [ -n "${NVM_AUTH_HEADER:-}" ]; then
-      sanitized_header=$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")
-      ARGS="${ARGS} --header \"Authorization: ${sanitized_header}\""
-    fi
-    # shellcheck disable=SC2086
-    eval wget $ARGS
+  local sanitized_header
+  sanitized_header=''
+  if [ -n "${NVM_AUTH_HEADER:-}" ]; then
+    sanitized_header="$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")"
   fi
+
+  local NVM_DOWNLOADER
+  NVM_DOWNLOADER=''
+  if nvm_has "curl"; then
+    NVM_DOWNLOADER='curl'
+    set -- -q --fail "$@"
+    if nvm_curl_use_compression; then
+      set -- --compressed "$@"
+    fi
+  elif nvm_has "wget"; then
+    NVM_DOWNLOADER='wget'
+    # Emulate curl with wget
+    local NVM_DOWNLOAD_WGET_COUNT
+    NVM_DOWNLOAD_WGET_COUNT=$#
+    local NVM_DOWNLOAD_WGET_SKIP
+    NVM_DOWNLOAD_WGET_SKIP=0
+    local NVM_DOWNLOAD_WGET_ARG
+    for NVM_DOWNLOAD_WGET_ARG in "$@"; do
+      if [ "${NVM_DOWNLOAD_WGET_SKIP}" = '1' ]; then
+        NVM_DOWNLOAD_WGET_SKIP=0
+        continue
+      fi
+      case "${NVM_DOWNLOAD_WGET_ARG}" in
+        '--progress-bar') set -- "$@" '--progress=bar' ;;
+        '--compressed') : ;;
+        '--fail') : ;;
+        '-L') : ;;
+        '-I') set -- "$@" '--server-response' ;;
+        '-s') set -- "$@" '-q' ;;
+        '-sS') set -- "$@" '-nv' ;;
+        '-o') set -- "$@" '-O' ;;
+        '-C') NVM_DOWNLOAD_WGET_SKIP=1; set -- "$@" '-c' ;;
+        *) set -- "$@" "${NVM_DOWNLOAD_WGET_ARG}" ;;
+      esac
+    done
+    shift "${NVM_DOWNLOAD_WGET_COUNT}"
+  fi
+
+  if [ -z "${NVM_DOWNLOADER}" ]; then
+    return 0
+  fi
+
+  if [ -n "${NVM_AUTH_HEADER:-}" ]; then
+    set -- "$@" --header "Authorization: ${sanitized_header}"
+  fi
+
+  "${NVM_DOWNLOADER}" "$@"
 }
 
 nvm_sanitize_auth_header() {
