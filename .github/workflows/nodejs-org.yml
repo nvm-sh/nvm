@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'nvm version tag (e.g., v0.40.4). Defaults to latest release.'
+        description: 'nvm version tag (e.g., v0.40.4). Defaults to the latest version tag.'
         required: false
         default: ''
 
@@ -41,7 +41,8 @@ jobs:
           elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
             TAG="${GITHUB_REF#refs/tags/}"
           else
-            TAG="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')"
+            TAG="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/tags" --jq '.[].name' \
+              | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)"
           fi
 
           if ! printf '%s\n' "${TAG}" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
@@ -74,7 +75,7 @@ jobs:
             gh api "repos/${FORK_OWNER}/nodejs.org/git/refs/heads/${BRANCH}" \
               -X PATCH \
               -f "sha=${UPSTREAM_SHA}" \
-              -f "force=true" > /dev/null
+              -F "force=true" > /dev/null
           fi
 
           printf 'fork_owner=%s\n' "${FORK_OWNER}" >> "${GITHUB_OUTPUT}"
