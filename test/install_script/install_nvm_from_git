@@ -17,6 +17,9 @@ NVM_ENV=testing \. ../../install.sh
 
 set -ex
 
+git config --global gc.autoDetach false
+git config --global maintenance.auto false
+
 # nvm_do_install is available
 type install_nvm_from_git > /dev/null 2>&1 || die 'install_nvm_from_git is not available'
 
@@ -94,14 +97,14 @@ test_install() {
   test_step "Clones repo $message"
   install_nvm_from_git
   test_install_data "$(get_head_ref)" "$(get_head_changeset)" "$message" "$ref" "$changeset" "$avoid_ref"
-  rm -rf "$NVM_DIR"
+  rm -rf "$NVM_DIR" || { sleep 1; rm -rf "$NVM_DIR"; }
 
   # Ensure it initializes the repository for an empty existing repository
   mkdir -p "$NVM_DIR" || die 'Unable to create directory'
   test_step "Initialize repo $message"
   install_nvm_from_git
   test_install_data "$(get_head_ref)" "$(get_head_changeset)" "$message" "$ref" "$changeset" "$avoid_ref"
-  rm -rf "$NVM_DIR"
+  rm -rf "$NVM_DIR" || { sleep 1; rm -rf "$NVM_DIR"; }
 
   # Ensure it updates the repository for an existing git repository
   git clone "$(nvm_source "git")" -b "v0.36.0" --depth=2 "$NVM_DIR" || die 'Unable to clone repository'
@@ -109,7 +112,7 @@ test_install() {
   test_step "Updates repo $message"
   install_nvm_from_git
   test_install_data "$(get_head_ref)" "$(get_head_changeset)" "$message" "$ref" "$changeset" "$avoid_ref"
-  rm -rf "$NVM_DIR"
+  rm -rf "$NVM_DIR" || { sleep 1; rm -rf "$NVM_DIR"; }
 }
 
 # Handle latest version
