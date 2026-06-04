@@ -66,12 +66,15 @@ jobs:
           FORK_OWNER="$(gh api user --jq '.login')"
 
           DEFAULT_BRANCH="$(gh api repos/nodejs/nodejs.org --jq '.default_branch')"
+
+          gh repo sync "${FORK_OWNER}/nodejs.org" --branch "${DEFAULT_BRANCH}" || true
+
           UPSTREAM_SHA="$(gh api "repos/nodejs/nodejs.org/git/ref/heads/${DEFAULT_BRANCH}" --jq '.object.sha')"
 
           # Create or reset branch on fork to upstream HEAD
           if ! gh api "repos/${FORK_OWNER}/nodejs.org/git/refs" \
             -f "ref=refs/heads/${BRANCH}" \
-            -f "sha=${UPSTREAM_SHA}" > /dev/null 2>&1; then
+            -f "sha=${UPSTREAM_SHA}" > /dev/null; then
             gh api "repos/${FORK_OWNER}/nodejs.org/git/refs/heads/${BRANCH}" \
               -X PATCH \
               -f "sha=${UPSTREAM_SHA}" \
