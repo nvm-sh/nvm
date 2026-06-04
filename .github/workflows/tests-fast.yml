@@ -47,8 +47,17 @@ jobs:
             production.cloudflare.docker.com:443
             production.cloudfront.docker.com:443
       - uses: actions/checkout@v6
+        id: checkout
+        continue-on-error: true
         with:
           submodules: true
+      - name: 'nvmrc submodule fallback (forks without their own nvmrc)'
+        if: steps.checkout.outcome == 'failure'
+        shell: bash
+        run: |
+          git submodule set-url test/fixtures/nvmrc https://github.com/nvm-sh/nvmrc.git
+          git submodule sync --recursive
+          git submodule update --init --recursive
       - name: Install zsh, additional shells, and awk variant
         run: |
           sudo apt-get update

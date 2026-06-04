@@ -39,8 +39,17 @@ jobs:
             azure.archive.ubuntu.com:80
             packages.microsoft.com:443
       - uses: actions/checkout@v6
+        id: checkout
+        continue-on-error: true
         with:
           submodules: true
+      - name: 'nvmrc submodule fallback (forks without their own nvmrc)'
+        if: steps.checkout.outcome == 'failure'
+        shell: bash
+        run: |
+          git submodule set-url test/fixtures/nvmrc https://github.com/nvm-sh/nvmrc.git
+          git submodule sync --recursive
+          git submodule update --init --recursive
       - name: Install zsh and additional shells
         run: |
           sudo apt-get update
