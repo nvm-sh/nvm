@@ -548,12 +548,12 @@ ${1}"
 $(nvm_wrap_with_color_code 'y' "${warn_text}")"
 }
 
-nvm_process_nvmrc() {
-  local NVMRC_PATH
-  NVMRC_PATH="$1"
+nvm_process_nvmrc_content() {
+  local NVMRC_CONTENT
+  NVMRC_CONTENT="${1-}"
   local lines
 
-  lines=$(command sed 's/#.*//' "$NVMRC_PATH" | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
+  lines=$(nvm_echo "${NVMRC_CONTENT}" | command sed 's/#.*//' | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
 
   if [ -z "$lines" ]; then
     nvm_nvmrc_invalid_msg "${lines}"
@@ -615,6 +615,13 @@ EOF
   fi
 
   nvm_echo "${unpaired_line}"
+}
+
+nvm_process_nvmrc() {
+  local NVMRC_PATH
+  NVMRC_PATH="$1"
+
+  nvm_process_nvmrc_content "$(command cat "${NVMRC_PATH}")"
 }
 
 nvm_rc_version() {
@@ -1474,6 +1481,17 @@ nvm_strip_iojs_prefix() {
 nvm_ls() {
   local PATTERN
   PATTERN="${1-}"
+  case "${PATTERN}" in
+    *'#'* | *'
+'*)
+      local NVMRC_PATTERN
+      if ! NVMRC_PATTERN="$(nvm_process_nvmrc_content "${PATTERN}" 2>/dev/null)"; then
+        nvm_echo 'N/A'
+        return 3
+      fi
+      PATTERN="${NVMRC_PATTERN}"
+    ;;
+  esac
   local VERSIONS
   VERSIONS=''
   if [ "${PATTERN}" = 'current' ]; then
@@ -4668,7 +4686,7 @@ nvm() {
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code nvm_format_help_message_colors \
         nvm_echo_with_colors nvm_err_with_colors \
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
-        nvm_process_nvmrc nvm_nvmrc_invalid_msg \
+        nvm_process_nvmrc nvm_process_nvmrc_content nvm_nvmrc_invalid_msg \
         nvm_write_nvmrc \
         >/dev/null 2>&1
       unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
