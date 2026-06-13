@@ -32,14 +32,14 @@ __nvm_commands() {
 
     command="${COMP_WORDS[COMP_CWORD - 2]}"
     case "${command}" in
-      alias) __nvm_installed_nodes ;;
+      (alias) __nvm_installed_nodes ;;
     esac
 
   else
 
     case "${current_word}" in
-      -*) __nvm_options ;;
-      *) __nvm_generate_completion "${COMMANDS}" ;;
+      (-*) __nvm_options ;;
+      (*) __nvm_generate_completion "${COMMANDS}" ;;
     esac
 
   fi
@@ -72,9 +72,9 @@ __nvm() {
   previous_word="${COMP_WORDS[COMP_CWORD - 1]}"
 
   case "${previous_word}" in
-    use | run | exec | ls | list | uninstall) __nvm_installed_nodes ;;
-    alias | unalias) __nvm_alias ;;
-    *) __nvm_commands ;;
+    (use | run | exec | ls | list | uninstall) __nvm_installed_nodes ;;
+    (alias | unalias) __nvm_alias ;;
+    (*) __nvm_commands ;;
   esac
 
   return 0
