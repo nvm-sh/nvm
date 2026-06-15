@@ -68,7 +68,7 @@ nvm_validate_install_dir() {
   local INSTALL_DIR_BASE
   INSTALL_DIR_BASE="$(nvm_install_dir_base "${INSTALL_DIR}")"
   if [ ! -d "${INSTALL_DIR_BASE}" ]; then
-    nvm_echo >&2 "Invalid \$NVM_DIR: failed to find directory \"${INSTALL_DIR_BASE}\""
+    nvm_echo >&2 "Invalid \$NVM_DIR \"${INSTALL_DIR}\": failed to find directory \"${INSTALL_DIR_BASE}\""
     return 1
   fi
 
@@ -80,9 +80,9 @@ nvm_validate_install_dir() {
   REMAINING_PATH="${INSTALL_DIR#"$INSTALL_DIR_BASE"}"
   REMAINING_PATH="${REMAINING_PATH#/}"
   if [ "${INSTALL_DIR_BASE}" = "/" ]; then
-    nvm_echo >&2 "Invalid \$NVM_DIR: failed to find directory \"/${REMAINING_PATH%%/*}\""
+    nvm_echo >&2 "Invalid \$NVM_DIR \"${INSTALL_DIR}\": failed to find directory \"/${REMAINING_PATH%%/*}\""
   else
-    nvm_echo >&2 "Invalid \$NVM_DIR: failed to find directory \"${INSTALL_DIR_BASE}/${REMAINING_PATH%%/*}\""
+    nvm_echo >&2 "Invalid \$NVM_DIR \"${INSTALL_DIR}\": failed to find directory \"${INSTALL_DIR_BASE}/${REMAINING_PATH%%/*}\""
   fi
   return 1
 }
