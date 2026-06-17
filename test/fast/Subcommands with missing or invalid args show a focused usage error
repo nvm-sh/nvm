@@ -1,0 +1,68 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  cd "${ORIG_PWD}" 2>/dev/null || true
+  [ -n "${TMP_DIR-}" ] && rm -rf "${TMP_DIR}"
+}
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+
+\. ../common.sh
+
+ORIG_PWD="$(pwd)"
+
+# Run from a fresh, empty directory so the "no version + no .nvmrc" cases
+# (install/run/which) are not masked by an ambient .nvmrc above the test dir.
+TMP_DIR="$(mktemp -d)"
+cd "${TMP_DIR}" || die "could not cd to temp dir"
+
+# Asserts a subcommand emits the given focused usage line (not the full help
+# dump) on stderr, and exits 127.
+assert_usage() {
+  local EXPECTED_LINE
+  EXPECTED_LINE="$1"
+  shift
+
+  try_err "$@"
+
+  case "${CAPTURED_STDERR}" in
+    *"${EXPECTED_LINE}"*) ;;
+    *) die "\`$*\` did not show focused usage >${EXPECTED_LINE}<; got >${CAPTURED_STDERR}<" ;;
+  esac
+  # the focused usage should NOT be the full help dump
+  case "${CAPTURED_STDERR}" in
+    *'Show this message'*) die "\`$*\` dumped full help instead of a focused usage" ;;
+  esac
+  [ "_${CAPTURED_EXIT_CODE}" = "_127" ] \
+    || die "\`$*\` expected exit code 127; got ${CAPTURED_EXIT_CODE}"
+}
+
+assert_usage 'Usage: nvm cache dir'                  nvm cache bogus
+assert_usage 'Usage: nvm install [<version>]'        nvm install
+assert_usage 'Usage: nvm run [<version>] [<args>]'   nvm run
+assert_usage 'Usage: nvm which [current | <version>]' nvm which
+assert_usage 'Usage: nvm uninstall <version>'        nvm uninstall
+assert_usage 'Usage: nvm uninstall <version>'        nvm uninstall a b
+assert_usage 'Usage: nvm unalias <name>'             nvm unalias
+assert_usage 'Usage: nvm unalias <name>'             nvm unalias a b
+assert_usage 'Usage: nvm install-latest-npm'         nvm install-latest-npm extra
+assert_usage 'Usage: nvm reinstall-packages <version>' nvm reinstall-packages
+assert_usage 'Usage: nvm copy-packages <version>'    nvm copy-packages a b
+
+# `nvm use` reaches its focused-usage guard only when version resolution returns
+# an empty string. From the CLI that cannot happen: an omitted version is caught
+# earlier (the `Please see ... nvmrc` branch), and an unresolvable non-empty
+# version yields the "N/A" sentinel, never "". The branch is a defensive guard,
+# so drive it directly by stubbing the resolver to return empty. Keep this last:
+# the stub stays in effect for the rest of the shell.
+nvm_match_version() { nvm_echo ''; }
+assert_usage 'Usage: nvm use [<version>]'            nvm use foo
+
+cleanup

@@ -622,7 +622,7 @@ nvm_rc_version() {
   NVMRC_PATH="$(nvm_find_nvmrc)"
   if [ ! -e "${NVMRC_PATH}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-      nvm_err "No .nvmrc file found"
+      nvm_err "No version provided and no .nvmrc file found"
     fi
     return 1
   fi
@@ -3222,7 +3222,7 @@ nvm() {
         nvm_echo '  nvm --help                                  Show this message'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm --version                               Print out the installed version of nvm'
-        nvm_echo '  nvm install [<version>]                     Download and install a <version>. Uses .nvmrc if available and version is omitted.'
+        nvm_echo '  nvm install [<version>]                     Download and install a <version>. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm install`:'
         nvm_echo '    -s                                        Skip binary download, install from source only.'
         nvm_echo '    -b                                        Skip source download, install from binary only.'
@@ -3239,23 +3239,23 @@ nvm() {
         nvm_echo '  nvm uninstall <version>                     Uninstall a version'
         nvm_echo '  nvm uninstall --lts                         Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '  nvm uninstall --lts=<LTS name>              Uninstall using automatic alias for provided LTS line, if available.'
-        nvm_echo '  nvm use [<version>]                         Modify PATH to use <version>. Uses .nvmrc if available and version is omitted.'
+        nvm_echo '  nvm use [current | <version>]               Modify PATH to use <version>. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm use`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
         nvm_echo '    --lts                                     Uses automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '    --lts=<LTS name>                          Uses automatic alias for provided LTS line, if available.'
         nvm_echo '    --save                                    Writes the specified version to .nvmrc.'
-        nvm_echo '  nvm exec [<version>] [<command>]            Run <command> on <version>. Uses .nvmrc if available and version is omitted.'
+        nvm_echo '  nvm exec [current | <version>] [<command>]  Run <command> on <version>. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm exec`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
         nvm_echo '    --lts                                     Uses automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '    --lts=<LTS name>                          Uses automatic alias for provided LTS line, if available.'
-        nvm_echo '  nvm run [<version>] [<args>]                Run `node` on <version> with <args> as arguments. Uses .nvmrc if available and version is omitted.'
+        nvm_echo '  nvm run [current | <version>] [<args>]      Run `node` on <version> with <args> as arguments. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm run`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
         nvm_echo '    --lts                                     Uses automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '    --lts=<LTS name>                          Uses automatic alias for provided LTS line, if available.'
-        nvm_echo '  nvm current                                 Display currently activated version of Node'
+        nvm_echo '  nvm current                                 Display the active node version (resolved via $PATH; not affected by .nvmrc).'
         nvm_echo '  nvm ls [<version>]                          List installed versions, matching a given <version> if provided'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '    --no-alias                                Suppress `nvm alias` output'
@@ -3276,7 +3276,7 @@ nvm() {
         nvm_echo '  nvm install-latest-npm                      Attempt to upgrade to the latest working `npm` on the current node version'
         nvm_echo '  nvm reinstall-packages <version>            Reinstall global `npm` packages contained in <version> to current version'
         nvm_echo '  nvm unload                                  Unload `nvm` from shell'
-        nvm_echo '  nvm which [current | <version>]             Display path to installed node version. Uses .nvmrc if available and version is omitted.'
+        nvm_echo '  nvm which [current | <version>]             Display path to installed node version. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '    --silent                                  Silences stdout/stderr output when a version is omitted'
         nvm_echo '  nvm cache dir                               Display path to the cache directory for nvm'
         nvm_echo '  nvm cache clear                             Empty cache directory for nvm'
@@ -3338,7 +3338,9 @@ nvm() {
           fi
         ;;
         *)
-          >&2 nvm --help
+          nvm_err 'Usage: nvm cache dir'
+          nvm_err '       nvm cache clear'
+          nvm_err '  Run `nvm --help` for full help.'
           return 127
         ;;
       esac
@@ -3594,7 +3596,9 @@ nvm() {
         else
           { provided_version="$(nvm_rc_version 3>&1 1>&4)"; } 4>&1
           if [ $version_not_provided -eq 1 ] && [ -z "${provided_version}" ]; then
-            >&2 nvm --help
+            nvm_err 'Usage: nvm install [<version>]'
+            nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+            nvm_err '  Run `nvm --help` for full help.'
             return 127
           fi
         fi
@@ -3852,7 +3856,10 @@ nvm() {
     ;;
     "uninstall")
       if [ $# -ne 1 ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm uninstall <version>'
+        nvm_err '       nvm uninstall --lts'
+        nvm_err '       nvm uninstall --lts=<LTS name>'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4041,7 +4048,9 @@ nvm() {
       fi
 
       if [ -z "${VERSION}" ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm use [<version>]'
+        nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4165,7 +4174,9 @@ nvm() {
           VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
         fi
         if [ "${VERSION:-N/A}" = 'N/A' ]; then
-          >&2 nvm --help
+          nvm_err 'Usage: nvm run [<version>] [<args>]'
+          nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+          nvm_err '  Run `nvm --help` for full help.'
           return 127
         fi
       fi
@@ -4178,6 +4189,14 @@ nvm() {
             provided_version=''
             if [ $has_checked_nvmrc -ne 1 ]; then
               { NVM_RC_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
+            fi
+            if [ -z "${NVM_RC_VERSION-}" ]; then
+              if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+                nvm_err 'WARNING: `nvm run` was invoked without a version argument and without an .nvmrc file.'
+                nvm_err '  Falling back to the active node version; this will become an error in a future release.'
+                nvm_err '  Pass `current` explicitly (e.g. `nvm run current ...`) to silence this warning.'
+              fi
+              NVM_RC_VERSION="$(nvm_version current)" ||:
             fi
             provided_version="${NVM_RC_VERSION}"
             IS_VERSION_FROM_NVMRC=1
@@ -4236,17 +4255,34 @@ nvm() {
 
       local provided_version
       provided_version="$1"
+      local VERSION_SOURCE
+      VERSION_SOURCE=''
       if [ "${NVM_LTS-}" != '' ]; then
         provided_version="lts/${NVM_LTS:-*}"
         VERSION="${provided_version}"
+        VERSION_SOURCE='lts'
       elif [ -n "${provided_version}" ]; then
         VERSION="$(nvm_version "${provided_version}")" ||:
         if [ "_${VERSION}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
           { provided_version="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
           VERSION="$(nvm_version "${provided_version}")" ||:
+          if [ -n "${provided_version}" ]; then
+            VERSION_SOURCE='nvmrc'
+          fi
         else
+          VERSION_SOURCE='arg'
           shift
         fi
+      fi
+
+      if [ -z "${VERSION_SOURCE}" ]; then
+        if [ "${NVM_SILENT:-0}" -ne 1 ]; then
+          nvm_err 'WARNING: `nvm exec` was invoked without a version argument and without an .nvmrc file.'
+          nvm_err '  Falling back to the active node version; this will become an error in a future release.'
+          nvm_err '  Pass `current` explicitly (e.g. `nvm exec current ...`) to silence this warning.'
+        fi
+        provided_version='current'
+        VERSION="$(nvm_version current)" ||:
       fi
 
       nvm_ensure_version_installed "${provided_version}"
@@ -4383,7 +4419,9 @@ nvm() {
         VERSION="${provided_version-}"
       fi
       if [ -z "${VERSION}" ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm which [current | <version>]'
+        nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4480,7 +4518,8 @@ nvm() {
       NVM_ALIAS_DIR="$(nvm_alias_path)"
       command mkdir -p "${NVM_ALIAS_DIR}"
       if [ $# -ne 1 ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm unalias <name>'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
       if [ "${1#*\/}" != "${1-}" ]; then
@@ -4517,7 +4556,8 @@ nvm() {
     ;;
     "install-latest-npm")
       if [ $# -ne 0 ]; then
-        >&2 nvm --help
+        nvm_err 'Usage: nvm install-latest-npm'
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
@@ -4525,7 +4565,8 @@ nvm() {
     ;;
     "reinstall-packages" | "copy-packages")
       if [ $# -ne 1 ]; then
-        >&2 nvm --help
+        nvm_err "Usage: nvm ${COMMAND} <version>"
+        nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
 
