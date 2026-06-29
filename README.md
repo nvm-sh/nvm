@@ -31,6 +31,7 @@
 - [Usage](#usage)
   - [Long-term Support](#long-term-support)
   - [Migrating Global Packages While Installing](#migrating-global-packages-while-installing)
+  - [Migrating Global Packages Between Installed Versions](#migrating-global-packages-between-installed-versions)
   - [Offline Install](#offline-install)
   - [Default Global Packages From File While Installing](#default-global-packages-from-file-while-installing)
   - [io.js](#iojs)
@@ -482,6 +483,17 @@ nvm install-latest-npm
 ```
 
 If you've already gotten an error to the effect of "npm does not support Node.js", you'll need to (1) revert to a previous node version (`nvm ls` & `nvm use <your latest _working_ version from the ls>`), (2) delete the newly created node version (`nvm uninstall <your _broken_ version of node from the ls>`), then (3) rerun your `nvm install` with the `--latest-npm` flag.
+
+### Migrating Global Packages Between Installed Versions
+
+`--reinstall-packages-from` is tied to `nvm install`. To migrate global npm packages between versions you _already_ have installed, without (re)installing anything, `nvm use` the destination and run `nvm reinstall-packages` as a standalone command, pointing at the version you want to copy _from_:
+
+```sh
+nvm use 22.22.2
+nvm reinstall-packages 22.20.0
+```
+
+This reinstalls all global packages from `22.20.0` into the currently-active version (`22.22.2`). As with `--reinstall-packages-from`, the npm version itself is not changed.
 
 
 ### Offline Install
