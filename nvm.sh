@@ -3736,10 +3736,10 @@ nvm() {
             nvm install-latest-npm
             EXIT_CODE=$?
           fi
-          if [ $EXIT_CODE -ne 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
+          if [ $EXIT_CODE -eq 0 ] && [ -z "${SKIP_DEFAULT_PACKAGES-}" ]; then
             nvm_install_default_packages
           fi
-          if [ $EXIT_CODE -ne 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
+          if [ $EXIT_CODE -eq 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
             nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
             EXIT_CODE=$?
           fi
@@ -3757,7 +3757,7 @@ nvm() {
           EXIT_CODE=$?
         fi
 
-        if [ $EXIT_CODE -ne 0 ] && [ -n "${ALIAS-}" ]; then
+        if [ $EXIT_CODE -eq 0 ] && [ -n "${ALIAS-}" ]; then
           nvm alias "${ALIAS}" "${provided_version}"
           EXIT_CODE=$?
         fi
