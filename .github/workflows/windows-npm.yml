@@ -94,6 +94,8 @@ jobs:
           bash.exe "%USERPROFILE%\setup.sh"
 
   wsl_matrix:
+    permissions:
+      contents: none
     continue-on-error: true
     name: 'WSL nvm install'
     defaults:
@@ -187,6 +189,8 @@ jobs:
           node -v
 
   wsl_matrix_unofficial:
+    permissions:
+      contents: none
     continue-on-error: true
     name: 'WSL nvm install'
     defaults:

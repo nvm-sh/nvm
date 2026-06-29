@@ -18,7 +18,7 @@ jobs:
   update-nodejs-org:
     if: github.repository == 'nvm-sh/nvm' && github.actor == 'ljharb'
     permissions:
-      contents: none
+      contents: read  # for the "Extract and validate version" step's `gh api .../tags` call via the default github.token
     name: 'Create PR to nodejs/nodejs.org'
     runs-on: ubuntu-latest
     steps:
