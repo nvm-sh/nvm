@@ -2191,9 +2191,11 @@ nvm_get_arch() {
   fi
 
   if [ -f "/etc/alpine-release" ]; then
-    # Alpine Linux uses musl libc; only x64-musl binaries are available
+    # Alpine Linux uses musl libc; map to musl variants where available
+    # See https://unofficial-builds.nodejs.org/download/release/
     case "${NVM_ARCH}" in
       x64) NVM_ARCH=x64-musl ;;
+      arm64) NVM_ARCH=arm64-musl ;;
     esac
   fi
 
