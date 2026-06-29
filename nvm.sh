@@ -3293,11 +3293,11 @@ nvm() {
         nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'k' 'k')/$(nvm_wrap_with_color_code 'K' 'K') = $(nvm_wrap_with_color_code 'k' 'black') / $(nvm_wrap_with_color_code 'K' 'bold black')"
         nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'e' 'e')/$(nvm_wrap_with_color_code 'W' 'W') = $(nvm_wrap_with_color_code 'e' 'light grey') / $(nvm_wrap_with_color_code 'W' 'white')"
         nvm_echo 'Example:'
-        nvm_echo '  nvm install 8.0.0                     Install a specific version number'
-        nvm_echo '  nvm use 8.0                           Use the latest available 8.0.x release'
-        nvm_echo '  nvm run 6.10.3 app.js                 Run app.js using node 6.10.3'
-        nvm_echo '  nvm exec 4.8.3 node app.js            Run `node app.js` with the PATH pointing to node 4.8.3'
-        nvm_echo '  nvm alias default 8.1.0               Set default node version on a shell'
+        nvm_echo '  nvm install 24.0.0                    Install a specific version number'
+        nvm_echo '  nvm use 22.11                         Use the latest available 22.11.x release'
+        nvm_echo '  nvm run 22.11.0 app.js                Run app.js using node 22.11.0'
+        nvm_echo '  nvm exec 24.0.0 node app.js           Run `node app.js` with the PATH pointing to node 24.0.0'
+        nvm_echo '  nvm alias default 24.0.0              Set default node version on a shell'
         nvm_echo '  nvm alias default node                Always default to the latest available node version on a shell'
         nvm_echo
         nvm_echo '  nvm install node                      Install the latest available version'
