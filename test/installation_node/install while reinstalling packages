@@ -72,7 +72,7 @@ npm list --global | grep object-is > /dev/null || die "object-is isn't installed
 
 # install a fresh global package on the source (v9.7.0) only
 nvm use 9.7.0
-npm install -g is-nan@1.0.0 || die "npm install -g is-nan failed"
+npm install -g is-nan@1.0.1 || die "npm install -g is-nan failed"
 npm list --global | grep is-nan > /dev/null || die "is-nan isn't installed on v9.7.0"
 
 # precondition: the already-installed target (v9.10.0) must not have it yet
