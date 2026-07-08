@@ -50,6 +50,39 @@ make_echo() {
   chmod a+x "$1"
 }
 
+# `command curl` bypasses shell functions and aliases, so tests that mock curl
+# must provide an actual executable on the PATH: this creates one in the given
+# directory. Invoked as `curl -V`, it prints ${VERSION_MESSAGE} (exported here
+# on the mock's behalf); any other invocation runs the body given as the
+# second argument, or fails.
+make_fake_curl() {
+  local FAKE_BIN_DIR
+  FAKE_BIN_DIR="${1-}"
+  [ -n "${FAKE_BIN_DIR}" ] || return 1
+
+  local FAKE_CURL_BODY
+  FAKE_CURL_BODY="${2-}"
+  if [ -z "${FAKE_CURL_BODY}" ]; then
+    FAKE_CURL_BODY='echo >&2 "This fake curl only takes one parameter, -V"
+exit 1'
+  fi
+
+  mkdir -p "${FAKE_BIN_DIR}" || return 2
+
+  {
+    echo '#!/bin/sh'
+    echo 'if [ "$#" -eq 1 ] && [ "$1" = "-V" ]; then'
+    echo '  echo "${VERSION_MESSAGE}"'
+    echo '  exit 0'
+    echo 'fi'
+    printf '%s\n' "${FAKE_CURL_BODY}"
+  } > "${FAKE_BIN_DIR}/curl"
+  chmod +x "${FAKE_BIN_DIR}/curl"
+
+  # the fake curl reads VERSION_MESSAGE from the environment
+  export VERSION_MESSAGE
+}
+
 make_fake_node() {
   local VERSION
   VERSION="${1-}"

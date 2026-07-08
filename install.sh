@@ -119,7 +119,7 @@ nvm_download() {
                             -e 's/-o /-O /' \
                             -e 's/-C - /-c /')
     # shellcheck disable=SC2086
-    eval wget $ARGS
+    eval command wget $ARGS
   fi
 }
 

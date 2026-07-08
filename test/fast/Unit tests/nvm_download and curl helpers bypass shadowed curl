@@ -1,0 +1,48 @@
+#!/bin/sh
+
+WORK="$PWD/shadowed-curl-work.$$"
+TEST_BIN="$WORK/bin"
+ARGV_LOG="$WORK/argv.log"
+
+cleanup () {
+  unset -f die cleanup curl wget
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../../nvm.sh
+
+\. ../../common.sh
+
+OLDPATH="$PATH"
+
+# real-looking curl on PATH; calling the shadowing shell function below instead is a failure
+make_fake_curl "$TEST_BIN" ': > "$ARGV_LOG"
+for a in "$@"; do printf "%s\n" "$a" >> "$ARGV_LOG"; done'
+
+VERSION_MESSAGE="curl 7.99.0 (fake)
+Features: libz"
+
+export ARGV_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+
+# shadowing shell functions, like aliases baked into a user's shell, must be
+# bypassed in favor of the executables on PATH (https://github.com/nvm-sh/nvm/issues/2923)
+curl() {
+  echo 'curl 0.0.0-shadowed'
+  return 1
+}
+wget() {
+  return 1
+}
+
+[ "$(nvm_curl_version)" = '7.99.0' ] || die "nvm_curl_version used the shadowing curl function; got $(nvm_curl_version)"
+
+nvm_curl_libz_support || die 'nvm_curl_libz_support used the shadowing curl function'
+
+nvm_download -s 'http://example.com/' -o /dev/null || die 'nvm_download used the shadowing curl function and failed'
+grep -Fxq 'http://example.com/' "$ARGV_LOG" || die "nvm_download did not invoke the curl executable; got: $(cat "$ARGV_LOG")"
+
+cleanup

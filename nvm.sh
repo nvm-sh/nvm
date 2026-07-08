@@ -87,7 +87,7 @@ nvm_has_colors() {
 }
 
 nvm_curl_libz_support() {
-  curl -V 2>/dev/null | nvm_grep "^Features:" | nvm_grep -q "libz"
+  command curl -V 2>/dev/null | nvm_grep "^Features:" | nvm_grep -q "libz"
 }
 
 nvm_curl_use_compression() {
@@ -103,7 +103,7 @@ nvm_get_latest() {
     fi
     NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
   elif nvm_has "wget"; then
-    NVM_LATEST_URL="$(wget -q https://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
+    NVM_LATEST_URL="$(command wget -q https://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
     nvm_err 'nvm needs curl or wget to proceed.'
     return 1
@@ -170,7 +170,7 @@ nvm_download() {
     set -- "$@" --header "Authorization: ${sanitized_header}"
   fi
 
-  "${NVM_DOWNLOADER}" "$@"
+  command "${NVM_DOWNLOADER}" "$@"
 }
 
 nvm_sanitize_auth_header() {
@@ -649,7 +649,7 @@ nvm_clang_version() {
 }
 
 nvm_curl_version() {
-  curl -V | command awk '{ if ($1 == "curl") print $2 }' | command sed 's/-.*$//g'
+  command curl -V | command awk '{ if ($1 == "curl") print $2 }' | command sed 's/-.*$//g'
 }
 
 nvm_version_greater() {
