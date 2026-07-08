@@ -45,4 +45,22 @@ nvm_curl_libz_support || die 'nvm_curl_libz_support used the shadowing curl func
 nvm_download -s 'http://example.com/' -o /dev/null || die 'nvm_download used the shadowing curl function and failed'
 grep -Fxq 'http://example.com/' "$ARGV_LOG" || die "nvm_download did not invoke the curl executable; got: $(cat "$ARGV_LOG")"
 
+# when no curl executable exists, a shadowing curl shell function must not fool
+# downloader selection: nvm_download must fall back to the wget executable
+WGET_ONLY_BIN="$WORK/wget-only-bin"
+mkdir -p "$WGET_ONLY_BIN"
+{
+  echo '#!/bin/sh'
+  echo ': > "$ARGV_LOG"'
+  echo 'for a in "$@"; do printf "%s\n" "$a" >> "$ARGV_LOG"; done'
+} > "$WGET_ONLY_BIN/wget"
+chmod +x "$WGET_ONLY_BIN/wget"
+
+(
+  PATH="$WGET_ONLY_BIN"
+  export PATH
+  nvm_download -s 'http://wget-fallback.example.com/' -o /dev/null
+) || die 'nvm_download did not fall back to wget when curl is only a shell function'
+grep -Fxq 'http://wget-fallback.example.com/' "$ARGV_LOG" || die "nvm_download did not invoke the wget executable; got: $(cat "$ARGV_LOG")"
+
 cleanup

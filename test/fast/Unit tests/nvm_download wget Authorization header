@@ -6,7 +6,7 @@ TEST_BIN="$WORK/bin"
 ARGV_LOG="$WORK/argv.log"
 
 cleanup() {
-  unset -f die cleanup nvm_has
+  unset -f die cleanup nvm_has_executable
   rm -rf "$WORK"
   export PATH="$OLDPATH"
 }
@@ -30,7 +30,7 @@ chmod +x "$TEST_BIN/wget"
 export ARGV_LOG
 export PATH="$TEST_BIN:$OLDPATH"
 # force the wget path while keeping system tools (sed) available for sanitization
-nvm_has() { [ "$1" != curl ] && command -v "$1" >/dev/null 2>&1; }
+nvm_has_executable() { [ "$1" != curl ] && command -v "$1" >/dev/null 2>&1; }
 
 # given an Authorization credential in NVM_AUTH_HEADER
 # when nvm_download uses the wget path

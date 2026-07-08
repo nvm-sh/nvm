@@ -49,6 +49,18 @@ nvm_has() {
   type "${1-}" >/dev/null 2>&1
 }
 
+# resolves like `command "${1}"` does: only executables on the PATH,
+# ignoring shell functions and aliases
+nvm_has_executable() {
+  (
+    # `|| true` so that shells with errexit-style options (eg, zsh's ERR_RETURN)
+    # do not abort the subshell when the name is not an alias or a function
+    unalias "${1-}" 2>/dev/null || true
+    unset -f "${1-}" 2>/dev/null || true
+    command -v "${1-}" >/dev/null 2>&1
+  )
+}
+
 nvm_has_non_aliased() {
   nvm_has "${1-}" && ! nvm_is_alias "${1-}"
 }
@@ -97,12 +109,12 @@ nvm_curl_use_compression() {
 nvm_get_latest() {
   local NVM_LATEST_URL
   local CURL_COMPRESSED_FLAG
-  if nvm_has "curl"; then
+  if nvm_has_executable "curl"; then
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
     NVM_LATEST_URL="$(curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
-  elif nvm_has "wget"; then
+  elif nvm_has_executable "wget"; then
     NVM_LATEST_URL="$(command wget -q https://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
     nvm_err 'nvm needs curl or wget to proceed.'
@@ -127,13 +139,13 @@ nvm_download() {
 
   local NVM_DOWNLOADER
   NVM_DOWNLOADER=''
-  if nvm_has "curl"; then
+  if nvm_has_executable "curl"; then
     NVM_DOWNLOADER='curl'
     set -- -q --fail "$@"
     if nvm_curl_use_compression; then
       set -- --compressed "$@"
     fi
-  elif nvm_has "wget"; then
+  elif nvm_has_executable "wget"; then
     NVM_DOWNLOADER='wget'
     # Emulate curl with wget
     local NVM_DOWNLOAD_WGET_COUNT
@@ -3569,7 +3581,7 @@ nvm() {
         esac
       done
 
-      if [ "${NVM_OFFLINE}" != 1 ] && ! nvm_has "curl" && ! nvm_has "wget"; then
+      if [ "${NVM_OFFLINE}" != 1 ] && ! nvm_has_executable "curl" && ! nvm_has_executable "wget"; then
         nvm_err 'nvm needs curl or wget to proceed.'
         return 1
       fi
@@ -4688,7 +4700,7 @@ nvm() {
         nvm_version_greater nvm_version_greater_than_or_equal_to \
         nvm_print_npm_version nvm_install_latest_npm nvm_npm_global_modules \
         nvm_has_system_node nvm_has_system_iojs \
-        nvm_download nvm_get_latest nvm_has nvm_install_default_packages nvm_get_default_packages \
+        nvm_download nvm_get_latest nvm_has nvm_has_executable nvm_install_default_packages nvm_get_default_packages \
         nvm_curl_use_compression nvm_curl_version \
         nvm_auto nvm_supports_xz \
         nvm_echo nvm_err nvm_grep nvm_cd \

@@ -6,6 +6,18 @@ nvm_has() {
   type "$1" > /dev/null 2>&1
 }
 
+# resolves like `command "${1}"` does: only executables on the PATH,
+# ignoring shell functions and aliases
+nvm_has_executable() {
+  (
+    # `|| true` so that shells with errexit-style options (eg, zsh's ERR_RETURN)
+    # do not abort the subshell when the name is not an alias or a function
+    unalias "${1-}" 2>/dev/null || true
+    unset -f "${1-}" 2>/dev/null || true
+    command -v "${1-}" > /dev/null 2>&1
+  )
+}
+
 nvm_echo() {
   command printf %s\\n "$*" 2>/dev/null
 }
@@ -105,9 +117,9 @@ nvm_node_version() {
 }
 
 nvm_download() {
-  if nvm_has "curl"; then
+  if nvm_has_executable "curl"; then
     curl --fail --compressed -q "$@"
-  elif nvm_has "wget"; then
+  elif nvm_has_executable "wget"; then
     # Emulate curl with wget
     ARGS=$(nvm_echo "$@" | command sed -e 's/--progress-bar /--progress=bar /' \
                             -e 's/--compressed //' \
@@ -401,7 +413,7 @@ nvm_do_install() {
     # Autodetect install method
     if nvm_has git; then
       install_nvm_from_git
-    elif nvm_has curl || nvm_has wget; then
+    elif nvm_has_executable curl || nvm_has_executable wget; then
       install_nvm_as_script
     else
       nvm_echo >&2 'You need git, curl, or wget to install nvm'
@@ -414,7 +426,7 @@ nvm_do_install() {
     fi
     install_nvm_from_git
   elif [ "${METHOD}" = 'script' ]; then
-    if ! nvm_has curl && ! nvm_has wget; then
+    if ! nvm_has_executable curl && ! nvm_has_executable wget; then
       nvm_echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
@@ -496,7 +508,7 @@ nvm_do_install() {
 # during the execution of the install script
 #
 nvm_reset() {
-  unset -f nvm_has nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
+  unset -f nvm_has nvm_has_executable nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
     install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_check_global_modules \
     nvm_do_install nvm_reset nvm_default_install_dir nvm_grep
