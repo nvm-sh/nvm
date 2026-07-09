@@ -38,8 +38,8 @@ EXPECTED='∞'
 rm -f '../../../alias/foo bar' '../../../alias/midway'
 
 # Non-cycle through an alias name containing a space.
-# Token-based cycle detection would false-positive on this chain because
-# 'bar' appears as a substring of the multi-token alias name 'foo bar'.
+# Guards the newline-delimited SEEN_ALIASES storage: with space- or
+# token-delimited storage, seen name 'foo bar' would falsely match 'bar'.
 # Resolves: 'foo bar' -> 'midway' -> 'bar' -> 0.0.99
 echo 'midway' > '../../../alias/foo bar'
 echo 'bar' > '../../../alias/midway'
@@ -50,3 +50,25 @@ EXPECTED='v0.0.99'
 [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for space-name chain, got >${ACTUAL}<"
 
 rm -f '../../../alias/foo bar' '../../../alias/midway' '../../../alias/bar'
+
+# Non-cycle through an alias name containing a regex metacharacter.
+# Guards the literal `case` matching: the previous grep-based detection
+# interpolated the resolved name into an anchored regex, so resolving 'axb'
+# matched the seen name 'axb' against the pattern 'a.b' and falsely
+# reported a cycle.
+# Resolves: 'axb' -> 'a.b' -> 0.0.99
+echo 'a.b' > '../../../alias/axb'
+echo '0.0.99' > '../../../alias/a.b'
+
+ACTUAL="$(nvm_resolve_alias axb)"
+EXPECTED='v0.0.99'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for metachar-name chain, got >${ACTUAL}<"
+
+# ... while a genuine cycle through a metachar name is still detected
+echo 'axb' > '../../../alias/a.b'
+
+ACTUAL="$(nvm_resolve_alias axb)"
+EXPECTED='∞'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for metachar-name cycle, got >${ACTUAL}<"
+
+rm -f '../../../alias/axb' '../../../alias/a.b'
