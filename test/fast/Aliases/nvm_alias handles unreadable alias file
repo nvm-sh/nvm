@@ -1,0 +1,38 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  chmod 644 ../../../alias/test-edge-unreadable 2>/dev/null
+  rm -f ../../../alias/test-edge-unreadable
+}
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file that exists but can not be read
+echo 'v0.0.1' > ../../../alias/test-edge-unreadable
+chmod 000 ../../../alias/test-edge-unreadable
+
+# root (and some containers) can read mode-000 files; nothing to assert there
+if [ -r ../../../alias/test-edge-unreadable ]; then
+  cleanup
+  exit 0
+fi
+
+# like the sed/awk pipeline this replaced: empty output, success status, so
+# that `nvm_ensure_default_set` does not overwrite an unreadable default alias
+OUTPUT="$(nvm_alias test-edge-unreadable 2>/dev/null)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '0' ] || die "expected exit code 0 for unreadable alias file, got ${EXIT_CODE}"
+[ -z "${OUTPUT}" ] || die "expected empty output for unreadable alias file, got >${OUTPUT}<"
+
+STDERR="$(nvm_alias test-edge-unreadable 2>&1 >/dev/null)"
+case "${STDERR}" in
+  *'not readable'*) ;;
+  *) die "expected a not-readable warning on stderr, got >${STDERR}<" ;;
+esac
+
+cleanup

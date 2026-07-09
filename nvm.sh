@@ -1362,6 +1362,14 @@ nvm_alias() {
     return 2
   fi
 
+  if [ ! -r "${NVM_ALIAS_PATH}" ]; then
+    # an existing-but-unreadable alias file yields empty output with a success
+    # status - a nonzero status here would make `nvm_ensure_default_set`
+    # overwrite an existing default alias it merely could not read
+    nvm_err "Alias file is not readable: ${NVM_ALIAS_PATH}"
+    return 0
+  fi
+
   command sed 's/#.*//; s/[[:space:]]*$//' "${NVM_ALIAS_PATH}" | command awk 'NF'
 }
 
