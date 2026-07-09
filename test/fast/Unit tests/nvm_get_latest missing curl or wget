@@ -3,7 +3,7 @@
 die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
-  unset -f nvm_has
+  unset -f nvm_has nvm_has_executable
 }
 
 : nvm.sh
@@ -12,6 +12,7 @@ cleanup() {
 \. ../../common.sh
 
 nvm_has() { return 1 ; }
+nvm_has_executable() { return 1 ; }
 
 try_err nvm_get_latest
 [ "_$CAPTURED_STDERR" = "_nvm needs curl or wget to proceed." ] \

@@ -1,19 +1,25 @@
 #!/bin/sh
 
+WORK="$PWD/nvm_curl_version-work.$$"
+TEST_BIN="$WORK/bin"
+
 cleanup () {
-  unset -f die
-  unset -f curl
+  unset -f die cleanup assert_version_is
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
 }
 
 die () { echo -e "$@" ; cleanup ;  exit 1; }
 
 NVM_ENV=testing \. ../../../nvm.sh
 
-curl() {
-  if [ "$1" = "-V" ]; then
-    echo "${VERSION_MESSAGE}"
-  fi
-}
+\. ../../common.sh
+
+OLDPATH="$PATH"
+
+make_fake_curl "$TEST_BIN"
+
+export PATH="$TEST_BIN:$OLDPATH"
 
 assert_version_is() {
   if [ "${1}" != "${2}" ]; then

@@ -110,3 +110,26 @@ ACTUAL="$(nvm_get_download_slug iojs source 15.99.99)"
 EXPECTED="iojs-15.99.99"
 [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
 
+
+REAL_OS="$(command uname -s 2>/dev/null || echo '')"
+REAL_ARCH="$(command uname -m 2>/dev/null || echo '')"
+if [ "${REAL_OS}" = "Darwin" ] && [ "${REAL_ARCH}" = "arm64" ]; then
+  # Node < 16 uses x64 on darwin-arm64
+  ACTUAL="$(nvm_get_download_slug node binary 14.21.3)"
+  EXPECTED='node-14.21.3-darwin-x64'
+  [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+  ACTUAL="$(nvm_get_download_slug node binary 15.99.99)"
+  EXPECTED='node-15.99.99-darwin-x64'
+  [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+  ACTUAL="$(nvm_get_download_slug iojs binary 15.99.99)"
+  EXPECTED='iojs-15.99.99-darwin-x64'
+  [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+
+  # Test Node >= 16 uses arm64 on darwin-arm64
+  ACTUAL="$(nvm_get_download_slug node binary 16.0.0)"
+  EXPECTED='node-16.0.0-darwin-arm64'
+  [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+  ACTUAL="$(nvm_get_download_slug node binary 18.0.0)"
+  EXPECTED='node-18.0.0-darwin-arm64'
+  [ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${ACTUAL}<"
+fi

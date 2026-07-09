@@ -30,9 +30,10 @@ nvm_echo "$CAPTURED_STDERR" | nvm_grep -q "${EXPECTED_ERR}" \
 
 # --offline should not require curl or wget
 nvm_has() { return 1; }
+nvm_has_executable() { return 1; }
 try_err nvm install --offline 999.999.999
 # Should fail with "not found" not "nvm needs curl or wget"
 nvm_echo "$CAPTURED_STDERR" | nvm_grep -q "curl or wget" \
   && die "nvm install --offline should not require curl or wget"
 alias nvm_has='\nvm_has'
-unset -f nvm_has
+unset -f nvm_has nvm_has_executable

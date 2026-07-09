@@ -8,7 +8,7 @@ permissions:
 jobs:
   tests:
     permissions:
-      contents: write
+      contents: read  # for actions/checkout@v6
 
     name: "tests"
     runs-on: ubuntu-latest
