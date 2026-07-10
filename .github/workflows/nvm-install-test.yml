@@ -49,7 +49,6 @@ jobs:
       contents: read
     needs: [matrix]
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.ref == 'v0.40.0' }} # https://github.com/nvm-sh/nvm/issues/3405
     strategy:
       fail-fast: false
       matrix:
@@ -81,12 +80,19 @@ jobs:
           set -e
           export NVM_INSTALL_VERSION="${ref}"
           curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${ref}/install.sh" | bash
+      # v0.40.0 with an .nvmrc present is expected to fail (https://github.com/nvm-sh/nvm/issues/3405):
+      # the steps below tolerate failure for that combination, and the final step
+      # turns the job red only if the expected failure did NOT happen.
       - name: nvm --version
+        id: nvm-version
+        continue-on-error: ${{ matrix.ref == 'v0.40.0' && matrix.has-nvmrc == 'nvmrc' }}
         run: |
           set +e
           . $NVM_DIR/nvm.sh && nvm --version
       - name: nvm install in 1 shell level, ${{ matrix.has-nvmrc }}
+        id: install-1
         if: ${{ matrix.shell-level == '1 shlvl' }}
+        continue-on-error: ${{ matrix.ref == 'v0.40.0' && matrix.has-nvmrc == 'nvmrc' }}
         run: |
           set -ex
           . $NVM_DIR/nvm.sh
@@ -96,12 +102,28 @@ jobs:
             nvm install
           fi
       - name: nvm install in 2 shell levels, ${{ matrix.has-nvmrc }}
+        id: install-2
         if: ${{ matrix.shell-level == '2 shlvls' }}
+        continue-on-error: ${{ matrix.ref == 'v0.40.0' && matrix.has-nvmrc == 'nvmrc' }}
         run: |
           if [ '${{ matrix.has-nvmrc }}' == 'nvmrc' ]; then
             bash -c "set -ex && . $NVM_DIR/nvm.sh && echo nvm.sh sourced && nvm --version && nvm install"
           else
             bash -c "set -ex && . $NVM_DIR/nvm.sh && echo nvm.sh sourced && nvm --version"
+          fi
+      - name: 'confirm the expected failure happened (v0.40.0 + nvmrc)'
+        if: ${{ matrix.ref == 'v0.40.0' && matrix.has-nvmrc == 'nvmrc' }}
+        env:
+          SOURCE_OUTCOME: ${{ steps.nvm-version.outcome }}
+          INSTALL_1_OUTCOME: ${{ steps.install-1.outcome }}
+          INSTALL_2_OUTCOME: ${{ steps.install-2.outcome }}
+        run: |
+          echo "nvm --version: ${SOURCE_OUTCOME}; install (1 shlvl): ${INSTALL_1_OUTCOME}; install (2 shlvls): ${INSTALL_2_OUTCOME}"
+          if [ "${SOURCE_OUTCOME}" = 'failure' ] || [ "${INSTALL_1_OUTCOME}" = 'failure' ] || [ "${INSTALL_2_OUTCOME}" = 'failure' ]; then
+            echo 'v0.40.0 failed as expected: https://github.com/nvm-sh/nvm/issues/3405'
+          else
+            echo '::error::v0.40.0 with an .nvmrc was expected to fail (https://github.com/nvm-sh/nvm/issues/3405), but every step succeeded. If v0.40.0 somehow works now, remove the expected-failure handling from this workflow.'
+            exit 1
           fi
 
   finisher:
