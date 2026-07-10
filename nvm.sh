@@ -3163,21 +3163,28 @@ nvm_cache_dir() {
 nvm_ls_cached() {
   local PATTERN
   PATTERN="${1-}"
-  local CACHE_BIN_DIR
-  CACHE_BIN_DIR="$(nvm_cache_dir)/bin"
-  if [ ! -d "${CACHE_BIN_DIR}" ]; then
-    return
-  fi
+  local NVM_CACHE_DIR
+  NVM_CACHE_DIR="$(nvm_cache_dir)"
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
   local NVM_ARCH
   NVM_ARCH="$(nvm_get_arch)"
   local SUFFIX
   SUFFIX="${NVM_OS}-${NVM_ARCH}"
-  # shellcheck disable=SC2010
-  command ls -1 "${CACHE_BIN_DIR}" \
-    | nvm_grep "^node-v.*-${SUFFIX}\$" \
-    | command sed "s/^node-\\(v[0-9][0-9.]*\\)-${SUFFIX}\$/\\1/" \
+  {
+    if [ -d "${NVM_CACHE_DIR}/bin" ]; then
+      # shellcheck disable=SC2010
+      command ls -1 "${NVM_CACHE_DIR}/bin" \
+        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*-${SUFFIX}\$" \
+        | command sed "s/-${SUFFIX}\$//"
+    fi
+    if [ -d "${NVM_CACHE_DIR}/src" ]; then
+      # shellcheck disable=SC2010
+      command ls -1 "${NVM_CACHE_DIR}/src" \
+        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*\$"
+    fi
+  } \
+    | command sed 's/^node-//' \
     | nvm_grep "$(nvm_ensure_version_prefix "${PATTERN}")" \
     | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n
 }
