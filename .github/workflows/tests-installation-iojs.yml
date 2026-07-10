@@ -98,11 +98,45 @@ jobs:
         run: sudo apt-get install curl -y
         shell: bash
 
+  installation_iojs_source_compile:
+    permissions:
+      contents: read
+
+    name: 'actually compile io.js from source (gcc 4.9 container)'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            mirror.gcr.io:443
+            storage.googleapis.com:443
+            iojs.org:443
+      - uses: actions/checkout@v6
+      # io.js requires python 2 and gcc <= 5 to compile; the gcc:4.9 image
+      # (debian jessie) has both, plus curl/wget/xz and CA certificates that
+      # still validate iojs.org - so the source-install tests run unmodified,
+      # resolving, downloading, checksumming, and compiling for real.
+      # The image is pulled through Google's Docker Hub mirror: it serves
+      # manifests and blobs from a single stable hostname (Docker Hub's blob
+      # CDN hostnames rotate, which the blocked-egress policy can not allow),
+      # and it is not subject to Docker Hub's anonymous pull rate limits.
+      - name: compile io.js from source, for real
+        run: |
+          docker run --rm -v "${PWD}:/nvm-under-test" -e NVM_DIR=/nvm-under-test mirror.gcr.io/library/gcc:4.9 bash -ec '
+            cd "${NVM_DIR}/test/installation_iojs"
+            sh "./install from source"
+            sh "./install version specified in .nvmrc from source"
+          '
+
   all:
     permissions:
       contents: none
     name: 'all installation_iojs tests'
-    needs: [installation_iojs_without_curl]
+    needs: [installation_iojs_without_curl, installation_iojs_source_compile]
     runs-on: ubuntu-latest
     steps:
       - run: true
