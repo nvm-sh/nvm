@@ -10,6 +10,10 @@ TEST_DIR="$(pwd)/nvm_offline_version_tmp"
 
 cleanup() {
   rm -rf "${TEST_DIR}"
+  CACHE_DIR="$(nvm_cache_dir)"
+  SUFFIX="$(nvm_get_os)-$(nvm_get_arch)"
+  rm -rf "${CACHE_DIR}/bin/node-v0.99.98-${SUFFIX}" "${CACHE_DIR}/bin/iojs-v0.99.97-${SUFFIX}" \
+    "${CACHE_DIR}/src/node-v0.99.96" "${CACHE_DIR}/src/iojs-v0.99.95"
 }
 
 [ ! -e "${TEST_DIR}" ] && mkdir -p "${TEST_DIR}"
@@ -35,5 +39,36 @@ try nvm_offline_version "999.999.999"
 try nvm_ls_cached "999.999"
 [ -z "$CAPTURED_STDOUT" ] \
   || die "nvm_ls_cached '999.999' should return empty; got '$CAPTURED_STDOUT'"
+
+# nvm_ls_cached can currently only see bin-cached node artifacts: bin-cached
+# io.js, and src-cached anything, are invisible to it - and thus to
+# `--offline` version resolution
+CACHE_DIR="$(nvm_cache_dir)"
+SUFFIX="$(nvm_get_os)-$(nvm_get_arch)"
+mkdir -p "${CACHE_DIR}/bin/node-v0.99.98-${SUFFIX}" "${CACHE_DIR}/bin/iojs-v0.99.97-${SUFFIX}" \
+  "${CACHE_DIR}/src/node-v0.99.96" "${CACHE_DIR}/src/iojs-v0.99.95"
+
+try nvm_ls_cached "v0.99.98"
+[ "_$CAPTURED_STDOUT" = "_v0.99.98" ] \
+  || die "nvm_ls_cached 'v0.99.98' should find the bin-cached node version; got '$CAPTURED_STDOUT'"
+
+try nvm_ls_cached "iojs-v0.99.97"
+[ -z "$CAPTURED_STDOUT" ] \
+  || die "nvm_ls_cached 'iojs-v0.99.97' should not see the bin-cached io.js version; got '$CAPTURED_STDOUT'"
+
+try nvm_ls_cached "v0.99.96"
+[ -z "$CAPTURED_STDOUT" ] \
+  || die "nvm_ls_cached 'v0.99.96' should not see the src-cached node version; got '$CAPTURED_STDOUT'"
+
+try nvm_ls_cached "iojs-v0.99.95"
+[ -z "$CAPTURED_STDOUT" ] \
+  || die "nvm_ls_cached 'iojs-v0.99.95' should not see the src-cached io.js version; got '$CAPTURED_STDOUT'"
+
+# ... and so nvm_offline_version can not resolve them
+try nvm_offline_version "iojs-v0.99.95"
+[ "_$CAPTURED_STDOUT" = "_N/A" ] \
+  || die "nvm_offline_version 'iojs-v0.99.95' should not resolve the src-cached io.js version; got '$CAPTURED_STDOUT'"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] \
+  || die "nvm_offline_version 'iojs-v0.99.95' should exit 3; got '$CAPTURED_EXIT_CODE'"
 
 cleanup
