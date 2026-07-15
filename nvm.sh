@@ -11,7 +11,7 @@
 { # this ensures the entire script is downloaded #
 
 # shellcheck disable=SC3028
-NVM_SCRIPT_SOURCE="$_"
+NVM_SCRIPT_SOURCE="${_:-}"
 
 nvm_is_zsh() {
   [ -n "${ZSH_VERSION-}" ]
