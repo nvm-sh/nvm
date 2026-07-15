@@ -57,15 +57,23 @@ setup_chroot() {
   sudo mknod "${chroot_dir}/dev/null" c 1 3
 }
 
-setup_chroot "${CHROOT_WITH_ALPINE}"
-setup_chroot "${CHROOT_WITHOUT_ALPINE}"
+# The chroot fixtures assume a glibc layout (fixed dynamic-linker path under
+# /lib64, coreutils binaries). On musl Alpine that setup does not apply, and
+# nvm_get_arch's musl mapping is already covered by the "nvm_get_arch alpine"
+# test, so skip the chroot checks there and still run the ls-remote checks.
+if [ -f "/etc/alpine-release" ]; then
+  echo "on Alpine; skipping chroot arch checks (covered by 'nvm_get_arch alpine')"
+else
+  setup_chroot "${CHROOT_WITH_ALPINE}"
+  setup_chroot "${CHROOT_WITHOUT_ALPINE}"
 
-# Run tests in chroot environments
-ARCH_WITH_ALPINE=$(sudo chroot "${CHROOT_WITH_ALPINE}" /bin/sh -c ". ./nvm.sh && nvm_get_arch")
-[ "${ARCH_WITH_ALPINE}" = "x64-musl" ] || die "Expected x64-musl for alpine environment but got ${ARCH_WITH_ALPINE}"
+  # Run tests in chroot environments
+  ARCH_WITH_ALPINE=$(sudo chroot "${CHROOT_WITH_ALPINE}" /bin/sh -c ". ./nvm.sh && nvm_get_arch")
+  [ "${ARCH_WITH_ALPINE}" = "x64-musl" ] || die "Expected x64-musl for alpine environment but got ${ARCH_WITH_ALPINE}"
 
-ARCH_WITHOUT_ALPINE=$(sudo chroot "${CHROOT_WITHOUT_ALPINE}" /bin/sh -c ". ./nvm.sh && nvm_get_arch")
-[ "${ARCH_WITHOUT_ALPINE}" != "x64-musl" ] || die "Did not expect x64-musl for non-alpine environment"
+  ARCH_WITHOUT_ALPINE=$(sudo chroot "${CHROOT_WITHOUT_ALPINE}" /bin/sh -c ". ./nvm.sh && nvm_get_arch")
+  [ "${ARCH_WITHOUT_ALPINE}" != "x64-musl" ] || die "Did not expect x64-musl for non-alpine environment"
+fi
 
 # Run tests for nvm ls-remote
 test_default_ls_remote() {

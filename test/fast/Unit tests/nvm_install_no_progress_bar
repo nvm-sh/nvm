@@ -14,6 +14,14 @@ die () { >&2 echo "$@" ; cleanup ; exit 1; }
 : nvm.sh
 \. ../../../nvm.sh
 
+# v0.12.18 predates musl binaries and the expected output hardcodes the glibc
+# x64 tarball URL, so on Alpine nvm would request a nonexistent -musl build.
+# The progress-bar behavior is not OS-specific, so skip below the musl floor.
+if [ -f "/etc/alpine-release" ]; then
+  echo 'on Alpine; skipping (v0.12.18 has no musl binary)'
+  exit 0
+fi
+
 cleanup
 
 OUTPUT="$(TERM=dumb 2>&1 nvm install --no-progress v0.12.18)"
