@@ -2251,7 +2251,7 @@ nvm_get_arch() {
     HOST_ARCH=armv7l
   fi
 
-  if [ -f "/etc/alpine-release" ]; then
+  if [ -f "/etc/alpine-release" ] && [ "_${NVM_OS}" = "_linux" ]; then
     # Alpine Linux uses musl libc; map to musl variants where available
     # See https://unofficial-builds.nodejs.org/download/release/
     case "${NVM_ARCH}" in
