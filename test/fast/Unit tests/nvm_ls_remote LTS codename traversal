@@ -1,0 +1,40 @@
+#!/bin/sh
+
+WORK="$PWD/ls_remote-traversal-work.$$"
+export HOME="$WORK/home"
+export NVM_DIR="$HOME/.nvm"
+BASHRC="$HOME/.bashrc"
+
+cleanup() {
+  unset -f die cleanup nvm_download
+  rm -rf "$WORK"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+mkdir -p "$NVM_DIR/alias"
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# a malicious/compromised mirror: the LTS codename field ($10) carries path
+# traversal, and the version field ($1) carries a command-substitution payload;
+# a valid codename (Iron) is included to prove real aliases still get written
+nvm_download() {
+  printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity\n'
+  printf '$(>%s/pwned)\t2026-01-01\tlinux-x64\t-\t-\t-\t-\t-\t-\t../../../.bashrc\t-\n' "$WORK"
+  printf 'v20.0.0\t2026-01-01\tlinux-x64\t-\t-\t-\t-\t-\t-\tIron\t-\n'
+}
+
+nvm_ls_remote >/dev/null 2>&1 || true
+
+[ ! -e "$BASHRC" ] || die "path traversal wrote outside the alias dir: $BASHRC was created"
+[ ! -e "$WORK/pwned" ] || die "mirror-supplied payload landed: $WORK/pwned was created"
+[ -f "$NVM_DIR/alias/lts/iron" ] || die "valid LTS alias lts/iron was not created"
+
+nvm_make_alias 'lts/../../../escape' 'v1.0.0' 2>/dev/null && die 'nvm_make_alias accepted a traversing alias name'
+[ ! -e "$NVM_DIR/../escape" ] || die 'nvm_make_alias wrote outside the alias dir'
+nvm_make_alias 'lts/carbon' 'v8.0.0' >/dev/null 2>&1 || die 'nvm_make_alias rejected a valid alias name'
+[ -f "$NVM_DIR/alias/lts/carbon" ] || die 'nvm_make_alias did not create a valid alias'
+
+cleanup
+echo "nvm_ls_remote LTS codename traversal: passed"

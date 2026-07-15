@@ -1283,6 +1283,13 @@ nvm_make_alias() {
     nvm_err "an alias target version is required"
     return 2
   fi
+  # slashes are legal (eg `lts/iron`), but a `..` component would escape the alias dir
+  case "/${ALIAS}/" in
+    */../*)
+      nvm_err "invalid alias name: ${ALIAS}"
+      return 3
+    ;;
+  esac
   nvm_echo "${VERSION}" | tee "$(nvm_alias_path)/${ALIAS}" >/dev/null
 }
 
@@ -1797,6 +1804,7 @@ nvm_ls_remote_index_tab() {
   command mkdir -p "$(nvm_alias_path)/lts"
   { command awk '{
         if ($10 ~ /^\-?$/) { next }
+        if (tolower($10) !~ /^[a-z0-9][a-z0-9._-]*$/) { next }
         if ($10 && !a[tolower($10)]++) {
           if (alias) { print alias, version }
           alias_name = "lts/" tolower($10)
