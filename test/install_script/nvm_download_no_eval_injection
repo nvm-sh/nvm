@@ -1,0 +1,99 @@
+#!/bin/sh
+
+OLDPATH="$PATH"
+WORK="$PWD/nvm_download-noeval-work.$$"
+TEST_BIN="$WORK/bin"
+ARGV_LOG="$WORK/argv.log"
+PROOF="$WORK/nvm_injection_proof"
+
+cleanup() {
+  unset -f die cleanup
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+mkdir -p "$TEST_BIN"
+
+# fake curl/wget: record each received argument verbatim, then succeed
+{
+  echo '#!/bin/sh'
+  echo ': > "$ARGV_LOG"'
+  echo 'for a in "$@"; do printf "%s\n" "$a" >> "$ARGV_LOG"; done'
+  echo 'exit 0'
+} > "$TEST_BIN/curl"
+chmod +x "$TEST_BIN/curl"
+cp "$TEST_BIN/curl" "$TEST_BIN/wget"
+
+# the wget-path calls below restrict PATH to $TEST_BIN so that no real curl is
+# found; link sed and touch in so that a regression to the old sed|eval
+# implementation fails this test by actually injecting, rather than by failing
+# to find the binaries the injection needs
+ln -s "$(command -v sed)" "$TEST_BIN/sed"
+ln -s "$(command -v touch)" "$TEST_BIN/touch"
+
+export ARGV_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+
+URL="https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/nvm.sh"
+
+# given a url containing command-substitution syntax
+INJECT_URL="http://example.test/v1\$(touch ${PROOF})/x"
+
+# when nvm_download is invoked (curl path)
+rm -f "$PROOF"
+nvm_download "$INJECT_URL" -o - || die 'nvm_download (curl) returned nonzero on injection url'
+# then the substitution must not have executed
+[ ! -e "$PROOF" ] || die "command injection fired via curl path: proof file was created"
+# and curl must have received the url as one literal argument
+grep -Fxq "$INJECT_URL" "$ARGV_LOG" || die "curl did not receive the url as a single literal argument; got: $(cat "$ARGV_LOG")"
+
+# given curl is unavailable (the wget-path calls run with PATH limited to our
+# fake wget, so neither the fake nor the system curl is found)
+rm -f "$TEST_BIN/curl"
+
+# when nvm_download is invoked with the injection url (wget path)
+rm -f "$PROOF"
+( PATH="$TEST_BIN"; export PATH; nvm_download "$INJECT_URL" -o - ) || die 'nvm_download (wget) returned nonzero on injection url'
+# then the substitution must not have executed
+[ ! -e "$PROOF" ] || die "command injection fired via wget path: proof file was created"
+grep -Fxq "$INJECT_URL" "$ARGV_LOG" || die "wget did not receive the url as a single literal argument; got: $(cat "$ARGV_LOG")"
+
+# given an output path containing a space, as a real $NVM_DIR may
+SPACED_DIR="$WORK/dir with space"
+SPACED="$SPACED_DIR/nvm.sh"
+mkdir -p "$SPACED_DIR"
+
+# when nvm_download is invoked with it (wget path)
+( PATH="$TEST_BIN"; export PATH; nvm_download -s "$URL" -o "$SPACED" ) || die 'nvm_download (wget) returned nonzero on spaced output path'
+# then wget receives it as one argument rather than word-split
+grep -Fxq "$SPACED" "$ARGV_LOG" || die "wget did not receive the spaced output path as a single argument; got: $(cat "$ARGV_LOG")"
+
+# given a url with an ampersand in its query string, as a real mirror may
+AMP_URL="http://example.test/nvm.sh?a=1&b=2"
+
+# when nvm_download is invoked with it (wget path)
+( PATH="$TEST_BIN"; export PATH; nvm_download -s "$AMP_URL" -o - ) || die 'nvm_download (wget) returned nonzero on ampersand url'
+# then the url is passed intact rather than backgrounding the command
+grep -Fxq "$AMP_URL" "$ARGV_LOG" || die "wget did not receive the ampersand url intact; got: $(cat "$ARGV_LOG")"
+
+# when invoked with -L -C - --progress-bar URL -o FILE (wget path)
+FILE="$WORK/target"
+( PATH="$TEST_BIN"; export PATH; nvm_download -L -C - --progress-bar "$URL" -o "$FILE" ) || die 'nvm_download (wget) returned nonzero on normal url'
+# then flags are translated to wget equivalents
+grep -Fxqe "-c" "$ARGV_LOG" || die "wget did not translate -C - to -c; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "--progress=bar" "$ARGV_LOG" || die "wget did not translate --progress-bar; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-O" "$ARGV_LOG" || die "wget did not translate -o to -O; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-L" "$ARGV_LOG" && die "wget should drop -L; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-C" "$ARGV_LOG" && die "wget should not pass -C through; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-" "$ARGV_LOG" && die "wget should drop the lone - after -C; got: $(cat "$ARGV_LOG")"
+
+# when invoked with -s (wget path)
+( PATH="$TEST_BIN"; export PATH; nvm_download -s "$URL" -o "$FILE" ) || die 'nvm_download (wget) returned nonzero on -s url'
+# then -s becomes -q
+grep -Fxqe "-q" "$ARGV_LOG" || die "wget did not translate -s to -q; got: $(cat "$ARGV_LOG")"
+
+cleanup
+echo "nvm_download no eval injection: passed"
