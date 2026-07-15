@@ -44,6 +44,61 @@ nvm_install_dir() {
   fi
 }
 
+nvm_install_dir_base() {
+  local INSTALL_DIR
+  INSTALL_DIR="${1}"
+  while [ "${INSTALL_DIR}" != "/" ] && [ ! -e "${INSTALL_DIR}" ]; do
+    INSTALL_DIR="${INSTALL_DIR%/*}"
+    if [ -z "${INSTALL_DIR}" ]; then
+      INSTALL_DIR="."
+    fi
+  done
+  printf %s "${INSTALL_DIR}"
+}
+
+nvm_validate_install_dir() {
+  local ALLOW_MISSING
+  ALLOW_MISSING="${1-}"
+  local INSTALL_DIR
+  INSTALL_DIR="$(nvm_install_dir)"
+
+  if [ -d "${INSTALL_DIR}" ]; then
+    return
+  fi
+
+  if [ -e "${INSTALL_DIR}" ]; then
+    nvm_echo >&2 "File \"${INSTALL_DIR}\" has the same name as installation directory."
+    return 1
+  fi
+
+  local DEFAULT_INSTALL_DIR
+  DEFAULT_INSTALL_DIR="$(nvm_default_install_dir)"
+  if [ "${INSTALL_DIR}" = "${DEFAULT_INSTALL_DIR}" ]; then
+    return
+  fi
+
+  local INSTALL_DIR_BASE
+  INSTALL_DIR_BASE="$(nvm_install_dir_base "${INSTALL_DIR}")"
+  if [ ! -d "${INSTALL_DIR_BASE}" ]; then
+    nvm_echo >&2 "Invalid \$NVM_DIR \"${INSTALL_DIR}\": failed to find directory \"${INSTALL_DIR_BASE}\""
+    return 1
+  fi
+
+  if [ -z "${NVM_DIR-}" ] || [ -n "${ALLOW_MISSING}" ]; then
+    return
+  fi
+
+  local REMAINING_PATH
+  REMAINING_PATH="${INSTALL_DIR#"$INSTALL_DIR_BASE"}"
+  REMAINING_PATH="${REMAINING_PATH#/}"
+  if [ "${INSTALL_DIR_BASE}" = "/" ]; then
+    nvm_echo >&2 "Invalid \$NVM_DIR \"${INSTALL_DIR}\": failed to find directory \"/${REMAINING_PATH%%/*}\""
+  else
+    nvm_echo >&2 "Invalid \$NVM_DIR \"${INSTALL_DIR}\": failed to find directory \"${INSTALL_DIR_BASE}/${REMAINING_PATH%%/*}\""
+  fi
+  return 1
+}
+
 nvm_latest_version() {
   nvm_echo "v0.40.5"
 }
@@ -138,6 +193,9 @@ nvm_download() {
 install_nvm_from_git() {
   local INSTALL_DIR
   INSTALL_DIR="$(nvm_install_dir)"
+  if [ ! -d "${INSTALL_DIR}" ]; then
+    nvm_validate_install_dir 'allow-missing' || exit 1
+  fi
   local NVM_VERSION
   NVM_VERSION="${NVM_INSTALL_VERSION:-$(nvm_latest_version)}"
   if [ -n "${NVM_INSTALL_VERSION:-}" ]; then
@@ -241,6 +299,9 @@ nvm_install_node() {
 install_nvm_as_script() {
   local INSTALL_DIR
   INSTALL_DIR="$(nvm_install_dir)"
+  if [ ! -d "${INSTALL_DIR}" ]; then
+    nvm_validate_install_dir 'allow-missing' || return 1
+  fi
   local NVM_SOURCE_LOCAL
   NVM_SOURCE_LOCAL="$(nvm_source script)"
   local NVM_EXEC_SOURCE
@@ -385,20 +446,15 @@ nvm_check_global_modules() {
 }
 
 nvm_do_install() {
-  if [ -n "${NVM_DIR-}" ] && ! [ -d "${NVM_DIR}" ]; then
-    if [ -e "${NVM_DIR}" ]; then
-      nvm_echo >&2 "File \"${NVM_DIR}\" has the same name as installation directory."
+  if [ -n "${NVM_DIR-}" ]; then
+    if ! nvm_validate_install_dir; then
       exit 1
     fi
-
-    if [ "${NVM_DIR}" = "$(nvm_default_install_dir)" ]; then
+    if [ ! -d "${NVM_DIR}" ]; then
       mkdir "${NVM_DIR}" || {
         nvm_echo >&2 "Failed to create directory '${NVM_DIR}'"
         exit 2
       }
-    else
-      nvm_echo >&2 "You have \$NVM_DIR set to \"${NVM_DIR}\", but that directory does not exist. Check your profile files and environment."
-      exit 1
     fi
   fi
   # Disable the optional which check, https://www.shellcheck.net/wiki/SC2230
@@ -511,7 +567,8 @@ nvm_reset() {
   unset -f nvm_has nvm_has_executable nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
     install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_check_global_modules \
-    nvm_do_install nvm_reset nvm_default_install_dir nvm_grep
+    nvm_do_install nvm_reset nvm_default_install_dir nvm_grep nvm_install_dir_base \
+    nvm_validate_install_dir
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
