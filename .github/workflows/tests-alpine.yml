@@ -1,0 +1,193 @@
+name: 'Tests: alpine'
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  fast:
+    permissions:
+      contents: read
+
+    # Native runners per arch (no QEMU): arm64 uses the ubuntu-24.04-arm image.
+    name: 'fast ${{ matrix.arch }} (alpine ${{ matrix.alpine }}, ${{ matrix.shell }})'
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        alpine:
+          - '3.15'
+          - '3.19'
+          - '3'
+        arch:
+          - x64
+          - arm64
+        shell:
+          - sh
+          - bash
+          - dash
+          - zsh
+          # - ksh (#574)
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            registry.npmjs.org:443
+            raw.githubusercontent.com:443
+            nodejs.org:443
+            iojs.org:443
+            unofficial-builds.nodejs.org:443
+            dl-cdn.alpinelinux.org:443
+            dl-cdn.alpinelinux.org:80
+            registry-1.docker.io:443
+            auth.docker.io:443
+            production.cloudflare.docker.com:443
+            production.cloudfront.docker.com:443
+      - uses: actions/checkout@v6
+        id: checkout
+        continue-on-error: true
+        with:
+          submodules: true
+      - name: 'nvmrc submodule fallback (forks without their own nvmrc)'
+        if: steps.checkout.outcome == 'failure'
+        shell: bash
+        run: |
+          git submodule set-url test/fixtures/nvmrc https://github.com/nvm-sh/nvmrc.git
+          git submodule sync --recursive
+          git submodule update --init --recursive
+      - uses: ljharb/actions/node/install@main
+        name: 'npm install (on host; node_modules is mounted into the container)'
+        with:
+          node-version: 'lts/*'
+          skip-ls-check: true
+      - run: npm ls urchin
+      - name: 'Run fast tests on Alpine ${{ matrix.alpine }} (${{ matrix.arch }})'
+        run: |
+          for i in 1 2 3 4 5; do
+            docker pull alpine:${{ matrix.alpine }} && break
+            echo "docker pull failed, attempt $i/5"; sleep $((i * 5))
+          done
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e "TEST_SHELL=${{ matrix.shell }}" \
+            -e "TERM=xterm-256color" \
+            -e "GITHUB_ACTIONS=true" \
+            alpine:${{ matrix.alpine }} \
+            sh -c '
+              set -ex
+              cat /etc/alpine-release; uname -m
+              for i in 1 2 3 4 5; do
+                apk add --no-cache \
+                  make bash zsh dash \
+                  grep sed gawk coreutils util-linux findutils ncurses \
+                  curl wget ca-certificates openssl tar xz gzip git \
+                  sudo su-exec libstdc++ libgcc && break
+                echo "apk add failed, attempt $i/5"; sleep $((i * 5))
+              done
+              # Mirror the ubuntu runner: run the suite as a non-root user with
+              # passwordless sudo and a PTY so the permission/terminal tests
+              # behave the same. The user takes the mounted checkout uid so
+              # files stay host-owned (no chown; post-checkout cleanup works).
+              # No node is installed, so no active version skews the output.
+              HOST_UID="$(stat -c %u /workspace)"
+              adduser -D -u "$HOST_UID" tester 2>/dev/null || adduser -D tester
+              echo "tester ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/tester
+              chmod 0440 /etc/sudoers.d/tester
+              export NVM_DIR=/workspace HOME=/home/tester
+              unset NVM_BIN NVM_INC NVM_CD_FLAGS
+              su-exec tester script -q -e -c "make TEST_SUITE=fast SHELL=$TEST_SHELL URCHIN=/workspace/node_modules/.bin/urchin test-$TEST_SHELL" /dev/null
+            '
+
+  musl-binary:
+    permissions:
+      contents: read
+
+    # Regression lock, same-era diagonal only: modern musl node needs a newer
+    # libstdc++ than old Alpine ships, and arm64-musl exists only from
+    # v20.20.1/v22.21.1/v24.9.0 (built on modern Alpine), so arm64 pins modern Alpine.
+    name: 'musl-binary ${{ matrix.arch }} (alpine ${{ matrix.alpine }}, node ${{ matrix.node }})'
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, alpine: '3.10', node: v8.17.0 }
+          - { arch: x64, alpine: '3.10', node: v10.24.1 }
+          - { arch: x64, alpine: '3.12', node: v12.22.12 }
+          - { arch: x64, alpine: '3.15', node: v14.21.3 }
+          - { arch: x64, alpine: '3.16', node: v16.20.2 }
+          - { arch: x64, alpine: '3.18', node: v18.20.4 }
+          - { arch: x64, alpine: '3.20', node: v20.18.1 }
+          - { arch: x64, alpine: '3', node: v22.12.0 }
+          - { arch: arm64, alpine: '3.20', node: v20.20.1 }
+          - { arch: arm64, alpine: '3', node: v22.21.1 }
+          - { arch: arm64, alpine: '3', node: v24.9.0 }
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            registry.npmjs.org:443
+            unofficial-builds.nodejs.org:443
+            dl-cdn.alpinelinux.org:443
+            dl-cdn.alpinelinux.org:80
+            registry-1.docker.io:443
+            auth.docker.io:443
+            production.cloudflare.docker.com:443
+            production.cloudfront.docker.com:443
+      - uses: actions/checkout@v6
+        with:
+          submodules: false
+      - name: 'Install node ${{ matrix.node }} from a musl binary on Alpine ${{ matrix.alpine }}'
+        run: |
+          for i in 1 2 3 4 5; do
+            docker pull alpine:${{ matrix.alpine }} && break
+            echo "docker pull failed, attempt $i/5"; sleep $((i * 5))
+          done
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            -e "NODE_VERSION=${{ matrix.node }}" \
+            -e "TERM=xterm-256color" \
+            alpine:${{ matrix.alpine }} \
+            sh -c '
+              set -ex
+              cat /etc/alpine-release; uname -m
+              # libstdc++/libgcc are load-bearing: the unofficial musl node
+              # binary dynamically links them. No build toolchain: -b forbids
+              # the source fallback, so a missing binary is a hard failure.
+              for i in 1 2 3 4 5; do
+                apk add --no-cache \
+                  bash ca-certificates curl wget tar xz gzip \
+                  grep sed coreutils libstdc++ libgcc && break
+                echo "apk add failed, attempt $i/5"; sleep $((i * 5))
+              done
+              export NVM_DIR=/workspace
+              unset NVM_BIN NVM_INC NVM_CD_FLAGS
+              # The default nodejs.org mirror serves no -musl artifacts; this one does.
+              export NVM_NODEJS_ORG_MIRROR=https://unofficial-builds.nodejs.org/download/release
+              . /workspace/nvm.sh --no-use
+              nvm install -b --skip-default-packages "$NODE_VERSION"
+              nvm use "$NODE_VERSION"
+              [ "$(node -v)" = "$NODE_VERSION" ] || { echo "version mismatch: $(node -v)"; exit 1; }
+              node -e "process.exit(0)"
+              ldd "$(command -v node)" | grep -qi musl
+            '
+
+  all:
+    permissions:
+      contents: none
+    name: 'all alpine tests'
+    needs: [fast, musl-binary]
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
