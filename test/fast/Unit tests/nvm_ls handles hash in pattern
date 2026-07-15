@@ -1,9 +1,23 @@
 #!/bin/sh
 
-die () { echo "$@" ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "${TEST_DIR-}"
+  unset NVMRC_CONTENT OUTPUT EXIT_CODE TEST_DIR NVM_DIR
+}
 
 : nvm.sh
 \. ../../../nvm.sh
+
+\. ../../common.sh
+
+# an isolated NVM_DIR with a single known version, so that ambient versions
+# and aliases can not affect any assertions
+TEST_DIR="${PWD}/nvm_ls_hash_pattern_tmp"
+mkdir -p "${TEST_DIR}/versions/node/v24.13.0/bin" || die 'failed to create test version dir'
+make_echo "${TEST_DIR}/versions/node/v24.13.0/bin/node" 'v24.13.0' || die 'failed to create test node binary'
+NVM_DIR="${TEST_DIR}"
 
 # Test: nvm_ls with pattern containing # should not cause sed error
 # This is a regression test for https://github.com/nvm-sh/nvm/issues/3761
@@ -22,3 +36,33 @@ echo "$OUTPUT" | grep -q "invalid command code" && \
 # Should return N/A with exit code 3 (not found)
 [ "$EXIT_CODE" = "3" ] || die "nvm_ls 'foo#bar' should exit with code 3, got $EXIT_CODE"
 echo "$OUTPUT" | grep -q "N/A" || die "nvm_ls 'foo#bar' should output N/A, got: $OUTPUT"
+
+NVMRC_CONTENT='v24.13.0
+# krypton is the codename for Node.js v24.x'
+
+OUTPUT="$(nvm_ls "${NVMRC_CONTENT}" 2>&1)"
+EXIT_CODE=$?
+
+[ "$EXIT_CODE" = "0" ] || die "nvm_ls with .nvmrc comments should exit with code 0, got $EXIT_CODE"
+[ "$OUTPUT" = "v24.13.0" ] || die "nvm_ls with .nvmrc comments should output v24.13.0, got: $OUTPUT"
+
+OUTPUT="$(nvm_version "${NVMRC_CONTENT}" 2>&1)"
+[ "$OUTPUT" = "v24.13.0" ] || die "nvm_version with .nvmrc comments should output v24.13.0, got: $OUTPUT"
+
+# a partial version reaches nvm_ls's find/sed pipeline, which is where multiline
+# patterns used to break sed ("unterminated regular expression" on BSD sed,
+# "unterminated address regex" on GNU sed); a full x.y.z version takes the
+# explicit-version fast path and never reaches it
+NVMRC_CONTENT='24
+# krypton is the codename for Node.js v24.x'
+
+OUTPUT="$(nvm_ls "${NVMRC_CONTENT}" 2>&1)"
+EXIT_CODE=$?
+
+echo "$OUTPUT" | grep -q "unterminated" && \
+  die "nvm_ls with partial version + comments caused a sed error: $OUTPUT"
+
+[ "$EXIT_CODE" = "0" ] || die "nvm_ls with partial version + comments should exit with code 0, got $EXIT_CODE"
+[ "$OUTPUT" = "v24.13.0" ] || die "nvm_ls with partial version + comments should output v24.13.0, got: $OUTPUT"
+
+cleanup

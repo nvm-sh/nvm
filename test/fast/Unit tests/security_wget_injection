@@ -32,9 +32,9 @@ fi
 # Test 2: Verify that sanitized header still works for legitimate requests
 # The sanitized header should only contain safe characters
 SANITIZED=$(nvm_sanitize_auth_header "${MALICIOUS_HEADER}")
-# Verify that dangerous characters were removed
+# Verify that dangerous shell metacharacters were removed
 case "${SANITIZED}" in
-  *";"*|*"touch"*|*"/tmp"*)
+  *";"*|*'$'*|*"\`"*)
     die "SECURITY FAILURE: Sanitization did not remove dangerous characters properly"
     ;;
 esac

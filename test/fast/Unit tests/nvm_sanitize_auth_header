@@ -1,0 +1,38 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+set -ex
+
+# Test 1: all standard base64 characters (RFC 4648) are preserved
+STANDARD_B64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+RESULT=$(nvm_sanitize_auth_header "${STANDARD_B64}")
+[ "${RESULT}" = "${STANDARD_B64}" ] || die "FAIL: standard base64 chars were stripped. Got: '${RESULT}'"
+
+# Test 2: all base64url characters (RFC 4648 §5) are preserved
+B64URL="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_="
+RESULT=$(nvm_sanitize_auth_header "${B64URL}")
+[ "${RESULT}" = "${B64URL}" ] || die "FAIL: base64url chars were stripped. Got: '${RESULT}'"
+
+# Test 3: a real JWT Bearer token (base64url-encoded header.payload.signature) is preserved
+JWT_TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+RESULT=$(nvm_sanitize_auth_header "${JWT_TOKEN}")
+[ "${RESULT}" = "${JWT_TOKEN}" ] || die "FAIL: JWT Bearer token chars were stripped. Got: '${RESULT}'"
+
+# Test 4: Basic auth (base64-encoded user:pass) is preserved
+BASIC_TOKEN="Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+RESULT=$(nvm_sanitize_auth_header "${BASIC_TOKEN}")
+[ "${RESULT}" = "${BASIC_TOKEN}" ] || die "FAIL: Basic auth base64 token chars were stripped. Got: '${RESULT}'"
+
+# Test 5: dangerous shell metacharacters are removed
+DANGEROUS="Bearer token;\`evil\`-cmd \$(inject)"
+RESULT=$(nvm_sanitize_auth_header "${DANGEROUS}")
+case "${RESULT}" in
+  *";"*|*"\`"*|*'$'*|*"("*|*")"*)
+    die "FAIL: dangerous shell metacharacters survived sanitization. Got: '${RESULT}'"
+    ;;
+esac
+
+echo "All nvm_sanitize_auth_header tests passed"

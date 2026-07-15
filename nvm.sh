@@ -186,8 +186,13 @@ nvm_download() {
 }
 
 nvm_sanitize_auth_header() {
-    # Remove potentially dangerous characters
-    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9:;_. -]//g'
+    # Remove potentially dangerous characters; allow the full base64 (A-Za-z0-9+/=)
+    # and base64url (A-Za-z0-9-_=) charsets, plus the space, colon, dot, and
+    # underscore the previous allowlist already permitted, so that values like
+    # `Basic <base64>` and `Bearer <token>` survive intact.
+    # token68's '~' is still stripped.
+    # Note: '-' must be at the end of the bracket expression to be treated as a literal.
+    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=-]//g'
 }
 
 nvm_has_system_node() {
@@ -560,12 +565,12 @@ ${1}"
 $(nvm_wrap_with_color_code 'y' "${warn_text}")"
 }
 
-nvm_process_nvmrc() {
-  local NVMRC_PATH
-  NVMRC_PATH="$1"
+nvm_process_nvmrc_content() {
+  local NVMRC_CONTENT
+  NVMRC_CONTENT="${1-}"
   local lines
 
-  lines=$(command sed 's/#.*//' "$NVMRC_PATH" | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
+  lines=$(nvm_echo "${NVMRC_CONTENT}" | command sed 's/#.*//' | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
 
   if [ -z "$lines" ]; then
     nvm_nvmrc_invalid_msg "${lines}"
@@ -627,6 +632,13 @@ EOF
   fi
 
   nvm_echo "${unpaired_line}"
+}
+
+nvm_process_nvmrc() {
+  local NVMRC_PATH
+  NVMRC_PATH="$1"
+
+  nvm_process_nvmrc_content "$(command cat "${NVMRC_PATH}")"
 }
 
 nvm_rc_version() {
@@ -1355,7 +1367,24 @@ nvm_alias() {
     return 2
   fi
 
-  command sed 's/#.*//; s/[[:space:]]*$//' "${NVM_ALIAS_PATH}" | command awk 'NF'
+  if [ ! -r "${NVM_ALIAS_PATH}" ]; then
+    # an existing-but-unreadable alias file yields empty output with a success
+    # status - a nonzero status here would make `nvm_ensure_default_set`
+    # overwrite an existing default alias it merely could not read
+    nvm_err "Alias file is not readable: ${NVM_ALIAS_PATH}"
+    return 0
+  fi
+
+  local NVM_ALIAS_LINE
+  while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
+    case "${NVM_ALIAS_LINE}" in
+      *[![:space:]]*) ;;
+      *) continue ;;
+    esac
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%"${NVM_ALIAS_LINE##*[![:space:]]}"}"
+    nvm_echo "${NVM_ALIAS_LINE}"
+  done < "${NVM_ALIAS_PATH}"
 }
 
 nvm_ls_current() {
@@ -1388,24 +1417,32 @@ nvm_resolve_alias() {
   local ALIAS
   ALIAS="${PATTERN}"
   local ALIAS_TEMP
+  local ALIAS_OUTPUT
 
   local SEEN_ALIASES
-  SEEN_ALIASES="${ALIAS}"
-  local NVM_ALIAS_INDEX
-  NVM_ALIAS_INDEX=1
+  SEEN_ALIASES="
+${ALIAS}
+"
   while true; do
-    ALIAS_TEMP="$( (nvm_alias "${ALIAS}" 2>/dev/null | command head -n "${NVM_ALIAS_INDEX}" | command tail -n 1) || nvm_echo)"
+    ALIAS_OUTPUT="$(nvm_alias "${ALIAS}" 2>/dev/null)" || ALIAS_OUTPUT=''
+    ALIAS_TEMP="${ALIAS_OUTPUT%%
+*}"
 
     if [ -z "${ALIAS_TEMP}" ]; then
       break
     fi
 
-    if command printf '%b' "${SEEN_ALIASES}" | nvm_grep -q -e "^${ALIAS_TEMP}$"; then
-      ALIAS="∞"
-      break
-    fi
+    case "${SEEN_ALIASES}" in
+      *"
+${ALIAS_TEMP}
+"*)
+        ALIAS="∞"
+        break
+      ;;
+    esac
 
-    SEEN_ALIASES="${SEEN_ALIASES}\\n${ALIAS_TEMP}"
+    SEEN_ALIASES="${SEEN_ALIASES}${ALIAS_TEMP}
+"
     ALIAS="${ALIAS_TEMP}"
   done
 
@@ -1486,6 +1523,17 @@ nvm_strip_iojs_prefix() {
 nvm_ls() {
   local PATTERN
   PATTERN="${1-}"
+  case "${PATTERN}" in
+    *'#'* | *'
+'*)
+      local NVMRC_PATTERN
+      if ! NVMRC_PATTERN="$(nvm_process_nvmrc_content "${PATTERN}" 2>/dev/null)"; then
+        nvm_echo 'N/A'
+        return 3
+      fi
+      PATTERN="${NVMRC_PATTERN}"
+    ;;
+  esac
   local VERSIONS
   VERSIONS=''
   if [ "${PATTERN}" = 'current' ]; then
@@ -3115,21 +3163,28 @@ nvm_cache_dir() {
 nvm_ls_cached() {
   local PATTERN
   PATTERN="${1-}"
-  local CACHE_BIN_DIR
-  CACHE_BIN_DIR="$(nvm_cache_dir)/bin"
-  if [ ! -d "${CACHE_BIN_DIR}" ]; then
-    return
-  fi
+  local NVM_CACHE_DIR
+  NVM_CACHE_DIR="$(nvm_cache_dir)"
   local NVM_OS
   NVM_OS="$(nvm_get_os)"
   local NVM_ARCH
   NVM_ARCH="$(nvm_get_arch)"
   local SUFFIX
   SUFFIX="${NVM_OS}-${NVM_ARCH}"
-  # shellcheck disable=SC2010
-  command ls -1 "${CACHE_BIN_DIR}" \
-    | nvm_grep "^node-v.*-${SUFFIX}\$" \
-    | command sed "s/^node-\\(v[0-9][0-9.]*\\)-${SUFFIX}\$/\\1/" \
+  {
+    if [ -d "${NVM_CACHE_DIR}/bin" ]; then
+      # shellcheck disable=SC2010
+      command ls -1 "${NVM_CACHE_DIR}/bin" \
+        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*-${SUFFIX}\$" \
+        | command sed "s/-${SUFFIX}\$//"
+    fi
+    if [ -d "${NVM_CACHE_DIR}/src" ]; then
+      # shellcheck disable=SC2010
+      command ls -1 "${NVM_CACHE_DIR}/src" \
+        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*\$"
+    fi
+  } \
+    | command sed 's/^node-//' \
     | nvm_grep "$(nvm_ensure_version_prefix "${PATTERN}")" \
     | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n
 }
@@ -4717,7 +4772,7 @@ nvm() {
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code nvm_format_help_message_colors \
         nvm_echo_with_colors nvm_err_with_colors \
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
-        nvm_process_nvmrc nvm_nvmrc_invalid_msg \
+        nvm_process_nvmrc nvm_process_nvmrc_content nvm_nvmrc_invalid_msg \
         nvm_write_nvmrc \
         >/dev/null 2>&1
       unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \

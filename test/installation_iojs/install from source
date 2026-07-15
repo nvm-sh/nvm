@@ -8,6 +8,23 @@ die () { echo "$@" ; exit 1; }
 
 set -ex
 
+# Compiling io.js requires a period toolchain: python 2 (its `configure`),
+# and gcc <= 5 (its bundled V8). CI compiles it for real in a gcc:4.9
+# container job; on modern toolchains, this can only be skipped
+# (`install from fake source` covers nvm's source pipeline everywhere).
+GCC_MAJOR="$(gcc -dumpversion 2>/dev/null | command cut -d. -f1)"
+if ! command -v python2 >/dev/null 2>&1 && ! python -V 2>&1 | command grep -q '^Python 2'; then
+  echo 'python 2 is not available; skipping the io.js source install'
+  exit 0
+fi
+case "${GCC_MAJOR}" in
+  '' | *[!0-9]*) echo 'gcc is not available; skipping the io.js source install'; exit 0 ;;
+esac
+if [ "${GCC_MAJOR}" -gt 5 ]; then
+  echo "gcc <= 5 is required to compile io.js, got ${GCC_MAJOR}; skipping the io.js source install"
+  exit 0
+fi
+
 NVM_TEST_VERSION='v3.3.1'
 NVM_PREFIXED_TEST_VERSION="iojs-${NVM_TEST_VERSION}"
 
@@ -19,4 +36,4 @@ nvm uninstall "${NVM_TEST_VERSION}" || echo 'not installed'
 
 # Check
 nvm_is_version_installed "${NVM_PREFIXED_TEST_VERSION}" || die 'version not installed'
-nvm run "${NVM_PREFIXED_TEST_VERSION}" --version | grep "${NVM_TEST_VERSION}" || "'nvm run ${NVM_PREFIXED_TEST_VERSION} --version | grep ${NVM_TEST_VERSION}' failed"
+nvm run --silent "${NVM_PREFIXED_TEST_VERSION}" --version | grep "${NVM_TEST_VERSION}" || die "'nvm run ${NVM_PREFIXED_TEST_VERSION} --version | grep ${NVM_TEST_VERSION}' failed"

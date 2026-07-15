@@ -71,11 +71,29 @@ jobs:
       - name: check tests filenames
         run: ./rename_test.sh --check
 
+  check_exec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          allowed-endpoints:
+            github.com:443
+            raw.githubusercontent.com:443
+            nodejs.org:443
+            registry.npmjs.org:443
+      - uses: actions/checkout@v6
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install lts/* && npm install'
+        with:
+          node-version: 'lts/*'
+      - name: check that test files are executable
+        run: npm run test:check-exec
+
   all:
     permissions:
       contents: none
     name: 'all linting'
-    needs: [eclint, dockerfile_lint, doctoc, test_naming]
+    needs: [eclint, dockerfile_lint, doctoc, test_naming, check_exec]
     runs-on: ubuntu-latest
     steps:
       - run: true

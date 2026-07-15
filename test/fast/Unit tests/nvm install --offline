@@ -12,8 +12,10 @@ nvm_download() {
 }
 
 # --offline with an already-installed version should succeed
-INSTALLED_VERSION="$(nvm ls | command tail -1 | command awk '{print $1}' | command sed 's/\x1b\[[0-9;]*m//g')"
-if [ -n "${INSTALLED_VERSION}" ] && [ "_${INSTALLED_VERSION}" != '_N/A' ] && [ "_${INSTALLED_VERSION}" != '_system' ]; then
+# (`nvm ls` ends with the alias listing, so use `nvm_ls`, which emits bare
+# versions, and skip its trailing `system <version>` line)
+INSTALLED_VERSION="$(nvm_ls | command grep -v '^system' | command tail -n1)"
+if [ -n "${INSTALLED_VERSION}" ] && [ "_${INSTALLED_VERSION}" != '_N/A' ]; then
   try nvm install --offline "${INSTALLED_VERSION}"
   [ "_$CAPTURED_EXIT_CODE" = "_0" ] \
     || die "nvm install --offline with installed version '${INSTALLED_VERSION}' should succeed, got exit code $CAPTURED_EXIT_CODE"

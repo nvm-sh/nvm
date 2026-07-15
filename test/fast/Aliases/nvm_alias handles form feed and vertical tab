@@ -1,0 +1,22 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file with trailing form feed
+printf 'v22.1.0\f\n' > ../../../alias/test-edge-ff
+ACTUAL="$(nvm_alias test-edge-ff)"
+EXPECTED='v22.1.0'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for form feed, got >${ACTUAL}<"
+
+# Create an alias file with trailing vertical tab
+printf 'v22.2.0\v\n' > ../../../alias/test-edge-vt
+ACTUAL="$(nvm_alias test-edge-vt)"
+EXPECTED='v22.2.0'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for vertical tab, got >${ACTUAL}<"
+
+rm -f ../../../alias/test-edge-ff ../../../alias/test-edge-vt

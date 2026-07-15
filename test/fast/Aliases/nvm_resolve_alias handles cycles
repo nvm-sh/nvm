@@ -1,0 +1,74 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# 1-hop self-reference: alias points to itself
+echo 'self' > '../../../alias/self'
+
+ACTUAL="$(nvm_resolve_alias self)"
+EXPECTED='∞'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for self-reference, got >${ACTUAL}<"
+
+rm -f '../../../alias/self'
+
+# Multi-hop loop: link1 -> link2 -> link3 -> link1
+echo 'link2' > '../../../alias/link1'
+echo 'link3' > '../../../alias/link2'
+echo 'link1' > '../../../alias/link3'
+
+ACTUAL="$(nvm_resolve_alias link1)"
+EXPECTED='∞'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for 3-hop cycle, got >${ACTUAL}<"
+
+rm -f '../../../alias/link1' '../../../alias/link2' '../../../alias/link3'
+
+# Cycle through an alias name containing a space
+echo 'midway' > '../../../alias/foo bar'
+echo 'foo bar' > '../../../alias/midway'
+
+ACTUAL="$(nvm_resolve_alias 'foo bar')"
+EXPECTED='∞'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for space-name cycle, got >${ACTUAL}<"
+
+rm -f '../../../alias/foo bar' '../../../alias/midway'
+
+# Non-cycle through an alias name containing a space.
+# Guards the newline-delimited SEEN_ALIASES storage: with space- or
+# token-delimited storage, seen name 'foo bar' would falsely match 'bar'.
+# Resolves: 'foo bar' -> 'midway' -> 'bar' -> 0.0.99
+echo 'midway' > '../../../alias/foo bar'
+echo 'bar' > '../../../alias/midway'
+echo '0.0.99' > '../../../alias/bar'
+
+ACTUAL="$(nvm_resolve_alias 'foo bar')"
+EXPECTED='v0.0.99'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for space-name chain, got >${ACTUAL}<"
+
+rm -f '../../../alias/foo bar' '../../../alias/midway' '../../../alias/bar'
+
+# Non-cycle through an alias name containing a regex metacharacter.
+# Guards the literal `case` matching: the previous grep-based detection
+# interpolated the resolved name into an anchored regex, so resolving 'axb'
+# matched the seen name 'axb' against the pattern 'a.b' and falsely
+# reported a cycle.
+# Resolves: 'axb' -> 'a.b' -> 0.0.99
+echo 'a.b' > '../../../alias/axb'
+echo '0.0.99' > '../../../alias/a.b'
+
+ACTUAL="$(nvm_resolve_alias axb)"
+EXPECTED='v0.0.99'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for metachar-name chain, got >${ACTUAL}<"
+
+# ... while a genuine cycle through a metachar name is still detected
+echo 'axb' > '../../../alias/a.b'
+
+ACTUAL="$(nvm_resolve_alias axb)"
+EXPECTED='∞'
+[ "${ACTUAL}" = "${EXPECTED}" ] || die "expected >${EXPECTED}< for metachar-name cycle, got >${ACTUAL}<"
+
+rm -f '../../../alias/axb' '../../../alias/a.b'

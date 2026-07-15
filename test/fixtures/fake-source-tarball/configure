@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# a fake node/io.js `configure`, for source-install tests: real io.js (and
+# old node) can no longer be compiled on modern toolchains (python 2
+# `configure`, ancient V8), so source-install tests exercise nvm's entire
+# source pipeline against this tiny stand-in instead.
+
+PREFIX=''
+while [ $# -gt 0 ]; do
+  case "${1}" in
+    --prefix=*) PREFIX="${1#--prefix=}" ;;
+  esac
+  shift
+done
+
+if [ -z "${PREFIX}" ]; then
+  echo 'configure: a --prefix is required' >&2
+  exit 1
+fi
+
+printf 'PREFIX = %s\n' "${PREFIX}" > config.mk
+echo "configured with PREFIX=${PREFIX}"
