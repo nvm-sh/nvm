@@ -63,9 +63,15 @@ test_install_data() {
     echo "$current_ref" | grep -q "$ref" || die "install_nvm_from_git ${message} did not clone with ref ${ref}"
   fi
 
-  local head_ref="$(git for-each-ref --points-at HEAD --format='%(refname:short)' 'refs/tags/')"
-  if [ -n "${avoid_ref}" ] && [ "${head_ref}" != "${avoid_ref}" ]; then
-    echo "${current_ref}" | grep -q "$avoid_ref" && die "install_nvm_from_git ${message} did clone with unwanted ref ${avoid_ref}"
+  if [ -n "${avoid_ref}" ] && echo "${current_ref}" | grep -q "${avoid_ref}"; then
+    # the avoided tag decorating HEAD is only legitimate if HEAD really is that
+    # tag's commit in the installed clone (eg master released at that tag); query
+    # the clone itself, not the caller's checkout, so the trigger ref cannot skew it
+    local avoid_changeset
+    avoid_changeset="$(git --git-dir "$NVM_DIR"/.git rev-parse --verify --quiet "refs/tags/${avoid_ref}^{commit}" 2>/dev/null)"
+    if [ "${avoid_changeset}" != "${current_changeset}" ]; then
+      die "install_nvm_from_git ${message} did clone with unwanted ref ${avoid_ref}"
+    fi
   fi
 
   if [ -n "$changeset" ]; then
