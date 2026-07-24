@@ -74,7 +74,7 @@
 
 ## Intro
 
-`nvm` allows you to quickly install and use different versions of node via the command line.
+`nvm` allows you to quickly install and use different versions of [node](https://nodejs.org) via the command line.
 
 **Example:**
 ```sh
@@ -96,7 +96,7 @@ Simple as that!
 
 
 ## About
-nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [Windows WSL](https://github.com/nvm-sh/nvm#important-notes).
+nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, [dash](https://git.kernel.org/pub/scm/utils/dash/dash.git), [ksh](https://github.com/ksh93/ksh), [zsh](https://www.zsh.org), [bash](https://www.gnu.org/software/bash/)), in particular on these platforms: unix, [macOS](https://www.apple.com/macos/), and [Windows WSL](https://github.com/nvm-sh/nvm#important-notes).
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
@@ -104,7 +104,7 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 
 ### Install & Update Script
 
-To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
+To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following [cURL](https://curl.se) or [Wget](https://www.gnu.org/software/wget/) command:
 ```sh
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
 ```
@@ -134,13 +134,13 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 - You can customize the install source, directory, profile, and version using the `NVM_SOURCE`, `NVM_DIR`, `PROFILE`, and `NODE_VERSION` variables.
 Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not contain a trailing slash.
 
-- The installer can use `git`, `curl`, or `wget` to download `nvm`, whichever is available.
+- The installer can use [`git`](https://git-scm.com/), `curl`, or `wget` to download `nvm`, whichever is available.
 
 - You can instruct the installer to not edit your shell config (for example if you already get completions via a [zsh nvm plugin](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm)) by setting `PROFILE=/dev/null` before running the `install.sh` script. Here's an example one-line command to do that: `PROFILE=/dev/null bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash'`
 
 #### Installing in Docker
 
-When invoking bash as a non-interactive shell, like in a Docker container, none of the regular profile files are sourced. In order to use `nvm`, `node`, and `npm` like normal, you can instead specify the special `BASH_ENV` variable, which bash sources when invoked non-interactively.
+When invoking bash as a non-interactive shell, like in a [Docker](https://www.docker.com) container, none of the regular profile files are sourced. In order to use `nvm`, `node`, and [`npm`](https://www.npmjs.com) like normal, you can instead specify the special `BASH_ENV` variable, which bash sources when invoked non-interactively.
 
 ```Dockerfile
 # Use bash for the shell
@@ -215,7 +215,7 @@ user@host:/tmp/test $ docker run --rm -it nvmimage npm -v
 
 #### Troubleshooting on Linux
 
-On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
+On [Linux](https://www.kernel.org/), after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
 Alternatively, you can run the following commands for the different shells on the command line:
 
 *bash*: `source ~/.bashrc`
@@ -228,7 +228,7 @@ These should pick up the `nvm` command.
 
 #### Troubleshooting on macOS
 
-Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
+Since OS X 10.9, `/usr/bin/git` has been preset by [Xcode](https://developer.apple.com/xcode/) command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
 
 If you get `nvm: command not found` after running the install script, one of the following might be the reason:
 
@@ -278,9 +278,9 @@ which should output `nvm` if the installation was successful. Please note that `
 
 ### Important Notes
 
-If you're running a system without prepackaged binary available, which means you're going to install node or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
+If you're running a system without prepackaged binary available, which means you're going to install node or [io.js](https://iojs.org) from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for [Debian](https://www.debian.org)/[Ubuntu](https://ubuntu.com) based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
-**Note:** `nvm` also supports Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [Git Bash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` also supports Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [Git Bash](https://gitforwindows.org/) ([MSYS](https://www.msys2.org/)) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
 
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
@@ -294,7 +294,7 @@ If you're running a system without prepackaged binary available, which means you
   - [nvm.fish](https://github.com/jorgebucaran/nvm.fish) - The Node.js version manager you'll adore, crafted just for Fish
   - [fish-nvm](https://github.com/FabioAntunes/fish-nvm) - Wrapper around nvm for fish, delays sourcing nvm until it's actually used.
 
-**Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
+**Note:** We still have some problems with [FreeBSD](https://www.freebsd.org), because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
 
   - [[#900] [Bug] node on FreeBSD may need to be patched](https://github.com/nvm-sh/nvm/issues/900)
   - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
@@ -309,11 +309,11 @@ If you're running a system without prepackaged binary available, which means you
   - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with `nvm`)
   - You can (but should not?) keep your previous "system" node install, but `nvm` will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
 
-Homebrew installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
+[Homebrew](https://brew.sh) installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
 
 **Note:** If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm upgrade` to upgrade ([you can set](https://github.com/lukechilds/zsh-nvm#auto-use) `NVM_AUTO_USE=true` to have it automatically detect and use `.nvmrc` files).
 
-**Note:** Git versions before v1.7 may face a problem of cloning `nvm` source from GitHub via https protocol, and there is also different behavior of git before v1.6, and git prior to [v1.17.10](https://github.com/git/git/commit/5a7d5b683f869d3e3884a89775241afa515da9e7) can not clone tags, so the minimum required git version is v1.7.10. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
+**Note:** Git versions before v1.7 may face a problem of cloning `nvm` source from [GitHub](https://github.com) via https protocol, and there is also different behavior of git before v1.6, and git prior to [v1.17.10](https://github.com/git/git/commit/5a7d5b683f869d3e3884a89775241afa515da9e7) can not clone tags, so the minimum required git version is v1.7.10. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
 
 ### Git Install
 
@@ -429,7 +429,7 @@ In place of a version pointer like "14.7" or "16.3" or "12.22.1", you can use th
   - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
   - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
   - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
-  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in SemVer, versions communicate breakage, not stability).
+  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in [SemVer](https://semver.org), versions communicate breakage, not stability).
   - `current`: the version currently active in this shell (i.e. what `node` resolves to via `$PATH`). It is **not** affected by `.nvmrc`. Useful when you want to refer to the active version explicitly &mdash; e.g. `nvm which current` always prints the path to the active `node`, regardless of whether an `.nvmrc` file is present.
 
 ### Long-term Support
@@ -955,9 +955,9 @@ set -e
 
 ## Installing nvm on Alpine Linux
 
-In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
+In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, [CentOS](https://www.centos.org), [RedHat](https://www.redhat.com) et al).
 
-Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
+[Alpine Linux](https://www.alpinelinux.org), unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
 
 There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally.
 
@@ -975,11 +975,11 @@ apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc 
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
 ```
 
-_Note: Alpine 3.5 can only install NodeJS versions up to v6.9.5, Alpine 3.6 can only install versions up to v6.10.3, Alpine 3.7 installs versions up to v8.9.3, Alpine 3.8 installs versions up to v8.14.0, Alpine 3.9 installs versions up to v10.19.0, Alpine 3.10 installs versions up to v10.24.1, Alpine 3.11 installs versions up to v12.22.6, Alpine 3.12 installs versions up to v12.22.12, Alpine 3.13 & 3.14 install versions up to v14.20.0, Alpine 3.15 & 3.16 install versions up to v16.16.0 (**These are all versions on the main branch**). Alpine 3.5 - 3.12 required the package `python2` to build NodeJS, as they are older versions to build. Alpine 3.13+ requires `python3` to successfully build newer NodeJS versions, but you can use `python2` with Alpine 3.13+ if you need to build versions of node supported in Alpine 3.5 - 3.15, you just need to specify what version of NodeJS you need to install in the package install script._
+_Note: Alpine 3.5 can only install NodeJS versions up to v6.9.5, Alpine 3.6 can only install versions up to v6.10.3, Alpine 3.7 installs versions up to v8.9.3, Alpine 3.8 installs versions up to v8.14.0, Alpine 3.9 installs versions up to v10.19.0, Alpine 3.10 installs versions up to v10.24.1, Alpine 3.11 installs versions up to v12.22.6, Alpine 3.12 installs versions up to v12.22.12, Alpine 3.13 & 3.14 install versions up to v14.20.0, Alpine 3.15 & 3.16 install versions up to v16.16.0 (**These are all versions on the main branch**). Alpine 3.5 - 3.12 required the package [`python2`](https://www.python.org/) to build NodeJS, as they are older versions to build. Alpine 3.13+ requires `python3` to successfully build newer NodeJS versions, but you can use `python2` with Alpine 3.13+ if you need to build versions of node supported in Alpine 3.5 - 3.15, you just need to specify what version of NodeJS you need to install in the package install script._
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
 
-As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
+As a potential alternative, [@mhart](https://github.com/mhart) (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
 
 <a id="removal"></a>
 ## Uninstalling / Removal
@@ -1051,7 +1051,7 @@ nvm install -s 0.8.6
 
 ## macOS Troubleshooting
 
-**nvm node version not found in vim shell**
+**nvm node version not found in [vim](https://www.vim.org) shell**
 
 If you set node version to a version other than your system node version `nvm use 6.2.1` and open vim and run `:!node -v` you should see `v6.2.1` if you see your system version `v0.12.7`. You need to run:
 
@@ -1092,7 +1092,7 @@ Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` 
 Experimental support for the Apple Silicon chip architecture was added in node.js v15.3 and full support was added in v16.0.
 Because of this, if you try to install older versions of node as usual, you will probably experience either compilation errors when installing node or out-of-memory errors while running your code.
 
-So, if you want to run a version prior to v16.0 on an Apple Silicon Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that Rosetta 2 can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
+So, if you want to run a version prior to v16.0 on an Apple Silicon Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that [Rosetta 2](https://support.apple.com/en-us/HT211861) can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
 Here's what you will need to do:
 
 - Install Rosetta, if you haven't already done so
@@ -1110,7 +1110,7 @@ Here's what you will need to do:
   $ arch -x86_64 zsh
   ```
 
-  Note: This same thing can also be accomplished by finding the Terminal or iTerm App in Finder, right clicking, selecting "Get Info", and then checking the box labeled "Open using Rosetta".
+  Note: This same thing can also be accomplished by finding the Terminal or [iTerm](https://iterm2.com) App in Finder, right clicking, selecting "Get Info", and then checking the box labeled "Open using Rosetta".
 
   Note: This terminal session is now running in `zsh`.
   If `zsh` is not the shell you typically use, `nvm` may not be `source`'d automatically like it probably is for your usual shell through your dotfiles.
@@ -1128,7 +1128,7 @@ Here's what you will need to do:
   ```
 
   Note: You're probably curious why `--shared-zlib` is included.
-  There's a bug in recent versions of Apple's system `clang` compiler.
+  There's a bug in recent versions of Apple's system [`clang`](https://clang.llvm.org/) compiler.
   If one of these broken versions is installed on your system, the above step will likely still succeed even if you didn't include the `--shared-zlib` flag.
   However, later, when you attempt to `npm install` something using your old version of node.js, you will see `incorrect data check` errors.
   If you want to avoid the possible hassle of dealing with this, include that flag.
