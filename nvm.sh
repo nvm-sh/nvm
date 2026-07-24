@@ -2377,22 +2377,39 @@ nvm_install_binary_extract() {
   if [ "${NVM_OS}" = 'win' ]; then
     VERSION_PATH="${VERSION_PATH}/bin"
     command unzip -q "${TARBALL}" -d "${TMPDIR}" || return 1
-  # For non Windows system (including WSL running on Windows)
-  else
-    nvm_extract_tarball "${NVM_OS}" "${VERSION}" "${TARBALL}" "${TMPDIR}"
-  fi
-
-  command mkdir -p "${VERSION_PATH}" || return 1
-
-  if [ "${NVM_OS}" = 'win' ]; then
+    # Replace any pre-existing (possibly broken or partial) install so the
+    # move below cannot collide with leftover files. Safe here: the archive
+    # has already downloaded and unzipped successfully into TMPDIR.
+    command rm -rf "${VERSION_PATH}"
+    command mkdir -p "${VERSION_PATH}" || return 1
     command mv "${TMPDIR}/"*/* "${VERSION_PATH}/" || return 1
     command chmod +x "${VERSION_PATH}"/node.exe || return 1
     command chmod +x "${VERSION_PATH}"/npm || return 1
     command chmod +x "${VERSION_PATH}"/npx 2>/dev/null
-  else
-    command mv "${TMPDIR}/"* "${VERSION_PATH}" || return 1
+    command rm -rf "${TMPDIR}"
+    return 0
   fi
 
+  # For non-Windows systems (including WSL running on Windows)
+  nvm_extract_tarball "${NVM_OS}" "${VERSION}" "${TARBALL}" "${TMPDIR}" || return 1
+
+  # Install atomically: replace any pre-existing version directory with a
+  # single rename, so a partial or broken tree is never observed as installed.
+  # A leftover directory without a working bin/node otherwise wedges the
+  # install - the per-entry `mv` refuses to overwrite the non-empty bin/, lib/,
+  # ... subdirectories and leaves a half-updated tree behind. Removing it first
+  # is safe: the tarball has already downloaded and extracted into TMPDIR.
+  command rm -rf "${VERSION_PATH}" || return 1
+  command mkdir -p "$(dirname "${VERSION_PATH}")" || return 1
+  if command mv "${TMPDIR}" "${VERSION_PATH}" 2>/dev/null; then
+    return 0
+  fi
+
+  # Fall back to a per-entry move when a single rename is not possible (e.g.
+  # TMPDIR and the versions directory are on different filesystems).
+  command rm -rf "${VERSION_PATH}"
+  command mkdir -p "${VERSION_PATH}" || return 1
+  command mv "${TMPDIR}/"* "${VERSION_PATH}" || return 1
   command rm -rf "${TMPDIR}"
 
   return 0
