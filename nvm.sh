@@ -3362,6 +3362,7 @@ nvm() {
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm install`:'
         nvm_echo '    -s                                        Skip binary download, install from source only.'
         nvm_echo '    -b                                        Skip source download, install from binary only.'
+        nvm_echo '                                              (set NVM_NO_SOURCE_FALLBACK=1 to make this the default for every install)'
         nvm_echo '    --reinstall-packages-from=<version>       When installing, reinstall packages installed in <node|iojs|node version number>'
         nvm_echo '    --lts                                     When installing, only select from LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When installing, only select from versions for a specific LTS line'
@@ -3709,6 +3710,17 @@ nvm() {
           ;;
         esac
       done
+
+      # NVM_NO_SOURCE_FALLBACK=1 makes `nvm install` behave as if `-b` were always passed:
+      # a failed binary download aborts instead of silently falling back to a from-source compile.
+      # It is a persistent policy so callers need not thread `-b` through every invocation.
+      if [ "${NVM_NO_SOURCE_FALLBACK-}" = '1' ] && [ $nosource -ne 1 ]; then
+        if [ $nobinary -eq 1 ]; then
+          nvm_err '-s cannot be combined with NVM_NO_SOURCE_FALLBACK=1 since that would skip install from both binary and source'
+          return 6
+        fi
+        nosource=1
+      fi
 
       if [ "${NVM_OFFLINE}" != 1 ] && ! nvm_has_executable "curl" && ! nvm_has_executable "wget"; then
         nvm_err 'nvm needs curl or wget to proceed.'

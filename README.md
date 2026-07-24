@@ -872,6 +872,10 @@ nvm exposes the following environment variables:
 
 Additionally, nvm modifies `PATH`, and, if present, `MANPATH` and `NODE_PATH` when changing versions.
 
+The following environment variables can be set to configure `nvm install`:
+
+- `NVM_NO_SOURCE_FALLBACK` - when `1`, a failed binary download aborts instead of silently falling back to a (much slower) from-source compile; the persistent equivalent of the `-b` flag, and mutually exclusive with `-s`.
+
 
 ## Bash Completion
 

@@ -1,0 +1,50 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${NVM_DIR}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup nvm_remote_version nvm_has_executable nvm_binary_available \
+    nvm_install_binary nvm_install_source nvm_get_make_jobs
+  unset NVM_DIR version SOURCE_MARKER OUTPUT EXIT_CODE
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+unset npm_config_prefix NPM_CONFIG_PREFIX
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'unable to create temp NVM_DIR'
+version='v20.0.0'
+SOURCE_MARKER="${NVM_DIR}/source-was-attempted"
+
+# Stay offline; make the binary download always fail and record any attempt to
+# compile from source.
+nvm_remote_version() { nvm_echo "${version}"; }
+nvm_has_executable() { return 0; }
+nvm_binary_available() { return 0; }
+nvm_get_make_jobs() { NVM_MAKE_JOBS=1; }
+nvm_install_binary() { return 1; }
+nvm_install_source() { command touch "${SOURCE_MARKER}"; return 1; }
+
+# Default: a failed binary download falls back to a source compile.
+rm -f "${SOURCE_MARKER}"
+nvm install "${version}" > /dev/null 2>&1
+[ -f "${SOURCE_MARKER}" ] || die 'default behaviour should fall back to source when the binary fails'
+
+# NVM_NO_SOURCE_FALLBACK=1: a failed binary download must NOT compile from source.
+rm -f "${SOURCE_MARKER}"
+NVM_NO_SOURCE_FALLBACK=1 nvm install "${version}" > /dev/null 2>&1; EXIT_CODE=$?
+[ ! -f "${SOURCE_MARKER}" ] || die 'NVM_NO_SOURCE_FALLBACK=1 should not fall back to source'
+[ "${EXIT_CODE}" != "0" ] || die 'a failed binary install with NVM_NO_SOURCE_FALLBACK=1 should be non-zero'
+
+# NVM_NO_SOURCE_FALLBACK=1 combined with -s would skip both methods: a conflict.
+OUTPUT="$(NVM_NO_SOURCE_FALLBACK=1 nvm install -s "${version}" 2>&1)"; EXIT_CODE=$?
+[ "${EXIT_CODE}" = "6" ] || die "expected exit code 6 for -s with NVM_NO_SOURCE_FALLBACK=1, got ${EXIT_CODE}"
+case "${OUTPUT}" in
+  *'skip install from both binary and source'*) ;;
+  *) die "expected a conflict message, got >${OUTPUT}<" ;;
+esac
+
+cleanup
