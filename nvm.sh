@@ -218,6 +218,52 @@ nvm_is_version_installed() {
   return 1
 }
 
+# Sanity-check an installed version's layout: a non-empty, executable bin/node
+# and, if present, an npm entry that resolves. nvm_is_version_installed only
+# tests the bin/node exec bit, which a zero-byte binary and a dangling npm
+# symlink both pass; this catches those, so a partial install is not reported
+# as a success. It deliberately does NOT execute node: a correctly installed
+# binary can still fail to run on an incompatible host (e.g. a newer node on an
+# older glibc), which is not a broken install - and a corrupt download is
+# already rejected by the checksum check before extraction.
+nvm_validate_install() {
+  local VERSION
+  VERSION="${1-}"
+  if [ -z "${VERSION}" ]; then
+    return 1
+  fi
+
+  local VERSION_PATH
+  VERSION_PATH="$(nvm_version_path "${VERSION}" 2>/dev/null)"
+  if [ -z "${VERSION_PATH}" ] || [ ! -d "${VERSION_PATH}" ]; then
+    return 1
+  fi
+
+  local NVM_NODE_BINARY
+  NVM_NODE_BINARY='node'
+  if [ "_$(nvm_get_os)" = '_win' ]; then
+    NVM_NODE_BINARY='node.exe'
+  fi
+
+  local NVM_NODE_PATH
+  NVM_NODE_PATH="${VERSION_PATH}/bin/${NVM_NODE_BINARY}"
+  # A zero-byte file with the exec bit set still passes `[ -x ]` (the shell
+  # would run it as an empty script), so require a non-empty executable.
+  if [ ! -s "${NVM_NODE_PATH}" ] || [ ! -x "${NVM_NODE_PATH}" ]; then
+    nvm_err "The installed node binary at ${NVM_NODE_PATH} is missing or empty."
+    return 1
+  fi
+
+  # npm ships with every supported node/io.js version; if its entry is a
+  # symlink it must resolve (one pointing at a removed target counts as broken).
+  if [ -h "${VERSION_PATH}/bin/npm" ] && [ ! -e "${VERSION_PATH}/bin/npm" ]; then
+    nvm_err "npm for ${VERSION} is a dangling symlink."
+    return 1
+  fi
+
+  return 0
+}
+
 nvm_print_npm_version() {
   if nvm_has "npm"; then
     local NPM_VERSION
@@ -3817,7 +3863,7 @@ nvm() {
 
       EXIT_CODE=0
 
-      if nvm_is_version_installed "${VERSION}"; then
+      if nvm_is_version_installed "${VERSION}" && nvm_validate_install "${VERSION}"; then
         nvm_err "${VERSION} is already installed."
         nvm use "${VERSION}"
         EXIT_CODE=$?
@@ -3917,6 +3963,11 @@ nvm() {
             EXIT_CODE=$?
           fi
         fi
+      fi
+
+      if [ $EXIT_CODE -eq 0 ] && ! nvm_validate_install "${VERSION}"; then
+        nvm_err "The install of ${VERSION} reported success but failed verification; not activating it."
+        EXIT_CODE=1
       fi
 
       if [ $EXIT_CODE -eq 0 ]; then
@@ -4789,7 +4840,7 @@ nvm() {
         nvm_echo nvm_err nvm_grep nvm_cd \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
-        nvm_is_natural_num nvm_is_version_installed \
+        nvm_is_natural_num nvm_is_version_installed nvm_validate_install \
         nvm_list_aliases nvm_make_alias nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \

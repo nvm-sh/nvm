@@ -1,0 +1,53 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${NVM_DIR}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup
+  unset NVM_DIR version version_path
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+type nvm_validate_install > /dev/null 2>&1 || die 'nvm_validate_install is not available'
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'Unable to create temporary folder'
+
+version='v20.0.0'
+version_path="${NVM_DIR}/versions/node/${version}"
+
+# No version directory at all: not valid.
+nvm_validate_install "${version}" 2>/dev/null && die 'a missing version dir should not validate'
+
+# A healthy install: a non-empty node plus an npm symlink that resolves.
+# (validation checks layout, not execution, so bin/node need not be a real
+# runnable binary here - just non-empty and executable.)
+mkdir -p "${version_path}/bin" "${version_path}/lib/node_modules/npm/bin" || die 'setup mkdir failed'
+printf '#!/bin/sh\necho "%s"\n' "${version}" > "${version_path}/bin/node"
+chmod +x "${version_path}/bin/node"
+echo 'npm-cli' > "${version_path}/lib/node_modules/npm/bin/npm-cli.js"
+( cd "${version_path}/bin" && ln -s ../lib/node_modules/npm/bin/npm-cli.js npm )
+nvm_validate_install "${version}" 2>/dev/null || die 'a healthy install should validate'
+
+# A binary that is correctly installed but cannot run on this host (e.g. a
+# newer node on an older glibc) must STILL validate: whether it runs is the
+# host's concern, not a broken install.
+printf '#!/bin/sh\nexit 1\n' > "${version_path}/bin/node"
+chmod +x "${version_path}/bin/node"
+nvm_validate_install "${version}" 2>/dev/null || die 'a non-runnable but present binary should still validate'
+
+# A zero-byte but executable node: passes `[ -x ]` but must not validate.
+: > "${version_path}/bin/node"
+chmod +x "${version_path}/bin/node"
+nvm_validate_install "${version}" 2>/dev/null && die 'a zero-byte node should not validate'
+
+# A non-empty node again, but with a dangling npm symlink: must not validate.
+printf '#!/bin/sh\necho "%s"\n' "${version}" > "${version_path}/bin/node"
+chmod +x "${version_path}/bin/node"
+rm -f "${version_path}/lib/node_modules/npm/bin/npm-cli.js"
+nvm_validate_install "${version}" 2>/dev/null && die 'a dangling npm symlink should not validate'
+
+cleanup
