@@ -875,6 +875,10 @@ Additionally, nvm modifies `PATH`, and, if present, `MANPATH` and `NODE_PATH` wh
 The following environment variables can be set to configure `nvm install`:
 
 - `NVM_NO_SOURCE_FALLBACK` - when `1`, a failed binary download aborts instead of silently falling back to a (much slower) from-source compile; the persistent equivalent of the `-b` flag, and mutually exclusive with `-s`.
+- `NVM_INSTALL_LOCK_TIMEOUT` - seconds to wait for a concurrent install of the same version to finish before giving up (default `600`). On timeout, nvm prints the lock path so a lock left behind by a killed install can be removed.
+- `NVM_INSTALL_LOCK_STALE` - minutes after which an install lock is assumed abandoned and stolen automatically; `0` (the default) never steals.
+
+`nvm install <version>` takes a per-version advisory lock (a directory under `$NVM_DIR/.cache/locks`), so two shells installing the same version at once cannot corrupt its version directory; installs of *different* versions never block each other.
 
 
 ## Bash Completion

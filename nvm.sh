@@ -3230,6 +3230,80 @@ nvm_cache_dir() {
   nvm_echo "${NVM_DIR}/.cache"
 }
 
+# Turn a version into a filesystem-safe lock name. Versions that reach here are
+# already restricted to [0-9A-Za-z._+-], but be defensive about anything else.
+nvm_install_lock_name() {
+  command printf '%s' "${1-}" | command tr -c '0-9A-Za-z._+-' '_'
+}
+
+# Acquire an advisory, per-version install lock so two concurrent
+# `nvm install <same version>` runs cannot race on the same version directory
+# (one removing/replacing it while the other reads or writes it). The lock is a
+# directory created with `mkdir`, which is atomic across POSIX filesystems.
+#
+# Tunables (env vars):
+#   NVM_INSTALL_LOCK_TIMEOUT  seconds to wait for a held lock (default 600)
+#   NVM_INSTALL_LOCK_STALE    minutes after which a lock is assumed abandoned
+#                             and stolen; 0 (default) never steals
+#
+# On success the lock path is recorded in NVM_INSTALL_LOCK for the matching
+# nvm_release_install_lock.
+nvm_acquire_install_lock() {
+  local VERSION
+  VERSION="${1-}"
+  if [ -z "${VERSION}" ]; then
+    return 0
+  fi
+
+  local LOCK_ROOT
+  LOCK_ROOT="$(nvm_cache_dir)/locks"
+  # If the lock directory can't be created, don't block the install over it.
+  command mkdir -p "${LOCK_ROOT}" 2>/dev/null || return 0
+
+  local LOCK
+  LOCK="${LOCK_ROOT}/$(nvm_install_lock_name "${VERSION}")"
+
+  local TIMEOUT
+  TIMEOUT="${NVM_INSTALL_LOCK_TIMEOUT:-600}"
+  local STALE
+  STALE="${NVM_INSTALL_LOCK_STALE:-0}"
+
+  local WAITED
+  WAITED=0
+  local ANNOUNCED
+  ANNOUNCED=0
+  while ! command mkdir "${LOCK}" 2>/dev/null; do
+    # Steal a lock left behind by a crashed install once it is old enough.
+    if [ "${STALE}" != '0' ] && [ -n "$(command find "${LOCK}" -maxdepth 0 -type d -mmin "+${STALE}" 2>/dev/null)" ]; then
+      nvm_err "Removing stale install lock for ${VERSION} (older than ${STALE} minute(s))"
+      command rm -rf "${LOCK}" 2>/dev/null
+      continue
+    fi
+    if [ "${WAITED}" -ge "${TIMEOUT}" ]; then
+      nvm_err "Timed out after ${TIMEOUT}s waiting for another install of ${VERSION} to finish."
+      nvm_err "If no other install is running, remove ${LOCK} and try again."
+      return 1
+    fi
+    if [ "${ANNOUNCED}" -eq 0 ]; then
+      nvm_err "Waiting for another install of ${VERSION} to finish..."
+      ANNOUNCED=1
+    fi
+    command sleep 1
+    WAITED=$((WAITED + 1))
+  done
+
+  NVM_INSTALL_LOCK="${LOCK}"
+  return 0
+}
+
+# Release the lock acquired by nvm_acquire_install_lock, if any.
+nvm_release_install_lock() {
+  if [ -n "${NVM_INSTALL_LOCK-}" ]; then
+    command rmdir "${NVM_INSTALL_LOCK}" 2>/dev/null || command rm -rf "${NVM_INSTALL_LOCK}" 2>/dev/null || true
+    unset NVM_INSTALL_LOCK
+  fi
+}
+
 # args: pattern
 # Lists versions available in the local cache (not yet installed).
 # Returns version numbers like "v18.20.4", one per line, sorted.
@@ -3933,6 +4007,11 @@ nvm() {
         fi
         EXIT_CODE=0
       else
+        # Serialize concurrent installs of this version so two runs cannot race
+        # on its version directory (one replacing it while the other reads it).
+        if ! nvm_acquire_install_lock "${VERSION}"; then
+          return 1
+        fi
 
         if [ "_${NVM_OS}" = "_freebsd" ]; then
           # node.js and io.js do not have a FreeBSD binary
@@ -3975,6 +4054,8 @@ nvm() {
             EXIT_CODE=$?
           fi
         fi
+
+        nvm_release_install_lock
       fi
 
       if [ $EXIT_CODE -eq 0 ] && ! nvm_validate_install "${VERSION}"; then
@@ -4853,6 +4934,7 @@ nvm() {
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_version_installed nvm_validate_install \
+        nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
         nvm_list_aliases nvm_make_alias nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
@@ -4866,7 +4948,7 @@ nvm() {
         nvm_write_nvmrc \
         >/dev/null 2>&1
       unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
-        NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS \
+        NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS NVM_INSTALL_LOCK \
         NVM_COLORS INSTALLED_COLOR SYSTEM_COLOR \
         CURRENT_COLOR NOT_INSTALLED_COLOR DEFAULT_COLOR LTS_COLOR \
         >/dev/null 2>&1
