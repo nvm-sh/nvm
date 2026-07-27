@@ -4332,10 +4332,10 @@ nvm() {
       if nvm_has manpath; then
         if [ -z "${MANPATH-}" ]; then
           local MANPATH
-          MANPATH=$(manpath)
+          MANPATH=":$(manpath)"
         fi
         # Change current version
-        MANPATH="$(nvm_change_path "${MANPATH}" "/share/man" "${NVM_VERSION_DIR}")"
+        MANPATH=":$(nvm_change_path "${MANPATH}" "/share/man" "${NVM_VERSION_DIR}")"
         export MANPATH
       fi
       export PATH
