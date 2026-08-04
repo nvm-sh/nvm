@@ -530,4 +530,4 @@ nvm_reset() {
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
 
-} # this ensures the entire script is downloaded #
+} # this ensures the entire script is downloaded # 
