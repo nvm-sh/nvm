@@ -1430,7 +1430,7 @@ nvm_alias() {
 
   local NVM_ALIAS_LINE
   while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
-    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%\#*}"
     case "${NVM_ALIAS_LINE}" in
       *[![:space:]]*) ;;
       *) continue ;;
