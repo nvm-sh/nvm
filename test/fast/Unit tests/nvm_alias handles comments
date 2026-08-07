@@ -6,6 +6,7 @@ cleanup () {
   rm -rf ../../../alias/test-comment
   rm -rf ../../../alias/test-inline-comment
   rm -rf ../../../alias/test-comment-first
+  rm -rf ../../../alias/test-extended-glob
 }
 
 : nvm.sh
@@ -30,5 +31,19 @@ v0.12" > ../../../alias/test-comment-first
 OUTPUT="$(nvm_alias test-comment-first)"
 EXPECTED_OUTPUT="v0.12"
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias test-comment-first' should skip comment-only first line; expected '$EXPECTED_OUTPUT', got '$OUTPUT'"
+
+# Test: alias file with inline comment under zsh EXTENDED_GLOB (regression for #3895)
+# Under zsh's EXTENDED_GLOB, `#` is a glob operator, so the comment-strip
+# expansion `${var%%#*}` raises "bad pattern: #*" and yields no output. The fix
+# escapes the `#` so it is matched literally. Only zsh supports EXTENDED_GLOB,
+# so this assertion is skipped on other shells.
+if nvm_is_zsh; then
+  echo "v0.13 # inline comment under EXTENDED_GLOB" > ../../../alias/test-extended-glob
+  setopt EXTENDED_GLOB
+  OUTPUT="$(nvm_alias test-extended-glob)"
+  setopt NO_EXTENDED_GLOB
+  EXPECTED_OUTPUT="v0.13"
+  [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_alias test-extended-glob' should strip inline comment under EXTENDED_GLOB; expected '$EXPECTED_OUTPUT', got '$OUTPUT'"
+fi
 
 cleanup
