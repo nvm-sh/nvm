@@ -1,1 +1,22 @@
+#!/bin/sh
 
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# nvm_wrap_with_color_code should not color inside command substitution when colors are undetected
+OUTPUT="$(nvm_wrap_with_color_code 'b' 'b')"
+[ "_${OUTPUT}" = '_b' ] || die "expected plain text without color support; got >${OUTPUT}<"
+
+# nvm_wrap_with_color_code should color inside command substitution when NVM_HAS_COLORS is 1
+NVM_HAS_COLORS=1
+OUTPUT="$(nvm_wrap_with_color_code 'b' 'b')"
+EXPECTED_OUTPUT="$(command printf %b '\033[0;34mb\033[0m')"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
+
+# nvm_wrap_with_color_code should not color an unknown color code
+OUTPUT="$(nvm_wrap_with_color_code 'z' 'z')"
+[ "_${OUTPUT}" = '_z' ] || die "expected plain text for an unknown color code; got >${OUTPUT}<"
+
+unset NVM_HAS_COLORS

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_has_colors() { return 0; }
+
+HELP="$(nvm --help)"
+
+EXPECTED="$(command printf %b '\033[0;34mb\033[0m\033[0;33my\033[0m\033[0;32mg\033[0m\033[0;31mr\033[0m\033[0;37me\033[0m')"
+case "${HELP}" in
+  *"${EXPECTED}"*) ;;
+  *) die "nvm --help did not color the initial colors sample" ;;
+esac
+
+EXPECTED="$(command printf %b '\033[0;34mb\033[0m/\033[1;34mB\033[0m = \033[0;34mblue\033[0m / \033[1;34mbold blue\033[0m')"
+case "${HELP}" in
+  *"${EXPECTED}"*) ;;
+  *) die "nvm --help did not color the color codes legend" ;;
+esac

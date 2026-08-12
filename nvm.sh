@@ -1128,6 +1128,8 @@ nvm_set_colors() {
     local CURRENT_COLOR
     local NOT_INSTALLED_COLOR
     local DEFAULT_COLOR
+    local NVM_HAS_COLORS
+    NVM_HAS_COLORS=0
 
     INSTALLED_COLOR="$(echo "$1" | awk '{ print substr($0, 1, 1); }')"
     LTS_AND_SYSTEM_COLOR="$(echo "$1" | awk '{ print substr($0, 2, 1); }')"
@@ -1138,6 +1140,7 @@ nvm_set_colors() {
       nvm_echo "Setting colors to: ${INSTALLED_COLOR} ${LTS_AND_SYSTEM_COLOR} ${CURRENT_COLOR} ${NOT_INSTALLED_COLOR} ${DEFAULT_COLOR}"
       nvm_echo "WARNING: Colors may not display because they are not supported in this shell."
     else
+      NVM_HAS_COLORS=1
       nvm_echo_with_colors "Setting colors to: $(nvm_wrap_with_color_code "${INSTALLED_COLOR}" "${INSTALLED_COLOR}")$(nvm_wrap_with_color_code "${LTS_AND_SYSTEM_COLOR}" "${LTS_AND_SYSTEM_COLOR}")$(nvm_wrap_with_color_code "${CURRENT_COLOR}" "${CURRENT_COLOR}")$(nvm_wrap_with_color_code "${NOT_INSTALLED_COLOR}" "${NOT_INSTALLED_COLOR}")$(nvm_wrap_with_color_code "${DEFAULT_COLOR}" "${DEFAULT_COLOR}")"
     fi
     export NVM_COLORS="$1"
@@ -1175,7 +1178,7 @@ nvm_wrap_with_color_code() {
   CODE="$(nvm_print_color_code "${1}" 2>/dev/null ||:)"
   local TEXT
   TEXT="${2-}"
-  if nvm_has_colors && [ -n "${CODE}" ]; then
+  if { [ "${NVM_HAS_COLORS-}" = 1 ] || nvm_has_colors; } && [ -n "${CODE}" ]; then
     nvm_echo_with_colors "\033[${CODE}${TEXT}\033[0m"
   else
     nvm_echo "${TEXT}"
@@ -3412,6 +3415,12 @@ nvm() {
             break
           fi
         done
+
+        local NVM_HAS_COLORS
+        NVM_HAS_COLORS=0
+        if nvm_has_colors; then
+          NVM_HAS_COLORS=1
+        fi
 
         local NVM_IOJS_PREFIX
         NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
