@@ -146,4 +146,107 @@ assert_uname_os 'FreeBSD host 14.0-STABLE' "${OS_RELEASE}" 'freebsd'
 printf 'NAME=Helios\nID=helios\n' > "${OS_RELEASE}"
 assert_uname_os 'SunOS host 5.11' "${OS_RELEASE}" 'sunos'
 
+# a HarmonyOS kernel without the OpenHarmony userland is not an OS `nvm` knows
+assert_uname_os 'HarmonyOS localhost HongMeng Kernel 1.12.0 #1 SMP Tue Jul 14 09:40:51 UTC 2026 aarch64 Toybox' "${MISSING_OS_RELEASE}" ''
+
+# openharmony on aarch64 composes the slug a mirror has to serve; this runs on every host,
+# and pins that `nvm_get_arch` gives `arm64`, not Alpine's `arm64-musl`
+NVM_MOCK_UNAME=aarch64
+export NVM_MOCK_UNAME
+SLUG="$(nvm_get_os() { nvm_echo openharmony; }; PATH="${MOCK_BIN}:${PATH}" nvm_get_download_slug node binary v22.22.0)"
+unset NVM_MOCK_UNAME
+[ "${SLUG}" = 'node-v22.22.0-openharmony-arm64' ] || die "nvm_get_download_slug produced \"${SLUG}\", expected \"node-v22.22.0-openharmony-arm64\""
+
+# OpenHarmony detection via chroot
+
+MOCKS_DIR="$(pwd)/../../mocks"
+
+setup_chroot() {
+  chroot_dir=$1
+  param_mock=$2
+  uname_mock=$3
+
+  # Directories
+  mkdir -p "${chroot_dir}/etc"
+  mkdir -p "${chroot_dir}/bin"
+  mkdir -p "${chroot_dir}/usr/bin"
+  mkdir -p "${chroot_dir}/lib64"
+  mkdir -p "${chroot_dir}/dev"
+  mkdir -p "${chroot_dir}/system/bin"
+
+  # Files and binaries
+  cp ../../../nvm.sh "${chroot_dir}/"
+  cp /bin/sh /usr/bin/dirname /usr/bin/grep "${chroot_dir}/usr/bin/"
+  cp "${uname_mock}" "${chroot_dir}/usr/bin/uname"
+  chmod +x "${chroot_dir}/usr/bin/uname"
+  ln -sf ../usr/bin/sh "${chroot_dir}/bin/sh"
+
+  # Fake OpenHarmony param binary
+  cp "${param_mock}" "${chroot_dir}/system/bin/param"
+  chmod +x "${chroot_dir}/system/bin/param"
+
+  # Libraries
+  for binary in /bin/sh /usr/bin/dirname /usr/bin/uname /usr/bin/grep; do
+    for lib in $(ldd $binary | awk '{print $3}' | grep "^/"); do
+      dir=$(dirname "${lib}")
+      mkdir -p "${chroot_dir}${dir}"
+      cp "${lib}" "${chroot_dir}${dir}/"
+    done
+  done
+
+  # Dynamic linker
+  cp /lib64/ld-linux-x86-64.so.2 "${chroot_dir}/lib64/"
+
+  # /dev/null
+  sudo mknod "${chroot_dir}/dev/null" c 1 3
+}
+
+# The chroot fixtures assume a glibc x86-64 layout (`ldd`, a fixed dynamic-linker path
+# under /lib64), which macOS and musl Alpine do not have; skip the chroot checks there.
+if [ -f "/etc/alpine-release" ] || ! nvm_has ldd || [ ! -e /lib64/ld-linux-x86-64.so.2 ]; then
+  echo "no glibc x86-64 layout; skipping chroot OpenHarmony checks"
+else
+  CHROOT_UNAME_LINUX_PARAM_OPENHARMONY="${TEST_DIR}/uname_linux_param_openharmony"
+  CHROOT_UNAME_LINUX_PARAM_OTHER="${TEST_DIR}/uname_linux_param_other"
+  CHROOT_UNAME_HARMONYOS_PARAM_OPENHARMONY="${TEST_DIR}/uname_harmonyos_param_openharmony"
+  CHROOT_UNAME_HARMONYOS_PARAM_OTHER="${TEST_DIR}/uname_harmonyos_param_other"
+  CHROOT_UNAME_OSX_PARAM_OPENHARMONY="${TEST_DIR}/uname_osx_param_openharmony"
+
+  setup_chroot "${CHROOT_UNAME_LINUX_PARAM_OPENHARMONY}" "${MOCKS_DIR}/param_openharmony" "${MOCKS_DIR}/uname_linux_aarch64"
+  setup_chroot "${CHROOT_UNAME_LINUX_PARAM_OTHER}" "${MOCKS_DIR}/param_other" "${MOCKS_DIR}/uname_linux_aarch64"
+  setup_chroot "${CHROOT_UNAME_HARMONYOS_PARAM_OPENHARMONY}" "${MOCKS_DIR}/param_openharmony" "${MOCKS_DIR}/uname_harmonyos_aarch64"
+  setup_chroot "${CHROOT_UNAME_HARMONYOS_PARAM_OTHER}" "${MOCKS_DIR}/param_other" "${MOCKS_DIR}/uname_harmonyos_aarch64"
+  setup_chroot "${CHROOT_UNAME_OSX_PARAM_OPENHARMONY}" "${MOCKS_DIR}/param_openharmony" "${MOCKS_DIR}/uname_osx_amd64"
+
+  # Linux kernel with an OpenHarmony param -> openharmony
+  OS_UNAME_LINUX_PARAM_OPENHARMONY=$(sudo chroot "${CHROOT_UNAME_LINUX_PARAM_OPENHARMONY}" /bin/sh -c "NVM_DIR=/; export NVM_DIR; . ./nvm.sh && nvm_get_os")
+  if [ "${OS_UNAME_LINUX_PARAM_OPENHARMONY}" != "openharmony" ]; then
+    die "nvm_get_os produced \"${OS_UNAME_LINUX_PARAM_OPENHARMONY}\", expected \"openharmony\""
+  fi
+
+  # Linux kernel with an unrelated param stays linux
+  OS_UNAME_LINUX_PARAM_OTHER=$(sudo chroot "${CHROOT_UNAME_LINUX_PARAM_OTHER}" /bin/sh -c "NVM_DIR=/; export NVM_DIR; . ./nvm.sh && nvm_get_os")
+  if [ "${OS_UNAME_LINUX_PARAM_OTHER}" != "linux" ]; then
+    die "nvm_get_os produced \"${OS_UNAME_LINUX_PARAM_OTHER}\", expected \"linux\""
+  fi
+
+  # HarmonyOS kernel with an OpenHarmony param -> openharmony
+  OS_UNAME_HARMONYOS_PARAM_OPENHARMONY=$(sudo chroot "${CHROOT_UNAME_HARMONYOS_PARAM_OPENHARMONY}" /bin/sh -c "NVM_DIR=/; export NVM_DIR; . ./nvm.sh && nvm_get_os")
+  if [ "${OS_UNAME_HARMONYOS_PARAM_OPENHARMONY}" != "openharmony" ]; then
+    die "nvm_get_os produced \"${OS_UNAME_HARMONYOS_PARAM_OPENHARMONY}\", expected \"openharmony\""
+  fi
+
+  # HarmonyOS kernel with an unrelated param stays empty
+  OS_UNAME_HARMONYOS_PARAM_OTHER=$(sudo chroot "${CHROOT_UNAME_HARMONYOS_PARAM_OTHER}" /bin/sh -c "NVM_DIR=/; export NVM_DIR; . ./nvm.sh && nvm_get_os")
+  if [ "_${OS_UNAME_HARMONYOS_PARAM_OTHER}" != "_" ]; then
+    die "nvm_get_os produced \"${OS_UNAME_HARMONYOS_PARAM_OTHER}\", expected \"\""
+  fi
+
+  # an OS that `uname` already identified is never re-probed
+  OS_UNAME_OSX_PARAM_OPENHARMONY=$(sudo chroot "${CHROOT_UNAME_OSX_PARAM_OPENHARMONY}" /bin/sh -c "NVM_DIR=/; export NVM_DIR; . ./nvm.sh && nvm_get_os")
+  if [ "${OS_UNAME_OSX_PARAM_OPENHARMONY}" != "darwin" ]; then
+    die "nvm_get_os produced \"${OS_UNAME_OSX_PARAM_OPENHARMONY}\", expected \"darwin\""
+  fi
+fi
+
 cleanup
