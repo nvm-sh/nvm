@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -e
+
+cleanup() {
+  rm -f "${NVM_HAS_COLORS_MARKER}"
+  unset NVM_HAS_COLORS_MARKER
+  unset -f nvm_has_colors
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+unset NVM_HAS_COLORS
+
+NVM_HAS_COLORS_MARKER="$(mktemp)"
+# one-shot: the fix asks once up front, while the unfixed code re-asks inside every command substitution
+nvm_has_colors() {
+  if [ ! -e "${NVM_HAS_COLORS_MARKER}" ]; then
+    return 1
+  fi
+  rm -f "${NVM_HAS_COLORS_MARKER}"
+}
+
+OUTPUT="$(nvm set-colors bygre)"
+EXPECTED_OUTPUT="$(command printf %b 'Setting colors to: \033[0;34mb\033[0m\033[0;33my\033[0m\033[0;32mg\033[0m\033[0;31mr\033[0m\033[0;37me\033[0m')"
+
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
+
+cleanup

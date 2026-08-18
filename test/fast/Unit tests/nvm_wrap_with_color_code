@@ -5,6 +5,8 @@ die () { echo "$@" ; exit 1; }
 : nvm.sh
 \. ../../../nvm.sh
 
+unset NVM_HAS_COLORS
+
 # nvm_wrap_with_color_code should not color inside command substitution when colors are undetected
 OUTPUT="$(nvm_wrap_with_color_code 'b' 'b')"
 [ "_${OUTPUT}" = '_b' ] || die "expected plain text without color support; got >${OUTPUT}<"
@@ -19,4 +21,11 @@ EXPECTED_OUTPUT="$(command printf %b '\033[0;34mb\033[0m')"
 OUTPUT="$(nvm_wrap_with_color_code 'z' 'z')"
 [ "_${OUTPUT}" = '_z' ] || die "expected plain text for an unknown color code; got >${OUTPUT}<"
 
+# NVM_HAS_COLORS=0 is not an off switch; it falls through to nvm_has_colors
+NVM_HAS_COLORS=0
+nvm_has_colors() { return 0; }
+OUTPUT="$(nvm_wrap_with_color_code 'b' 'b')"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
+
 unset NVM_HAS_COLORS
+unset -f nvm_has_colors
