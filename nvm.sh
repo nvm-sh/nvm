@@ -2253,6 +2253,18 @@ nvm_get_os() {
     AIX\ *) NVM_OS=aix ;;
     CYGWIN* | MSYS* | MINGW*) NVM_OS=win ;;
   esac
+
+  # OpenHarmony can't be identified from `uname` alone: a device may run either
+  # a Linux kernel or a HarmonyOS kernel. Ask the userland, but only when
+  # `uname` has not already identified some other OS.
+  case "${NVM_OS-}" in
+    '' | linux)
+      if [ -x /system/bin/param ] && /system/bin/param get const.ohos.fullname </dev/null 2>/dev/null | nvm_grep -q '^OpenHarmony'; then
+        NVM_OS=openharmony
+      fi
+      ;;
+  esac
+
   nvm_echo "${NVM_OS-}"
 }
 
