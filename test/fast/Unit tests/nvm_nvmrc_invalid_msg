@@ -1,0 +1,20 @@
+#!/bin/sh
+
+cleanup() {
+  unset NVM_HAS_COLORS OUTPUT ESC
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+export NVM_HAS_COLORS=1
+
+OUTPUT="$(nvm_nvmrc_invalid_msg 'lts/*' 2>&1)"
+ESC="$(command printf %b '\033[')"
+case "${OUTPUT}" in
+  *"${ESC}"*) die "an exported NVM_HAS_COLORS should not color the invalid .nvmrc message; got >${OUTPUT}<" ;;
+esac
+
+cleanup

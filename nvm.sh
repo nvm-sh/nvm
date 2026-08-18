@@ -594,6 +594,8 @@ nvm_find_nvmrc() {
 }
 
 nvm_nvmrc_invalid_msg() {
+  local NVM_HAS_COLORS
+  NVM_HAS_COLORS=0
   local error_text
   error_text="invalid .nvmrc!
 all non-commented content (anything after # is a comment) must be either:
