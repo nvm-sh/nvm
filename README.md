@@ -1132,7 +1132,7 @@ Here's what you will need to do:
   If one of these broken versions is installed on your system, the above step will likely still succeed even if you didn't include the `--shared-zlib` flag.
   However, later, when you attempt to `npm install` something using your old version of node.js, you will see `incorrect data check` errors.
   If you want to avoid the possible hassle of dealing with this, include that flag.
-  For more details, see [this issue](https://github.com/nodejs/node/issues/39313) and [this comment](https://github.com/nodejs/node/issues/39313#issuecomment-90.40.676)
+  For more details, see [this issue](https://github.com/nodejs/node/issues/39313) and [this comment](https://github.com/nodejs/node/issues/39313#issuecomment-902395576)
 
 - Exit back to your native shell.
 
