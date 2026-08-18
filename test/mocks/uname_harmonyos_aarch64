@@ -1,0 +1,5 @@
+if [ "_$1" = "_-m" ]; then
+  echo "aarch64"
+else
+  echo "HarmonyOS localhost HongMeng Kernel 1.12.0 #1 SMP Tue Jul 14 09:40:51 UTC 2026 aarch64 Toybox"
+fi
