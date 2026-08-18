@@ -35,5 +35,6 @@ jobs:
         run: echo proceed | make TAG=99.99.99 release
         env:
           GIT_EDITOR: "sed -i '1 s/^/99.99.99 make release test/'"
+          GH_TOKEN: ${{ github.token }}
       - name: Ensure tag is created
         run: git tag | grep v99.99.99
