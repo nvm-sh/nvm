@@ -51,4 +51,7 @@ case "${HELP}" in
   *"${EXPECTED}"*) die "nvm --help --no-colors colored the legend" ;;
 esac
 
+nvm --help >/dev/null
+[ -z "${NVM_HAS_COLORS-}" ] || die "nvm --help leaked NVM_HAS_COLORS=${NVM_HAS_COLORS} into the shell"
+
 cleanup

@@ -29,4 +29,9 @@ EXPECTED_OUTPUT="$(command printf %b 'Setting colors to: \033[0;34mb\033[0m\033[
 
 [ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<; got >${OUTPUT}<"
 
+rm -f "${NVM_HAS_COLORS_MARKER}"
+NVM_HAS_COLORS_MARKER="$(mktemp)"
+nvm set-colors bygre >/dev/null
+[ -z "${NVM_HAS_COLORS-}" ] || die "nvm set-colors leaked NVM_HAS_COLORS=${NVM_HAS_COLORS} into the shell"
+
 cleanup

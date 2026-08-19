@@ -17,4 +17,9 @@ case "${OUTPUT}" in
   *"${ESC}"*) die "an exported NVM_HAS_COLORS should not color the invalid .nvmrc message; got >${OUTPUT}<" ;;
 esac
 
+case "${OUTPUT}" in
+  *'invalid .nvmrc!'*) ;;
+  *) die "expected the invalid-.nvmrc message; got >${OUTPUT}<" ;;
+esac
+
 cleanup
