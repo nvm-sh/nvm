@@ -33,12 +33,15 @@ nvm_cd() {
   \cd "$@"
 }
 
+# a caller that closed stderr, rather than redirecting it to /dev/null, makes
+# the `>&2` fail; zsh cannot report that, so it aborts the script, which only a
+# subshell contains, and `|| return 0` keeps the status from the caller
 nvm_err() {
-  >&2 nvm_echo "$@"
+  (>&2 nvm_echo "$@") || return 0
 }
 
 nvm_err_with_colors() {
-  >&2 nvm_echo_with_colors "$@"
+  (>&2 nvm_echo_with_colors "$@") || return 0
 }
 
 nvm_grep() {

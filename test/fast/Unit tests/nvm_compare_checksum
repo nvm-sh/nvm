@@ -54,4 +54,6 @@ EXPECTED_OUTPUT='Checksums matched!'
 [ "${CAPTURED_STDERR}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${CAPTURED_STDERR}<"
 [ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected to exit with code 0, got ${CAPTURED_EXIT_CODE}"
 
+(set +x; nvm_compare_checksum ../../../nvm.sh checksum 2>&-) || die "with stderr closed, expected to exit with code 0, got $?"
+
 cleanup

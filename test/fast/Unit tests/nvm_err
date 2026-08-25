@@ -1,0 +1,21 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+try_err nvm_err 'an error'
+EXPECTED_OUTPUT='an error'
+[ "${CAPTURED_STDERR}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${CAPTURED_STDERR}<"
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected to exit with code 0, got ${CAPTURED_EXIT_CODE}"
+
+try_err nvm_err_with_colors 'an error'
+EXPECTED_OUTPUT='an error'
+[ "${CAPTURED_STDERR}" = "${EXPECTED_OUTPUT}" ] || die "expected >${EXPECTED_OUTPUT}<, got >${CAPTURED_STDERR}<"
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected to exit with code 0, got ${CAPTURED_EXIT_CODE}"
+
+nvm_err 'an error' 2>&- || die "nvm_err with stderr closed exited with code $?"
+nvm_err_with_colors 'an error' 2>&- || die "nvm_err_with_colors with stderr closed exited with code $?"
