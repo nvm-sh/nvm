@@ -1,0 +1,19 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# bash errors on `hash -r` when hashing is disabled (`set +h`); the guarded
+# call in `nvm deactivate` must not print "hash: hashing disabled"
+if [ "${-#*h}" != "$-" ]; then
+  NVM_DIR="$(command pwd)"
+  PATH="$NVM_DIR/fake/bin:$PATH"
+  set +h
+  OUTPUT=`nvm deactivate 2>&1`
+  set -h
+  case "${OUTPUT}" in
+    *"hash: hashing disabled"*) die "nvm deactivate printed 'hash: hashing disabled': ${OUTPUT}" ;;
+  esac
+fi

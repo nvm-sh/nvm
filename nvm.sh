@@ -4228,7 +4228,11 @@ nvm() {
         fi
       else
         export PATH="${NEWPATH}"
-        \hash -r
+        # run only when hashing is enabled, else `hash` prints
+        # "hash: hashing disabled" on every new terminal
+        if [ "${-#*h}" != "$-" ]; then
+          \hash -r
+        fi
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
         fi
@@ -4373,7 +4377,11 @@ nvm() {
         export MANPATH
       fi
       export PATH
-      \hash -r
+      # run only when hashing is enabled, else `hash` prints
+      # "hash: hashing disabled" on every new terminal
+      if [ "${-#*h}" != "$-" ]; then
+        \hash -r
+      fi
       export NVM_BIN="${NVM_VERSION_DIR}/bin"
       export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
