@@ -2388,7 +2388,14 @@ nvm_get_mirror() {
   esac
 
 
-  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ if ($0 !~ /^https?:\/\/[a-zA-Z0-9.\/_-]+$/) exit 1 }'; then
+  # Allow RFC 3986 `unreserved` (A-Za-z0-9-._~) plus the authority and path
+  # punctuation a mirror URL legitimately needs: `:` for a port, `@` for
+  # userinfo, `[`/`]` for an IPv6 literal host, `%` for percent-encoding.
+  # `sub-delims` (!$&'()*+,;=) and the query/fragment delimiters (?#) stay out:
+  # nvm appends a path to this value, so a query string could never work anyway,
+  # and several of those characters are shell metacharacters.
+  # Note: in a bracket expression `]` must come first and `-` last to be literal.
+  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ if ($0 !~ /^https?:\/\/[]a-zA-Z0-9._~:\/@%[-]+$/) exit 1 }'; then
       nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
       return 2
   fi
