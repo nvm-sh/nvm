@@ -34,11 +34,22 @@ nvm_cd() {
 }
 
 nvm_err() {
-  >&2 nvm_echo "$@"
+  # Run the stderr redirection in a subshell so that a closed stderr (eg, from
+  # `IO.popen(..., err: :close)`) does not propagate a non-zero exit status
+  # back to the caller. `nvm_compare_checksum` ends with `nvm_err 'Checksums
+  # matched!'`, so a successful checksum would otherwise be reported as a
+  # failure. `|| true` swallows the subshell's exit code; `nvm_echo` itself
+  # silences any `printf` errors via `2>/dev/null`. See issue #3906.
+  (
+    >&2 nvm_echo "$@"
+  ) || true
 }
 
 nvm_err_with_colors() {
-  >&2 nvm_echo_with_colors "$@"
+  # See `nvm_err` for rationale.
+  (
+    >&2 nvm_echo_with_colors "$@"
+  ) || true
 }
 
 nvm_grep() {
