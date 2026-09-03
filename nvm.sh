@@ -1129,6 +1129,8 @@ nvm_set_colors() {
     local CURRENT_COLOR
     local NOT_INSTALLED_COLOR
     local DEFAULT_COLOR
+    local NVM_HAS_COLORS
+    NVM_HAS_COLORS=0
 
     INSTALLED_COLOR="$(echo "$1" | awk '{ print substr($0, 1, 1); }')"
     LTS_AND_SYSTEM_COLOR="$(echo "$1" | awk '{ print substr($0, 2, 1); }')"
@@ -1139,6 +1141,7 @@ nvm_set_colors() {
       nvm_echo "Setting colors to: ${INSTALLED_COLOR} ${LTS_AND_SYSTEM_COLOR} ${CURRENT_COLOR} ${NOT_INSTALLED_COLOR} ${DEFAULT_COLOR}"
       nvm_echo "WARNING: Colors may not display because they are not supported in this shell."
     else
+      NVM_HAS_COLORS=1
       nvm_echo_with_colors "Setting colors to: $(nvm_wrap_with_color_code "${INSTALLED_COLOR}" "${INSTALLED_COLOR}")$(nvm_wrap_with_color_code "${LTS_AND_SYSTEM_COLOR}" "${LTS_AND_SYSTEM_COLOR}")$(nvm_wrap_with_color_code "${CURRENT_COLOR}" "${CURRENT_COLOR}")$(nvm_wrap_with_color_code "${NOT_INSTALLED_COLOR}" "${NOT_INSTALLED_COLOR}")$(nvm_wrap_with_color_code "${DEFAULT_COLOR}" "${DEFAULT_COLOR}")"
     fi
     export NVM_COLORS="$1"
@@ -1176,7 +1179,10 @@ nvm_wrap_with_color_code() {
   CODE="$(nvm_print_color_code "${1}" 2>/dev/null ||:)"
   local TEXT
   TEXT="${2-}"
-  if nvm_has_colors && [ -n "${CODE}" ]; then
+  # `nvm_has_colors` cannot answer for itself inside a command substitution,
+  # where `[ -t 1 ]` sees the capture pipe: callers that already checked pass
+  # the answer in, as `nvm_print_alias_path` also accepts it.
+  if { [ "${NVM_HAS_COLORS-}" = 1 ] || nvm_has_colors; } && [ -n "${CODE}" ]; then
     nvm_echo_with_colors "\033[${CODE}${TEXT}\033[0m"
   else
     nvm_echo "${TEXT}"
@@ -1184,9 +1190,14 @@ nvm_wrap_with_color_code() {
 }
 
 nvm_print_color_legend() {
-  # Every line is built in a command substitution, so this cannot stay
-  # inline: resolving color support has to happen in one scope that all of
-  # them share. Pure code motion for now; see the following commit.
+  # Every line below builds its text in a command substitution, which cannot
+  # detect color support itself, so resolve it once here. `local` matters:
+  # leaking the flag would override `--no-colors` for every later call.
+  local NVM_HAS_COLORS
+  NVM_HAS_COLORS=0
+  if nvm_has_colors; then
+    NVM_HAS_COLORS=1
+  fi
   nvm_echo '                                               Initial colors are:'
   nvm_echo_with_colors "                                                  $(nvm_wrap_with_color_code 'b' 'b')$(nvm_wrap_with_color_code 'y' 'y')$(nvm_wrap_with_color_code 'g' 'g')$(nvm_wrap_with_color_code 'r' 'r')$(nvm_wrap_with_color_code 'e' 'e')"
   nvm_echo '                                               Color codes:'

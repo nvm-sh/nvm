@@ -1,10 +1,20 @@
 #!/bin/sh
 
-die () { echo "$@" ; exit 1; }
+ONESHOT=''
+cleanup () {
+  if [ -n "${ONESHOT}" ]; then
+    command rm -f "${ONESHOT}"
+  fi
+}
+die () { echo "$@" ; cleanup ; exit 1; }
 
 \. ../../../nvm.sh
 
 set -e
+
+# assert about nvm, not about the caller's environment
+NVM_HAS_COLORS_WAS="${NVM_HAS_COLORS-}"
+unset NVM_HAS_COLORS
 
 ESC="$(printf '\033')"
 # The legend's letters are wrapped in color codes when the terminal supports
@@ -77,6 +87,87 @@ HELP_PLAIN="$(nvm --help | strip_colors)"
 contains_line '                                               Color codes:' "${HELP_PLAIN}" \
   || die 'nvm --help no longer includes the color legend'
 
+# --- the fix: colors have to survive command substitution ------------------
+
+# the bug condition: inside `$( )`, `[ -t 1 ]` sees the capture pipe, so
+# `nvm_has_colors` always fails
+nvm_has_colors () { return 1; }
+
+WRAPPED="$(nvm_wrap_with_color_code 'b' 'b')"
+case "${WRAPPED}" in
+  *"${ESC}"*) die "expected plain text when colors are unsupported, got >${WRAPPED}<" ;;
+esac
+
+NVM_HAS_COLORS=1
+export NVM_HAS_COLORS
+WRAPPED="$(nvm_wrap_with_color_code 'b' 'b')"
+[ "${WRAPPED}" = "${ESC}[0;34mb${ESC}[0m" ] \
+  || die "expected a colored 'b' with NVM_HAS_COLORS=1, got >${WRAPPED}<"
+
+WRAPPED="$(nvm_wrap_with_color_code 'X' 'X')"
+[ "${WRAPPED}" = 'X' ] \
+  || die "expected plain text for an unknown color code, got >${WRAPPED}<"
+unset NVM_HAS_COLORS
+
+# `0` is what the resolving callers start from, so it must not read as truthy
+NVM_HAS_COLORS=0
+export NVM_HAS_COLORS
+WRAPPED="$(nvm_wrap_with_color_code 'b' 'b')"
+case "${WRAPPED}" in
+  *"${ESC}"*) die "NVM_HAS_COLORS=0 must not enable colors, got >${WRAPPED}<" ;;
+esac
+unset NVM_HAS_COLORS
+
+UNSUPPORTED="$(nvm_print_color_legend)"
+case "${UNSUPPORTED}" in
+  *"${ESC}"*) die "the legend emitted colors while unsupported: ${UNSUPPORTED}" ;;
+esac
+
+# Model the real asymmetry: yes to the first, direct call, no to every later
+# one. The state has to live in a file, because each `$( )` is a fresh subshell
+# that would take its own copy of an in-shell counter and answer yes every time.
+ONESHOT="$(command mktemp)"
+oneshot_reset () { nvm_echo 0 > "${ONESHOT}"; }
+nvm_has_colors () {
+  if [ "$(command cat "${ONESHOT}")" = 0 ]; then
+    nvm_echo 1 > "${ONESHOT}"
+    return 0
+  fi
+  return 1
+}
+
+oneshot_reset
+COLORED_OUTPUT="$(nvm_print_color_legend)"
+# `grep -c` drains its input, so it cannot SIGPIPE its producer
+COLORED="$(nvm_echo "${COLORED_OUTPUT}" | nvm_grep -c "${ESC}" || true)"
+[ "${COLORED}" = 9 ] \
+  || die "expected all 9 legend lines colored, got ${COLORED}: ${COLORED_OUTPUT}"
+
+# the sample specifically, which is the case #3896 reports
+case "${COLORED_OUTPUT}" in
+  *"${ESC}[0;34mb${ESC}[0m${ESC}[0;33my${ESC}[0m"*) : ;;
+  *) die "the initial-colors sample was not colored: ${COLORED_OUTPUT}" ;;
+esac
+
+# in a substitution, so `nvm_set_colors`' `export NVM_COLORS` stays contained
+oneshot_reset
+SET_COLORS_OUTPUT="$(nvm_set_colors 'bygre')"
+case "${SET_COLORS_OUTPUT}" in
+  *"${ESC}"*) : ;;
+  *) die "nvm_set_colors did not color its confirmation line: ${SET_COLORS_OUTPUT}" ;;
+esac
+
+# coloring must change only the escapes, never the text or the alignment
+COLORED_STRIPPED="$(nvm_echo "${COLORED_OUTPUT}" | strip_colors)"
+[ "${COLORED_STRIPPED}" = "${PLAIN}" ] \
+  || die 'the colored legend does not match the plain legend once escapes are stripped'
+
+# called directly rather than in a substitution, so a leak is observable at all
+oneshot_reset
+nvm_print_color_legend >/dev/null
+[ -z "${NVM_HAS_COLORS-}" ] \
+  || die "nvm_print_color_legend leaked NVM_HAS_COLORS=${NVM_HAS_COLORS}"
+
 # And `nvm unload` has to clean it up, the way it does its sibling helpers.
 # `set +e` inside the subshell so a non-zero `nvm unload` cannot abort it before
 # the lookup runs; its status is reported separately, so "unload failed" can
@@ -97,4 +188,10 @@ case "${UNLOAD_OUT}" in
   *) die "nvm unload did not remove nvm_print_color_legend (${UNLOAD_OUT})" ;;
 esac
 
+if [ -n "${NVM_HAS_COLORS_WAS}" ]; then
+  NVM_HAS_COLORS="${NVM_HAS_COLORS_WAS}"
+  export NVM_HAS_COLORS
+fi
+
+cleanup
 echo "nvm_print_color_legend: passed"
