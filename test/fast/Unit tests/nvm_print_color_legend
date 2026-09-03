@@ -27,17 +27,13 @@ ${1}
   return 1
 }
 
-# `command -v` reports a bare name for a shell function but a path for an
-# executable, and this test file is itself an executable named
-# `nvm_print_color_legend`. Whenever its directory is on PATH, as it is under
-# CI, a plain `command -v` keeps finding the file long after the function is
-# gone, so the presence checks below have to insist on the function.
+# This test file is itself an executable named `nvm_print_color_legend`, so a
+# plain `command -v` keeps finding it long after the function is gone. Emptying
+# `PATH` for the lookup is the only reliable way to ask about the function
+# alone: filtering on a `/` is not enough, because dash and zsh report a bare
+# name for a current-directory match reached through an empty `PATH` component.
 is_function () {
-  case "$(command -v "${1}" 2>/dev/null)" in
-    '') return 1 ;;
-    */*) return 1 ;;
-    *) return 0 ;;
-  esac
+  [ -n "$(PATH=/nonexistent command -v "${1}" 2>/dev/null)" ]
 }
 
 is_function nvm_print_color_legend \
