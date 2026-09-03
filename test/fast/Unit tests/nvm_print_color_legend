@@ -27,7 +27,20 @@ ${1}
   return 1
 }
 
-command -v nvm_print_color_legend >/dev/null 2>&1 \
+# `command -v` reports a bare name for a shell function but a path for an
+# executable, and this test file is itself an executable named
+# `nvm_print_color_legend`. Whenever its directory is on PATH, as it is under
+# CI, a plain `command -v` keeps finding the file long after the function is
+# gone, so the presence checks below have to insist on the function.
+is_function () {
+  case "$(command -v "${1}" 2>/dev/null)" in
+    '') return 1 ;;
+    */*) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+is_function nvm_print_color_legend \
   || die 'nvm_print_color_legend is not defined'
 
 OUTPUT="$(nvm_print_color_legend)"
@@ -77,7 +90,7 @@ UNLOAD_OUT="$(
   nvm unload >/dev/null 2>&1
   # plain `echo`: `nvm unload` has just unset `nvm_echo`
   echo "unload_rc=$?"
-  if command -v nvm_print_color_legend >/dev/null 2>&1; then
+  if is_function nvm_print_color_legend; then
     echo present
   else
     echo gone
