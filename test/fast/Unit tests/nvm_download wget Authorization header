@@ -39,5 +39,11 @@ NVM_AUTH_HEADER='Bearer test-token' nvm_download "https://nodejs.org/dist/x" -o 
 grep -Fxqe '--header' "$ARGV_LOG" || die "wget did not receive --header; got: $(cat "$ARGV_LOG")"
 grep -Fxq 'Authorization: Bearer test-token' "$ARGV_LOG" || die "wget did not receive a well-formed Authorization header; got: $(cat "$ARGV_LOG")"
 
+# given a credential using every character RFC 7235 token68 permits, including '~'
+# when nvm_download uses the wget path
+NVM_AUTH_HEADER='Bearer mF_9.B5f-4.1JqM~+/=' nvm_download "https://nodejs.org/dist/x" -o - || die 'nvm_download (wget) returned nonzero for a token68 credential'
+# then it reaches wget byte-for-byte, with no character silently dropped
+grep -Fxq 'Authorization: Bearer mF_9.B5f-4.1JqM~+/=' "$ARGV_LOG" || die "wget did not receive the token68 credential intact; got: $(cat "$ARGV_LOG")"
+
 cleanup
 echo "nvm_download wget Authorization header: passed"

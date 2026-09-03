@@ -190,9 +190,10 @@ nvm_sanitize_auth_header() {
     # and base64url (A-Za-z0-9-_=) charsets, plus the space, colon, dot, and
     # underscore the previous allowlist already permitted, so that values like
     # `Basic <base64>` and `Bearer <token>` survive intact.
-    # token68's '~' is still stripped.
+    # '~' is also allowed, completing RFC 7235 `token68` (and thus RFC 6750
+    # `b64token`), so opaque Bearer tokens containing it are not corrupted.
     # Note: '-' must be at the end of the bracket expression to be treated as a literal.
-    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=-]//g'
+    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=~-]//g'
 }
 
 nvm_has_system_node() {
