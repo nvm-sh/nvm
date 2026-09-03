@@ -12,6 +12,21 @@ ESC="$(printf '\033')"
 # escapes removed. That keeps these checks about structure and alignment only.
 strip_colors() { command sed "s/${ESC}\[[0-9;]*m//g"; }
 
+# Exact whole-line match against an already-captured string. Deliberately
+# pipe-free: `grep -q` exits at its first match and hands SIGPIPE to whatever
+# feeds it, which BSD sed swallows but GNU sed reports as "couldn't flush
+# stdout", polluting the test's stderr.
+contains_line () {
+  case "
+${2}
+" in
+    *"
+${1}
+"*) return 0 ;;
+  esac
+  return 1
+}
+
 command -v nvm_print_color_legend >/dev/null 2>&1 \
   || die 'nvm_print_color_legend is not defined'
 
@@ -24,13 +39,13 @@ PLAIN="$(nvm_echo "${OUTPUT}" | strip_colors)"
 
 # the two labels are literal, and their indentation lines the legend up under
 # the `nvm set-colors` entry in the help output
-nvm_echo "${PLAIN}" | nvm_grep -qx '                                               Initial colors are:' \
+contains_line '                                               Initial colors are:' "${PLAIN}" \
   || die "the 'Initial colors are:' label is missing or misaligned: ${PLAIN}"
-nvm_echo "${PLAIN}" | nvm_grep -qx '                                               Color codes:' \
+contains_line '                                               Color codes:' "${PLAIN}" \
   || die "the 'Color codes:' label is missing or misaligned: ${PLAIN}"
 
 # the default-palette sample, indented one level deeper than its label
-nvm_echo "${PLAIN}" | nvm_grep -qx '                                                  bygre' \
+contains_line '                                                  bygre' "${PLAIN}" \
   || die "the initial-colors sample is missing or misaligned: ${PLAIN}"
 
 # all eight rows of the code table, in order, each with both letter forms
@@ -44,16 +59,33 @@ for ROW in \
   'k/K = black / bold black' \
   'e/W = light grey / white' \
 ; do
-  nvm_echo "${PLAIN}" | nvm_grep -qx "                                                ${ROW}" \
+  contains_line "                                                ${ROW}" "${PLAIN}" \
     || die "color code row '${ROW}' is missing or misaligned: ${PLAIN}"
 done
 
 # the extracted function has to stay wired into the help output
-nvm --help | strip_colors | nvm_grep -qx '                                               Color codes:' \
+HELP_PLAIN="$(nvm --help | strip_colors)"
+contains_line '                                               Color codes:' "${HELP_PLAIN}" \
   || die 'nvm --help no longer includes the color legend'
 
-# and `nvm unload` has to clean it up, the way it does its sibling helpers
-UNLOADED="$( (nvm unload >/dev/null 2>&1; command -v nvm_print_color_legend >/dev/null 2>&1 && echo present || echo gone) )"
-[ "${UNLOADED}" = 'gone' ] || die 'nvm unload left nvm_print_color_legend defined'
+# And `nvm unload` has to clean it up, the way it does its sibling helpers.
+# `set +e` inside the subshell so a non-zero `nvm unload` cannot abort it before
+# the lookup runs; its status is reported separately, so "unload failed" can
+# never be misreported as "the function survived".
+UNLOAD_OUT="$(
+  set +e
+  nvm unload >/dev/null 2>&1
+  # plain `echo`: `nvm unload` has just unset `nvm_echo`
+  echo "unload_rc=$?"
+  if command -v nvm_print_color_legend >/dev/null 2>&1; then
+    echo present
+  else
+    echo gone
+  fi
+)"
+case "${UNLOAD_OUT}" in
+  *gone*) : ;;
+  *) die "nvm unload did not remove nvm_print_color_legend (${UNLOAD_OUT})" ;;
+esac
 
 echo "nvm_print_color_legend: passed"
