@@ -1,0 +1,29 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+make_fake_node v0.2.3 || die 'unable to make fake node v0.2.3'
+make_fake_node v0.10.1 || die 'unable to make fake node v0.10.1'
+
+nvm use --delete-prefix v0.2.3 >/dev/null 2>&1 || die 'failed to activate v0.2.3'
+
+# run `node` from this shell, so that the shell caches where it found it
+node >/dev/null 2>&1 || die 'fake node v0.2.3 is not runnable'
+
+nvm use --delete-prefix v0.10.1 >/dev/null 2>&1 || die 'failed to activate v0.10.1'
+
+ACTUAL="$(node)"
+[ "${ACTUAL}" = 'v0.10.1' ] || die "expected node v0.10.1 after switching versions, got '${ACTUAL}'"
+
+nvm deactivate >/dev/null 2>&1 || die 'failed to deactivate'
+
+RESOLVED="$(command -v node || true)"
+case "${RESOLVED}" in
+  "${NVM_DIR}"/*) die "after deactivating, node still resolves inside \${NVM_DIR}: ${RESOLVED}" ;;
+esac

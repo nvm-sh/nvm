@@ -1117,6 +1117,19 @@ nvm_change_path() {
   fi
 }
 
+nvm_hash_reset() {
+  # under `set +h` there is no cache to clear, and `hash -r` errors
+  if [ -n "${BASH_VERSION-}" ] && [ "${-#*h}" = "$-" ]; then
+    return 0
+  fi
+  # `ksh93`'s `hash` takes no `-r` and its usage error is fatal; probing in a
+  # subshell contains it, and spares the `ksh` variants that do accept `-r`
+  if [ -n "${KSH_VERSION-}" ] && ! ( \hash -r ) >/dev/null 2>&1; then
+    return 0
+  fi
+  \hash -r
+}
+
 nvm_binary_available() {
   # binaries started with node 0.8.6
   nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix "${1-}")" v0.8.6
@@ -4228,7 +4241,7 @@ nvm() {
         fi
       else
         export PATH="${NEWPATH}"
-        \hash -r
+        nvm_hash_reset
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
         fi
@@ -4373,7 +4386,7 @@ nvm() {
         export MANPATH
       fi
       export PATH
-      \hash -r
+      nvm_hash_reset
       export NVM_BIN="${NVM_VERSION_DIR}/bin"
       export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
@@ -4980,7 +4993,7 @@ nvm() {
         nvm_echo_with_colors nvm_err_with_colors \
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
         nvm_process_nvmrc nvm_process_nvmrc_content nvm_nvmrc_invalid_msg \
-        nvm_write_nvmrc \
+        nvm_write_nvmrc nvm_hash_reset \
         >/dev/null 2>&1
       unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS NVM_INSTALL_LOCK \

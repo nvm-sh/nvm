@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# the `bash` shebang is deliberate: only bash can exhibit the bug, so pinning
+# it keeps this meaningful in every job of the shell matrix
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  set -h
+  rm -f "${OUTPUT_FILE-}"
+}
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+make_fake_node v0.2.3 || die 'unable to make fake node'
+
+OUTPUT_FILE="$(mktemp)"
+
+set +h
+
+# not in a command substitution, so the `PATH` it sets survives to `nvm deactivate`
+nvm use --delete-prefix v0.2.3 > "${OUTPUT_FILE}" 2>&1
+OUTPUT="$(cat "${OUTPUT_FILE}")"
+case "${OUTPUT}" in
+  *'hash: '*) die "nvm use complained about hashing: ${OUTPUT}" ;;
+esac
+case "${OUTPUT}" in
+  *'Now using node v0.2.3'*) ;;
+  *) die "nvm use did not activate v0.2.3: ${OUTPUT}" ;;
+esac
+
+nvm deactivate > "${OUTPUT_FILE}" 2>&1
+OUTPUT="$(cat "${OUTPUT_FILE}")"
+case "${OUTPUT}" in
+  *'hash: '*) die "nvm deactivate complained about hashing: ${OUTPUT}" ;;
+esac
+case "${OUTPUT}" in
+  *'removed from ${PATH}'*) ;;
+  *) die "nvm deactivate did not strip the nvm bin dir: ${OUTPUT}" ;;
+esac
+
+cleanup
