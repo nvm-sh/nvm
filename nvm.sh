@@ -1389,7 +1389,7 @@ nvm_list_aliases() {
     NVM_HAS_COLORS=1
   fi
 
-  nvm_is_zsh && unsetopt local_options nomatch
+  nvm_is_zsh && setopt local_options nonomatch
   (
     local ALIAS_PATH
     for ALIAS_PATH in "${NVM_ALIAS_DIR}/${ALIAS}"*; do
@@ -1685,7 +1685,7 @@ nvm_ls() {
     esac
 
     nvm_is_zsh && setopt local_options shwordsplit
-    nvm_is_zsh && unsetopt local_options markdirs
+    nvm_is_zsh && setopt local_options nomarkdirs
 
     local NVM_DIRS_TO_SEARCH1
     NVM_DIRS_TO_SEARCH1=''
