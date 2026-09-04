@@ -496,7 +496,7 @@ nvm_do_install() {
     fi
   fi
   if ${BASH_OR_ZSH} && [ -z "${NVM_PROFILE-}" ] ; then
-    nvm_echo "=> Please also append the following lines to the if you are using bash/zsh shell:"
+    nvm_echo "=> Please also append the following lines to the correct file if you are using bash/zsh shell:"
     command printf "${COMPLETION_STR}"
   fi
 
