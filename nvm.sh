@@ -1427,6 +1427,23 @@ nvm_list_aliases() {
   return
 }
 
+nvm_print_alias_file() {
+  # a `#` pattern is a repetition operator under zsh's `extendedglob`, so it is
+  # unset for the length of this function and restored by `local_options`
+  nvm_is_zsh && setopt local_options noextendedglob
+
+  local NVM_ALIAS_LINE
+  while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
+    case "${NVM_ALIAS_LINE}" in
+      *[![:space:]]*) ;;
+      *) continue ;;
+    esac
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%"${NVM_ALIAS_LINE##*[![:space:]]}"}"
+    nvm_echo "${NVM_ALIAS_LINE}"
+  done < "$1"
+}
+
 nvm_alias() {
   local ALIAS
   ALIAS="${1-}"
@@ -1457,16 +1474,7 @@ nvm_alias() {
     return 0
   fi
 
-  local NVM_ALIAS_LINE
-  while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
-    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
-    case "${NVM_ALIAS_LINE}" in
-      *[![:space:]]*) ;;
-      *) continue ;;
-    esac
-    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%"${NVM_ALIAS_LINE##*[![:space:]]}"}"
-    nvm_echo "${NVM_ALIAS_LINE}"
-  done < "${NVM_ALIAS_PATH}"
+  nvm_print_alias_file "${NVM_ALIAS_PATH}"
 }
 
 nvm_ls_current() {
@@ -4961,7 +4969,7 @@ nvm() {
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_version_installed nvm_validate_install \
         nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
-        nvm_list_aliases nvm_make_alias nvm_print_alias_path \
+        nvm_list_aliases nvm_make_alias nvm_print_alias_file nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
