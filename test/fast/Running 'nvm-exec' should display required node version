@@ -1,10 +1,12 @@
 #!/bin/bash
 
 set -x
+export NVM_DIR="$(cd ../.. && pwd)"
 : nvm.sh
 \. ../../nvm.sh
+\. ../common.sh
 
-cleanup() { rm -f .nvmrc; }
+cleanup() { rm -f .nvmrc ../../alias/default; rm -rf ../../v0.0.1; }
 die () { echo "$@" ; cleanup ; exit 1; }
 
 NVM_TEST_VERSION=v0.42
@@ -20,6 +22,16 @@ You need to run \`nvm install ${NVM_TEST_VERSION}\` to install and use it.
 No NODE_VERSION provided; no .nvmrc file found";
 
 # Skip install, we want to test the error message
+[ "${EXPECTED}" = "${OUTPUT}" ] || die "expected >${EXPECTED}<, got >${OUTPUT}<"
+
+cleanup
+
+make_fake_node v0.0.1 || die "unable to create fake node"
+echo "0.0.1" > ../../alias/default || die "unable to create default alias"
+
+OUTPUT="$(../../nvm-exec node 2>&1)";
+EXPECTED="v0.0.1";
+
 [ "${EXPECTED}" = "${OUTPUT}" ] || die "expected >${EXPECTED}<, got >${OUTPUT}<"
 
 cleanup
