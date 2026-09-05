@@ -35,4 +35,18 @@ case "${RESULT}" in
     ;;
 esac
 
+# Test 6: every character of RFC 7235 §2.1 `token68` is preserved.
+# token68 = 1*( ALPHA / DIGIT / "-" / "." / "_" / "~" / "+" / "/" ) *"="
+# This is a superset of both base64 and base64url; note the '~', which no
+# base64 variant emits but which an opaque token may legitimately contain.
+TOKEN68="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~+/="
+RESULT=$(nvm_sanitize_auth_header "${TOKEN68}")
+[ "${RESULT}" = "${TOKEN68}" ] || die "FAIL: token68 chars were stripped. Got: '${RESULT}'"
+
+# Test 7: the RFC 6750 §2.1 example Bearer token, extended with the remaining
+# valid `b64token` characters, survives intact.
+B64TOKEN="Bearer mF_9.B5f-4.1JqM~+/="
+RESULT=$(nvm_sanitize_auth_header "${B64TOKEN}")
+[ "${RESULT}" = "${B64TOKEN}" ] || die "FAIL: b64token chars were stripped. Got: '${RESULT}'"
+
 echo "All nvm_sanitize_auth_header tests passed"

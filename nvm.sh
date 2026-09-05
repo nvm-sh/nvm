@@ -33,12 +33,15 @@ nvm_cd() {
   \cd "$@"
 }
 
+# a caller that closed stderr, rather than redirecting it to /dev/null, makes
+# the `>&2` fail; zsh cannot report that, so it aborts the script, which only a
+# subshell contains, and `|| return 0` keeps the status from the caller
 nvm_err() {
-  >&2 nvm_echo "$@"
+  (>&2 nvm_echo "$@") || return 0
 }
 
 nvm_err_with_colors() {
-  >&2 nvm_echo_with_colors "$@"
+  (>&2 nvm_echo_with_colors "$@") || return 0
 }
 
 nvm_grep() {
@@ -190,9 +193,10 @@ nvm_sanitize_auth_header() {
     # and base64url (A-Za-z0-9-_=) charsets, plus the space, colon, dot, and
     # underscore the previous allowlist already permitted, so that values like
     # `Basic <base64>` and `Bearer <token>` survive intact.
-    # token68's '~' is still stripped.
+    # '~' is also allowed, completing RFC 7235 `token68` (and thus RFC 6750
+    # `b64token`), so opaque Bearer tokens containing it are not corrupted.
     # Note: '-' must be at the end of the bracket expression to be treated as a literal.
-    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=-]//g'
+    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=~-]//g'
 }
 
 nvm_has_system_node() {
@@ -1116,6 +1120,19 @@ nvm_change_path() {
   fi
 }
 
+nvm_hash_reset() {
+  # under `set +h` there is no cache to clear, and `hash -r` errors
+  if [ -n "${BASH_VERSION-}" ] && [ "${-#*h}" = "$-" ]; then
+    return 0
+  fi
+  # `ksh93`'s `hash` takes no `-r` and its usage error is fatal; probing in a
+  # subshell contains it, and spares the `ksh` variants that do accept `-r`
+  if [ -n "${KSH_VERSION-}" ] && ! ( \hash -r ) >/dev/null 2>&1; then
+    return 0
+  fi
+  \hash -r
+}
+
 nvm_binary_available() {
   # binaries started with node 0.8.6
   nvm_version_greater_than_or_equal_to "$(nvm_strip_iojs_prefix "${1-}")" v0.8.6
@@ -1128,6 +1145,8 @@ nvm_set_colors() {
     local CURRENT_COLOR
     local NOT_INSTALLED_COLOR
     local DEFAULT_COLOR
+    local NVM_HAS_COLORS
+    NVM_HAS_COLORS=0
 
     INSTALLED_COLOR="$(echo "$1" | awk '{ print substr($0, 1, 1); }')"
     LTS_AND_SYSTEM_COLOR="$(echo "$1" | awk '{ print substr($0, 2, 1); }')"
@@ -1138,6 +1157,7 @@ nvm_set_colors() {
       nvm_echo "Setting colors to: ${INSTALLED_COLOR} ${LTS_AND_SYSTEM_COLOR} ${CURRENT_COLOR} ${NOT_INSTALLED_COLOR} ${DEFAULT_COLOR}"
       nvm_echo "WARNING: Colors may not display because they are not supported in this shell."
     else
+      NVM_HAS_COLORS=1
       nvm_echo_with_colors "Setting colors to: $(nvm_wrap_with_color_code "${INSTALLED_COLOR}" "${INSTALLED_COLOR}")$(nvm_wrap_with_color_code "${LTS_AND_SYSTEM_COLOR}" "${LTS_AND_SYSTEM_COLOR}")$(nvm_wrap_with_color_code "${CURRENT_COLOR}" "${CURRENT_COLOR}")$(nvm_wrap_with_color_code "${NOT_INSTALLED_COLOR}" "${NOT_INSTALLED_COLOR}")$(nvm_wrap_with_color_code "${DEFAULT_COLOR}" "${DEFAULT_COLOR}")"
     fi
     export NVM_COLORS="$1"
@@ -1175,11 +1195,36 @@ nvm_wrap_with_color_code() {
   CODE="$(nvm_print_color_code "${1}" 2>/dev/null ||:)"
   local TEXT
   TEXT="${2-}"
-  if nvm_has_colors && [ -n "${CODE}" ]; then
+  # `nvm_has_colors` cannot answer for itself inside a command substitution,
+  # where `[ -t 1 ]` sees the capture pipe: callers that already checked pass
+  # the answer in, as `nvm_print_alias_path` also accepts it.
+  if { [ "${NVM_HAS_COLORS-}" = 1 ] || nvm_has_colors; } && [ -n "${CODE}" ]; then
     nvm_echo_with_colors "\033[${CODE}${TEXT}\033[0m"
   else
     nvm_echo "${TEXT}"
   fi
+}
+
+nvm_print_color_legend() {
+  # Every line below builds its text in a command substitution, which cannot
+  # detect color support itself, so resolve it once here. `local` matters:
+  # leaking the flag would override `--no-colors` for every later call.
+  local NVM_HAS_COLORS
+  NVM_HAS_COLORS=0
+  if nvm_has_colors; then
+    NVM_HAS_COLORS=1
+  fi
+  nvm_echo '                                               Initial colors are:'
+  nvm_echo_with_colors "                                                  $(nvm_wrap_with_color_code 'b' 'b')$(nvm_wrap_with_color_code 'y' 'y')$(nvm_wrap_with_color_code 'g' 'g')$(nvm_wrap_with_color_code 'r' 'r')$(nvm_wrap_with_color_code 'e' 'e')"
+  nvm_echo '                                               Color codes:'
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'r' 'r')/$(nvm_wrap_with_color_code 'R' 'R') = $(nvm_wrap_with_color_code 'r' 'red') / $(nvm_wrap_with_color_code 'R' 'bold red')"
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'g' 'g')/$(nvm_wrap_with_color_code 'G' 'G') = $(nvm_wrap_with_color_code 'g' 'green') / $(nvm_wrap_with_color_code 'G' 'bold green')"
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'b' 'b')/$(nvm_wrap_with_color_code 'B' 'B') = $(nvm_wrap_with_color_code 'b' 'blue') / $(nvm_wrap_with_color_code 'B' 'bold blue')"
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'c' 'c')/$(nvm_wrap_with_color_code 'C' 'C') = $(nvm_wrap_with_color_code 'c' 'cyan') / $(nvm_wrap_with_color_code 'C' 'bold cyan')"
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'm' 'm')/$(nvm_wrap_with_color_code 'M' 'M') = $(nvm_wrap_with_color_code 'm' 'magenta') / $(nvm_wrap_with_color_code 'M' 'bold magenta')"
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'y' 'y')/$(nvm_wrap_with_color_code 'Y' 'Y') = $(nvm_wrap_with_color_code 'y' 'yellow') / $(nvm_wrap_with_color_code 'Y' 'bold yellow')"
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'k' 'k')/$(nvm_wrap_with_color_code 'K' 'K') = $(nvm_wrap_with_color_code 'k' 'black') / $(nvm_wrap_with_color_code 'K' 'bold black')"
+  nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'e' 'e')/$(nvm_wrap_with_color_code 'W' 'W') = $(nvm_wrap_with_color_code 'e' 'light grey') / $(nvm_wrap_with_color_code 'W' 'white')"
 }
 
 nvm_print_color_code() {
@@ -1360,7 +1405,7 @@ nvm_list_aliases() {
     NVM_HAS_COLORS=1
   fi
 
-  nvm_is_zsh && unsetopt local_options nomatch
+  nvm_is_zsh && setopt local_options nonomatch
   (
     local ALIAS_PATH
     for ALIAS_PATH in "${NVM_ALIAS_DIR}/${ALIAS}"*; do
@@ -1398,6 +1443,23 @@ nvm_list_aliases() {
   return
 }
 
+nvm_print_alias_file() {
+  # a `#` pattern is a repetition operator under zsh's `extendedglob`, so it is
+  # unset for the length of this function and restored by `local_options`
+  nvm_is_zsh && setopt local_options noextendedglob
+
+  local NVM_ALIAS_LINE
+  while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
+    case "${NVM_ALIAS_LINE}" in
+      *[![:space:]]*) ;;
+      *) continue ;;
+    esac
+    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%"${NVM_ALIAS_LINE##*[![:space:]]}"}"
+    nvm_echo "${NVM_ALIAS_LINE}"
+  done < "$1"
+}
+
 nvm_alias() {
   local ALIAS
   ALIAS="${1-}"
@@ -1428,16 +1490,7 @@ nvm_alias() {
     return 0
   fi
 
-  local NVM_ALIAS_LINE
-  while IFS= read -r NVM_ALIAS_LINE || [ -n "${NVM_ALIAS_LINE}" ]; do
-    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%%#*}"
-    case "${NVM_ALIAS_LINE}" in
-      *[![:space:]]*) ;;
-      *) continue ;;
-    esac
-    NVM_ALIAS_LINE="${NVM_ALIAS_LINE%"${NVM_ALIAS_LINE##*[![:space:]]}"}"
-    nvm_echo "${NVM_ALIAS_LINE}"
-  done < "${NVM_ALIAS_PATH}"
+  nvm_print_alias_file "${NVM_ALIAS_PATH}"
 }
 
 nvm_ls_current() {
@@ -1656,7 +1709,7 @@ nvm_ls() {
     esac
 
     nvm_is_zsh && setopt local_options shwordsplit
-    nvm_is_zsh && unsetopt local_options markdirs
+    nvm_is_zsh && setopt local_options nomarkdirs
 
     local NVM_DIRS_TO_SEARCH1
     NVM_DIRS_TO_SEARCH1=''
@@ -2387,7 +2440,14 @@ nvm_get_mirror() {
   esac
 
 
-  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ if ($0 !~ /^https?:\/\/[a-zA-Z0-9.\/_-]+$/) exit 1 }'; then
+  # Allow RFC 3986 `unreserved` (A-Za-z0-9-._~) plus the authority and path
+  # punctuation a mirror URL legitimately needs: `:` for a port, `@` for
+  # userinfo, `[`/`]` for an IPv6 literal host, `%` for percent-encoding.
+  # `sub-delims` (!$&'()*+,;=) and the query/fragment delimiters (?#) stay out:
+  # nvm appends a path to this value, so a query string could never work anyway,
+  # and several of those characters are shell metacharacters.
+  # Note: in a bracket expression `]` must come first and `-` last to be literal.
+  if ! nvm_echo "${NVM_MIRROR}" | command awk '{ if ($0 !~ /^https?:\/\/[]a-zA-Z0-9._~:\/@%[-]+$/) exit 1 }'; then
       nvm_err '$NVM_NODEJS_ORG_MIRROR and $NVM_IOJS_ORG_MIRROR may only contain a URL'
       return 2
   fi
@@ -3492,17 +3552,7 @@ nvm() {
         nvm_echo '  nvm cache dir                               Display path to the cache directory for nvm'
         nvm_echo '  nvm cache clear                             Empty cache directory for nvm'
         nvm_echo '  nvm set-colors [<color codes>]              Set five text colors using format "yMeBg". Available when supported.'
-        nvm_echo '                                               Initial colors are:'
-        nvm_echo_with_colors "                                                  $(nvm_wrap_with_color_code 'b' 'b')$(nvm_wrap_with_color_code 'y' 'y')$(nvm_wrap_with_color_code 'g' 'g')$(nvm_wrap_with_color_code 'r' 'r')$(nvm_wrap_with_color_code 'e' 'e')"
-        nvm_echo '                                               Color codes:'
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'r' 'r')/$(nvm_wrap_with_color_code 'R' 'R') = $(nvm_wrap_with_color_code 'r' 'red') / $(nvm_wrap_with_color_code 'R' 'bold red')"
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'g' 'g')/$(nvm_wrap_with_color_code 'G' 'G') = $(nvm_wrap_with_color_code 'g' 'green') / $(nvm_wrap_with_color_code 'G' 'bold green')"
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'b' 'b')/$(nvm_wrap_with_color_code 'B' 'B') = $(nvm_wrap_with_color_code 'b' 'blue') / $(nvm_wrap_with_color_code 'B' 'bold blue')"
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'c' 'c')/$(nvm_wrap_with_color_code 'C' 'C') = $(nvm_wrap_with_color_code 'c' 'cyan') / $(nvm_wrap_with_color_code 'C' 'bold cyan')"
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'm' 'm')/$(nvm_wrap_with_color_code 'M' 'M') = $(nvm_wrap_with_color_code 'm' 'magenta') / $(nvm_wrap_with_color_code 'M' 'bold magenta')"
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'y' 'y')/$(nvm_wrap_with_color_code 'Y' 'Y') = $(nvm_wrap_with_color_code 'y' 'yellow') / $(nvm_wrap_with_color_code 'Y' 'bold yellow')"
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'k' 'k')/$(nvm_wrap_with_color_code 'K' 'K') = $(nvm_wrap_with_color_code 'k' 'black') / $(nvm_wrap_with_color_code 'K' 'bold black')"
-        nvm_echo_with_colors "                                                $(nvm_wrap_with_color_code 'e' 'e')/$(nvm_wrap_with_color_code 'W' 'W') = $(nvm_wrap_with_color_code 'e' 'light grey') / $(nvm_wrap_with_color_code 'W' 'white')"
+        nvm_print_color_legend
         nvm_echo 'Example:'
         nvm_echo '  nvm install 8.0.0                     Install a specific version number'
         nvm_echo '  nvm use 8.0                           Use the latest available 8.0.x release'
@@ -4194,7 +4244,7 @@ nvm() {
         fi
       else
         export PATH="${NEWPATH}"
-        \hash -r
+        nvm_hash_reset
         if [ "${NVM_SILENT:-0}" -ne 1 ]; then
           nvm_echo "${NVM_DIR}/*/bin removed from \${PATH}"
         fi
@@ -4339,7 +4389,7 @@ nvm() {
         export MANPATH
       fi
       export PATH
-      \hash -r
+      nvm_hash_reset
       export NVM_BIN="${NVM_VERSION_DIR}/bin"
       export NVM_INC="${NVM_VERSION_DIR}/include/node"
       if [ "${NVM_SYMLINK_CURRENT-}" = true ]; then
@@ -4935,17 +4985,18 @@ nvm() {
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_version_installed nvm_validate_install \
         nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
-        nvm_list_aliases nvm_make_alias nvm_print_alias_path \
+        nvm_list_aliases nvm_make_alias nvm_print_alias_file nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
         nvm_sanitize_path nvm_has_colors nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears nvm_sanitize_auth_header \
-        nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code nvm_format_help_message_colors \
+        nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code \
+        nvm_print_color_legend \
         nvm_echo_with_colors nvm_err_with_colors \
         nvm_get_artifact_compression nvm_install_binary_extract nvm_extract_tarball \
         nvm_process_nvmrc nvm_process_nvmrc_content nvm_nvmrc_invalid_msg \
-        nvm_write_nvmrc \
+        nvm_write_nvmrc nvm_hash_reset \
         >/dev/null 2>&1
       unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR NVM_DIR \
         NVM_CD_FLAGS NVM_BIN NVM_INC NVM_MAKE_JOBS NVM_INSTALL_LOCK \

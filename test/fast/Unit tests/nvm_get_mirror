@@ -52,3 +52,26 @@ testMirrors 'not a url'
 testMirrors 'ftp://wrong-scheme'
 testMirrors 'http://'
 testMirrors 'javascript:alert(1)'
+
+# a query string can never work, since nvm appends a path to the mirror
+testMirrors 'https://nodejs.org/dist?token=abc'
+testMirrors 'https://nodejs.org/dist#frag'
+
+testAcceptedMirrors() {
+  NVM_NODEJS_ORG_MIRROR="${1-}"
+  [ "$(nvm_get_mirror node std)" = "${1-}" ] || die "NVM_NODEJS_ORG_MIRROR should accept ${1-}"
+  unset NVM_NODEJS_ORG_MIRROR
+
+  NVM_IOJS_ORG_MIRROR="${1-}"
+  [ "$(nvm_get_mirror iojs std)" = "${1-}" ] || die "NVM_IOJS_ORG_MIRROR should accept ${1-}"
+  unset NVM_IOJS_ORG_MIRROR
+}
+
+# a private mirror on a non-default port is a URL, and must not be rejected
+testAcceptedMirrors 'https://mirror.internal:8443/dist'
+testAcceptedMirrors 'http://localhost:8080/dist'
+# an IPv6 literal host, userinfo, percent-encoding, and `~` are all legal too
+testAcceptedMirrors 'http://[::1]:8080/dist'
+testAcceptedMirrors 'https://user:pw@nexus.corp.example.com/repository/nodejs-dist'
+testAcceptedMirrors 'https://mirror.internal/a%20b/dist'
+testAcceptedMirrors 'https://mirror.internal/~dist'
