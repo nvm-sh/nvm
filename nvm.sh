@@ -30,7 +30,7 @@ nvm_echo_with_colors() {
 }
 
 nvm_cd() {
-  \cd "$@"
+  command cd "$@"
 }
 
 # a caller that closed stderr, rather than redirecting it to /dev/null, makes

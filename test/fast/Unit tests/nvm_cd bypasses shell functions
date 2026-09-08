@@ -1,0 +1,15 @@
+#!/bin/sh
+
+die() {
+  echo "$@"
+  exit 1
+}
+
+\. ../../../nvm.sh
+
+# A user-defined cd function must not intercept nvm's internal directory changes.
+cd() {
+  return 1
+}
+
+nvm_cd ../../../ || die 'nvm_cd failed when cd was overridden by a shell function'
