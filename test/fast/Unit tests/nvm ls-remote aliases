@@ -1,0 +1,49 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_has_colors() { return 1; }
+nvm_remote_versions() {
+  command printf '%s\n' 'v1.0.0' 'v2.0.0'
+  return "${NVM_REMOTE_STATUS-0}"
+}
+
+INHERITED_ALIAS='injected'
+EXPECTED_OUTPUT='v2.0.0 (Latest: node, stable)'
+OUTPUT="$(NVM_REMOTE_ALIASES="${INHERITED_ALIAS}" nvm ls-remote --no-colors | command tail -1 | command sed 's/^[[:space:]]*//')"
+
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "bare nvm ls-remote did not annotate the latest version with node and stable; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
+EXPECTED_OUTPUT='v2.0.0'
+OUTPUT="$(NVM_REMOTE_ALIASES="${INHERITED_ALIAS}" nvm ls-remote 2 --no-colors | command tail -1 | command sed 's/^[[:space:]]*//')"
+
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "filtered nvm ls-remote used an inherited remote alias; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
+OUTPUT="$(NVM_REMOTE_ALIASES="${INHERITED_ALIAS}" nvm ls-remote --lts --no-colors | command tail -1 | command sed 's/^[[:space:]]*//')"
+
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "LTS nvm ls-remote used an inherited remote alias; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
+NVM_REMOTE_STATUS=1
+OUTPUT="$(NVM_REMOTE_ALIASES="${INHERITED_ALIAS}" nvm ls-remote --no-colors 2>/dev/null)"
+COMMAND_STATUS=$?
+NVM_REMOTE_STATUS=0
+OUTPUT="$(command printf '%s\n' "${OUTPUT}" | command tail -1 | command sed 's/^[[:space:]]*//')"
+
+[ "${COMMAND_STATUS}" -eq 1 ] \
+  || die "failed nvm ls-remote returned ${COMMAND_STATUS}; expected 1"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "failed nvm ls-remote used an inherited remote alias; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
+nvm_has_colors() { return 0; }
+
+EXPECTED_OUTPUT="$(command printf 'v2.0.0\033[1;32m (Latest: node, stable)\033[0m')"
+OUTPUT="$(nvm ls-remote | command tail -1 | command sed 's/^[[:space:]]*//')"
+
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "bare nvm ls-remote did not color the node and stable annotation; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
