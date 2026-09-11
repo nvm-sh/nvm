@@ -2124,6 +2124,9 @@ nvm_print_versions() {
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
 
+  local NVM_REMOTE_ALIASES
+  NVM_REMOTE_ALIASES="${2-}"
+
   local INSTALLED_COLOR
   local SYSTEM_COLOR
   local CURRENT_COLOR
@@ -2146,6 +2149,7 @@ nvm_print_versions() {
 
   command awk \
     -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" \
+    -v remote_aliases="${NVM_REMOTE_ALIASES}" \
     -v installed_versions="$(nvm_ls | tr '\n' '|')" -v current="$NVM_CURRENT" \
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
@@ -2161,6 +2165,7 @@ BEGIN {
 
   fmt_latest_lts = has_colors && latest_lts_color ? ("\033[" latest_lts_color " (Latest LTS: %s)\033[0m") : " (Latest LTS: %s)";
   fmt_old_lts = has_colors && old_lts_color ? ("\033[" old_lts_color " (LTS: %s)\033[0m") : " (LTS: %s)";
+  fmt_latest_aliases = has_colors && latest_lts_color ? ("\033[" latest_lts_color " (Latest: %s)\033[0m") : " (Latest: %s)";
   fmt_system_target = has_colors && system_color ? (" (\033[" system_color "-> %s\033[0m)") : " (-> %s)";
 
   split(remote_versions, lines, "|");
@@ -2199,6 +2204,10 @@ BEGIN {
       formatted = sprintf((fmt_version padding fmt_old_lts), version, fields[2]);
     } else if (cols == 3 && fields[3] == "*") {
       formatted = sprintf((fmt_version padding fmt_latest_lts), version, fields[2]);
+    }
+
+    if (n == rows && remote_aliases) {
+      formatted = formatted sprintf(fmt_latest_aliases, remote_aliases);
     }
 
     output[n] = formatted;
@@ -4710,7 +4719,12 @@ nvm() {
       NVM_OUTPUT="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN-}" &&:)"
       EXIT_CODE=$?
       if [ -n "${NVM_OUTPUT}" ]; then
-        NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "${NVM_OUTPUT}"
+        local NVM_REMOTE_ALIASES
+        NVM_REMOTE_ALIASES=''
+        if [ "${EXIT_CODE}" -eq 0 ] && [ -z "${NVM_LTS-}" ] && [ -z "${PATTERN-}" ]; then
+          NVM_REMOTE_ALIASES='node, stable'
+        fi
+        NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "${NVM_OUTPUT}" "${NVM_REMOTE_ALIASES-}"
         return $EXIT_CODE
       fi
       NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "N/A"

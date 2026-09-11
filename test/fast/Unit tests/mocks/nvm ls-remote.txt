@@ -797,4 +797,4 @@
        v22.10.0
        v22.11.0  [1;32m (Latest LTS: Jod)[0m
         v23.0.0
-        v23.1.0
+        v23.1.0[1;32m (Latest: node, stable)[0m
