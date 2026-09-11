@@ -2877,6 +2877,16 @@ nvm_get_make_jobs() {
     "_aix")
       NVM_CPU_CORES="$(pmcycles -m | wc -l)"
     ;;
+    *)
+      # `_NPROCESSORS_ONLN` is how glibc, FreeBSD, macOS, and Cygwin spell it;
+      # the unprefixed name is what POSIX.1-2024 standardizes, and what NetBSD
+      # and Solaris answer to. Windows shells inherit `NUMBER_OF_PROCESSORS`;
+      # the smallest ones ship neither `getconf` nor `nproc`.
+      NVM_CPU_CORES="$(command getconf _NPROCESSORS_ONLN 2>/dev/null \
+        || command getconf NPROCESSORS_ONLN 2>/dev/null \
+        || command nproc 2>/dev/null \
+        || nvm_echo "${NUMBER_OF_PROCESSORS-}")"
+    ;;
   esac
   if ! nvm_is_natural_num "${NVM_CPU_CORES}"; then
     nvm_err 'Can not determine how many core(s) are available, running in single-threaded mode.'
