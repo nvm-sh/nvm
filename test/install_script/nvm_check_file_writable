@@ -1,0 +1,39 @@
+#!/bin/sh
+
+setup () {
+  HOME="."
+  if [ -z "$BASH_VERSION" ]; then
+    export BASH_VERSION=$(command -v bash >/dev/null && bash -c 'echo $BASH_VERSION' || echo "5.0.0")
+  fi
+  NVM_ENV=testing \. ../../install.sh
+  touch "writable_test_file"
+  touch "readonly_test_file"
+  chmod -w "readonly_test_file"   
+}
+
+cleanup () {
+  unset HOME
+  unset NVM_ENV
+  unset -f setup cleanup die  
+  rm -f "writable_test_file" "readonly_test_file" > "/dev/null" 2>&1
+}
+
+die () { echo "$@"; cleanup; exit 1; }
+
+setup
+nvm_check_file_writable "file_not_exists"
+if [ $? -ne 2 ] ; then 
+  die "nvm_check_file_writable did not reject nonexisting file with code 2"
+fi
+
+nvm_check_file_writable "readonly_test_file"
+if [ $? -ne 1 ]; then
+  die "nvm_check_file_writable did not reject nonwritable file with code 1"
+fi 
+
+nvm_check_file_writable "writable_test_file"
+if [ $? -ne  0 ]; then 
+  die "nvm_check_file_writable failed on writable file for unknown reason"
+fi 
+
+cleanup
