@@ -44,6 +44,7 @@
   - [Set default node version](#set-default-node-version)
   - [Use a mirror of node binaries](#use-a-mirror-of-node-binaries)
     - [Pass Authorization header to mirror](#pass-authorization-header-to-mirror)
+  - [Platforms without official binaries](#platforms-without-official-binaries)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
@@ -646,6 +647,8 @@ nvm install iojs-v1.0.3
 NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 ```
 
+Some platforms and architectures have no binary on the default host at all; see [Platforms without official binaries](#platforms-without-official-binaries).
+
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs. Note that using `nvm` in multiple shell tabs with this environment variable enabled can cause race conditions.
 
 #### Pass Authorization header to mirror
@@ -654,6 +657,31 @@ To pass an Authorization header through to the mirror url, set `$NVM_AUTH_HEADER
 ```sh
 NVM_AUTH_HEADER="Bearer secret-token" nvm install node
 ```
+
+### Platforms without official binaries
+
+nodejs.org does not publish a binary for every platform and architecture nvm can detect. Where it does not, `nvm install` falls back by default to compiling from source, which is slow and needs a C++ toolchain (see [Important Notes](#important-notes)); set `$NVM_NO_SOURCE_FALLBACK` to `1` to make a missing binary an error instead.
+
+[unofficial-builds.nodejs.org](https://unofficial-builds.nodejs.org/download/release/) ([nodejs/unofficial-builds](https://github.com/nodejs/unofficial-builds)) publishes binaries for platforms the Node.js project does not officially support. To use them, point [`$NVM_NODEJS_ORG_MIRROR`](#use-a-mirror-of-node-binaries) at it:
+
+```sh
+export NVM_NODEJS_ORG_MIRROR=https://unofficial-builds.nodejs.org/download/release
+```
+
+| platform | binaries on nodejs.org | binaries on unofficial-builds |
+| --- | --- | --- |
+| `freebsd`, `openbsd` (any arch) | none | none |
+| `sunos` (Solaris, illumos) | v13.x and earlier | none |
+| `linux-x86` (32-bit) | v9.x and earlier | v8.16.0 through v21.x |
+| `linux-armv6l` | v11.x and earlier | v8.16.0 through v22.x |
+| `linux-armv7l` | v23.x and earlier | none |
+| `linux-x64-musl` (Alpine) | v24.20.0+ and v26.8.0+ only | v8.16.0 and later |
+| `linux-arm64-musl` (Alpine) | none | v20.20.1 and later |
+| `linux-loong64` | none | v18.18.0 and later |
+| `linux-riscv64` | none | v17.7.1 through v26.0.0 |
+| `win-x86` (32-bit) | v22.x and earlier | none |
+
+Neither host is gapless, and both change over time; the `index.tab` at the root of each is authoritative. Where neither has a binary, `nvm install` compiles from source, except on non-WSL Windows, which nvm cannot build on; on FreeBSD and OpenBSD it skips the download and goes straight to source. Alpine has its own section: [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux).
 
 ### .nvmrc
 
@@ -957,7 +985,7 @@ set -e
 
 In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, [CentOS](https://www.centos.org), [RedHat](https://www.redhat.com) et al).
 
-[Alpine Linux](https://www.alpinelinux.org), unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
+[Alpine Linux](https://www.alpinelinux.org), unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional distributions incompatible with Alpine Linux, so on `x64` and `arm64` nvm requests a `musl` build instead. nodejs.org publishes those only for some recent `x64` releases, so for anything else the download 404s and `nvm install X` falls back to compiling from source, unless you point it at a mirror that has one (see [Platforms without official binaries](#platforms-without-official-binaries)).
 
 There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally.
 
@@ -977,7 +1005,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash
 
 _Note: Alpine 3.5 can only install NodeJS versions up to v6.9.5, Alpine 3.6 can only install versions up to v6.10.3, Alpine 3.7 installs versions up to v8.9.3, Alpine 3.8 installs versions up to v8.14.0, Alpine 3.9 installs versions up to v10.19.0, Alpine 3.10 installs versions up to v10.24.1, Alpine 3.11 installs versions up to v12.22.6, Alpine 3.12 installs versions up to v12.22.12, Alpine 3.13 & 3.14 install versions up to v14.20.0, Alpine 3.15 & 3.16 install versions up to v16.16.0 (**These are all versions on the main branch**). Alpine 3.5 - 3.12 required the package [`python2`](https://www.python.org/) to build NodeJS, as they are older versions to build. Alpine 3.13+ requires `python3` to successfully build newer NodeJS versions, but you can use `python2` with Alpine 3.13+ if you need to build versions of node supported in Alpine 3.5 - 3.15, you just need to specify what version of NodeJS you need to install in the package install script._
 
-The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
+The Node project now publishes an official `linux-x64-musl` binary for some recent releases (v24.20.0+ and v26.8.0+; no v25 release has one). There is no official `arm64` musl binary.
 
 As a potential alternative, [@mhart](https://github.com/mhart) (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
 
