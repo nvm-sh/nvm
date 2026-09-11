@@ -547,9 +547,8 @@ else
 fi
 unset NVM_SCRIPT_SOURCE 2>/dev/null
 
-# Performs pure in-memory POSIX path containment checking without subshell process forks.
-# Uses case-guarded ${pathdir%/*} for parent-walk and exact string equality (=) to ensure literal matching
-# for directory names containing glob metacharacters (*, ?, []) across all shells including zsh.
+# Walks parent paths without subshells, comparing names literally before checking
+# filesystem identity to account for case-insensitive paths and directory symlinks.
 nvm_tree_contains_path() {
   local tree
   tree="${1-}"
@@ -572,12 +571,11 @@ nvm_tree_contains_path() {
     clean_tree='/'
   fi
 
-  # Pure in-memory POSIX parent-walk using parameter expansion instead of subshell dirname forks.
-  # Uses literal string equality [ "${pathdir}" = "${clean_tree}" ] to prevent glob expansion bugs.
+  # Keep literal matching for paths that do not exist, including glob characters.
   local pathdir
   pathdir="${node_path}"
   while [ "${pathdir}" != '' ] && [ "${pathdir}" != '.' ] && [ "${pathdir}" != '/' ] &&
-      [ "${pathdir}" != "${clean_tree}" ]; do
+      [ "${pathdir}" != "${clean_tree}" ] && ! [ "${pathdir}" -ef "${clean_tree}" ]; do
     case "${pathdir}" in
       */*)
         pathdir="${pathdir%/*}"
@@ -590,7 +588,7 @@ nvm_tree_contains_path() {
         ;;
     esac
   done
-  [ "${pathdir}" = "${clean_tree}" ]
+  [ "${pathdir}" = "${clean_tree}" ] || [ "${pathdir}" -ef "${clean_tree}" ]
 }
 
 nvm_find_project_dir() {
