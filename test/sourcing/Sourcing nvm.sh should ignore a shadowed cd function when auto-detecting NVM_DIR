@@ -1,0 +1,33 @@
+#!/bin/sh
+
+cleanup () { :; }
+die () { echo "$@" ; cleanup ; exit 1; }
+
+FAKE_CD_ERROR='fake cd -q invoked'
+OUTPUT_FILE="$(mktemp)" || die 'failed to create temporary output file'
+# shellcheck disable=SC2218
+EXPECTED_NVM_DIR="$(cd ../.. && pwd -P)" || die 'failed to determine expected NVM_DIR'
+
+cleanup () {
+  rm -f "${OUTPUT_FILE}"
+}
+trap 'cleanup' EXIT
+
+unset NVM_DIR
+
+cd() {
+  printf '%s\n' "${FAKE_CD_ERROR}" >&2
+  return 1
+}
+
+\. ../../nvm.sh >"${OUTPUT_FILE}" 2>&1 || die 'sourcing returned nonzero exit code'
+
+if \grep "${FAKE_CD_ERROR}" "${OUTPUT_FILE}" >/dev/null 2>&1; then
+  die 'fake cd error was emitted while sourcing'
+fi
+
+[ "${NVM_DIR}" = "${EXPECTED_NVM_DIR}" ] || die "NVM_DIR should resolve to ${EXPECTED_NVM_DIR}, got ${NVM_DIR}"
+[ "${NVM_DIR}" != "${PWD}" ] || die 'NVM_DIR should not resolve to the current directory'
+[ "${NVM_DIR}" != '/' ] || die 'NVM_DIR should not resolve to /'
+
+nvm --version >/dev/null 2>&1 || die 'nvm is not available after sourcing'
