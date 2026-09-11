@@ -5066,12 +5066,14 @@ nvm_get_default_packages() {
     command awk -v filename="${NVM_DEFAULT_PACKAGE_FILE}" '
       /^[ \t]*#/ { next }                           # Skip lines that begin with #
       /^[ \t]*$/ { next }                           # Skip empty lines
-      /[ \t]/ && !/^[ \t]*#/ {
-        print "Only one package per line is allowed in `" filename "`. Please remove any lines with multiple space-separated values." > "/dev/stderr"
-        err = 1
-        exit 1
-      }
       {
+        pkgs = 0
+        for (i = 1; i <= NF; i++) if ($i !~ /^-/) pkgs++  # flags (leading -) may share a line with a package
+        if (pkgs > 1) {
+          print "Only one package per line is allowed in `" filename "`. Please remove any lines with multiple space-separated values." > "/dev/stderr"
+          err = 1
+          exit 1
+        }
         if (NR > 1 && !prev_space) printf " "
         printf "%s", $0
         prev_space = 0
