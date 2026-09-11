@@ -517,12 +517,15 @@ nvm install --offline --lts
 
 If you have a list of default packages you want installed every time you install a new version, we support that too -- just add the package names, one per line, to the file `$NVM_DIR/default-packages`. You can add anything npm would accept as a package argument on the command line.
 
+Each line may also carry npm flags (anything starting with `-`, such as `--install-links`) alongside the package name, or on a line by itself to apply to every package. Only multiple *packages* on one line are rejected.
+
 ```sh
 # $NVM_DIR/default-packages
 
 rimraf
 object-inspect@1.0.2
 stevemao/left-pad
+my-internal-tool --install-links
 ```
 
 ### io.js
