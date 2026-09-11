@@ -1,0 +1,3 @@
+if [ "$#" -eq 2 ] && [ "$1" = "get" ] && [ "$2" = "const.ohos.fullname" ]; then
+  echo "SomeOtherOS-1.2.3"
+fi
