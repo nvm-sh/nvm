@@ -1,0 +1,115 @@
+#!/bin/sh
+
+# Tests nvm_download's NVM_PROXY_AUTH_HEADER support through a proxy that
+# demands its own credentials. A node release is installed (the latest LTS,
+# or the newest release whose binary runs on this system), and the node
+# binary of that installation is used to run the dependency-free mock proxy
+# (test/mocks/mock-proxy.js). The proxy-header checks themselves follow the
+# nvm_download test in "Unit tests", using a local httpbin container as the
+# origin.
+
+cleanup () {
+  unset -f die cleanup
+  if [ -n "${mock_proxy_pid:-}" ]; then
+    kill "${mock_proxy_pid}" >/dev/null 2>&1 || true
+  fi
+  rm -f "${mock_proxy_port_file:-}" 2>/dev/null || true
+  docker rm -f httpbin >/dev/null 2>&1 || true
+  if [ -n "${nvm_alias_bak:-}" ]; then
+    rm -rf "${nvm_alias_dir}" 2>/dev/null || true
+    mv "${nvm_alias_bak}" "${nvm_alias_dir}" 2>/dev/null || true
+  else
+    rm -rf "${nvm_alias_dir:-}" 2>/dev/null || true
+  fi
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../nvm.sh
+
+set -ex
+
+nvm deactivate >/dev/null 2>&1 || true
+
+# install a node release; its node binary is used to run the mock proxy.
+# On Alpine, node -musl binaries are served by the unofficial-builds mirror
+# (the default nodejs.org mirror serves no arm64-musl artifacts), and a
+# -musl binary needs a libstdc++ as new as the Alpine it was built on, so
+# older Alpine releases can only run older node releases: try the candidates
+# newest first and keep the first whose binary runs (the 'musl-binary' CI
+# job locks the same-era pairings).
+if [ -f "/etc/alpine-release" ]; then
+# shellcheck disable=SC2034  # read by nvm.sh (not followed by shellcheck)
+  NVM_NODEJS_ORG_MIRROR='https://unofficial-builds.nodejs.org/download/release'
+fi
+NODE_VERSION=''
+for NODE_CANDIDATE in 'lts/*' v20.20.1 v18.20.4 v14.21.3; do
+  nvm install -b --no-progress --skip-default-packages "${NODE_CANDIDATE}" || continue
+  CURRENT_VERSION="$(nvm current)"
+  if [ -n "${CURRENT_VERSION}" ] && [ "${CURRENT_VERSION}" != 'none' ]; then
+    NODE_VERSION="${CURRENT_VERSION}"
+    break
+  fi
+  nvm uninstall "${NODE_CANDIDATE}" >/dev/null 2>&1 || true
+done
+if [ -z "${NODE_VERSION}" ]; then
+  echo 'skip: no node release with a runnable binary on this system (tried: lts/*, v20.20.1, v18.20.4, v14.21.3)'
+  exit 0
+fi
+NODE_BIN="$(nvm_version_path "${NODE_VERSION}")/bin/node"
+[ -x "${NODE_BIN}" ] || die "the node binary at ${NODE_BIN} is missing or not executable"
+[ "$("${NODE_BIN}" --version)" = "${NODE_VERSION}" ] || die 'the installed node binary does not report the installed version'
+
+# `nvm install` and `nvm ls-remote` create aliases; keep the checkout clean
+nvm_alias_dir="$(nvm_alias_path)"
+nvm_alias_bak=''
+if [ -d "${nvm_alias_dir}" ]; then
+  nvm_alias_bak="${nvm_alias_dir}.test-bak"
+  mv "${nvm_alias_dir}" "${nvm_alias_bak}"
+fi
+
+# start the mock proxy, with the just-installed node, on an ephemeral port
+mock_proxy_port_file="$(mktemp)"
+"${NODE_BIN}" "../mocks/mock-proxy.js" "Bearer proxy-token" "${mock_proxy_port_file}" >/dev/null 2>&1 &
+mock_proxy_pid="$!"
+mock_proxy_port=''
+i=0
+while [ "${i}" -lt 10 ]; do
+  if [ -s "${mock_proxy_port_file}" ]; then
+    mock_proxy_port="$(cat "${mock_proxy_port_file}")"
+    break
+  fi
+  i=$((i + 1))
+  sleep 1
+done
+[ -n "${mock_proxy_port}" ] || die 'the mock proxy did not report a port'
+proxy_url="http://127.0.0.1:${mock_proxy_port}"
+
+# make sure no_proxy does not bypass the proxy for these tests
+unset no_proxy NO_PROXY
+
+# the proxy header checks need a local httpbin container (as the nvm_download
+# fast test); retry the pull, and skip (rather than fail) if the image cannot
+# be pulled or run, so a transient Docker registry outage does not fail the
+# suite
+httpbin_pulled=0
+for i in 1 2 3 4 5; do
+  if docker pull kennethreitz/httpbin; then httpbin_pulled=1; break; fi
+  echo "docker pull httpbin failed, attempt $i/5"
+  sleep $((i * 5))
+done
+if [ "${httpbin_pulled}" = 1 ] && SHELL=bash docker run -d --name httpbin -p 80:80 kennethreitz/httpbin; then
+  sleep 1 # wait for httpbin to start
+  # no Authorization and no Proxy-Authorization: expected fail
+  http_proxy="${proxy_url}" nvm_download "http://127.0.0.1/get" > /dev/null && die 'nvm_download with no Authorization and no Proxy-Authorization header should fail'
+  # Authorization but no Proxy-Authorization: expected fail
+  NVM_AUTH_HEADER="Bearer test-token" http_proxy="${proxy_url}" nvm_download "http://127.0.0.1/bearer" > /dev/null && die 'nvm_download with Authorization but no Proxy-Authorization header should fail'
+  # no Authorization but Proxy-Authorization: expected fail
+  NVM_PROXY_AUTH_HEADER="Bearer proxy-token" http_proxy="${proxy_url}" nvm_download "http://127.0.0.1/bearer" > /dev/null && die 'nvm_download with Proxy-Authorization but no Authorization header should fail'
+  # Authorization and Proxy-Authorization: expected success
+  NVM_AUTH_HEADER="Bearer test-token" NVM_PROXY_AUTH_HEADER="Bearer proxy-token" http_proxy="${proxy_url}" nvm_download "http://127.0.0.1/bearer" > /dev/null || die 'nvm_download with Authorization and Proxy-Authorization headers should succeed'
+else
+  echo 'skipping proxy header checks: unable to pull or run httpbin'
+fi
+
+cleanup

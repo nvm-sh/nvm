@@ -139,6 +139,11 @@ nvm_download() {
   if [ -n "${NVM_AUTH_HEADER:-}" ]; then
     sanitized_header="$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")"
   fi
+  local sanitized_proxy_header
+  sanitized_proxy_header=''
+  if [ -n "${NVM_PROXY_AUTH_HEADER:-}" ]; then
+    sanitized_proxy_header="$(nvm_sanitize_auth_header "${NVM_PROXY_AUTH_HEADER}")"
+  fi
 
   local NVM_DOWNLOADER
   NVM_DOWNLOADER=''
@@ -183,6 +188,9 @@ nvm_download() {
 
   if [ -n "${NVM_AUTH_HEADER:-}" ]; then
     set -- "$@" --header "Authorization: ${sanitized_header}"
+  fi
+  if [ -n "${NVM_PROXY_AUTH_HEADER:-}" ]; then
+    set -- "$@" --header "Proxy-Authorization: ${sanitized_proxy_header}"
   fi
 
   command "${NVM_DOWNLOADER}" "$@"
