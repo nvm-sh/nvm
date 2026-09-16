@@ -148,7 +148,7 @@ When invoking bash as a non-interactive shell, like in a [Docker](https://www.do
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV "${HOME}/.bash_env"
+ENV BASH_ENV="${HOME:-/root}/.bash_env"
 RUN touch "${BASH_ENV}"
 RUN echo '. "${BASH_ENV}"' >> ~/.bashrc
 
@@ -174,7 +174,7 @@ RUN apt update && apt install curl -y
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 
 # set env
-ENV NVM_DIR=/root/.nvm
+ENV NVM_DIR="${HOME:-/root}/.nvm"
 
 # install node
 RUN bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION"
