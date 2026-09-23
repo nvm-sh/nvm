@@ -2161,9 +2161,52 @@ nvm_get_checksum() {
   nvm_download -L -s "${SHASUMS_URL}" -o - | command awk -v tarball="${4}.${5}" '{ if (tarball == $2) print $1 }'
 }
 
+nvm_get_remote_aliases() {
+  local NVM_ALIAS_DIR
+  NVM_ALIAS_DIR="$(nvm_alias_path)"
+  if [ ! -d "${NVM_ALIAS_DIR}" ]; then
+    return 0
+  fi
+
+  local NVM_NODE_PREFIX
+  NVM_NODE_PREFIX="$(nvm_node_prefix)"
+  local NVM_IOJS_PREFIX
+  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
+  local NVM_ALIAS_PATH
+  local NVM_ALIAS_NAME
+  local NVM_ALIAS_TARGET
+
+  nvm_is_zsh && setopt local_options nonomatch
+  # the same glob as `nvm_list_aliases`, so this never shows an alias that `nvm alias` omits
+  for NVM_ALIAS_PATH in "${NVM_ALIAS_DIR}/"*; do
+    if [ ! -f "${NVM_ALIAS_PATH}" ]; then
+      continue
+    fi
+
+    NVM_ALIAS_NAME="${NVM_ALIAS_PATH##*/}"
+    case "${NVM_ALIAS_NAME}" in
+      "${NVM_NODE_PREFIX}" | "${NVM_IOJS_PREFIX}" | stable | unstable) continue ;;
+      # control characters would corrupt the terminal, or the tab-separated output
+      *[[:cntrl:]]*) continue ;;
+    esac
+
+    NVM_ALIAS_TARGET="$(nvm_resolve_alias "${NVM_ALIAS_NAME}" 2>/dev/null)" || continue
+    case "${NVM_ALIAS_TARGET}" in
+      '' | *[[:cntrl:]]*) continue ;;
+    esac
+
+    command printf '%s\t%s\n' "${NVM_ALIAS_TARGET}" "${NVM_ALIAS_NAME}"
+  done
+}
+
 nvm_print_versions() {
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
+
+  local NVM_LATEST_ALIAS
+  NVM_LATEST_ALIAS="${2-}"
+  local NVM_NAMED_ALIASES
+  NVM_NAMED_ALIASES="${3-}"
 
   local INSTALLED_COLOR
   local SYSTEM_COLOR
@@ -2185,20 +2228,36 @@ nvm_print_versions() {
     NVM_HAS_COLORS=1
   fi
 
+  local NVM_HAS_ITALICS
+  NVM_HAS_ITALICS=0
+  if [ "${NVM_HAS_COLORS}" = 1 ] && [ -n "${NVM_LATEST_ALIAS}${NVM_NAMED_ALIASES}" ] && nvm_has_italics; then
+    NVM_HAS_ITALICS=1
+  fi
+
+  NVM_NAMED_ALIASES="${NVM_NAMED_ALIASES}" \
   command awk \
     -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" \
+    -v latest_alias="${NVM_LATEST_ALIAS}" \
+    -v node_prefix="$(nvm_node_prefix)" -v iojs_prefix="$(nvm_iojs_prefix)" \
     -v installed_versions="$(nvm_ls | tr '\n' '|')" -v current="$NVM_CURRENT" \
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
-    -v old_lts_color="$DEFAULT_COLOR" -v has_colors="$NVM_HAS_COLORS" '
+    -v old_lts_color="$DEFAULT_COLOR" -v has_colors="$NVM_HAS_COLORS" \
+    -v has_italics="$NVM_HAS_ITALICS" '
 function alen(arr, i, len) { len=0; for(i in arr) len++; return len; }
+function paint(color, text) { return (has_colors && color) ? ("\033[" color text "\033[0m") : text; }
+function spaces(count, result) { result = ""; while (count-- > 0) result = result " "; return result; }
+function italicize(text) { return has_italics ? ("\033[3m" text "\033[23m") : text; }
 BEGIN {
+  named_alias_list = ENVIRON["NVM_NAMED_ALIASES"];
   fmt_installed = has_colors ? (installed_color ? "\033[" installed_color "%15s\033[0m" : "%15s") : "%15s *";
   fmt_system = has_colors ? (system_color ? "\033[" system_color "%15s\033[0m" : "%15s") : "%15s *";
   fmt_current = has_colors ? (current_color ? "\033[" current_color "->%13s\033[0m" : "%15s") : "->%13s *";
 
   latest_lts_color = current_color;
   sub(/0;/, "1;", latest_lts_color);
+  alias_color = current_color;
+  sub(/^1;/, "0;", alias_color);
 
   fmt_latest_lts = has_colors && latest_lts_color ? ("\033[" latest_lts_color " (Latest LTS: %s)\033[0m") : " (Latest LTS: %s)";
   fmt_old_lts = has_colors && old_lts_color ? ("\033[" old_lts_color " (LTS: %s)\033[0m") : " (LTS: %s)";
@@ -2207,6 +2266,57 @@ BEGIN {
   split(remote_versions, lines, "|");
   split(installed_versions, installed, "|");
   rows = alen(lines);
+
+  for (n = 1; n <= rows; n++) {
+    split(lines[n], fields, "[[:blank:]]+");
+    if (index(fields[1], iojs_prefix "-") == 1) {
+      latest_iojs = fields[1];
+    } else if (fields[1] ~ /^v0\.[0-9]*[13579]\./) {
+      latest_unstable = fields[1];
+    } else if (fields[1] ~ /^v[0-9]/) {
+      latest_stable = fields[1];
+    }
+  }
+
+  named_alias_rows = split(named_alias_list, named_alias_lines, "\n");
+  for (a = 1; a <= named_alias_rows; a++) {
+    tab_position = index(named_alias_lines[a], "\t");
+    if (tab_position < 2) {
+      continue;
+    }
+    alias_target = substr(named_alias_lines[a], 1, tab_position - 1);
+    alias_name = substr(named_alias_lines[a], tab_position + 1);
+    if (alias_name == "") {
+      continue;
+    }
+
+    alias_version = "";
+    if (alias_target == node_prefix || alias_target == "stable") {
+      alias_version = latest_stable;
+    } else if (alias_target == "unstable") {
+      alias_version = latest_unstable;
+    } else if (alias_target == iojs_prefix || alias_target == (iojs_prefix "-")) {
+      alias_version = latest_iojs;
+    } else {
+      for (n = 1; n <= rows; n++) {
+        split(lines[n], fields, "[[:blank:]]+");
+        if (fields[1] == alias_target || index(fields[1], alias_target ".") == 1) {
+          alias_version = fields[1];
+        }
+      }
+    }
+
+    if (alias_version != "") {
+      # mawk creates the assigned element before evaluating the right side, so `in` must be checked first
+      if (alias_version in named_aliases) {
+        named_aliases[alias_version] = named_aliases[alias_version] ", " alias_name;
+        italic_aliases[alias_version] = italic_aliases[alias_version] ", " italicize(alias_name);
+      } else {
+        named_aliases[alias_version] = alias_name;
+        italic_aliases[alias_version] = italicize(alias_name);
+      }
+    }
+  }
 
   for (n = 1; n <= rows; n++) {
     split(lines[n], fields, "[[:blank:]]+");
@@ -2230,23 +2340,69 @@ BEGIN {
       fmt_version = fmt_installed;
     }
 
-    padding = (!has_colors && is_installed) ? "" : "  ";
+    padding[n] = (!has_colors && is_installed) ? "" : "  ";
 
-    if (cols == 1) {
-      formatted = sprintf(fmt_version, version);
-    } else if (version == "system" && cols >= 2) {
-      formatted = sprintf((fmt_version fmt_system_target), version, fields[2]);
+    output[n] = sprintf(fmt_version, version);
+    version_width[n] = output[n] padding[n];
+    gsub(/\033\[[0-9;]*m/, "", version_width[n]);
+    version_width[n] = length(version_width[n]);
+    if (version_width[n] > max_version_width) {
+      max_version_width = version_width[n];
+    }
+    for (c = 1; c <= 3; c++) {
+      text[n, c] = "";
+      cell[n, c] = "";
+    }
+    if (version == "system" && cols >= 2) {
+      output[n] = output[n] sprintf(fmt_system_target, fields[2]);
     } else if (cols == 2) {
-      formatted = sprintf((fmt_version padding fmt_old_lts), version, fields[2]);
+      text[n, 1] = sprintf(" (LTS: %s)", fields[2]);
+      cell[n, 1] = sprintf(fmt_old_lts, fields[2]);
     } else if (cols == 3 && fields[3] == "*") {
-      formatted = sprintf((fmt_version padding fmt_latest_lts), version, fields[2]);
+      text[n, 1] = sprintf(" (Latest LTS: %s)", fields[2]);
+      cell[n, 1] = sprintf(fmt_latest_lts, fields[2]);
     }
 
-    output[n] = formatted;
+    if (latest_alias != "" && version == latest_stable) {
+      text[n, 2] = " (Latest: " latest_alias ")";
+      cell[n, 2] = paint(alias_color, " (Latest: " italicize(latest_alias) ")");
+    }
+
+    if (version in named_aliases) {
+      text[n, 3] = " (Aliases: " named_aliases[version] ")";
+      cell[n, 3] = paint(alias_color, " (Aliases: " italic_aliases[version] ")");
+    }
+
+    for (c = 1; c <= 3; c++) {
+      if (length(text[n, c]) > width[c]) {
+        width[c] = length(text[n, c]);
+      }
+    }
   }
 
+  # each kind of annotation starts in the same column on every row, so the output stays `cut`-able
   for (n = 1; n <= rows; n++) {
-    print output[n]
+    last = 0;
+    for (c = 1; c <= 3; c++) {
+      if (text[n, c] != "") {
+        last = c;
+      }
+    }
+    formatted = output[n];
+    if (last) {
+      formatted = formatted padding[n];
+      if (width[2] || width[3]) {
+        formatted = formatted spaces(max_version_width - version_width[n]);
+      }
+      gap = "";
+      for (c = 1; c <= last; c++) {
+        if (width[c]) {
+          formatted = formatted gap cell[n, c];
+          gap = spaces(width[c] - length(text[n, c])) "  ";
+        }
+      }
+    }
+    print formatted
   }
 
   exit
@@ -4751,7 +4907,15 @@ nvm() {
       NVM_OUTPUT="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN-}" &&:)"
       EXIT_CODE=$?
       if [ -n "${NVM_OUTPUT}" ]; then
-        NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "${NVM_OUTPUT}"
+        local NVM_REMOTE_LATEST_ALIAS
+        NVM_REMOTE_LATEST_ALIAS=''
+        local NVM_REMOTE_NAMED_ALIASES
+        NVM_REMOTE_NAMED_ALIASES=''
+        if [ "${EXIT_CODE}" -eq 0 ] && [ -z "${NVM_LTS-}" ] && [ -z "${PATTERN-}" ]; then
+          NVM_REMOTE_LATEST_ALIAS="$(nvm_node_prefix)"
+          NVM_REMOTE_NAMED_ALIASES="$(nvm_get_remote_aliases)"
+        fi
+        NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "${NVM_OUTPUT}" "${NVM_REMOTE_LATEST_ALIAS}" "${NVM_REMOTE_NAMED_ALIASES}"
         return $EXIT_CODE
       fi
       NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "N/A"
@@ -5035,7 +5199,7 @@ nvm() {
         nvm_iojs_prefix nvm_node_prefix \
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
         nvm_is_iojs_version nvm_is_alias nvm_has_non_aliased \
-        nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab \
+        nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact \

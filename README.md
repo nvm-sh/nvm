@@ -401,6 +401,15 @@ You can list available versions using `ls-remote`:
 nvm ls-remote
 ```
 
+When no version or `--lts` filter is given, the list also marks the version the `node` alias would install, and every version that one of your own aliases would resolve to. Each kind of annotation always starts in the same column, so the output can be sliced with `cut -c` or similar tools:
+
+```
+        v20.9.0   (Latest LTS: Iron)                        (Aliases: work)
+        v21.0.0
+        v21.1.0
+        v21.2.0                            (Latest: node)   (Aliases: default)
+```
+
 And then in any new shell just use the installed version:
 
 ```sh

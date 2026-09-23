@@ -3,7 +3,7 @@
 die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
-  unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs
+  unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs nvm_get_remote_aliases nvm_has_italics
   if [ -n "${TEMP_NVM_COLORS-}" ]; then
     export NVM_COLORS=TEMP_NVM_COLORS
   fi
@@ -87,6 +87,9 @@ REMOTE_IOJS="${PWD}/mocks/nvm_ls_remote_iojs.txt"
 nvm_ls_remote_iojs() {
   cat "${REMOTE_IOJS}"
 }
+# the mock must not depend on whatever local aliases exist in $NVM_DIR
+nvm_get_remote_aliases() { :; }
+nvm_has_italics() { return 0; }
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote.txt"
 OUTPUT="$(nvm ls-remote | sed 's/[ \t]*$//')"
