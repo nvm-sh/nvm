@@ -1015,6 +1015,11 @@ nvm_is_valid_version() {
     *)
       local VERSION
       VERSION="$(nvm_strip_iojs_prefix "${1-}")"
+      local VERSION_NO_V
+      VERSION_NO_V="${VERSION#v}"
+      if ! nvm_echo "${VERSION_NO_V}" | command grep -qE '^[0-9]+(\.[0-9]+){0,2}$'; then
+        return 1
+      fi
       nvm_version_greater_than_or_equal_to "${VERSION}" 0
     ;;
   esac
