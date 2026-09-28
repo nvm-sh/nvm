@@ -1,0 +1,39 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias" || die 'could not create alias dir'
+
+RELEASE='v998.0.0'
+NIGHTLY='v999.0.0-nightly20241031996708042b'
+make_fake_node "${RELEASE}" || die "fake node ${RELEASE} could not be made"
+make_fake_node "${NIGHTLY}" || die "fake node ${NIGHTLY} could not be made"
+
+for TARGET in "${NIGHTLY}" node; do
+  nvm_make_alias default "${TARGET}" || die "could not alias default to ${TARGET}"
+  nvm deactivate >/dev/null 2>&1
+  nvm_auto use || die "nvm_auto use failed with default -> ${TARGET}"
+  CURRENT="$(nvm current)"
+  [ "${CURRENT}" = "${NIGHTLY}" ] || die "with default -> ${TARGET}, nvm_auto use left 'nvm current' as >${CURRENT}<, expected >${NIGHTLY}<"
+done
+
+cleanup

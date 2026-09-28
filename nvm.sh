@@ -1015,6 +1015,27 @@ nvm_is_valid_version() {
     *)
       local VERSION
       VERSION="$(nvm_strip_iojs_prefix "${1-}")"
+      local NVM_VERSION_CORE
+      NVM_VERSION_CORE="${VERSION#v}"
+      case "${NVM_VERSION_CORE}" in
+        *-*)
+          # prereleases (rc, nightly, v8-canary, ...) need a full x.y.z, and never have a dot followed by a non-digit, like a file extension
+          case "${NVM_VERSION_CORE#*-}" in
+            '' | .* | *. | *..* | *.*[!0-9.]* | *[!0-9A-Za-z.-]*) return 1 ;;
+          esac
+          NVM_VERSION_CORE="${NVM_VERSION_CORE%%-*}"
+          case "${NVM_VERSION_CORE}" in
+            *.*.*) ;;
+            *) return 1 ;;
+          esac
+        ;;
+        *.)
+          NVM_VERSION_CORE="${NVM_VERSION_CORE%.}"
+        ;;
+      esac
+      case "${NVM_VERSION_CORE}" in
+        '' | .* | *. | *..* | *.*.*.* | *[!0-9.]*) return 1 ;;
+      esac
       nvm_version_greater_than_or_equal_to "${VERSION}" 0
     ;;
   esac
