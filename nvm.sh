@@ -101,6 +101,11 @@ nvm_has_colors() {
   [ -t 1 ] && [ "${NVM_NUM_COLORS:--1}" -ge 8 ] && [ "${NVM_NO_COLORS-}" != '--no-colors' ]
 }
 
+# terminals without italics may render the italic escape as reverse video instead, so check terminfo's `sitm` capability
+nvm_has_italics() {
+  nvm_has_colors && command tput -T "${TERM:-vt100}" sitm >/dev/null 2>&1
+}
+
 nvm_curl_libz_support() {
   command curl -V 2>/dev/null | nvm_grep "^Features:" | nvm_grep -q "libz"
 }
@@ -5061,7 +5066,7 @@ nvm() {
         nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
         nvm_list_aliases nvm_make_alias nvm_print_alias_file nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
-        nvm_sanitize_path nvm_has_colors nvm_process_parameters \
+        nvm_sanitize_path nvm_has_colors nvm_has_italics nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears nvm_sanitize_auth_header \
