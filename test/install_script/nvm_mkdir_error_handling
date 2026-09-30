@@ -24,17 +24,24 @@ type nvm_do_install > /dev/null 2>&1 || die 'nvm_do_install is not available'
 
 IMPOSSIBLE_DIR="/dev/null/impossible_path"
 
-## install_nvm_from_git: mkdir failure should exit with code 2 and print error
+## install_nvm_from_git: invalid custom NVM_DIR should exit with code 1 and print error
 OUTPUT="$(NVM_DIR="${IMPOSSIBLE_DIR}" install_nvm_from_git 2>&1)"
 EXIT_CODE=$?
-[ "${EXIT_CODE}" = '2' ] || die "install_nvm_from_git should exit 2 on mkdir failure, got ${EXIT_CODE}"
-echo "${OUTPUT}" | grep -q "Failed to create directory" || die "install_nvm_from_git should print mkdir error message, got: ${OUTPUT}"
+[ "${EXIT_CODE}" = '1' ] || die "install_nvm_from_git should exit 1 on invalid custom NVM_DIR, got ${EXIT_CODE}"
+echo "${OUTPUT}" | grep -q "Invalid \$NVM_DIR \"${IMPOSSIBLE_DIR}\": failed to find directory \"/dev/null\"" || die "install_nvm_from_git should print invalid NVM_DIR base path, got: ${OUTPUT}"
 
-## install_nvm_as_script: mkdir failure should return 1 and print error
+## install_nvm_as_script: invalid custom NVM_DIR should return 1 and print error
 OUTPUT="$(NVM_DIR="${IMPOSSIBLE_DIR}" install_nvm_as_script 2>&1)"
 EXIT_CODE=$?
-[ "${EXIT_CODE}" = '1' ] || die "install_nvm_as_script should return 1 on mkdir failure, got ${EXIT_CODE}"
-echo "${OUTPUT}" | grep -q "Failed to create directory" || die "install_nvm_as_script should print mkdir error message, got: ${OUTPUT}"
+[ "${EXIT_CODE}" = '1' ] || die "install_nvm_as_script should return 1 on invalid custom NVM_DIR, got ${EXIT_CODE}"
+echo "${OUTPUT}" | grep -q "Invalid \$NVM_DIR \"${IMPOSSIBLE_DIR}\": failed to find directory \"/dev/null\"" || die "install_nvm_as_script should print invalid NVM_DIR base path, got: ${OUTPUT}"
+
+## nvm_do_install: invalid custom NVM_DIR should report the first missing directory
+MISSING_PARENT_DIR="$(pwd)/missing_parent/child"
+OUTPUT="$(NVM_DIR="${MISSING_PARENT_DIR}" nvm_do_install 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '1' ] || die "nvm_do_install should exit 1 on invalid custom NVM_DIR, got ${EXIT_CODE}"
+echo "${OUTPUT}" | grep -q "Invalid \$NVM_DIR \"${MISSING_PARENT_DIR}\": failed to find directory \"$(pwd)/missing_parent\"" || die "nvm_do_install should print the first missing directory, got: ${OUTPUT}"
 
 ## nvm_do_install: mkdir failure for default dir should exit with code 2 and print error
 # Override nvm_default_install_dir to return the impossible path so the mkdir branch is taken

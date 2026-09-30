@@ -17,6 +17,8 @@ safe_type() {
 ! safe_type install_nvm_from_git || die 'install_nvm_from_git is still available'
 ! safe_type nvm_reset || die 'nvm_reset is still available'
 ! safe_type nvm_detect_profile || die 'nvm_detect_profile is still available'
+! safe_type nvm_install_dir_base || die 'nvm_install_dir_base is still available'
+! safe_type nvm_validate_install_dir || die 'nvm_validate_install_dir is still available'
 
 NVM_ENV=testing \. ../../install.sh
 
@@ -34,5 +36,7 @@ nvm_reset || die 'nvm_reset failed'
 ! safe_type install_nvm_from_git || die 'install_nvm_from_git is still available'
 ! safe_type nvm_reset || die 'nvm_reset is still available'
 ! safe_type nvm_detect_profile || die 'nvm_detect_profile is still available'
+! safe_type nvm_install_dir_base || die 'nvm_install_dir_base is still available'
+! safe_type nvm_validate_install_dir || die 'nvm_validate_install_dir is still available'
 
 cleanup
