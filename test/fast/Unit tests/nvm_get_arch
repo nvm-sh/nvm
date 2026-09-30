@@ -90,10 +90,10 @@ run_test amd64 smartos x64 no_pkg_info
 run_test x86 osx x86
 run_test amd64 osx x64
 
-# These smartos cases have no arch-specific uname mock, so nvm_get_os falls
-# through to the real host; on Alpine that host is linux and picks up the musl
-# suffix, which these non-musl assertions do not expect. Skip them there.
-if [ ! -f "/etc/alpine-release" ]; then
+# These smartos cases have no arch-specific uname mock, so they fall through to
+# the real host: they only hold on an x86_64 host, and not on Alpine, where the
+# host picks up the musl suffix these non-musl assertions do not expect.
+if [ ! -f "/etc/alpine-release" ] && [ "$(command uname -m)" = 'x86_64' ]; then
   run_test arm64 smartos x64
   run_test armv8l smartos x64
 fi

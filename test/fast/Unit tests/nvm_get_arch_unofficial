@@ -63,6 +63,8 @@ setup_chroot() {
 # test, so skip the chroot checks there and still run the ls-remote checks.
 if [ -f "/etc/alpine-release" ]; then
   echo "on Alpine; skipping chroot arch checks (covered by 'nvm_get_arch alpine')"
+elif [ "$(command uname -s)" != 'Linux' ] || [ "$(command uname -m)" != 'x86_64' ] || [ ! -e /lib64/ld-linux-x86-64.so.2 ]; then
+  echo "not on x86_64 glibc Linux; skipping chroot arch checks"
 else
   setup_chroot "${CHROOT_WITH_ALPINE}"
   setup_chroot "${CHROOT_WITHOUT_ALPINE}"
