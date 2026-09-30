@@ -148,7 +148,7 @@ When invoking bash as a non-interactive shell, like in a [Docker](https://www.do
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV "${HOME}/.bash_env"
+ENV BASH_ENV="${HOME}/.bash_env"
 RUN touch "${BASH_ENV}"
 RUN echo '. "${BASH_ENV}"' >> ~/.bashrc
 
