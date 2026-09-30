@@ -3153,6 +3153,7 @@ nvm() {
         nvm_echo '    --lts                                     Uses automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '    --lts=<LTS name>                          Uses automatic alias for provided LTS line, if available.'
         nvm_echo '  nvm current                                 Display currently activated version of Node'
+        nvm_echo '  nvm status                                  Display nvm version, active Node version, default alias, installed count, and NVM_DIR'
         nvm_echo '  nvm ls [<version>]                          List installed versions, matching a given <version> if provided'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '    --no-alias                                Suppress `nvm alias` output'
@@ -4232,6 +4233,25 @@ nvm() {
     ;;
     "current")
       nvm_version current
+    ;;
+    "status")
+      local NVM_STATUS_CURRENT
+      local NVM_STATUS_DEFAULT
+      local NVM_STATUS_INSTALLED_COUNT
+      local NVM_STATUS_INSTALLED_LABEL
+      NVM_STATUS_CURRENT="$(nvm_ls_current)"
+      NVM_STATUS_DEFAULT="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo 'none')"
+      NVM_STATUS_INSTALLED_COUNT="$(nvm_ls | command grep -c '^v' 2>/dev/null)" || NVM_STATUS_INSTALLED_COUNT=0
+      if [ "${NVM_STATUS_INSTALLED_COUNT}" = "1" ]; then
+        NVM_STATUS_INSTALLED_LABEL="version"
+      else
+        NVM_STATUS_INSTALLED_LABEL="versions"
+      fi
+      nvm_echo "nvm: $(nvm --version)"
+      nvm_echo "node: ${NVM_STATUS_CURRENT}"
+      nvm_echo "default: ${NVM_STATUS_DEFAULT:-none}"
+      nvm_echo "installed: ${NVM_STATUS_INSTALLED_COUNT} ${NVM_STATUS_INSTALLED_LABEL}"
+      nvm_echo "nvm dir: $(nvm_sanitize_path "${NVM_DIR}")"
     ;;
     "which")
       local NVM_SILENT

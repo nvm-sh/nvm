@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+make_fake_node v8.0.0
+
+nvm use --delete-prefix v8.0.0 || die "Failed to activate v8.0.0"
+
+STATUS_OUTPUT="$(nvm status)"
+
+echo "${STATUS_OUTPUT}" | grep -q "^nvm:" || die '"nvm status" did not output nvm version'
+echo "${STATUS_OUTPUT}" | grep -q "^node:" || die '"nvm status" did not output node version'
+echo "${STATUS_OUTPUT}" | grep -q "^default:" || die '"nvm status" did not output default alias'
+echo "${STATUS_OUTPUT}" | grep -q "^installed:" || die '"nvm status" did not output installed count'
+echo "${STATUS_OUTPUT}" | grep -q "^nvm dir:" || die '"nvm status" did not output nvm dir'
+
+echo "${STATUS_OUTPUT}" | grep "^node:" | grep -q "v8.0.0" || die '"nvm status" did not report active node version v8.0.0'
+echo "${STATUS_OUTPUT}" | grep "^installed:" | grep -q "1 version$" || die '"nvm status" did not report 1 installed version'

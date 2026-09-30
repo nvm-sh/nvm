@@ -76,18 +76,18 @@
 
 **Example:**
 ```sh
-$ nvm use 16
-Now using node v16.9.1 (npm v7.21.1)
+$ nvm use 24
+Now using node v24.13.1 (npm v11.4.2)
 $ node -v
-v16.9.1
-$ nvm use 14
-Now using node v14.18.0 (npm v6.14.15)
+v24.13.1
+$ nvm use 22
+Now using node v22.14.0 (npm v10.9.2)
 $ node -v
-v14.18.0
-$ nvm install 12
-Now using node v12.22.6 (npm v6.14.5)
+v22.14.0
+$ nvm install 20
+Now using node v20.18.3 (npm v10.8.2)
 $ node -v
-v12.22.6
+v20.18.3
 ```
 
 Simple as that!
@@ -162,7 +162,7 @@ See https://github.com/nvm-sh/nvm/issues/3531.
 
 ```Dockerfile
 FROM ubuntu:latest
-ARG NODE_VERSION=20
+ARG NODE_VERSION=22
 
 # install curl
 RUN apt update && apt install curl -y
@@ -184,9 +184,9 @@ CMD ["/bin/bash"]
 
 ```
 
-This example defaults to installation of nodejs version 20.x.y. Optionally you can easily override the version with docker build args like:
+This example defaults to installation of nodejs version 22.x.y. Optionally you can easily override the version with docker build args like:
 ```
-docker build -t nvmimage --build-arg NODE_VERSION=19 .
+docker build -t nvmimage --build-arg NODE_VERSION=24 .
 ```
 
 After creation of the image you can start container interactively and run commands, for example:
@@ -197,18 +197,18 @@ root@0a6b5a237c14:/# nvm -v
 0.40.4
 
 root@0a6b5a237c14:/# node -v
-v19.9.0
+v24.13.1
 
 root@0a6b5a237c14:/# npm -v
-9.6.3
+11.4.2
 ```
 
 Noninteractive example:
 ```
 user@host:/tmp/test $ docker run --rm -it nvmimage node -v
-v19.9.0
+v24.13.1
 user@host:/tmp/test $ docker run --rm -it nvmimage npm -v
-9.6.3
+11.4.2
 ```
 
 #### Troubleshooting on Linux
