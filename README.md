@@ -44,6 +44,7 @@
   - [Set default node version](#set-default-node-version)
   - [Use a mirror of node binaries](#use-a-mirror-of-node-binaries)
     - [Pass Authorization header to mirror](#pass-authorization-header-to-mirror)
+    - [Pass a Proxy-Authorization header to a proxy](#pass-a-proxy-authorization-header-to-a-proxy)
   - [Platforms without official binaries](#platforms-without-official-binaries)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
@@ -656,6 +657,18 @@ To pass an Authorization header through to the mirror url, set `$NVM_AUTH_HEADER
 
 ```sh
 NVM_AUTH_HEADER="Bearer secret-token" nvm install node
+```
+
+#### Pass a Proxy-Authorization header to a proxy
+To pass a Proxy-Authorization header through to a proxy that the downloads are
+routed through (for example via `http_proxy` or `https_proxy`), set
+`$NVM_PROXY_AUTH_HEADER`
+
+```sh
+export http_proxy="http://proxy.example.com:3128"
+export https_proxy="http://proxy.example.com:3128"
+export NVM_PROXY_AUTH_HEADER="Basic dXNlcjpwYXNzd29yZA=="
+nvm install node
 ```
 
 ### Platforms without official binaries
