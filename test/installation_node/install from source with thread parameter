@@ -25,8 +25,11 @@ nvm run $NVM_TEST_VERSION --version | grep $NVM_TEST_VERSION || "'nvm run $NVM_T
 # Remove the stuff we're clobbering.
 [ -e ../../$NVM_TEST_VERSION ] && rm -R ../../$NVM_TEST_VERSION
 
-# Install from source with 2 make jobs (and swapped arg order)
-nvm install -j 2 -s $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
+# Speed up test for non-CI environment which may have more CPU threads
+[ -z "${CI-}"] && nvm_get_make_jobs
+
+# Install from source with multiple make jobs (and swapped arg order)
+nvm install -j ${NVM_MAKE_JOBS-:2} -s $NVM_TEST_VERSION || die "'nvm install -s $NVM_TEST_VERSION' failed"
 
 # Check
 [ -d ../../$NVM_TEST_VERSION ]
