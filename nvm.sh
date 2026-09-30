@@ -30,7 +30,11 @@ nvm_echo_with_colors() {
 }
 
 nvm_cd() {
-  \cd "$@"
+  if command -v builtin >/dev/null 2>&1; then
+    \builtin cd "$@"
+  else
+    \cd "$@"
+  fi
 }
 
 # a caller that closed stderr, rather than redirecting it to /dev/null, makes
