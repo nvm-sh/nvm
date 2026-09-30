@@ -1,6 +1,13 @@
 #!/bin/sh
 
 cleanup () {
+  rm tmp-alias
+  if [ "${CASE_SENSITIVE-}" = '1' ]; then
+    rm tmp/TREE/node
+    rmdir tmp/TREE
+  fi
+  rm tmp/tree/node
+  rmdir tmp/tree
   rm tmp/node
   rmdir tmp
   rm tmp2/node
@@ -15,6 +22,15 @@ mkdir -p tmp
 touch tmp/node
 mkdir -p tmp2
 touch tmp2/node
+mkdir -p tmp/tree
+touch tmp/tree/node
+ln -s tmp tmp-alias
+CASE_SENSITIVE=0
+if [ ! -d tmp/TREE ]; then
+  CASE_SENSITIVE=1
+  mkdir tmp/TREE
+  touch tmp/TREE/node
+fi
 
 [ "$(nvm_tree_contains_path 2>&1)" = "both the tree and the node path are required" ] || die 'incorrect error message with no args'
 [ "$(nvm_tree_contains_path > /dev/null 2>&1 ; echo $?)" = "2" ] || die 'incorrect error code with no args'
@@ -35,5 +51,19 @@ nvm_tree_contains_path / /tmp/node || die '"/" should contain "/tmp/node"'
 
 nvm_tree_contains_path "tmp[glob]" "tmp[glob]/node" || die '"tmp[glob]" should contain "tmp[glob]/node"'
 nvm_tree_contains_path "tmp" "tmp[glob]/node" && die '"tmp" should not contain "tmp[glob]/node"'
+
+if [ "${CASE_SENSITIVE}" = '1' ]; then
+  nvm_tree_contains_path tmp/tree tmp/TREE/node && die 'case-sensitive directories should stay distinct'
+  nvm_tree_contains_path tmp/TREE tmp/tree/node && die 'case-sensitive directories should stay distinct'
+else
+  nvm_tree_contains_path tmp/tree tmp/TREE/node || die 'case-insensitive directories should match'
+  nvm_tree_contains_path tmp/TREE tmp/tree/node || die 'case-insensitive directories should match'
+fi
+
+nvm_tree_contains_path tmp-alias tmp/node || die 'a symlink to the tree should contain its node'
+nvm_tree_contains_path tmp tmp-alias/node || die 'the tree should contain a node reached through a symlink'
+nvm_tree_contains_path tmp-alias tmp2/node && die 'a symlink should not contain a sibling tree'
+
+nvm_tree_contains_path nonexistent NONEXISTENT/node && die 'missing directories should not be case folded'
 
 cleanup
