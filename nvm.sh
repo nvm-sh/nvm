@@ -3696,6 +3696,9 @@ nvm() {
       --) break ;;
       '-h'|'help'|'--help')
         NVM_NO_COLORS=""
+        if [[ "$NVM_NO_HELP" -eq 1 ]]; then
+          break;
+        fi
         for j in "$@"; do
           if [ "${j}" = '--no-colors' ]; then
             NVM_NO_COLORS="${j}"
