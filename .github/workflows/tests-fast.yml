@@ -6,7 +6,7 @@ permissions:
   contents: read
 
 jobs:
-  fast:
+  fast-linux:
     permissions:
       contents: read
 
@@ -101,11 +101,136 @@ jobs:
           if [ -f /usr/local/bin/npx.bak ]; then sudo mv /usr/local/bin/npx.bak /usr/local/bin/npx; fi
         shell: bash
 
+  fast-macos:
+    permissions:
+      contents: read
+
+    # APFS is case-insensitive, and /bin/sh and /bin/bash are bash 3.2
+    name: 'fast (macOS, ${{ matrix.shell }})'
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shell:
+          - sh
+          - bash
+          - dash
+          - zsh
+
+    steps:
+      - uses: actions/checkout@v6
+        id: checkout
+        continue-on-error: true
+        with:
+          submodules: true
+      - name: 'nvmrc submodule fallback (forks without their own nvmrc)'
+        if: steps.checkout.outcome == 'failure'
+        shell: bash
+        run: |
+          git submodule set-url test/fixtures/nvmrc https://github.com/nvm-sh/nvmrc.git
+          git submodule sync --recursive
+          git submodule update --init --recursive
+      - run: sw_vers; uname -m; which ${{ matrix.shell }}
+      - name: Ensure wget is installed
+        run: command -v wget || brew install wget
+      - run: wget --version
+      - uses: ljharb/actions/node/install@main
+        name: 'npm install && version checks'
+        with:
+          node-version: 'lts/*'
+          skip-ls-check: true
+      - run: npm ls urchin
+      - name: Hide system node
+        shell: bash
+        run: |
+          export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '\.nvm' | grep -v 'toolcache' | tr '\n' ':')"
+          for bin in node npm npx; do
+            while found="$(command -v "${bin}")"; do
+              sudo mv "${found}" "${found}.bak" || break
+              echo "${found}" >> "${RUNNER_TEMP}/hidden-node"
+              hash -r
+            done
+          done
+      - name: Run fast tests
+        shell: bash
+        run: |
+          unset NVM_CD_FLAGS NVM_BIN NVM_INC
+          export NVM_DIR="${{ github.workspace }}"
+          export PATH="$(echo "$PATH" | tr ':' '\n' | grep -v '\.nvm' | grep -v 'toolcache' | tr '\n' ':')"
+          script -q /dev/null make TERM=xterm-256color TEST_SUITE="fast" SHELL="${{ matrix.shell }}" URCHIN="${{ github.workspace }}/node_modules/.bin/urchin" test-${{ matrix.shell }} < /dev/null
+      - name: Restore system node
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "${RUNNER_TEMP}/hidden-node" ]; then
+            while IFS= read -r found; do sudo mv "${found}.bak" "${found}"; done < "${RUNNER_TEMP}/hidden-node"
+          fi
+
+  fast-windows:
+    permissions:
+      contents: read
+
+    # GitHub's Windows runners provide WSL1
+    name: 'fast (WSL ${{ matrix.wsl-distrib }}, ${{ matrix.shell }})'
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: wsl-bash {0}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        wsl-distrib:
+          - Ubuntu-24.04
+        shell:
+          - sh
+          - bash
+          - dash
+          - zsh
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: Vampire/setup-wsl@v7
+        with:
+          distribution: ${{ matrix.wsl-distrib }}
+          additional-packages: git make zsh dash sudo curl wget ca-certificates nodejs npm
+      - name: 'Clone into the WSL filesystem as a non-root user'
+        # the Windows checkout shows every file as executable, which urchin would run as tests
+        run: |
+          set -ex
+          useradd -m tester
+          echo 'tester ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/tester
+          chmod 0440 /etc/sudoers.d/tester
+          su tester -c '
+            set -ex
+            git config --global --add safe.directory "*"
+            git clone "$(wslpath "${{ github.workspace }}")" ~/nvm
+            cd ~/nvm
+            git submodule set-url test/fixtures/nvmrc https://github.com/nvm-sh/nvmrc.git
+            git submodule update --init --recursive
+            npm install
+            npm ls urchin
+          '
+      - name: Hide system node
+        run: |
+          for bin in node npm npx; do
+            if [ -e "/usr/bin/${bin}" ]; then mv "/usr/bin/${bin}" "/usr/bin/${bin}.bak"; fi
+          done
+      - name: Run fast tests
+        run: |
+          su tester -c '
+            cd ~/nvm
+            unset NVM_CD_FLAGS NVM_BIN NVM_INC
+            export NVM_DIR="${HOME}/nvm" GITHUB_ACTIONS=true TERM=xterm-256color
+            script -q -e -c "make TEST_SUITE=fast SHELL=${{ matrix.shell }} URCHIN=${HOME}/nvm/node_modules/.bin/urchin test-${{ matrix.shell }}" /dev/null
+          '
+
   all:
     permissions:
       contents: none
     name: 'all fast tests'
-    needs: [fast]
+    needs: [fast-linux, fast-macos, fast-windows]
     runs-on: ubuntu-latest
     steps:
       - run: true
