@@ -84,6 +84,36 @@ cleanup
 
 setup
 
+# a package may carry npm flags on the same line; flag-only lines are allowed too
+cat > "${FILE}" << EOF
+rimraf
+my-internal-tool --install-links
+--foreground-scripts
+EOF
+
+DEFAULT_PKGS="$(nvm_get_default_packages)"
+EXPECTED_PKGS='rimraf my-internal-tool --install-links --foreground-scripts'
+[ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "6: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+echo "6: ok: >${DEFAULT_PKGS}<"
+
+cleanup
+
+setup
+
+# two real packages on one line must still be rejected
+cat > "${FILE}" << EOF
+rimraf mkdirp
+EOF
+
+DEFAULT_PKGS="$(nvm_get_default_packages 2>&1 >/dev/null)"
+EXPECTED_PKGS="Only one package per line is allowed in \`${FILE}\`. Please remove any lines with multiple space-separated values."
+[ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "7: expected default packages >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+echo "7: ok: >${DEFAULT_PKGS}<"
+
+cleanup
+
+setup
+
 rm -rf "${FILE}"
 
 DEFAULT_PKGS="$(nvm_get_default_packages)"
