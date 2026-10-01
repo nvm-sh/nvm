@@ -212,6 +212,23 @@ nvm_has_system_iojs() {
   [ "$(nvm deactivate >/dev/null 2>&1 && command -v iojs)" != '' ]
 }
 
+nvm_is_installed_exact_version() {
+  case "${1-}" in
+    v*) ;;
+    *) return 1 ;;
+  esac
+  case "${1#v}" in
+    *[!0-9.]* | .* | *. | *..* | *.*.*.*) return 1 ;;
+    *.*.*) ;;
+    *) return 1 ;;
+  esac
+  # an alias with this exact name takes precedence, as it does in `nvm_version`
+  if [ -e "$(nvm_alias_path)/${1}" ]; then
+    return 1
+  fi
+  nvm_is_version_installed "${1}"
+}
+
 nvm_is_version_installed() {
   if [ -z "${1-}" ]; then
     return 1
@@ -4536,6 +4553,8 @@ nvm() {
       IS_VERSION_FROM_NVMRC=0
       local NVM_WRITE_TO_NVMRC
       NVM_WRITE_TO_NVMRC=0
+      local NVM_USE_EXACT_INSTALLED
+      NVM_USE_EXACT_INSTALLED=0
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -4576,6 +4595,9 @@ nvm() {
           nvm_err 'Please see `nvm --help` or https://github.com/nvm-sh/nvm#nvmrc for more information.'
           return 127
         fi
+      elif nvm_is_installed_exact_version "${PROVIDED_VERSION}"; then
+        VERSION="${PROVIDED_VERSION}"
+        NVM_USE_EXACT_INSTALLED=1
       else
         VERSION="$(nvm_match_version "${PROVIDED_VERSION}")"
       fi
@@ -4617,9 +4639,8 @@ nvm() {
           nvm_ensure_version_installed "${PROVIDED_VERSION}" "${IS_VERSION_FROM_NVMRC}"
         fi
         return 3
-      # This nvm_ensure_version_installed call can be a performance bottleneck
-      # on shell startup. Perhaps we can optimize it away or make it faster.
-      elif ! nvm_ensure_version_installed "${VERSION}" "${IS_VERSION_FROM_NVMRC}"; then
+      # an exact, already-installed version needs no further resolution or checks
+      elif [ "${NVM_USE_EXACT_INSTALLED}" -ne 1 ] && ! nvm_ensure_version_installed "${VERSION}" "${IS_VERSION_FROM_NVMRC}"; then
         return $?
       fi
 
@@ -5241,7 +5262,7 @@ nvm() {
         nvm_echo nvm_err nvm_grep nvm_cd \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
-        nvm_is_natural_num nvm_is_version_installed nvm_validate_install \
+        nvm_is_natural_num nvm_is_installed_exact_version nvm_is_version_installed nvm_validate_install \
         nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
         nvm_list_aliases nvm_make_alias nvm_print_alias_file nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
