@@ -1254,24 +1254,33 @@ nvm_change_path() {
   # if there’s no initial path, just return the supplementary path
   if [ -z "${1-}" ]; then
     nvm_echo "${3-}${2-}"
+    return
+  fi
+  # `${NVM_DIR}` is matched literally, so escape characters that are special in regexes
+  local NVM_DIR_RE
+  NVM_DIR_RE="$(nvm_echo "${NVM_DIR}" | command sed 's/[][\.*^$+?(){}|]/\\&/g')"
   # if the initial path doesn’t contain an nvm path, prepend the supplementary
   # path
-  elif ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/[^/]*${2-}" \
-    && ! nvm_echo "${1-}" | nvm_grep -q "${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
+  if ! nvm_echo "${1-}" | nvm_grep -Eq "${NVM_DIR_RE}/[^/]*${2-}" \
+    && ! nvm_echo "${1-}" | nvm_grep -Eq "${NVM_DIR_RE}/versions/[^/]*/[^/]*${2-}"; then
     nvm_echo "${3-}${2-}:${1-}"
   # if the initial path contains BOTH an nvm path (checked for above) and
   # that nvm path is preceded by a system binary path, just prepend the
   # supplementary path instead of replacing it.
   # https://github.com/nvm-sh/nvm/issues/1652#issuecomment-342571223
-  elif nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR}/[^/]*${2-}" \
-    || nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR}/versions/[^/]*/[^/]*${2-}"; then
+  elif nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR_RE}/[^/]*${2-}" \
+    || nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR_RE}/versions/[^/]*/[^/]*${2-}"; then
     nvm_echo "${3-}${2-}:${1-}"
   # use sed to replace the existing nvm path with the supplementary path. This
   # preserves the order of the path.
   else
-    nvm_echo "${1-}" | command sed \
-      -e "s#${NVM_DIR}/[^/]*${2-}[^:]*#${3-}${2-}#" \
-      -e "s#${NVM_DIR}/versions/[^/]*/[^/]*${2-}[^:]*#${3-}${2-}#"
+    local NVM_DIR_SED
+    NVM_DIR_SED="$(nvm_echo "${NVM_DIR_RE}" | command sed 's/#/\\#/g')"
+    local NEW_DIR_SED
+    NEW_DIR_SED="$(nvm_echo "${3-}" | command sed 's/[\&#]/\\&/g')"
+    nvm_echo "${1-}" | command sed -E \
+      -e "s#${NVM_DIR_SED}/[^/]*${2-}[^:]*#${NEW_DIR_SED}${2-}#" \
+      -e "s#${NVM_DIR_SED}/versions/[^/]*/[^/]*${2-}[^:]*#${NEW_DIR_SED}${2-}#"
   fi
 }
 
@@ -3638,14 +3647,29 @@ nvm_has_solaris_binary() {
   fi
 }
 
+# replaces every literal occurrence of $2 in $1 with $3; values go through the
+# environment so awk does not interpret backslash escapes or regex characters
+nvm_replace_literal() {
+  nvm_echo "${1-}" | NVM_FROM="${2-}" NVM_TO="${3-}" command awk '
+  BEGIN { from = ENVIRON["NVM_FROM"]; to = ENVIRON["NVM_TO"]; n = length(from) }
+  {
+    out = ""; s = $0
+    while (n > 0 && (i = index(s, from)) > 0) {
+      out = out substr(s, 1, i - 1) to
+      s = substr(s, i + n)
+    }
+    print out s
+  }'
+}
+
 nvm_sanitize_path() {
   local SANITIZED_PATH
   SANITIZED_PATH="${1-}"
   if [ "_${SANITIZED_PATH}" != "_${NVM_DIR}" ]; then
-    SANITIZED_PATH="$(nvm_echo "${SANITIZED_PATH}" | command sed -e "s#${NVM_DIR}#\${NVM_DIR}#g")"
+    SANITIZED_PATH="$(nvm_replace_literal "${SANITIZED_PATH}" "${NVM_DIR}" '${NVM_DIR}')"
   fi
   if [ "_${SANITIZED_PATH}" != "_${HOME}" ]; then
-    SANITIZED_PATH="$(nvm_echo "${SANITIZED_PATH}" | command sed -e "s#${HOME}#\${HOME}#g")"
+    SANITIZED_PATH="$(nvm_replace_literal "${SANITIZED_PATH}" "${HOME}" '${HOME}')"
   fi
   nvm_echo "${SANITIZED_PATH}"
 }
@@ -5426,7 +5450,7 @@ nvm() {
         nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
         nvm_list_aliases nvm_make_alias nvm_print_alias_file nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
-        nvm_sanitize_path nvm_has_colors nvm_has_italics nvm_process_parameters \
+        nvm_replace_literal nvm_sanitize_path nvm_has_colors nvm_has_italics nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears nvm_sanitize_auth_header \
