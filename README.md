@@ -895,6 +895,12 @@ Run all of the tests like this:
 
     npm test
 
+`npm run test/fast` runs `make` inside a clean environment (`env -i ... bash -lc`), so `node` must be on the `PATH` of a fresh login `bash` shell.
+If `node` is only available through `nvm` in your current shell, it fails with "Did you forget to run `npm install` after cloning the repo?", even after a successful `npm install`.
+In that case, run `make` directly from the root of the nvm git repository, choosing the test suite and shell:
+
+    make TEST_SUITE=fast test-zsh
+
 Nota bene: Avoid running nvm while the tests are running.
 
 ## Environment variables
