@@ -1,0 +1,50 @@
+#!/bin/sh
+
+cleanup () {
+  rm -rf "$NVM_DIR"
+  unset -f die cleanup
+  unset NVM_DIR NODE_PATH VERSION
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+set -ex
+
+NVM_DIR=$(mktemp -d)
+NODE_PATH="$NVM_DIR/versions/node"
+mkdir -p "$NODE_PATH"
+if [ -z "$NODE_PATH" ]; then
+  die 'Unable to create temporary folder'
+fi
+
+# nvm_is_installed_exact_version is available
+type nvm_is_installed_exact_version > /dev/null 2>&1 || die 'nvm_is_installed_exact_version is not available'
+
+# nvm_is_installed_exact_version with no parameter fails
+! nvm_is_installed_exact_version || die 'nvm_is_installed_exact_version without parameter should fail'
+
+# an exact version that is not installed fails
+! nvm_is_installed_exact_version 'v12.0.0' || die 'v12.0.0 is not installed and should fail'
+
+# an exact version whose node binary is not executable fails
+mkdir -p "$NODE_PATH/v12.0.0/bin"
+touch "$NODE_PATH/v12.0.0/bin/node"
+! nvm_is_installed_exact_version 'v12.0.0' || die 'v12.0.0 with a non-executable node should fail'
+
+# an exact, installed version succeeds
+chmod +x "$NODE_PATH/v12.0.0/bin/node"
+nvm_is_installed_exact_version 'v12.0.0' || die 'v12.0.0 is installed and should succeed'
+
+# anything that is not an exact vX.Y.Z fails, even if it would resolve to an installed version
+for VERSION in '12.0.0' '12' 'v12' 'v12.0' 'v12.0.0-rc.1' 'node' 'stable' 'lts/*' 'iojs-v1.0.0' 'system' 'default'; do
+  ! nvm_is_installed_exact_version "$VERSION" || die "$VERSION is not an exact version and should fail"
+done
+
+# an alias with the exact same name takes precedence, so the fast path must not apply
+mkdir -p "$(nvm_alias_path)"
+echo 'v12.0.0' > "$(nvm_alias_path)/v12.0.0"
+! nvm_is_installed_exact_version 'v12.0.0' || die 'an alias named v12.0.0 should take precedence'
+
+cleanup
