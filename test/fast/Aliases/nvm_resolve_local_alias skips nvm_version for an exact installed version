@@ -1,0 +1,20 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_version() {
+  echo 'nvm_version was called' >&2
+  return 42
+}
+
+EXACT="$(nvm_resolve_local_alias test-stable-1)"
+[ "_$EXACT" = "_v0.0.1" ] || die "'nvm_resolve_local_alias test-stable-1' was not v0.0.1; got $EXACT"
+
+echo v0.0.99 > ../../../alias/test-not-installed
+NOT_INSTALLED="$(nvm_resolve_local_alias test-not-installed 2>/dev/null)"
+EXIT_CODE=$?
+rm -f ../../../alias/test-not-installed
+[ "_$EXIT_CODE" = "_42" ] || die "an exact version that is not installed should still go through nvm_version; got exit code $EXIT_CODE"
