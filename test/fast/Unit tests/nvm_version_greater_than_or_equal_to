@@ -1,0 +1,21 @@
+#!/bin/sh
+
+die () { echo "$@" >&2; exit 1; }
+
+\. ../../../nvm.sh
+
+nvm_version_greater_than_or_equal_to 0.10.0 0.2.12 || die '"nvm_version_greater_than_or_equal_to" did not return true for 0.10.0 >= 0.2.12'
+
+nvm_version_greater_than_or_equal_to 0.10.0 0.10.0 || die '"nvm_version_greater_than_or_equal_to" did not return true for the same two versions'
+
+nvm_version_greater_than_or_equal_to v0.10.0 0.10.0 || die '"nvm_version_greater_than_or_equal_to" did not handle a leading v'
+
+if nvm_version_greater_than_or_equal_to 0.2.12 0.10.0; then
+  die '"nvm_version_greater_than_or_equal_to" returned true for a lesser version'
+fi
+
+if nvm_version_greater_than_or_equal_to '' 0.10.0; then
+  die '"nvm_version_greater_than_or_equal_to" returned true for an empty argument'
+fi
+
+echo "PASS: nvm_version_greater_than_or_equal_to"
