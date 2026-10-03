@@ -1673,11 +1673,18 @@ nvm_resolve_local_alias() {
   if [ -z "${VERSION}" ]; then
     return $EXIT_CODE
   fi
-  if [ "_${VERSION}" != '_∞' ]; then
-    nvm_version "${VERSION}"
-  else
+  if [ "_${VERSION}" = '_∞' ]; then
     nvm_echo "${VERSION}"
+    return
   fi
+
+  # Fast path: an exact, installed vX.Y.Z needs no further resolution.
+  if nvm_is_installed_exact_version "${VERSION}"; then
+    nvm_echo "${VERSION}"
+    return
+  fi
+
+  nvm_version "${VERSION}"
 }
 
 nvm_iojs_prefix() {
