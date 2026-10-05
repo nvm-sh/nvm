@@ -2775,8 +2775,12 @@ nvm_install_binary() {
     return 2
   fi
 
+  # dash's `local` keeps the caller's value, and TMPDIR is usually set: it is
+  # later removed with `rm -rf`, so it must not start as the system temp dir
   local TARBALL
+  TARBALL=''
   local TMPDIR
+  TMPDIR=''
 
   local PROGRESS_BAR
   local NODE_OR_IOJS
@@ -3176,9 +3180,13 @@ nvm_install_source() {
     fi
   fi
 
+  # see nvm_install_binary: these must not inherit TMPDIR, which is removed on failure
   local TARBALL
+  TARBALL=''
   local TMPDIR
+  TMPDIR=''
   local VERSION_PATH
+  VERSION_PATH=''
 
   if [ "${NVM_NO_PROGRESS-}" = "1" ]; then
     # --silent, --show-error, use short option as @samrocketman mentions the compatibility issue.
