@@ -5,6 +5,7 @@ set -ex
 die () { echo "$@" ; cleanup ; exit 1; }
 cleanup () {
   rm -rf "${NVM_DIR}/v0.10.4"
+  unset -f nvm_remote_version
 }
 
 export NVM_DIR="$(cd ../.. && pwd)"
@@ -12,6 +13,8 @@ export NVM_DIR="$(cd ../.. && pwd)"
 : nvm.sh
 \. ../../nvm.sh
 \. ../common.sh
+
+nvm_remote_version() { nvm_echo "${1-}"; }
 
 make_fake_node v0.10.4
 
