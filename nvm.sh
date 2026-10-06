@@ -22,11 +22,22 @@ nvm_stdout_is_terminal() {
 }
 
 nvm_echo() {
-  command printf %s\\n "$*" 2>/dev/null
+  # in zsh, `command printf` skips the builtin and runs `/usr/bin/printf`
+  if [ -n "${ZSH_VERSION-}" ]; then
+    # shellcheck disable=SC3044
+    builtin printf %s\\n "$*" 2>/dev/null
+  else
+    command printf %s\\n "$*" 2>/dev/null
+  fi
 }
 
 nvm_echo_with_colors() {
-  command printf %b\\n "$*" 2>/dev/null
+  if [ -n "${ZSH_VERSION-}" ]; then
+    # shellcheck disable=SC3044
+    builtin printf %b\\n "$*" 2>/dev/null
+  else
+    command printf %b\\n "$*" 2>/dev/null
+  fi
 }
 
 nvm_cd() {
