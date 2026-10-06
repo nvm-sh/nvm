@@ -3365,9 +3365,6 @@ nvm_die_on_prefix() {
     return 3
   fi
 
-  local NVM_OS
-  NVM_OS="$(nvm_get_os)"
-
   # npm normalizes NPM_CONFIG_-prefixed env vars
   # https://github.com/npm/npmconf/blob/22827e4038d6eebaafeb5c13ed2b92cf97b8fb82/npmconf.js#L331-L348
   # https://github.com/npm/npm/blob/5e426a78ca02d0044f8dd26e0c5f881217081cbd/lib/config/core.js#L343-L359
@@ -3377,6 +3374,10 @@ nvm_die_on_prefix() {
   local NVM_NPM_CONFIG_x_PREFIX_ENV
   NVM_NPM_CONFIG_x_PREFIX_ENV="$(command awk 'BEGIN { for (name in ENVIRON) if (toupper(name) == "NPM_CONFIG_PREFIX") { print name; break } }')"
   if [ -n "${NVM_NPM_CONFIG_x_PREFIX_ENV-}" ]; then
+    # `$NVM_OS` is only used to translate Windows paths, but detecting the OS
+    # shells out to `uname`, so it is deferred until it is actually needed
+    local NVM_OS
+    NVM_OS="$(nvm_get_os)"
     local NVM_CONFIG_VALUE
     eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_x_PREFIX_ENV}\""
     if [ -n "${NVM_CONFIG_VALUE-}" ] && [ "_${NVM_OS}" = "_win" ]; then

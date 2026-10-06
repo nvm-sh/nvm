@@ -49,6 +49,20 @@ nvm_has() { return 0; }
 OUTPUT="$(nvm_die_on_prefix 0 foo "$(nvm_version_dir new)" 2>&1)"
 [ -z "$OUTPUT" ] || die "'nvm_die_on_prefix' was not a noop when prefix is good; got '$OUTPUT'"
 
+# `nvm_get_os` runs `uname`; it is only needed when an `NPM_CONFIG_PREFIX`
+# variable is set, so with none set it must not run at all
+MOCK_BIN="${TEST_DIR}/bin"
+mkdir -p "${MOCK_BIN}"
+{
+  echo '#!/bin/sh'
+  echo 'echo "uname was called" >&2'
+  echo 'exit 1'
+} > "${MOCK_BIN}/uname"
+chmod +x "${MOCK_BIN}/uname"
+unset NPM_CONFIG_PREFIX npm_config_prefix npm_CONFIG_PREFIX
+OUTPUT="$(PATH="${MOCK_BIN}:${PATH}" nvm_die_on_prefix 0 foo "$(nvm_version_dir new)" 2>&1)"
+[ -z "$OUTPUT" ] || die "'nvm_die_on_prefix' detected the OS (ran uname) when no NPM_CONFIG_PREFIX was set; got '$OUTPUT'"
+
 mkdir -p "$(nvm_version_dir new)"
 ln -s "$(nvm_version_dir new)" "$TEST_DIR/node"
 
