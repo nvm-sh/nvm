@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "formatting": {
+    "trimNewlines": false,
+    "trimFinalNewlines": false,
+    "trimTrailingWhitespace": true,
+    "insertFinalNewline": true,
+    "multiStatementsOneLine": true,
+    "alignInlineComments": 48,
+    "spacing.operator": 1,
+    "spacing.semicolon": 1,
+    "spacing.comma": 1,
+    "spacing.assignment": 1,
+    "spacing.parentheses": 0,
+    "spacing.squareBrackets": 0,
+    "spacing.curlyBrackets": 0,
+    "spacing.angleBrackets": 0,
+    "style.operator": "keep",
+    "style.keyword": "keep",
+    "style.commentMark": "keep",
+    "style.keywordCase": "keep",
+    "indent.base": 0,
+    "indent.block": true,
+    "indent.commentLine": true,
+    "indent.directive": false,
+    "indent.clause": false,
+    "clause.useBlock": false,
+    "clause.addBlankLines": false,
+    "clause.atNewline": false,
+    "routine.labelPattern": ""
+  }
+}

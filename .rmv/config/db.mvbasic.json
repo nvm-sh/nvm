@@ -1,0 +1,145 @@
+/*
+    Database configuration
+
+    This is the example configuration file for the Rocket MV Basic for VS Code extension.
+    The configuration file should be at .rmv/config/db.mvbasic.json.
+
+    Configure the following items:
+    - db:{}                 This object defines the connection details to the U2 server.
+
+    - accounts: []          This array of objects defines paths on the local machine to other accounts.
+
+    - catalog: {}           This object allows autocompletion for CALL statements and 
+                            enables "Peek" and "Go to Definition" to access the source code.
+
+    - includeMapping: []    This array allows autocompletion for INCLUDE files and 
+                            enables "Peek" and "Go to Definition" to access the source code for an INCLUDEd item.
+
+*/
+{
+    "version": "1.0",
+
+    // Define connection details to the U2 server. 
+    // VS Code prompts for these values when left blank.
+    // For more information, please refer https://rocketsoftware.github.io/rocket-mvbasic/usage/Connection
+    "db": {
+
+        // Hostname or IP address of U2 server.
+        "host": "",
+        // "host": "localhost",
+        // "host": "my.u2.server.local",
+        // "host": "192.0.2.1",
+
+        // Username used to log in over Telnet or UniRPC. Use an escape character for domain log-in. (\\ instead of \)
+        "userName": "",
+        // "userName": "DOMAIN1\\myuser",
+        // "userName": "myuser",
+
+        // Password used to log in over Telnet or UniRPC. RECOMMENDED TO LEAVE THIS PASSWORD BLANK.
+        // VS Code will prompt for the password when connecting.
+        "password": "",
+
+        // U2 account to LOGIN to.
+        "account": "",
+        // "account": "XDEMO",
+        // "account": "MVTUTOR",
+
+        // Data source is either "UNIVERSE" or "UNIDATA" or "jBASE".
+        // If this value is changed, VS Code MUST BE restarted for it to take effect.
+        "dataSource": "UNIVERSE",
+
+        // UniRPC TCP/IP port to connect to U2 server. 31438 is the default port of UniRPC.
+        // Match the port number here if the U2 server runs the UniRPC on another port.
+        // Use 20002 for jBASE.
+        "port": 31438
+    },
+
+    // The "accounts" array defines the local paths to the U2 server account directories.
+    // These accounts are referred to in the "catalog" and "includeMapping" items.
+    // The "db" section "account" does not need to be defined here since it would be the current directory.
+    // For more details, please refer https://rocketsoftware.github.io/rocket-mvbasic/usage/Accounts/
+    "accounts": [
+        {
+            // The account name. For example, "XDEMO" or "HS.SALES" or "MVTUTOR", etc.
+            // This is the "account" referred to in the "programDirs"."programMapping" and "includeMapping" arrays.
+            "name": "",
+
+            // The full path of the account's folder as referenced from this local machine.
+            // For example, "C:\\U2\\UV\\XDEMO" or "U:\\U2\\UV\\XDEMO" or "/mnt/u2server/U2/UV/XDEMO".
+            // NOTE : If this client is a windows box, you must specify two backslashes (\\) between directories.
+            "path": ""
+        }
+    ], 
+
+    // Map cataloged programs for autocompletion of CALL statements.
+    "catalog": {
+
+        // Enables the extension to scan all directories in the workspace (account).
+        // Affects performance when there are a large number of directories in the workspace.
+        // Best practice is to define specific directories in "programDirs" that are known to contain SUBROUTINE source code.
+        "isSearchAllDirs": false,
+
+        // This is the time interval (in seconds) when the extension will scan directory files in the account.
+        // The default for this setting is 5.
+        "readServerInterval": 5,
+
+        // The "programDirs" array defines the accounts and directories in which to search for source code for CATALOGed
+        // ("CALL " program) items. You can define multiple directories to search.
+        // The directories will be searched for source code in alphabetic order regardless of their order in the array.
+        // You can find examples of this setting at https://rocketsoftware.github.io/rocket-mvbasic/usage/Catalog/
+        "programDirs": [
+            {
+                // Account name. Account name should be defined in "accounts" array.
+                // This setting could be removed if cataloged programs are not in directories in other accounts.
+                "account": "",
+
+                // The name of source code directory which contains cataloged programs.
+                // When searching cataloged programs, this configured directory will be scanned.
+                "fileName": ""
+            }
+        ],
+
+        // The "programMapping" array allows a one-to-one correlation for known SUBROUTINEs to be offered in the
+        // "CALL " auto-completion. If set in this section, those items defined as "catalogName" will appear in the
+        // pop-up auto-completion list and the source for "Peek" or "Go to Definition" can be explicitly defined here
+        // as "account", "fileName" and "program".
+        // You can find examples of these settings at https://rocketsoftware.github.io/rocket-mvbasic/usage/Catalog/
+        "programMapping": [
+            {
+                // The CATALOGed program name to be used in the CALL statement.
+                "catalogName": "",
+
+                // The Account name where the cataloged program source code exists. The Account name must appear in the
+                // "accounts" array with it's associated local path unless it is the current workspace account.
+                "account": "",
+
+                // The name of the actual program directory which contains the source code of cataloged program.
+                // NOTE: This may differ from the VOC entry for this U2 program file, since a Q or F point could
+                //       exist that points to a different OS level directory.
+                "fileName": "",
+
+                // The item ID of the source code in the "fileName" directory defined above.
+                "program": ""
+            }
+        ]
+    },
+
+    // The 'includeMapping" array allows the extension to populate the pop-up list for "INCLUDE file " and allows the
+    // "Peek" and "Go to Definition" to access the source code for the INCLUDEd item.
+    // Please refer more details at https://rocketsoftware.github.io/rocket-mvbasic/usage/Include/
+    "includeMapping": [
+        {
+            // The file name used in the "INCLUDE " statement. For example INCLUDE BP ABC would have "BP" as the
+            // "includeFile" name. This file name would be a VOC entry within the "account" and is not necessarily the
+            // actual OS directory name.
+            "includeFile": "",
+
+            // The account where the actual code directory exists. This "account" should be configured in "accounts" array.
+            "account": "",
+
+            // The actual OS directory within the account. This may vary from the VOC name in "includeFile" above.
+            // For example, UNIVERSE.INCLUDE in the VOC may refer to OS directory INCLUDE.
+            "fileName": ""
+        }
+    ]
+}

@@ -1,0 +1,52 @@
+/*
+    Compile and Catalog Configuration
+    Supported platforms: UniVerse, UniData, jBASE
+*/
+{
+  // For UniVerse, catalog types can be: global, local, or normal.
+  // For UniData, catalog types can be: local or direct.
+  "catalog": "local",
+
+  // Catalog arguments
+  // UniVerse/UniData: Additional arguments passed to CATALOG command
+  //
+  // jBASE CATALOG options examples:
+  //   -LLibraryDir  - Alternative lib directory for shared libraries
+  //   -oBinDir      - Alternative bin directory for executables
+  //   -v            - Verbose mode
+  "catalog_arguments": "",
+
+  // For the catalog type "global" in UniVerse, the initial characters can be: Asterisk (*), Exclamation mark (!), Minus sign (-), or Dollar sign ($).
+  "initialCharacter": "",
+  // "initialCharacter": "*",
+  // "initialCharacter": "!",
+  // "initialCharacter": "-",
+  // "initialCharacter": "$"
+
+  // If the datasource is Unidata, provide the `ud_compile_flavor`.
+  // The default flavor is Unibasic.
+  "ud_compile_flavor": "",
+  // "ud_compile_flavor": "Pick",
+  // "ud_compile_flavor": "Unibasic",
+  // "ud_compile_flavor": "revelation",
+  // "ud_compile_flavor": "douglas"
+
+  // Compile arguments
+  // UniVerse/UniData: Additional arguments passed to BASIC command
+  //
+  // jBASE: BASIC {-Options} <filename> <programname> {(Option}
+  //        Only options with '(' prefix are supported in MVVS.
+  //        jBASE compile options examples:
+  //        (On     - Optimize the code (n = optimization level)
+  //        (En     - Optimize the code (same as O option)
+  //        (Wn     - Set warning level to 0, 1, 2 or 3
+  //        (Ipath  - Path for include files
+  //        (V      - Allow persistent variables in subroutines
+  //        (Qq     - Source code contains embedded SQL statements
+  "compile_arguments": "",
+
+  //File Lock state
+  // ON  : Enable file locking
+  // OFF : No file locking
+  "file_lock_state": "OFF"
+}
