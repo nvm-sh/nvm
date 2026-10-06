@@ -2563,18 +2563,74 @@ nvm_print_implicit_alias() {
 }
 
 nvm_get_os() {
-  local NVM_UNAME
-  NVM_UNAME="$(command uname -a)"
+  # dash's `local` keeps the caller's value, so these must start empty
   local NVM_OS
-  case "${NVM_UNAME}" in
-    Linux\ *) NVM_OS=linux ;;
-    Darwin\ *) NVM_OS=darwin ;;
-    SunOS\ *) NVM_OS=sunos ;;
-    FreeBSD\ *) NVM_OS=freebsd ;;
-    OpenBSD\ *) NVM_OS=openbsd ;;
-    AIX\ *) NVM_OS=aix ;;
-    CYGWIN* | MSYS* | MINGW*) NVM_OS=win ;;
-  esac
+  NVM_OS=''
+  local NVM_UNAME
+  local NVM_OS_RELEASE_PATH
+  local NVM_OS_RELEASE_LINE
+  local NVM_OS_RELEASE_ID
+  NVM_OS_RELEASE_ID=''
+  local NVM_OS_KERNEL_PATH
+  local NVM_OS_KERNEL_TYPE
+  NVM_OS_KERNEL_TYPE=''
+
+  # `/etc/os-release` is available on Linux, FreeBSD 13.2+, and the MSYS2 and
+  # Cygwin runtimes; where it is readable, its `ID` names the OS without
+  # spawning `uname`. The file is read, not sourced, so nothing in it runs.
+  # systems without the file (macOS, OpenBSD, ...) and files without an `ID`
+  # fall through to `uname -a` below.
+  NVM_OS_RELEASE_PATH="${NVM_OS_RELEASE:-/etc/os-release}"
+  if [ -r "${NVM_OS_RELEASE_PATH}" ]; then
+    while IFS= read -r NVM_OS_RELEASE_LINE || [ -n "${NVM_OS_RELEASE_LINE}" ]; do
+      case "${NVM_OS_RELEASE_LINE}" in
+        ID=*)
+          NVM_OS_RELEASE_ID="${NVM_OS_RELEASE_LINE#ID=}"
+          break
+        ;;
+      esac
+    done < "${NVM_OS_RELEASE_PATH}"
+    # an `ID` is a single word, which may be quoted and followed by
+    # whitespace (including a CR) or a comment
+    NVM_OS_RELEASE_ID="${NVM_OS_RELEASE_ID%%[[:space:]#]*}"
+    NVM_OS_RELEASE_ID="${NVM_OS_RELEASE_ID#[\"\']}"
+    NVM_OS_RELEASE_ID="${NVM_OS_RELEASE_ID%[\"\']}"
+    case "${NVM_OS_RELEASE_ID}" in
+      freebsd) NVM_OS=freebsd ;;
+      cygwin* | mingw* | msys*) NVM_OS=win ;;
+      # illumos distributions and Oracle Solaris report `SunOS` from
+      # `uname -a`, and GhostBSD reports `FreeBSD`; map these directly instead
+      # of forking `uname`
+      solaris | omnios | openindiana | smartos | illumos) NVM_OS=sunos ;;
+      ghostbsd) NVM_OS=freebsd ;;
+      # no `ID`, or one with no `nvm` OS of its own (DragonFly BSD): let
+      # `uname -a` decide
+      '' | dragonfly) NVM_OS='' ;;
+      # any other `ID` is a Linux distribution's only if the kernel says so;
+      # unlisted BSD and illumos derivatives (e.g. HardenedBSD, Helios) let
+      # `uname -a` decide
+      *)
+        NVM_OS_KERNEL_PATH="${NVM_OS_KERNEL_OSTYPE:-/proc/sys/kernel/ostype}"
+        if [ -r "${NVM_OS_KERNEL_PATH}" ] && IFS= read -r NVM_OS_KERNEL_TYPE < "${NVM_OS_KERNEL_PATH}" && [ "${NVM_OS_KERNEL_TYPE}" = 'Linux' ]; then
+          NVM_OS=linux
+        fi
+      ;;
+    esac
+  fi
+
+  if [ -z "${NVM_OS-}" ]; then
+    NVM_UNAME="$(command uname -a)"
+    case "${NVM_UNAME}" in
+      Linux\ *) NVM_OS=linux ;;
+      Darwin\ *) NVM_OS=darwin ;;
+      SunOS\ *) NVM_OS=sunos ;;
+      FreeBSD\ *) NVM_OS=freebsd ;;
+      OpenBSD\ *) NVM_OS=openbsd ;;
+      AIX\ *) NVM_OS=aix ;;
+      CYGWIN* | MSYS* | MINGW*) NVM_OS=win ;;
+    esac
+  fi
+
   nvm_echo "${NVM_OS-}"
 }
 

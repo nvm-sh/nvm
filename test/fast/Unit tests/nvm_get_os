@@ -1,0 +1,149 @@
+#!/bin/sh
+
+TEST_PWD=$(pwd)
+TEST_DIR="${TEST_PWD}/nvm_get_os_tmp"
+
+: nvm.sh
+\. ../../../nvm.sh
+
+cleanup() {
+  rm -rf "${TEST_DIR}"
+}
+
+die() {
+  echo "$@"
+  cleanup
+  exit 1
+}
+
+[ ! -e "${TEST_DIR}" ] && mkdir "${TEST_DIR}"
+
+OS_RELEASE="${TEST_DIR}/os-release"
+MISSING_OS_RELEASE="${TEST_DIR}/nonexistent-os-release"
+
+# a `uname` that reports that it ran (and fails), so that any test can prove
+# whether `nvm_get_os` forked it
+MOCK_BIN="${TEST_DIR}/bin"
+mkdir -p "${MOCK_BIN}"
+{
+  echo '#!/bin/sh'
+  echo 'echo "uname was called" >&2'
+  echo 'exit 1'
+} > "${MOCK_BIN}/uname"
+chmod +x "${MOCK_BIN}/uname"
+
+# asserts that `nvm_get_os` maps the os-release file to $EXPECTED, without
+# forking `uname`; the kernel is mocked as Linux, so Linux distro `ID`s pass on any host
+KERNEL_LINUX="${TEST_DIR}/ostype-linux"
+echo 'Linux' > "${KERNEL_LINUX}"
+assert_os_release() {
+  local DESCRIPTION
+  DESCRIPTION="${1}"
+  local EXPECTED
+  EXPECTED="${2}"
+  local OUTPUT
+  NVM_OS_RELEASE="${OS_RELEASE}"
+  NVM_OS_KERNEL_OSTYPE="${KERNEL_LINUX}"
+  export NVM_OS_RELEASE NVM_OS_KERNEL_OSTYPE
+  OUTPUT="$(PATH="${MOCK_BIN}:${PATH}" nvm_get_os 2>&1)"
+  unset NVM_OS_RELEASE NVM_OS_KERNEL_OSTYPE
+  case "${OUTPUT}" in
+    *'uname was called'*) die "for ${DESCRIPTION}, \`nvm_get_os\` forked \`uname\` despite \`${OS_RELEASE}\` being readable" ;;
+  esac
+  [ "${OUTPUT}" = "${EXPECTED}" ] || die "for ${DESCRIPTION}, expected '${EXPECTED}', got '${OUTPUT}'"
+}
+
+printf 'NAME=Ubuntu\nID=ubuntu\n' > "${OS_RELEASE}"
+assert_os_release 'a distro-style os-release' 'linux'
+
+printf 'NAME="Arch Linux"\nID=arch\n' > "${OS_RELEASE}"
+assert_os_release 'an os-release with a quoted NAME' 'linux'
+
+printf 'NAME=FreeBSD\nVERSION=14.0-RELEASE\nID=freebsd\n' > "${OS_RELEASE}"
+assert_os_release 'the FreeBSD 13.2+ os-release' 'freebsd'
+
+printf 'ID=freebsd' > "${OS_RELEASE}"
+assert_os_release 'an os-release whose ID has no trailing newline' 'freebsd'
+
+printf 'NAME=MSYS2\nID=msys2\nPRETTY_NAME="MSYS2"\nID_LIKE="cygwin arch"\n' > "${OS_RELEASE}"
+assert_os_release 'the MSYS2 os-release' 'win'
+
+printf 'NAME="Oracle Solaris"\nPRETTY_NAME="Oracle Solaris 11.4"\nCPE_NAME="cpe:/o:oracle:solaris:11:4"\nID=solaris\nVERSION=11.4\nVERSION_ID=11.4\nBUILD_ID=11.4.0.0.1.15.0\nHOME_URL="https://www.oracle.com/solaris/"\nSUPPORT_URL="https://support.oracle.com/"\n' > "${OS_RELEASE}"
+assert_os_release 'the Oracle Solaris 11.4 os-release' 'sunos'
+
+printf 'NAME="OmniOS"\nPRETTY_NAME="OmniOS Community Edition v11 r151048"\nCPE_NAME="cpe:/o:omniosce:omnios:11:151048:0"\nID=omnios\nVERSION=r151048\nVERSION_ID=r151048\nBUILD_ID=151048.0.2023.11.04\nHOME_URL="https://omnios.org/"\nSUPPORT_URL="https://omnios.org/"\nBUG_REPORT_URL="https://github.com/omniosorg/omnios-build/issues/new"\n' > "${OS_RELEASE}"
+assert_os_release 'the OmniOS r151048 os-release' 'sunos'
+
+printf 'ID=openindiana\nID_LIKE="illumos solaris"\n' > "${OS_RELEASE}"
+assert_os_release 'an OpenIndiana os-release' 'sunos'
+
+printf 'ID=smartos\n' > "${OS_RELEASE}"
+assert_os_release 'a SmartOS os-release' 'sunos'
+
+printf 'ID=illumos\n' > "${OS_RELEASE}"
+assert_os_release 'an illumos os-release' 'sunos'
+
+printf 'ID=ghostbsd\nID_LIKE=freebsd\n' > "${OS_RELEASE}"
+assert_os_release 'a GhostBSD os-release' 'freebsd'
+
+printf 'ID=freebsd   # a comment\n' > "${OS_RELEASE}"
+assert_os_release 'an ID followed by whitespace and a comment' 'freebsd'
+
+# the file is read, not sourced: nothing in it runs
+printf 'exit 3\nID=ubuntu\n' > "${OS_RELEASE}"
+assert_os_release 'an os-release containing shell code' 'linux'
+
+# a file without an `ID`, or no file at all, falls back to parsing `uname -a`
+{
+  echo '#!/bin/sh'
+  echo 'echo "${NVM_MOCK_UNAME}"'
+} > "${MOCK_BIN}/uname"
+chmod +x "${MOCK_BIN}/uname"
+
+assert_uname_os() {
+  local UNAME_OUTPUT
+  UNAME_OUTPUT="${1}"
+  local OS_RELEASE_FILE
+  OS_RELEASE_FILE="${2}"
+  local EXPECTED
+  EXPECTED="${3}"
+  local OUTPUT
+  NVM_OS_RELEASE="${OS_RELEASE_FILE}"
+  NVM_OS_KERNEL_OSTYPE="${MISSING_OS_RELEASE}"
+  export NVM_OS_RELEASE NVM_OS_KERNEL_OSTYPE
+  NVM_MOCK_UNAME="${UNAME_OUTPUT}"
+  export NVM_MOCK_UNAME
+  OUTPUT="$(PATH="${MOCK_BIN}:${PATH}" nvm_get_os)"
+  unset NVM_OS_RELEASE NVM_OS_KERNEL_OSTYPE NVM_MOCK_UNAME
+  [ "${OUTPUT}" = "${EXPECTED}" ] || die "for uname -a '${UNAME_OUTPUT}', expected '${EXPECTED}', got '${OUTPUT}'"
+}
+
+printf 'NAME=OnlyAName\n' > "${OS_RELEASE}"
+assert_uname_os 'Linux host 6.1.0 #1 SMP x86_64 GNU/Linux' "${OS_RELEASE}" 'linux'
+assert_uname_os 'Darwin host 23.1.0 arm64' "${OS_RELEASE}" 'darwin'
+assert_uname_os 'SunOS host 5.11' "${OS_RELEASE}" 'sunos'
+assert_uname_os 'FreeBSD host 14.0-RELEASE' "${OS_RELEASE}" 'freebsd'
+assert_uname_os 'OpenBSD host 7.4' "${OS_RELEASE}" 'openbsd'
+assert_uname_os 'AIX host 3 7' "${OS_RELEASE}" 'aix'
+assert_uname_os 'CYGWIN_NT-10.0 host' "${OS_RELEASE}" 'win'
+assert_uname_os 'MINGW64_NT-10.0 host' "${OS_RELEASE}" 'win'
+assert_uname_os 'MSYS_NT-10.0 host' "${OS_RELEASE}" 'win'
+assert_uname_os 'Darwin host 23.1.0 arm64' "${MISSING_OS_RELEASE}" 'darwin'
+
+# a pre-set `ID` in the environment must not be mistaken for the file's `ID`
+ID=1000
+export ID
+assert_uname_os 'Darwin host 23.1.0 arm64' "${OS_RELEASE}" 'darwin'
+unset ID
+
+# DragonFly BSD has no `nvm` OS of its own: fall back to `uname -a` as before
+printf 'NAME="DragonFly"\nID=dragonfly\n' > "${OS_RELEASE}"
+assert_uname_os 'DragonFly host 6.4-RELEASE' "${OS_RELEASE}" ''
+
+# an unlisted `ID` on a non-Linux kernel is not assumed to be Linux
+printf 'NAME=HardenedBSD\nID=hardenedbsd\n' > "${OS_RELEASE}"
+assert_uname_os 'FreeBSD host 14.0-STABLE' "${OS_RELEASE}" 'freebsd'
+printf 'NAME=Helios\nID=helios\n' > "${OS_RELEASE}"
+assert_uname_os 'SunOS host 5.11' "${OS_RELEASE}" 'sunos'
+
+cleanup

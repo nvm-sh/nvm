@@ -21,6 +21,10 @@ MOCKS_DIR="$(pwd)/../../mocks"
 # binaries
 export PATH=".:${PATH}"
 
+# `nvm_get_os` reads `/etc/os-release` where it is available; this test drives
+# the OS through the mocked `uname`, so point it at a file that does not exist
+export NVM_OS_RELEASE="${MOCKS_DIR}/nonexistent-os-release"
+
 # Setups mock binaries for a given OS and arch that mimic
 # the output of the real binaries used by nvm_get_arch to guess
 # the architecture of a given system.
