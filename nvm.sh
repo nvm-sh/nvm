@@ -913,6 +913,16 @@ nvm_version() {
       PATTERN="stable"
     ;;
   esac
+
+  # Fast path: an exact, fully-qualified version that is installed resolves to
+  # itself, unless an alias of the same name takes precedence. Short-circuiting
+  # it here avoids the `nvm_ls` subprocess pipeline on shell startup; every
+  # other pattern falls through to `nvm_ls` unchanged.
+  if nvm_is_installed_exact_version "${PATTERN}"; then
+    nvm_echo "${PATTERN}"
+    return 0
+  fi
+
   VERSION="$(nvm_ls "${PATTERN}" | command tail -1)"
   case "${VERSION}" in
     system[[:blank:]]*)
