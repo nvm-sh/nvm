@@ -233,6 +233,22 @@ nvm_is_version_installed() {
   if [ -z "${1-}" ]; then
     return 1
   fi
+
+  # Fast path: versions in the modern layout live at a directly-computable
+  # path. Checking it first avoids forking `nvm_version_path` (and the `awk`
+  # version comparison inside it) and `nvm_get_os` on shell startup. Versions
+  # below `v0.12` are skipped, since they must not count from the modern
+  # layout; those, io.js, and Windows binaries fall through to the full lookup
+  # below, which also rejects path traversal.
+  case "/${1}/" in
+    */../* | /v0.[0-9].* | /v0.1[01].* | /0.[0-9].* | /0.1[01].*) ;;
+    *)
+      if [ -x "${NVM_DIR}/versions/node/${1}/bin/node" ]; then
+        return 0
+      fi
+    ;;
+  esac
+
   local NVM_NODE_BINARY
   NVM_NODE_BINARY='node'
   if [ "_$(nvm_get_os)" = '_win' ]; then
