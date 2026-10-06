@@ -3329,9 +3329,28 @@ nvm_npm_global_modules() {
 
 nvm_npmrc_bad_news_bears() {
   local NVM_NPMRC
+  local NVM_NPMRC_LINE
+  local NVM_NPMRC_KEY
   NVM_NPMRC="${1-}"
-  if [ -n "${NVM_NPMRC}" ] && [ -f "${NVM_NPMRC}" ] && nvm_grep -Ee '^(prefix|globalconfig) *=' <"${NVM_NPMRC}" >/dev/null; then
-    return 0
+  if [ -n "${NVM_NPMRC}" ] && [ -f "${NVM_NPMRC}" ]; then
+    # this is fork-free on purpose: it runs up to four times on every `nvm use`/`nvm install`
+    # avoid grepping or sub-shells as much as possible here.
+    while IFS= read -r NVM_NPMRC_LINE || [ -n "${NVM_NPMRC_LINE}" ]; do
+      case "${NVM_NPMRC_LINE}" in
+        *=*)
+          NVM_NPMRC_KEY="${NVM_NPMRC_LINE%%=*}"
+        ;;
+        *)
+          continue
+        ;;
+      esac
+      NVM_NPMRC_KEY="${NVM_NPMRC_KEY%"${NVM_NPMRC_KEY##*[! ]}"}"
+      case "${NVM_NPMRC_KEY}" in
+        prefix | globalconfig)
+          return 0
+        ;;
+      esac
+    done < "${NVM_NPMRC}"
   fi
   return 1
 }

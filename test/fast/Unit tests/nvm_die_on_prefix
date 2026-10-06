@@ -201,4 +201,55 @@ Run \`foo\` to unset it."
   [ "_$CAPTURED_EXIT_CODE" = "_10" ] || die "'nvm_die_on_prefix 0 foo' with user .npmrc that has globalconfig did not exit with 10; got '$CAPTURED_EXIT_CODE'"
 )
 
+# nvm_npmrc_bad_news_bears matches `^(prefix|globalconfig) *=`
+NPMRC="${TEST_DIR}/bad-news.npmrc"
+printf 'prefix=x\n' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'prefix=x should be bad news'
+printf 'prefix =x\n' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'prefix =x should be bad news'
+printf 'prefix  =x\n' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'prefix  =x should be bad news'
+printf 'prefix =\n' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'prefix = should be bad news'
+printf 'foo=1\nprefix = y\n' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'a matching line after a non-matching line should be bad news'
+printf 'prefix=x' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'prefix=x without a trailing newline should be bad news'
+printf 'globalconfig=x\n' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'globalconfig=x should be bad news'
+printf 'globalconfig = x\n' > "${NPMRC}"
+nvm_npmrc_bad_news_bears "${NPMRC}" || die 'globalconfig = x should be bad news'
+
+printf 'prefixfoo=x\n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'prefixfoo=x should not be bad news'
+printf 'globalconfigfoo=x\n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'globalconfigfoo=x should not be bad news'
+printf 'prefix x=x\n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'prefix x=x should not be bad news'
+printf 'prefix\t=x\n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'a tab before = should not be bad news'
+printf ' prefix=x\n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'a leading space should not be bad news'
+printf 'Prefix=x\n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'an uppercase key should not be bad news'
+printf 'prefix\n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'a bare prefix should not be bad news'
+printf 'prefix   \n' > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'trailing spaces without = should not be bad news'
+: > "${NPMRC}"
+! nvm_npmrc_bad_news_bears "${NPMRC}" || die 'an empty npmrc should not be bad news'
+! nvm_npmrc_bad_news_bears || die 'a missing argument should not be bad news'
+! nvm_npmrc_bad_news_bears "${TEST_DIR}/nonexistent.npmrc" || die 'a missing file should not be bad news'
+
+# the npmrc scan must not fork `grep`
+(
+  rm -f "${TEST_DIR}/grep-was-called"
+  nvm_grep() { : > "${TEST_DIR}/grep-was-called"; return 1; }
+  printf 'globalconfig = nope\n' > "${TEST_DIR}/probe.npmrc"
+  NVM_PROBE_EXIT=0
+  nvm_npmrc_bad_news_bears "${TEST_DIR}/probe.npmrc" || NVM_PROBE_EXIT=$?
+  [ ! -e "${TEST_DIR}/grep-was-called" ] || exit 10
+  [ "${NVM_PROBE_EXIT}" = 0 ] || exit 11
+) || die 'nvm_npmrc_bad_news_bears must read npmrc files without calling nvm_grep'
+
 cleanup
