@@ -41,3 +41,22 @@ nvm_is_valid_version v9.9.1-nightly201803256591d9f761 || die "nvm_is_valid_versi
 nvm_is_valid_version v9.0.0-v8-canary201710301f8f3dcf36 || die "nvm_is_valid_version v9.0.0-v8-canary201710301f8f3dcf36 did not return 0"
 nvm_is_valid_version v8.16.2-test201910293843c56739f || die "nvm_is_valid_version v8.16.2-test201910293843c56739f did not return 0"
 nvm_is_valid_version iojs-v3.2.1-nightly201508291a531b4e44 || die "nvm_is_valid_version iojs-v3.2.1-nightly201508291a531b4e44 did not return 0"
+
+# `nvm_is_valid_version` must not fork a command for a plain version: mock
+# `awk`, which the version comparisons used, and fail if it runs. (Prereleases
+# still reach the comparison, which is why this checks a release version.)
+TEST_DIR="$(pwd)/nvm_is_valid_version_tmp"
+[ ! -e "${TEST_DIR}" ] && mkdir "${TEST_DIR}"
+MOCK_BIN="${TEST_DIR}/bin"
+mkdir -p "${MOCK_BIN}"
+{
+  echo '#!/bin/sh'
+  echo 'echo "awk was called" >&2'
+  echo 'exit 1'
+} > "${MOCK_BIN}/awk"
+chmod +x "${MOCK_BIN}/awk"
+
+PATH="${MOCK_BIN}:${PATH}" nvm_is_valid_version v18.20.0 \
+  || die 'nvm_is_valid_version v18.20.0 forked a command'
+
+rm -rf "${TEST_DIR}"

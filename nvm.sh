@@ -1061,17 +1061,14 @@ ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^ *$/d'
 }
 
 nvm_is_valid_version() {
-  if nvm_validate_implicit_alias "${1-}" 2>/dev/null; then
-    return 0
-  fi
   case "${1-}" in
-    "$(nvm_iojs_prefix)" | \
-    "$(nvm_node_prefix)")
+    "stable" | "unstable" | "iojs" | "node")
       return 0
     ;;
     *)
       local VERSION
-      VERSION="$(nvm_strip_iojs_prefix "${1-}")"
+      VERSION="${1-}"
+      VERSION="${VERSION#iojs-}"
       local NVM_VERSION_CORE
       NVM_VERSION_CORE="${VERSION#v}"
       case "${NVM_VERSION_CORE}" in
@@ -1085,6 +1082,9 @@ nvm_is_valid_version() {
             *.*.*) ;;
             *) return 1 ;;
           esac
+          # a prerelease's `-` makes it unreachable for the pure-shell checks
+          # below, so do the full check now.
+          nvm_version_greater_than_or_equal_to "${VERSION}" 0 || return 1
         ;;
         *.)
           NVM_VERSION_CORE="${NVM_VERSION_CORE%.}"
@@ -1093,7 +1093,7 @@ nvm_is_valid_version() {
       case "${NVM_VERSION_CORE}" in
         '' | .* | *. | *..* | *.*.*.* | *[!0-9.]*) return 1 ;;
       esac
-      nvm_version_greater_than_or_equal_to "${VERSION}" 0
+      # every version that reaches this point is a number, and so `>= 0`
     ;;
   esac
 }
@@ -1741,12 +1741,9 @@ nvm_add_iojs_prefix() {
 }
 
 nvm_strip_iojs_prefix() {
-  local NVM_IOJS_PREFIX
-  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
-
   case "${1-}" in
-    "${NVM_IOJS_PREFIX}") nvm_echo ;;
-    *) nvm_echo "${1#"${NVM_IOJS_PREFIX}"-}" ;;
+    "iojs") nvm_echo ;;
+    *) nvm_echo "${1#iojs-}" ;;
   esac
 }
 
@@ -2470,17 +2467,12 @@ BEGIN {
 }
 
 nvm_validate_implicit_alias() {
-  local NVM_IOJS_PREFIX
-  NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
-  local NVM_NODE_PREFIX
-  NVM_NODE_PREFIX="$(nvm_node_prefix)"
-
   case "$1" in
-    "stable" | "unstable" | "${NVM_IOJS_PREFIX}" | "${NVM_NODE_PREFIX}")
+    "stable" | "unstable" | "iojs" | "node")
       return
     ;;
     *)
-      nvm_err "Only implicit aliases 'stable', 'unstable', '${NVM_IOJS_PREFIX}', and '${NVM_NODE_PREFIX}' are supported."
+      nvm_err "Only implicit aliases 'stable', 'unstable', 'iojs', and 'node' are supported."
       return 1
     ;;
   esac
