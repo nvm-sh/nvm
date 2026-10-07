@@ -52,11 +52,11 @@ jobs:
           git submodule update --init --recursive
       - name: Install zsh and additional shells
         run: |
-          sudo apt-get update
-          sudo apt-get install -y zsh
+          PACKAGES='zsh'
           if [ "${{ matrix.shell }}" != "sh" ] && [ "${{ matrix.shell }}" != "bash" ] && [ "${{ matrix.shell }}" != "zsh" ]; then
-            sudo apt-get install -y ${{ matrix.shell }}
+            PACKAGES="${PACKAGES} ${{ matrix.shell }}"
           fi
+          sh .github/scripts/apt-install.sh ${PACKAGES}
         shell: bash
       - run: sudo ${{ matrix.shell }} --version 2> /dev/null || dpkg -s ${{ matrix.shell }} 2> /dev/null || which ${{ matrix.shell }}
       - run: wget --version
@@ -95,7 +95,7 @@ jobs:
         shell: bash
       - name: Restore curl
         if: always()
-        run: sudo apt-get install curl -y
+        run: sh .github/scripts/apt-install.sh curl
         shell: bash
 
   installation_iojs_source_compile:

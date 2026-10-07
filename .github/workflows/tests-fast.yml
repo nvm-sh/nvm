@@ -60,11 +60,11 @@ jobs:
           git submodule update --init --recursive
       - name: Install zsh, additional shells, and awk variant
         run: |
-          sudo apt-get update
-          sudo apt-get install -y zsh ${{ matrix.awk }}
+          PACKAGES="zsh ${{ matrix.awk }}"
           if [ "${{ matrix.shell }}" != "sh" ] && [ "${{ matrix.shell }}" != "bash" ] && [ "${{ matrix.shell }}" != "zsh" ]; then
-            sudo apt-get install -y ${{ matrix.shell }}
+            PACKAGES="${PACKAGES} ${{ matrix.shell }}"
           fi
+          sh .github/scripts/apt-install.sh ${PACKAGES}
           # Set the selected awk as the default
           sudo update-alternatives --set awk /usr/bin/${{ matrix.awk }}
         shell: bash
@@ -194,7 +194,11 @@ jobs:
       - uses: Vampire/setup-wsl@v7
         with:
           distribution: ${{ matrix.wsl-distrib }}
-          additional-packages: git make zsh dash sudo curl wget ca-certificates nodejs npm
+      - name: Install packages with retries
+        # the Windows checkout has CRLF line endings
+        run: |
+          tr -d '\r' < "$(wslpath "${{ github.workspace }}")/.github/scripts/apt-install.sh" > /tmp/apt-install.sh
+          sh /tmp/apt-install.sh git make zsh dash sudo curl wget ca-certificates nodejs npm
       - name: 'Clone into the WSL filesystem as a non-root user'
         # the Windows checkout shows every file as executable, which urchin would run as tests
         run: |

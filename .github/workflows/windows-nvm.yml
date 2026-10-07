@@ -145,12 +145,35 @@ jobs:
           - ''
           - 'script'
     steps:
-      # For Ubuntu: install with packages directly
+      # For Ubuntu: `additional-packages` can't retry, so install in a separate step
       - if: ${{ !startsWith(matrix.wsl-distrib, 'Debian') }}
         uses: Vampire/setup-wsl@v7
         with:
           distribution: ${{ matrix.wsl-distrib }}
-          additional-packages: bash git curl ca-certificates wget
+      # mirror outages can outlast apt's own retries, so retry update+install with
+      # backoff for about 10 minutes (as .github/scripts/apt-install.sh does; this
+      # job has no checkout)
+      - if: ${{ !startsWith(matrix.wsl-distrib, 'Debian') }}
+        name: 'Install packages with retries'
+        shell: 'wsl-bash {0}'
+        run: |
+          attempt=1
+          delay=15
+          while true; do
+            apt-get -o Acquire::Retries=5 update || true
+            if apt-get -o Acquire::Retries=5 install --yes bash git curl ca-certificates wget; then
+              break
+            fi
+            if [ "${attempt}" -ge 8 ]; then
+              echo "apt-get install failed after ${attempt} attempts" >&2
+              exit 1
+            fi
+            echo "apt-get install failed (attempt ${attempt}/8); retrying in ${delay}s" >&2
+            sleep "${delay}"
+            attempt=$((attempt + 1))
+            delay=$((delay * 2))
+            if [ "${delay}" -gt 120 ]; then delay=120; fi
+          done
 
       # For Debian, install without packages: `additional-packages` would run
       # `apt-get update` before we get to fix up sources.list

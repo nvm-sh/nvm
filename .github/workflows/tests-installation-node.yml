@@ -83,21 +83,9 @@ jobs:
             bash -c '
               set -ex
 
-              # Retry apt-get update up to 5 times due to flaky Ubuntu mirrors
-              # apt-get update can return 0 even with partial failures, so check for warnings
-              for i in 1 2 3 4 5; do
-                if apt-get update 2>&1 | tee /tmp/apt-update.log | grep -qE "^(W:|E:|Err:)"; then
-                  echo "apt-get update had warnings/errors, attempt $i/5"
-                  cat /tmp/apt-update.log
-                  sleep $((i * 5))
-                else
-                  break
-                fi
-              done
-
-              apt-get install -y git curl wget make build-essential python zsh libssl-dev
+              sh /workspace/.github/scripts/apt-install.sh git curl wget make build-essential python zsh libssl-dev
               if [ "$TEST_SHELL" != "sh" ] && [ "$TEST_SHELL" != "bash" ]; then
-                apt-get install -y $TEST_SHELL || true
+                sh /workspace/.github/scripts/apt-install.sh $TEST_SHELL || true
               fi
 
               # Use nvm to install Node.js for running urchin
