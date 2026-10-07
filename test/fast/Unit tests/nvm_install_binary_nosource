@@ -9,6 +9,7 @@ cleanup () {
 
 die () { echo "$@" ; cleanup; exit 1;}
 
+: nvm.sh
 \. ../../../nvm.sh
 
 nvm_binary_available() {
@@ -21,6 +22,9 @@ EXPECTED_OUTPUT='Binary download failed. Download from source aborted.'
 if [ "${OUTPUT#*$EXPECTED_OUTPUT}" = "${OUTPUT}" ]; then
   die "No source binary flag is active and should have returned >${EXPECTED_OUTPUT}<. Instead it returned >${OUTPUT}<"
 fi
+
+nvm_install_binary node std 8.0.0 1 >/dev/null 2>&1; EXIT_CODE=$?
+[ "${EXIT_CODE}" = "2" ] || die "Expected exit code 2 when nosource=1 and binary fails, got ${EXIT_CODE}"
 
 # Unit test to check if the function errors out when the flag is set
 OUTPUT="$(nvm_install_binary node std 8.0.0 0 2>&1)"

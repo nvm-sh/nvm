@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -ex
+
+\. ../../nvm.sh
+\. ../common.sh
+
+set +ex # needed for stderr
+RETURN_MESSAGE="$(nvm uninstall 22 2>&1 || echo)"
+set -ex
+EXPECTED_MESSAGE="Version '22' is not installed."
+
+[ "${RETURN_MESSAGE}" = "${EXPECTED_MESSAGE}" ]

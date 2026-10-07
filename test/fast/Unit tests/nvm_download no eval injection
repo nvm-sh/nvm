@@ -1,0 +1,86 @@
+#!/bin/sh
+
+OLDPATH="$PATH"
+WORK="$PWD/nvm_download-noeval-work.$$"
+TEST_BIN="$WORK/bin"
+ARGV_LOG="$WORK/argv.log"
+PROOF="$WORK/nvm_injection_proof"
+
+cleanup() {
+  unset -f die cleanup
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+OLDPATH="$PATH"
+
+mkdir -p "$TEST_BIN"
+
+# fake curl/wget: record each received argument verbatim, then succeed
+{
+  echo '#!/bin/sh'
+  echo ': > "$ARGV_LOG"'
+  echo 'for a in "$@"; do printf "%s\n" "$a" >> "$ARGV_LOG"; done'
+  echo 'exit 0'
+} > "$TEST_BIN/curl"
+chmod +x "$TEST_BIN/curl"
+cp "$TEST_BIN/curl" "$TEST_BIN/wget"
+
+export ARGV_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+
+# given a url containing command-substitution syntax (mirror-supplied)
+INJECT_URL="http://example.test/v1\$(touch ${PROOF})/x.tar.gz"
+
+# when nvm_download is invoked (curl path)
+rm -f "$PROOF"
+nvm_download "$INJECT_URL" -o - || die 'nvm_download (curl) returned nonzero on injection url'
+# then the substitution must not have executed
+[ ! -e "$PROOF" ] || die "command injection fired via curl path: proof file was created"
+# and curl must have received the url as one literal argument
+grep -Fxq "$INJECT_URL" "$ARGV_LOG" || die "curl did not receive the url as a single literal argument; got: $(cat "$ARGV_LOG")"
+
+# given a normal download (curl path)
+URL="https://nodejs.org/dist/index.tab"
+FILE="$WORK/target"
+# when invoked with -L -s URL -o FILE
+nvm_download -L -s "$URL" -o "$FILE" || die 'nvm_download (curl) returned nonzero on normal url'
+# then the url, -o, and output file are passed through verbatim
+grep -Fxq "$URL" "$ARGV_LOG" || die "curl did not receive the url; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-o" "$ARGV_LOG" || die "curl did not receive -o; got: $(cat "$ARGV_LOG")"
+grep -Fxq "$FILE" "$ARGV_LOG" || die "curl did not receive the output file; got: $(cat "$ARGV_LOG")"
+# and curl-style flags are passed through verbatim (curl keeps -s; it is not translated to wget's -q)
+grep -Fxqe "-s" "$ARGV_LOG" || die "curl did not receive -s verbatim; got: $(cat "$ARGV_LOG")"
+rm -f "$FILE"
+
+# given curl is unavailable (the wget-path calls run with PATH limited to our
+# fake wget, so neither the fake nor the system curl is found)
+rm -f "$TEST_BIN/curl"
+
+# when nvm_download is invoked with the injection url (wget path)
+rm -f "$PROOF"
+( PATH="$TEST_BIN"; export PATH; nvm_download "$INJECT_URL" -o - ) || die 'nvm_download (wget) returned nonzero on injection url'
+# then the substitution must not have executed
+[ ! -e "$PROOF" ] || die "command injection fired via wget path: proof file was created"
+grep -Fxq "$INJECT_URL" "$ARGV_LOG" || die "wget did not receive the url as a single literal argument; got: $(cat "$ARGV_LOG")"
+
+# when invoked with -L -C - --progress-bar URL -o FILE (wget path)
+( PATH="$TEST_BIN"; export PATH; nvm_download -L -C - --progress-bar "$URL" -o "$FILE" ) || die 'nvm_download (wget) returned nonzero on normal url'
+# then flags are translated to wget equivalents
+grep -Fxqe "-c" "$ARGV_LOG" || die "wget did not translate -C - to -c; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "--progress=bar" "$ARGV_LOG" || die "wget did not translate --progress-bar; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-O" "$ARGV_LOG" || die "wget did not translate -o to -O; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-L" "$ARGV_LOG" && die "wget should drop -L; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-C" "$ARGV_LOG" && die "wget should not pass -C through; got: $(cat "$ARGV_LOG")"
+grep -Fxqe "-" "$ARGV_LOG" && die "wget should drop the lone - after -C; got: $(cat "$ARGV_LOG")"
+
+# when invoked with -s (wget path)
+( PATH="$TEST_BIN"; export PATH; nvm_download -L -s "$URL" -o "$FILE" ) || die 'nvm_download (wget) returned nonzero on -s url'
+# then -s becomes -q
+grep -Fxqe "-q" "$ARGV_LOG" || die "wget did not translate -s to -q; got: $(cat "$ARGV_LOG")"
+
+cleanup
+echo "nvm_download no eval injection: passed"

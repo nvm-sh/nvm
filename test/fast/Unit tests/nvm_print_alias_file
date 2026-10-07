@@ -1,0 +1,53 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup () {
+  rm -rf "${TEST_DIR-}"
+  unset TEST_DIR OUTPUT EXPECTED
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TEST_DIR="${PWD}/nvm_print_alias_file_tmp"
+mkdir -p "${TEST_DIR}" || die 'failed to create test dir'
+
+printf 'v0.10 # inline comment\n' > "${TEST_DIR}/inline"
+OUTPUT="$(nvm_print_alias_file "${TEST_DIR}/inline")"
+[ "_${OUTPUT}" = '_v0.10' ] || die "inline comment not stripped; got '${OUTPUT}'"
+
+printf '# leading comment\nv0.11\n' > "${TEST_DIR}/comment-first"
+OUTPUT="$(nvm_print_alias_file "${TEST_DIR}/comment-first")"
+[ "_${OUTPUT}" = '_v0.11' ] || die "comment-only line not skipped; got '${OUTPUT}'"
+
+printf 'v0.12\t \nv0.13\n' > "${TEST_DIR}/trailing-space"
+OUTPUT="$(nvm_print_alias_file "${TEST_DIR}/trailing-space")"
+EXPECTED="$(printf 'v0.12\nv0.13')"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "trailing whitespace not stripped, or a line was dropped; got '${OUTPUT}'"
+
+printf '\n   \n\t\n# only a comment\n' > "${TEST_DIR}/nothing-usable"
+OUTPUT="$(nvm_print_alias_file "${TEST_DIR}/nothing-usable")"
+[ "_${OUTPUT}" = '_' ] || die "blank and comment-only lines should produce no output; got '${OUTPUT}'"
+
+nvm_print_alias_file "${TEST_DIR}/nothing-usable" >/dev/null 2>&1 \
+  || die 'a file with no usable lines should still exit zero'
+
+printf 'v0.14' > "${TEST_DIR}/no-trailing-newline"
+OUTPUT="$(nvm_print_alias_file "${TEST_DIR}/no-trailing-newline")"
+[ "_${OUTPUT}" = '_v0.14' ] || die "a final line with no trailing newline should be read; got '${OUTPUT}'"
+
+# a `#` pattern is a repetition operator under zsh's `extendedglob`, which is what
+# made `nvm_alias` print nothing at all: https://github.com/nvm-sh/nvm/issues/3885
+if [ -n "${ZSH_VERSION-}" ]; then
+  setopt extendedglob || die 'enabling extendedglob failed'
+  OUTPUT="$(nvm_print_alias_file "${TEST_DIR}/inline")"
+  [ "_${OUTPUT}" = '_v0.10' ] || die "with extendedglob set, expected 'v0.10', got '${OUTPUT}'"
+  [[ -o extendedglob ]] || die 'nvm_print_alias_file left extendedglob unset'
+
+  unsetopt extendedglob
+  nvm_print_alias_file "${TEST_DIR}/inline" > /dev/null
+  [[ -o extendedglob ]] && die 'nvm_print_alias_file left extendedglob set'
+fi
+
+cleanup

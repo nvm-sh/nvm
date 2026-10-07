@@ -72,18 +72,35 @@ endif
 _ensure-clean:
 	@[ -z "$$(git status --porcelain --untracked-files=no || echo err)" ] || { echo "Workspace is not clean; please commit changes first." >&2; exit 2; }
 
+# Resolves $(TAG) against the most recent version tag; sets $$old_ver and $$new_ver in the recipe's shell.
+define RESOLVE_VERSIONS
+old_ver=`git describe --abbrev=0 --tags --match 'v[0-9]*.[0-9]*.[0-9]*'` || { echo "Failed to determine current version." >&2; exit 1; }; old_ver=$${old_ver#v}; \
+new_ver=`echo "$(TAG)" | sed 's/^v//'`; new_ver=$${new_ver:-patch}; \
+if printf "$$new_ver" | grep -q '^[0-9]'; then \
+	semver "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be major.minor.patch' >&2; exit 2; }; \
+	semver -r "> $$old_ver" "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be HIGHER than current one.' >&2; exit 2; } \
+else \
+	new_ver=`semver -i "$$new_ver" "$$old_ver"` || { echo 'Invalid version-increment specifier: $(TAG)' >&2; exit 2; } \
+fi
+endef
+
+# Prints the release notes that `make TAG=<versionOrIncrementSpec> release` would use; invoke the same way.
+.PHONY: release-notes
+release-notes: _ensure-tag _ensure-current-version
+	@$(RESOLVE_VERSIONS); \
+	./release-notes.sh "v$$new_ver"
+
 # Makes a release; invoke with `make TAG=<versionOrIncrementSpec> release`.
 .PHONY: release
 release: _ensure-tag _ensure-clean _ensure-current-version
-	@old_ver=`git describe --abbrev=0 --tags --match 'v[0-9]*.[0-9]*.[0-9]*'` || { echo "Failed to determine current version." >&2; exit 1; }; old_ver=$${old_ver#v}; \
-	new_ver=`echo "$(TAG)" | sed 's/^v//'`; new_ver=$${new_ver:-patch}; \
-	if printf "$$new_ver" | grep -q '^[0-9]'; then \
-		semver "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be major.minor.patch' >&2; exit 2; }; \
-		semver -r "> $$old_ver" "$$new_ver" >/dev/null || { echo 'Invalid version number specified: $(TAG) - must be HIGHER than current one.' >&2; exit 2; } \
-	else \
-		new_ver=`semver -i "$$new_ver" "$$old_ver"` || { echo 'Invalid version-increment specifier: $(TAG)' >&2; exit 2; } \
-	fi; \
-	printf "=== Bumping version **$$old_ver** to **$$new_ver** before committing and tagging:\n=== TYPE 'proceed' TO PROCEED, anything else to abort: " && read response && [ "$$response" = 'proceed' ] || { echo 'Aborted.' >&2; exit 2; }; \
-	replace "$$old_ver" "$$new_ver" $(VERSIONED_FILES) && \
-	git commit -m "v$$new_ver" $(VERSIONED_FILES) && \
-	git tag -a "v$$new_ver"
+	@$(RESOLVE_VERSIONS); \
+	notes_file=`mktemp` || { echo 'Failed to create a temp file for the release notes.' >&2; exit 1; }; \
+	trap 'rm -f "$$notes_file"' EXIT; \
+	./release-notes.sh "v$$new_ver" > "$$notes_file" || { echo 'Failed to generate release notes.' >&2; exit 1; }; \
+	echo '=== Release notes: ==='; \
+	cat "$$notes_file"; \
+	printf "\n=== Bumping version **$$old_ver** to **$$new_ver** before committing and tagging with the above notes:\n=== TYPE 'proceed' TO PROCEED, anything else to abort: " && read response && [ "$$response" = 'proceed' ] || { echo 'Aborted.' >&2; exit 2; }; \
+	old_ver_re=`printf '%s' "$$old_ver" | sed 's/[.]/\\\\./g'` && \
+	replace "$$old_ver_re" "$$new_ver" $(VERSIONED_FILES) && \
+	git commit -F "$$notes_file" $(VERSIONED_FILES) && \
+	git tag -a -F "$$notes_file" "v$$new_ver"

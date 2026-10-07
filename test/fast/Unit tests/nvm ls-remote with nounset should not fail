@@ -1,0 +1,30 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+REMOTE="${PWD}/mocks/nvm_ls_remote.txt"
+nvm_ls_remote() {
+  cat "${REMOTE}"
+}
+REMOTE_IOJS="${PWD}/mocks/nvm_ls_remote_iojs.txt"
+nvm_ls_remote_iojs() {
+  cat "${REMOTE_IOJS}"
+}
+
+# Enable no unset variable; regression test for https://github.com/nvm-sh/nvm/issues/3820
+set -u
+
+# Bare `nvm ls-remote` (no pattern argument) must not error on unset PATTERN
+output=$(nvm ls-remote 2>&1 1>/dev/null) || die "nvm ls-remote with nounset failed: ${output}"
+test -z "${output}" || die "expected empty stderr; got >${output}<"
+
+cleanup

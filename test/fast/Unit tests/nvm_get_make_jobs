@@ -1,0 +1,147 @@
+#!/bin/sh
+
+# `nvm_get_make_jobs` sets the global `NVM_MAKE_JOBS` instead of echoing it, so
+# every case runs it in this shell, with its output captured to files.
+
+ORIG_PATH="${PATH}"
+TMP_DIR="$(mktemp -d)"
+
+# the probe shims live under `mktemp -d` rather than `.`, because this directory
+# is shared with every other unit test and a leaked `getconf` would poison them
+SHIMS="${TMP_DIR}/bin"
+OUT="${TMP_DIR}/out"
+ERR="${TMP_DIR}/err"
+
+cleanup () {
+  export PATH="${ORIG_PATH}"
+  rm -rf "${TMP_DIR}"
+}
+
+die () { cleanup; echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+mkdir -p "${SHIMS}"
+
+shim () {
+  {
+    echo '#!/bin/sh'
+    echo "$2"
+  } > "${SHIMS}/$1"
+  chmod +x "${SHIMS}/$1"
+}
+
+# a probe that behaves as if it were not installed, and whose complaint must
+# never reach the user
+shim_absent () {
+  shim "$1" "echo 'PROBE_NOISE: $1' >&2; exit 127"
+}
+
+REAL_OS="$(nvm_get_os)"
+
+FAKE_OS=''
+nvm_get_os () {
+  nvm_echo "${FAKE_OS}"
+}
+
+run () {
+  FAKE_OS="$1"
+  shift
+  NVM_MAKE_JOBS=''
+  nvm_get_make_jobs "$@" >"${OUT}" 2>"${ERR}"
+}
+
+assert_jobs () {
+  [ "_${NVM_MAKE_JOBS}" = "_$1" ] \
+    || die "${2}: expected NVM_MAKE_JOBS ${1}, got '${NVM_MAKE_JOBS}'"
+}
+
+assert_stdout () {
+  ACTUAL="$(cat "${OUT}")"
+  [ "_${ACTUAL}" = "_$1" ] \
+    || die "${2}: expected stdout '${1}', got '${ACTUAL}'"
+}
+
+# deliberately narrower than "stderr is empty": ksh93 has no `local`, so every
+# nvm.sh function already sprays `local: not found` here (see #574)
+assert_no_probe_noise () {
+  ! nvm_grep -q 'PROBE_NOISE' "${ERR}" \
+    || die "${1}: a failed probe leaked to stderr: '$(cat "${ERR}")'"
+}
+
+assert_not_nagged () {
+  ! nvm_grep -q 'Please report an issue on GitHub' "${ERR}" \
+    || die "${1}: unexpected report-an-issue message"
+}
+
+assert_nagged () {
+  nvm_grep -q 'Please report an issue on GitHub' "${ERR}" \
+    || die "${1}: expected the report-an-issue message, got '$(cat "${ERR}")'"
+}
+
+export PATH="${SHIMS}:${ORIG_PATH}"
+
+# an OS the `case` does not name still gets a real core count
+shim getconf 'echo 4'
+shim_absent nproc
+
+run win
+assert_jobs 3 'win'
+assert_stdout 'Detected that you have 4 CPU core(s)
+Running with 3 threads to speed up the build' 'win'
+assert_not_nagged 'win'
+assert_no_probe_noise 'win'
+
+run ''
+assert_jobs 3 'unknown OS'
+assert_not_nagged 'unknown OS'
+
+# Solaris and NetBSD spell the `getconf` variable without the leading underscore
+shim getconf 'case "$1" in NPROCESSORS_ONLN) echo 4 ;; *) exit 1 ;; esac'
+run win
+assert_jobs 3 'unprefixed getconf name'
+assert_not_nagged 'unprefixed getconf name'
+
+# with no `getconf`, `nproc` answers
+shim_absent getconf
+shim nproc 'echo 4'
+run win
+assert_jobs 3 'nproc'
+assert_not_nagged 'nproc'
+assert_no_probe_noise 'nproc'
+
+# Cygwin/MSYS/MinGW inherit `NUMBER_OF_PROCESSORS` from Windows
+shim_absent nproc
+NUMBER_OF_PROCESSORS=4
+run win
+assert_jobs 3 'NUMBER_OF_PROCESSORS'
+assert_not_nagged 'NUMBER_OF_PROCESSORS'
+assert_no_probe_noise 'NUMBER_OF_PROCESSORS'
+
+# with nothing to probe, nvm still says so instead of guessing
+unset NUMBER_OF_PROCESSORS
+run win
+assert_jobs 1 'no probes'
+assert_nagged 'no probes'
+
+# the named arms keep priority: darwin asks `sysctl`, not `getconf`
+shim getconf 'echo 99'
+shim sysctl 'echo 4'
+run darwin
+assert_jobs 3 'darwin uses sysctl'
+assert_not_nagged 'darwin uses sysctl'
+
+export PATH="${ORIG_PATH}"
+
+# an explicit count short-circuits detection entirely
+run '' 7
+assert_jobs 7 'explicit jobs'
+assert_stdout 'number of `make` jobs: 7' 'explicit jobs'
+
+# on the real host, detected or not, the result is always usable
+run "${REAL_OS}"
+nvm_is_natural_num "${NVM_MAKE_JOBS}" \
+  || die "real host: expected a natural number, got '${NVM_MAKE_JOBS}'"
+
+cleanup

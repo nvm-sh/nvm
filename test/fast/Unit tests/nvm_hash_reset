@@ -1,0 +1,27 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# also covers #3247, where `command hash -r` found a `hash` binary, not the builtin
+OUTPUT="$(nvm_hash_reset 2>&1)"
+RC=$?
+[ ${RC} -eq 0 ] || die "nvm_hash_reset returned ${RC}: ${OUTPUT}"
+[ -z "${OUTPUT}" ] || die "nvm_hash_reset was not silent: ${OUTPUT}"
+
+# bash is the only supported shell that can turn hashing off
+if [ -n "${BASH_VERSION-}" ]; then
+  set +h
+  OUTPUT="$(nvm_hash_reset 2>&1)"
+  RC=$?
+  set -h
+  [ ${RC} -eq 0 ] || die "with hashing disabled, nvm_hash_reset returned ${RC}: ${OUTPUT}"
+  [ -z "${OUTPUT}" ] || die "with hashing disabled, nvm_hash_reset was not silent: ${OUTPUT}"
+
+  ls >/dev/null 2>&1
+  hash -t ls >/dev/null 2>&1 || die 'expected `ls` to be hashed'
+  nvm_hash_reset || die 'with hashing enabled, nvm_hash_reset failed'
+  ! hash -t ls >/dev/null 2>&1 || die 'nvm_hash_reset did not clear the hash table'
+fi

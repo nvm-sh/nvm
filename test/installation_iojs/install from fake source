@@ -1,0 +1,44 @@
+#!/bin/sh
+
+\. ../common.sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../nvm.sh
+
+set -ex
+
+NVM_TEST_VERSION='v3.99.9'
+NVM_PREFIXED_TEST_VERSION="iojs-${NVM_TEST_VERSION}"
+
+# Remove the stuff we're clobbering.
+nvm uninstall "${NVM_TEST_VERSION}" || echo 'not installed'
+
+# Exercise nvm's entire source-install pipeline - cache, extract, configure,
+# make, make install, activation - against a tiny fake source tree, seeded
+# into the download cache and installed with --offline. This runs everywhere,
+# including on toolchains where real io.js can not compile; `install from
+# source` covers the real compile, in CI's gcc:4.9 container job.
+SLUG="$(nvm_get_download_slug iojs source "${NVM_TEST_VERSION}")"
+COMPRESSION="$(nvm_get_artifact_compression "${NVM_TEST_VERSION}")"
+CACHE_DIR="$(nvm_cache_dir)/src/${SLUG}"
+STAGING="$(mktemp -d)"
+mkdir -p "${STAGING}/${SLUG}" "${CACHE_DIR}"
+cp ../fixtures/fake-source-tarball/configure ../fixtures/fake-source-tarball/Makefile "${STAGING}/${SLUG}/"
+chmod +x "${STAGING}/${SLUG}/configure"
+echo "${NVM_TEST_VERSION}" > "${STAGING}/${SLUG}/VERSION"
+if [ "${COMPRESSION}" = 'tar.xz' ]; then
+  (cd "${STAGING}" && tar -cJf "${CACHE_DIR}/${SLUG}.${COMPRESSION}" "${SLUG}")
+else
+  (cd "${STAGING}" && tar -czf "${CACHE_DIR}/${SLUG}.${COMPRESSION}" "${SLUG}")
+fi
+rm -rf "${STAGING}"
+
+# Install from source
+nvm install -s --offline "${NVM_PREFIXED_TEST_VERSION}" || die "'nvm install -s --offline ${NVM_PREFIXED_TEST_VERSION}' failed"
+
+# Check
+nvm_is_version_installed "${NVM_PREFIXED_TEST_VERSION}" || die 'version not installed'
+nvm run --silent "${NVM_PREFIXED_TEST_VERSION}" --version | grep "${NVM_TEST_VERSION}" || die "'nvm run ${NVM_PREFIXED_TEST_VERSION} --version | grep ${NVM_TEST_VERSION}' failed"
+
+rm -rf "${CACHE_DIR}"

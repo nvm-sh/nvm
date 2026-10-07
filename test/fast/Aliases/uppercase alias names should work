@@ -1,0 +1,37 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -f "$(nvm_alias_path)/UPPER_ALIAS"
+  rm -f "$(nvm_alias_path)/MixedCase"
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+make_fake_node v0.0.1
+
+# Uppercase alias should be created and readable
+nvm alias UPPER_ALIAS v0.0.1
+[ -f "$(nvm_alias_path)/UPPER_ALIAS" ] || die "uppercase alias file should exist"
+
+try nvm_alias UPPER_ALIAS
+[ "${CAPTURED_EXIT_CODE}" = "0" ] || die "nvm_alias should succeed for uppercase alias, got exit code ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDOUT}" = "v0.0.1" ] || die "nvm_alias UPPER_ALIAS should return v0.0.1, got ${CAPTURED_STDOUT}"
+
+# Mixed case should also work
+nvm alias MixedCase v0.0.1
+[ -f "$(nvm_alias_path)/MixedCase" ] || die "mixed case alias file should exist"
+
+try nvm_alias MixedCase
+[ "${CAPTURED_EXIT_CODE}" = "0" ] || die "nvm_alias should succeed for mixed case alias, got exit code ${CAPTURED_EXIT_CODE}"
+
+# LTS names with uppercase should still be rejected
+try_err nvm_normalize_lts "lts/ARGON"
+[ "${CAPTURED_EXIT_CODE}" = "3" ] || die "uppercase LTS name should fail with exit code 3, got ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDERR}" = "LTS names must be lowercase" ] || die "expected lowercase error, got ${CAPTURED_STDERR}"
+
+cleanup

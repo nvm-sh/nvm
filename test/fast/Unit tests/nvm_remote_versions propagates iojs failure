@@ -1,0 +1,68 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_ls_remote nvm_ls_remote_iojs
+}
+
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+# When nvm_ls_remote succeeds but nvm_ls_remote_iojs fails,
+# nvm_remote_versions should propagate the iojs failure exit code.
+nvm_ls_remote() {
+  echo "v0.10.0"
+  return 0
+}
+nvm_ls_remote_iojs() {
+  echo "N/A"
+  return 5
+}
+
+try nvm_remote_versions
+[ "_$CAPTURED_EXIT_CODE" = "_5" ] || die "expected iojs failure exit code 5 to propagate, got $CAPTURED_EXIT_CODE"
+
+# When nvm_ls_remote fails and nvm_ls_remote_iojs succeeds,
+# nvm_remote_versions should propagate the node failure exit code.
+nvm_ls_remote() {
+  echo "v0.10.0"
+  return 7
+}
+nvm_ls_remote_iojs() {
+  echo "iojs-v1.0.0"
+  return 0
+}
+
+try nvm_remote_versions
+[ "_$CAPTURED_EXIT_CODE" = "_7" ] || die "expected node failure exit code 7 to propagate, got $CAPTURED_EXIT_CODE"
+
+# When both fail, nvm_remote_versions should propagate the node failure exit code
+# (since it is checked first).
+nvm_ls_remote() {
+  echo "v0.10.0"
+  return 3
+}
+nvm_ls_remote_iojs() {
+  echo "iojs-v1.0.0"
+  return 4
+}
+
+try nvm_remote_versions
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "expected node failure exit code 3 to take priority, got $CAPTURED_EXIT_CODE"
+
+# When both succeed, exit code should be 0.
+nvm_ls_remote() {
+  echo "v0.10.0"
+  return 0
+}
+nvm_ls_remote_iojs() {
+  echo "iojs-v1.0.0"
+  return 0
+}
+
+try nvm_remote_versions
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "expected exit code 0 when both succeed, got $CAPTURED_EXIT_CODE"
+
+cleanup

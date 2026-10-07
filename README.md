@@ -6,7 +6,7 @@
 </a>
 
 
-# Node Version Manager [![Build Status](https://app.travis-ci.com/nvm-sh/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.40.3-yellow.svg)][4] [![CII Best Practices](https://bestpractices.dev/projects/684/badge)](https://bestpractices.dev/projects/684)
+# Node Version Manager [![Tests](https://github.com/nvm-sh/nvm/actions/workflows/tests-fast.yml/badge.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.40.8-yellow.svg)][4] [![CII Best Practices](https://bestpractices.dev/projects/684/badge)](https://bestpractices.dev/projects/684)
 
 <!-- To update this table of contents, ensure you have run `npm install` then `npm run doctoc` -->
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -31,6 +31,8 @@
 - [Usage](#usage)
   - [Long-term Support](#long-term-support)
   - [Migrating Global Packages While Installing](#migrating-global-packages-while-installing)
+  - [Migrating Global Packages Between Installed Versions](#migrating-global-packages-between-installed-versions)
+  - [Offline Install](#offline-install)
   - [Default Global Packages From File While Installing](#default-global-packages-from-file-while-installing)
   - [io.js](#iojs)
   - [System Version of Node](#system-version-of-node)
@@ -42,6 +44,7 @@
   - [Set default node version](#set-default-node-version)
   - [Use a mirror of node binaries](#use-a-mirror-of-node-binaries)
     - [Pass Authorization header to mirror](#pass-authorization-header-to-mirror)
+  - [Platforms without official binaries](#platforms-without-official-binaries)
   - [.nvmrc](#nvmrc)
   - [Deeper Shell Integration](#deeper-shell-integration)
     - [Calling `nvm use` automatically in a directory with a `.nvmrc` file](#calling-nvm-use-automatically-in-a-directory-with-a-nvmrc-file)
@@ -72,29 +75,29 @@
 
 ## Intro
 
-`nvm` allows you to quickly install and use different versions of node via the command line.
+`nvm` allows you to quickly install and use different versions of [node](https://nodejs.org) via the command line.
 
 **Example:**
 ```sh
-$ nvm use 16
-Now using node v16.9.1 (npm v7.21.1)
+$ nvm install 24
+Now using node v24.14.0 (npm v11.9.0)
 $ node -v
-v16.9.1
-$ nvm use 14
-Now using node v14.18.0 (npm v6.14.15)
+v24.14.0
+$ nvm use 22
+Now using node v22.22.1 (npm v10.9.4)
 $ node -v
-v14.18.0
-$ nvm install 12
-Now using node v12.22.6 (npm v6.14.5)
+v22.22.1
+$ nvm use 20
+Now using node v20.20.1 (npm v10.8.2)
 $ node -v
-v12.22.6
+v20.20.1
 ```
 
 Simple as that!
 
 
 ## About
-nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, dash, ksh, zsh, bash), in particular on these platforms: unix, macOS, and [windows WSL](https://github.com/nvm-sh/nvm#important-notes).
+nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be installed per-user, and invoked per-shell. `nvm` works on any POSIX-compliant shell (sh, [dash](https://git.kernel.org/pub/scm/utils/dash/dash.git), [ksh](https://github.com/ksh93/ksh), [zsh](https://www.zsh.org), [bash](https://www.gnu.org/software/bash/)), in particular on these platforms: unix, [macOS](https://www.apple.com/macos/), and [Windows WSL](https://github.com/nvm-sh/nvm#important-notes).
 
 <a id="installation-and-update"></a>
 <a id="install-script"></a>
@@ -102,12 +105,12 @@ nvm is a version manager for [node.js](https://nodejs.org/en/), designed to be i
 
 ### Install & Update Script
 
-To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following cURL or Wget command:
+To **install** or **update** nvm, you should run the [install script][2]. To do that, you may either download and run the script manually, or use the following [cURL](https://curl.se) or [Wget](https://www.gnu.org/software/wget/) command:
 ```sh
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 ```
 ```sh
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 ```
 
 Running either of the above commands downloads a script and runs it. The script clones the nvm repository to `~/.nvm`, and attempts to add the source lines from the snippet below to the correct profile file (`~/.bashrc`, `~/.bash_profile`, `~/.zshrc`, or `~/.profile`). If you find the install script is updating the wrong profile file, set the `$PROFILE` env var to the profile file’s path, and then rerun the installation script.
@@ -120,7 +123,7 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 
 #### Additional Notes
 
-- If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.</sub>
+- If the environment variable `$XDG_CONFIG_HOME` is present, it will place the `nvm` files there.
 
 - You can add `--no-use` to the end of the above script to postpone using `nvm` until you manually [`use`](#usage) it:
 
@@ -132,25 +135,25 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 - You can customize the install source, directory, profile, and version using the `NVM_SOURCE`, `NVM_DIR`, `PROFILE`, and `NODE_VERSION` variables.
 Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not contain a trailing slash.
 
-- The installer can use `git`, `curl`, or `wget` to download `nvm`, whichever is available.
+- The installer can use [`git`](https://git-scm.com/), `curl`, or `wget` to download `nvm`, whichever is available.
 
-- You can instruct the installer to not edit your shell config (for example if you already get completions via a [zsh nvm plugin](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm)) by setting `PROFILE=/dev/null` before running the `install.sh` script. Here's an example one-line command to do that: `PROFILE=/dev/null bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash'`
+- You can instruct the installer to not edit your shell config (for example if you already get completions via a [zsh nvm plugin](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/nvm)) by setting `PROFILE=/dev/null` before running the `install.sh` script. Here's an example one-line command to do that: `PROFILE=/dev/null bash -c 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash'`
 
 #### Installing in Docker
 
-When invoking bash as a non-interactive shell, like in a Docker container, none of the regular profile files are sourced. In order to use `nvm`, `node`, and `npm` like normal, you can instead specify the special `BASH_ENV` variable, which bash sources when invoked non-interactively.
+When invoking bash as a non-interactive shell, like in a [Docker](https://www.docker.com) container, none of the regular profile files are sourced. In order to use `nvm`, `node`, and [`npm`](https://www.npmjs.com) like normal, you can instead specify the special `BASH_ENV` variable, which bash sources when invoked non-interactively.
 
 ```Dockerfile
 # Use bash for the shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV /home/user/.bash_env
+ENV BASH_ENV "${HOME}/.bash_env"
 RUN touch "${BASH_ENV}"
 RUN echo '. "${BASH_ENV}"' >> ~/.bashrc
 
 # Download and install nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | PROFILE="${BASH_ENV}" bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | PROFILE="${BASH_ENV}" bash
 RUN echo node > .nvmrc
 RUN nvm install
 ```
@@ -168,7 +171,7 @@ ARG NODE_VERSION=20
 RUN apt update && apt install curl -y
 
 # install nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 
 # set env
 ENV NVM_DIR=/root/.nvm
@@ -194,7 +197,7 @@ After creation of the image you can start container interactively and run comman
 docker run --rm -it nvmimage
 
 root@0a6b5a237c14:/# nvm -v
-0.40.3
+0.40.8
 
 root@0a6b5a237c14:/# node -v
 v19.9.0
@@ -213,7 +216,7 @@ user@host:/tmp/test $ docker run --rm -it nvmimage npm -v
 
 #### Troubleshooting on Linux
 
-On Linux, after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
+On [Linux](https://www.kernel.org/), after running the install script, if you get `nvm: command not found` or see no feedback from your terminal after you type `command -v nvm`, simply close your current terminal, open a new terminal, and try verifying again.
 Alternatively, you can run the following commands for the different shells on the command line:
 
 *bash*: `source ~/.bashrc`
@@ -226,7 +229,7 @@ These should pick up the `nvm` command.
 
 #### Troubleshooting on macOS
 
-Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
+Since OS X 10.9, `/usr/bin/git` has been preset by [Xcode](https://developer.apple.com/xcode/) command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/nvm-sh/nvm/issues/1782))
 
 If you get `nvm: command not found` after running the install script, one of the following might be the reason:
 
@@ -257,7 +260,7 @@ You can use a task:
 ```yaml
 - name: Install nvm
   ansible.builtin.shell: >
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
   args:
     creates: "{{ ansible_env.HOME }}/.nvm/nvm.sh"
 ```
@@ -276,9 +279,9 @@ which should output `nvm` if the installation was successful. Please note that `
 
 ### Important Notes
 
-If you're running a system without prepackaged binary available, which means you're going to install node or io.js from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for Debian/Ubuntu based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
+If you're running a system without prepackaged binary available, which means you're going to install node or [io.js](https://iojs.org) from its source code, you need to make sure your system has a C++ compiler. For OS X, Xcode will work, for [Debian](https://www.debian.org)/[Ubuntu](https://ubuntu.com) based GNU/Linux, the `build-essential` and `libssl-dev` packages work.
 
-**Note:** `nvm` also supports Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [GitBash](https://gitforwindows.org/) (MSYS) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
+**Note:** `nvm` also supports Windows in some cases. It should work through WSL (Windows Subsystem for Linux) depending on the version of WSL. It should also work with [Git Bash](https://gitforwindows.org/) ([MSYS](https://www.msys2.org/)) or [Cygwin](https://cygwin.com). Otherwise, for Windows, a few alternatives exist, which are neither supported nor developed by us:
 
   - [nvm-windows](https://github.com/coreybutler/nvm-windows)
   - [nodist](https://github.com/marcelklehr/nodist)
@@ -292,7 +295,7 @@ If you're running a system without prepackaged binary available, which means you
   - [nvm.fish](https://github.com/jorgebucaran/nvm.fish) - The Node.js version manager you'll adore, crafted just for Fish
   - [fish-nvm](https://github.com/FabioAntunes/fish-nvm) - Wrapper around nvm for fish, delays sourcing nvm until it's actually used.
 
-**Note:** We still have some problems with FreeBSD, because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
+**Note:** We still have some problems with [FreeBSD](https://www.freebsd.org), because there is no official pre-built binary for FreeBSD, and building from source may need [patches](https://www.freshports.org/www/node/files/patch-deps_v8_src_base_platform_platform-posix.cc); see the issue ticket:
 
   - [[#900] [Bug] node on FreeBSD may need to be patched](https://github.com/nvm-sh/nvm/issues/900)
   - [nodejs/node#3716](https://github.com/nodejs/node/issues/3716)
@@ -307,11 +310,11 @@ If you're running a system without prepackaged binary available, which means you
   - If you have an `~/.npmrc` file, make sure it does not contain any `prefix` settings (which is not compatible with `nvm`)
   - You can (but should not?) keep your previous "system" node install, but `nvm` will only be available to your user account (the one used to install nvm). This might cause version mismatches, as other users will be using `/usr/local/lib/node_modules/*` VS your user account using `~/.nvm/versions/node/vX.X.X/lib/node_modules/*`
 
-Homebrew installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
+[Homebrew](https://brew.sh) installation is not supported. If you have issues with homebrew-installed `nvm`, please `brew uninstall` it, and install it using the instructions below, before filing an issue.
 
 **Note:** If you're using `zsh` you can easily install `nvm` as a zsh plugin. Install [`zsh-nvm`](https://github.com/lukechilds/zsh-nvm) and run `nvm upgrade` to upgrade ([you can set](https://github.com/lukechilds/zsh-nvm#auto-use) `NVM_AUTO_USE=true` to have it automatically detect and use `.nvmrc` files).
 
-**Note:** Git versions before v1.7 may face a problem of cloning `nvm` source from GitHub via https protocol, and there is also different behavior of git before v1.6, and git prior to [v1.17.10](https://github.com/git/git/commit/5a7d5b683f869d3e3884a89775241afa515da9e7) can not clone tags, so the minimum required git version is v1.7.10. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
+**Note:** Git versions before v1.7 may face a problem of cloning `nvm` source from [GitHub](https://github.com) via https protocol, and there is also different behavior of git before v1.6, and git prior to [v1.17.10](https://github.com/git/git/commit/5a7d5b683f869d3e3884a89775241afa515da9e7) can not clone tags, so the minimum required git version is v1.7.10. If you are interested in the problem we mentioned here, please refer to GitHub's [HTTPS cloning errors](https://help.github.com/articles/https-cloning-errors/) article.
 
 ### Git Install
 
@@ -319,7 +322,7 @@ If you have `git` installed (requires git v1.7.10+):
 
 1. clone this repo in the root of your user profile
     - `cd ~/` from anywhere then `git clone https://github.com/nvm-sh/nvm.git .nvm`
-1. `cd ~/.nvm` and check out the latest version with `git checkout v0.40.3`
+1. `cd ~/.nvm` and check out the latest version with `git checkout v0.40.8`
 1. activate `nvm` by sourcing it from your shell: `. ./nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
@@ -398,6 +401,15 @@ You can list available versions using `ls-remote`:
 nvm ls-remote
 ```
 
+When no version or `--lts` filter is given, the list also marks the version the `node` alias would install, and every version that one of your own aliases would resolve to. Each kind of annotation always starts in the same column, so the output can be sliced with `cut -c` or similar tools:
+
+```
+        v20.9.0   (Latest LTS: Iron)                        (Aliases: work)
+        v21.0.0
+        v21.1.0
+        v21.2.0                            (Latest: node)   (Aliases: default)
+```
+
 And then in any new shell just use the installed version:
 
 ```sh
@@ -427,7 +439,8 @@ In place of a version pointer like "14.7" or "16.3" or "12.22.1", you can use th
   - `node`: this installs the latest version of [`node`](https://nodejs.org/en/)
   - `iojs`: this installs the latest version of [`io.js`](https://iojs.org/en/)
   - `stable`: this alias is deprecated, and only truly applies to `node` `v0.12` and earlier. Currently, this is an alias for `node`.
-  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in SemVer, versions communicate breakage, not stability).
+  - `unstable`: this alias points to `node` `v0.11` - the last "unstable" node release, since post-1.0, all node versions are stable. (in [SemVer](https://semver.org), versions communicate breakage, not stability).
+  - `current`: the version currently active in this shell (i.e. what `node` resolves to via `$PATH`). It is **not** affected by `.nvmrc`. Useful when you want to refer to the active version explicitly &mdash; e.g. `nvm which current` always prints the path to the active `node`, regardless of whether an `.nvmrc` file is present.
 
 ### Long-term Support
 
@@ -443,7 +456,7 @@ Node has a [schedule](https://github.com/nodejs/Release#release-schedule) for lo
 
 Any time your local copy of `nvm` connects to https://nodejs.org, it will re-create the appropriate local aliases for all available LTS lines. These aliases (stored under `$NVM_DIR/alias/lts`), are managed by `nvm`, and you should not modify, remove, or create these files - expect your changes to be undone, and expect meddling with these files to cause bugs that will likely not be supported.
 
-To get the latest LTS version of node and migrate your existing installed packages, use
+To get the latest LTS version of node and migrate your existing installed packages, use:
 
 ```sh
 nvm install --reinstall-packages-from=current 'lts/*'
@@ -481,6 +494,33 @@ nvm install-latest-npm
 
 If you've already gotten an error to the effect of "npm does not support Node.js", you'll need to (1) revert to a previous node version (`nvm ls` & `nvm use <your latest _working_ version from the ls>`), (2) delete the newly created node version (`nvm uninstall <your _broken_ version of node from the ls>`), then (3) rerun your `nvm install` with the `--latest-npm` flag.
 
+### Migrating Global Packages Between Installed Versions
+
+`--reinstall-packages-from` is tied to `nvm install`. To migrate global npm packages between versions you _already_ have installed, without (re)installing anything, `nvm use` the destination and run `nvm reinstall-packages` as a standalone command, pointing at the version you want to copy _from_:
+
+```sh
+nvm use 22.22.2
+nvm reinstall-packages 22.20.0
+```
+
+This reinstalls all global packages from `22.20.0` into the currently-active version (`22.22.2`). As with `--reinstall-packages-from`, the npm version itself is not changed.
+
+
+### Offline Install
+
+If you've previously downloaded a node version (or it's still in the cache), you can install it without any network access using the `--offline` flag:
+
+```sh
+nvm install --offline 14.7.0
+```
+
+This resolves versions using only locally installed versions and cached downloads. It will not attempt to download anything. This is useful in air-gapped environments, on planes, or when you want to avoid network latency.
+
+You can combine `--offline` with `--lts` to install the latest cached LTS version (as long as LTS aliases have been populated by a prior `nvm ls-remote --lts`):
+
+```sh
+nvm install --offline --lts
+```
 
 ### Default Global Packages From File While Installing
 
@@ -496,7 +536,10 @@ stevemao/left-pad
 
 ### io.js
 
-If you want to install [io.js](https://github.com/iojs/io.js/):
+> [!WARNING]
+> io.js was a [fork of Node.js](https://en.wikipedia.org/wiki/Node.js#History), created in 2014 and merged back in 2015. io.js shipped v1, v2, and v3 release lines; post-merge, node.js began releasing with v4.
+
+If you want to install io.js:
 
 ```sh
 nvm install iojs
@@ -613,6 +656,8 @@ nvm install iojs-v1.0.3
 NVM_IOJS_ORG_MIRROR=https://iojs.org/dist nvm install iojs-v1.0.3
 ```
 
+Some platforms and architectures have no binary on the default host at all; see [Platforms without official binaries](#platforms-without-official-binaries).
+
 `nvm use` will not, by default, create a "current" symlink. Set `$NVM_SYMLINK_CURRENT` to "true" to enable this behavior, which is sometimes useful for IDEs. Note that using `nvm` in multiple shell tabs with this environment variable enabled can cause race conditions.
 
 #### Pass Authorization header to mirror
@@ -622,10 +667,35 @@ To pass an Authorization header through to the mirror url, set `$NVM_AUTH_HEADER
 NVM_AUTH_HEADER="Bearer secret-token" nvm install node
 ```
 
+### Platforms without official binaries
+
+nodejs.org does not publish a binary for every platform and architecture nvm can detect. Where it does not, `nvm install` falls back by default to compiling from source, which is slow and needs a C++ toolchain (see [Important Notes](#important-notes)); set `$NVM_NO_SOURCE_FALLBACK` to `1` to make a missing binary an error instead.
+
+[unofficial-builds.nodejs.org](https://unofficial-builds.nodejs.org/download/release/) ([nodejs/unofficial-builds](https://github.com/nodejs/unofficial-builds)) publishes binaries for platforms the Node.js project does not officially support. To use them, point [`$NVM_NODEJS_ORG_MIRROR`](#use-a-mirror-of-node-binaries) at it:
+
+```sh
+export NVM_NODEJS_ORG_MIRROR=https://unofficial-builds.nodejs.org/download/release
+```
+
+| platform | binaries on nodejs.org | binaries on unofficial-builds |
+| --- | --- | --- |
+| `freebsd`, `openbsd` (any arch) | none | none |
+| `sunos` (Solaris, illumos) | v13.x and earlier | none |
+| `linux-x86` (32-bit) | v9.x and earlier | v8.16.0 through v21.x |
+| `linux-armv6l` | v11.x and earlier | v8.16.0 through v22.x |
+| `linux-armv7l` | v23.x and earlier | none |
+| `linux-x64-musl` (Alpine) | v24.20.0+ and v26.8.0+ only | v8.16.0 and later |
+| `linux-arm64-musl` (Alpine) | none | v20.20.1 and later |
+| `linux-loong64` | none | v18.18.0 and later |
+| `linux-riscv64` | none | v17.7.1 through v26.0.0 |
+| `win-x86` (32-bit) | v22.x and earlier | none |
+
+Neither host is gapless, and both change over time; the `index.tab` at the root of each is authoritative. Where neither has a binary, `nvm install` compiles from source, except on non-WSL Windows, which nvm cannot build on; on FreeBSD and OpenBSD it skips the download and goes straight to source. Alpine has its own section: [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux).
+
 ### .nvmrc
 
 You can create a `.nvmrc` file containing a node version number (or any other string that `nvm` understands; see `nvm --help` for details) in the project root directory (or any parent directory).
-Afterwards, `nvm use`, `nvm install`, `nvm exec`, `nvm run`, and `nvm which` will use the version specified in the `.nvmrc` file if no version is supplied on the command line.
+Afterwards, `nvm use`, `nvm install`, and `nvm which` will use the version specified in the `.nvmrc` file if no version is supplied on the command line; if no `.nvmrc` is found either, they exit with status `127`. (`nvm exec` and `nvm run` follow the same `.nvmrc` lookup, but currently fall back to the active node if neither resolves &mdash; treat that fallback as undefined behavior; pass an explicit version if you need predictable scripting.) If you want the currently active version, pass `current` explicitly (e.g. `nvm which current`) &mdash; `current` is not affected by `.nvmrc`.
 
 For example, to make nvm default to the latest 5.9 release, the latest LTS version, or the latest node version for the current directory:
 
@@ -837,7 +907,15 @@ nvm exposes the following environment variables:
 - `NVM_CD_FLAGS` - used to maintain compatibility with zsh.
 - `NVM_RC_VERSION` - version from .nvmrc file if being used.
 
-Additionally, nvm modifies `PATH`, and, if present, `MANPATH` and `NODE_PATH` when changing versions.
+Additionally, nvm modifies `PATH` when changing versions, along with `MANPATH` wherever a `manpath` command exists, and `NODE_PATH`, if present.
+
+The following environment variables can be set to configure `nvm install`:
+
+- `NVM_NO_SOURCE_FALLBACK` - when `1`, a failed binary download aborts instead of silently falling back to a (much slower) from-source compile; the persistent equivalent of the `-b` flag, and mutually exclusive with `-s`.
+- `NVM_INSTALL_LOCK_TIMEOUT` - seconds to wait for a concurrent install of the same version to finish before giving up (default `600`). On timeout, nvm prints the lock path so a lock left behind by a killed install can be removed.
+- `NVM_INSTALL_LOCK_STALE` - minutes after which an install lock is assumed abandoned and stolen automatically; `0` (the default) never steals.
+
+`nvm install <version>` takes a per-version advisory lock (a directory under `$NVM_DIR/.cache/locks`), so two shells installing the same version at once cannot corrupt its version directory; installs of *different* versions never block each other.
 
 
 ## Bash Completion
@@ -914,31 +992,31 @@ set -e
 
 ## Installing nvm on Alpine Linux
 
-In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, CentOS, RedHat et al).
+In order to provide the best performance (and other optimizations), nvm will download and install pre-compiled binaries for Node (and npm) when you run `nvm install X`. The Node project compiles, tests and hosts/provides these pre-compiled binaries which are built for mainstream/traditional Linux distributions (such as Debian, Ubuntu, [CentOS](https://www.centos.org), [RedHat](https://www.redhat.com) et al).
 
-Alpine Linux, unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional incompatible with Alpine Linux, thus we cannot simply `nvm install X` on Alpine Linux and expect the downloaded binary to run correctly - you'll likely see "...does not exist" errors if you try that.
+[Alpine Linux](https://www.alpinelinux.org), unlike mainstream/traditional Linux distributions, is based on [BusyBox](https://www.busybox.net/), a very compact (~5MB) Linux distribution. BusyBox (and thus Alpine Linux) uses a different C/C++ stack to most mainstream/traditional Linux distributions - [musl](https://www.musl-libc.org/). This makes binary programs built for such mainstream/traditional distributions incompatible with Alpine Linux, so on `x64` and `arm64` nvm requests a `musl` build instead. nodejs.org publishes those only for some recent `x64` releases, so for anything else the download 404s and `nvm install X` falls back to compiling from source, unless you point it at a mirror that has one (see [Platforms without official binaries](#platforms-without-official-binaries)).
 
 There is a `-s` flag for `nvm install` which requests nvm download Node source and compile it locally.
 
-If installing nvm on Alpine Linux *is* still what you want or need to do, you should be able to achieve this by running the following from you Alpine Linux shell, depending on which version you are using:
+If installing nvm on Alpine Linux *is* still what you want or need to do, you should be able to achieve this by running the following from your Alpine Linux shell, depending on which version you are using:
 
 ### Alpine Linux 3.13+
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python3 make gcc g++ libgcc linux-headers grep util-linux binutils findutils
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 ```
 
 ### Alpine Linux 3.5 - 3.12
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc g++ libgcc linux-headers grep util-linux binutils findutils
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
 ```
 
-_Note: Alpine 3.5 can only install NodeJS versions up to v6.9.5, Alpine 3.6 can only install versions up to v6.10.3, Alpine 3.7 installs versions up to v8.9.3, Alpine 3.8 installs versions up to v8.14.0, Alpine 3.9 installs versions up to v10.19.0, Alpine 3.10 installs versions up to v10.24.1, Alpine 3.11 installs versions up to v12.22.6, Alpine 3.12 installs versions up to v12.22.12, Alpine 3.13 & 3.14 install versions up to v14.20.0, Alpine 3.15 & 3.16 install versions up to v16.16.0 (**These are all versions on the main branch**). Alpine 3.5 - 3.12 required the package `python2` to build NodeJS, as they are older versions to build. Alpine 3.13+ requires `python3` to successfully build newer NodeJS versions, but you can use `python2` with Alpine 3.13+ if you need to build versions of node supported in Alpine 3.5 - 3.15, you just need to specify what version of NodeJS you need to install in the package install script._
+_Note: Alpine 3.5 can only install NodeJS versions up to v6.9.5, Alpine 3.6 can only install versions up to v6.10.3, Alpine 3.7 installs versions up to v8.9.3, Alpine 3.8 installs versions up to v8.14.0, Alpine 3.9 installs versions up to v10.19.0, Alpine 3.10 installs versions up to v10.24.1, Alpine 3.11 installs versions up to v12.22.6, Alpine 3.12 installs versions up to v12.22.12, Alpine 3.13 & 3.14 install versions up to v14.20.0, Alpine 3.15 & 3.16 install versions up to v16.16.0 (**These are all versions on the main branch**). Alpine 3.5 - 3.12 required the package [`python2`](https://www.python.org/) to build NodeJS, as they are older versions to build. Alpine 3.13+ requires `python3` to successfully build newer NodeJS versions, but you can use `python2` with Alpine 3.13+ if you need to build versions of node supported in Alpine 3.5 - 3.15, you just need to specify what version of NodeJS you need to install in the package install script._
 
-The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
+The Node project now publishes an official `linux-x64-musl` binary for some recent releases (v24.20.0+ and v26.8.0+; no v25 release has one). There is no official `arm64` musl binary.
 
-As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
+As a potential alternative, [@mhart](https://github.com/mhart) (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
 
 <a id="removal"></a>
 ## Uninstalling / Removal
@@ -965,13 +1043,13 @@ export NVM_DIR="$HOME/.nvm"
 
 ## Docker For Development Environment
 
-To make the development and testing work easier, we have a Dockerfile for development usage, which is based on Ubuntu 18.04 base image, prepared with essential and useful tools for `nvm` development, to build the docker image of the environment, run the docker command at the root of `nvm` repository:
+To make development and testing work easier we supply a Dockerfile for development usage. It's based on an Ubuntu base image prepared with essential and useful tools for `nvm` development. To build the docker image of the environment, do a Docker build at the root of `nvm` repository:
 
 ```sh
 $ docker build -t nvm-dev .
 ```
 
-This will package your current nvm repository with our pre-defined development environment into a docker image named `nvm-dev`, once it's built with success, validate your image via `docker images`:
+This will package your current nvm working copy with our pre-defined development environment into a Docker image named `nvm-dev`. After the build you should see it appear in the list of images:
 
 ```sh
 $ docker images
@@ -980,7 +1058,7 @@ REPOSITORY         TAG                 IMAGE ID            CREATED             S
 nvm-dev            latest              9ca4c57a97d8        7 days ago          650 MB
 ```
 
-If you got no error message, now you can easily involve in:
+To start and enter a container based on this image:
 
 ```sh
 $ docker run -h nvm-dev -it nvm-dev
@@ -988,12 +1066,9 @@ $ docker run -h nvm-dev -it nvm-dev
 nvm@nvm-dev:~/.nvm$
 ```
 
-Please note that it'll take about 8 minutes to build the image and the image size would be about 650MB, so it's not suitable for production usage.
+It takes several minutes to build the image and the image size is about 650MB, so it's not suitable for production usage.
 
-For more information and documentation about docker, please refer to its official website:
-
-  - https://www.docker.com/
-  - https://docs.docker.com/
+For more information and documentation about Docker, please refer to its [official website][docker-www] and [documentation][docker-docs]:
 
 ## Problems
 
@@ -1013,7 +1088,7 @@ nvm install -s 0.8.6
 
 ## macOS Troubleshooting
 
-**nvm node version not found in vim shell**
+**nvm node version not found in [vim](https://www.vim.org) shell**
 
 If you set node version to a version other than your system node version `nvm use 6.2.1` and open vim and run `:!node -v` you should see `v6.2.1` if you see your system version `v0.12.7`. You need to run:
 
@@ -1034,13 +1109,13 @@ You have to make sure that the user directory name in `$HOME` and the user direc
 To change the user directory and/or account name follow the instructions [here](https://support.apple.com/en-us/HT201548)
 
 [1]: https://github.com/nvm-sh/nvm.git
-[2]: https://github.com/nvm-sh/nvm/blob/v0.40.3/install.sh
-[3]: https://app.travis-ci.com/nvm-sh/nvm
-[4]: https://github.com/nvm-sh/nvm/releases/tag/v0.40.3
+[2]: https://github.com/nvm-sh/nvm/blob/v0.40.8/install.sh
+[3]: https://github.com/nvm-sh/nvm/actions/workflows/tests-fast.yml
+[4]: https://github.com/nvm-sh/nvm/releases/tag/v0.40.8
 [Urchin]: https://git.sdf.org/tlevine/urchin
 [Fish]: https://fishshell.com
 
-**Homebrew makes zsh directories unsecure**
+**Homebrew makes zsh directories insecure**
 
 ```shell
 zsh compinit: insecure directories, run compaudit for list.
@@ -1054,7 +1129,7 @@ Homebrew causes insecure directories like `/usr/local/share/zsh/site-functions` 
 Experimental support for the Apple Silicon chip architecture was added in node.js v15.3 and full support was added in v16.0.
 Because of this, if you try to install older versions of node as usual, you will probably experience either compilation errors when installing node or out-of-memory errors while running your code.
 
-So, if you want to run a version prior to v16.0 on an Apple Silicon Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that Rosetta 2 can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
+So, if you want to run a version prior to v16.0 on an Apple Silicon Mac, it may be best to compile node targeting the `x86_64` Intel architecture so that [Rosetta 2](https://support.apple.com/en-us/HT211861) can translate the `x86_64` processor instructions to ARM-based Apple Silicon instructions.
 Here's what you will need to do:
 
 - Install Rosetta, if you haven't already done so
@@ -1072,7 +1147,7 @@ Here's what you will need to do:
   $ arch -x86_64 zsh
   ```
 
-  Note: This same thing can also be accomplished by finding the Terminal or iTerm App in Finder, right clicking, selecting "Get Info", and then checking the box labeled "Open using Rosetta".
+  Note: This same thing can also be accomplished by finding the Terminal or [iTerm](https://iterm2.com) App in Finder, right clicking, selecting "Get Info", and then checking the box labeled "Open using Rosetta".
 
   Note: This terminal session is now running in `zsh`.
   If `zsh` is not the shell you typically use, `nvm` may not be `source`'d automatically like it probably is for your usual shell through your dotfiles.
@@ -1090,11 +1165,11 @@ Here's what you will need to do:
   ```
 
   Note: You're probably curious why `--shared-zlib` is included.
-  There's a bug in recent versions of Apple's system `clang` compiler.
+  There's a bug in recent versions of Apple's system [`clang`](https://clang.llvm.org/) compiler.
   If one of these broken versions is installed on your system, the above step will likely still succeed even if you didn't include the `--shared-zlib` flag.
   However, later, when you attempt to `npm install` something using your old version of node.js, you will see `incorrect data check` errors.
   If you want to avoid the possible hassle of dealing with this, include that flag.
-  For more details, see [this issue](https://github.com/nodejs/node/issues/39313) and [this comment](https://github.com/nodejs/node/issues/39313#issuecomment-90.40.376)
+  For more details, see [this issue](https://github.com/nodejs/node/issues/39313) and [this comment](https://github.com/nodejs/node/issues/39313#issuecomment-902395576)
 
 - Exit back to your native shell.
 
@@ -1121,7 +1196,7 @@ Now you should be able to use node as usual.
 If you've encountered this error on WSL-2:
 
   ```sh
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh | bash
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                   Dload  Upload  Total   Spent    Left  Speed
   0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0curl: (6) Could not resolve host: raw.githubusercontent.com
@@ -1156,7 +1231,7 @@ Currently, the sole maintainer is [@ljharb](https://github.com/ljharb) - more ma
 
 ## Project Support
 
-Only the latest version (v0.40.3 at this time) is supported.
+Only the latest version (v0.40.8 at this time) is supported.
 
 ## Enterprise Support
 
@@ -1172,3 +1247,7 @@ See [LICENSE.md](./LICENSE.md).
 
 Copyright [OpenJS Foundation](https://openjsf.org) and `nvm` contributors. All rights reserved. The [OpenJS Foundation](https://openjsf.org) has registered trademarks and uses trademarks.  For a list of trademarks of the [OpenJS Foundation](https://openjsf.org), please see our [Trademark Policy](https://trademark-policy.openjsf.org/) and [Trademark List](https://trademark-list.openjsf.org/).  Trademarks and logos not indicated on the [list of OpenJS Foundation trademarks](https://trademark-list.openjsf.org) are trademarks™ or registered® trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them.
 [The OpenJS Foundation](https://openjsf.org/) | [Terms of Use](https://terms-of-use.openjsf.org/) | [Privacy Policy](https://privacy-policy.openjsf.org/) | [Bylaws](https://bylaws.openjsf.org/) | [Code of Conduct](https://code-of-conduct.openjsf.org) | [Trademark Policy](https://trademark-policy.openjsf.org/) | [Trademark List](https://trademark-list.openjsf.org/) | [Cookie Policy](https://www.linuxfoundation.org/cookies/)
+
+<!-------------------------------------------------------------------->
+[docker-docs]: https://docs.docker.com/
+[docker-www]: https://www.docker.com/

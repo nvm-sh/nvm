@@ -107,3 +107,35 @@ Additionally, the maintainer of a third-party dependency might introduce a vulne
 **Recommendation**: Third-party libraries should be kept up-to-date, applying patches to address publicly known vulnerabilities in a timely fashion.
 Monitoring and logging capabilities should also be in place to detect and respond to potential attacks.
 SLSA compliance may also be considered for further supply chain security hardening.
+
+## Trust boundary: mirror payloads vs. mirror metadata
+
+`nvm` fetches two very different kinds of data from a Node.js/io.js mirror (`nodejs.org`/`iojs.org` by default, or whatever `$NVM_NODEJS_ORG_MIRROR` and `$NVM_IOJS_ORG_MIRROR` point at), and they sit on opposite sides of a trust boundary:
+
+  - **Payloads** — the Node.js/io.js binaries and source tarballs that `nvm install` downloads, unpacks, compiles (for source installs), and runs.
+  - **Metadata** — everything `nvm` parses *about* those payloads rather than executing: the `index.tab` version list (including each release's LTS codename), and the `SHASUMS`/`SHASUMS256` checksum files.
+
+Conflating the two leads to mis-scoped reports, so the project draws the line explicitly.
+
+### Payloads are trusted, by construction
+
+The entire purpose of `nvm` is to download a mirror's build of Node.js and run it.
+A mirror that serves a backdoored binary has arbitrary code execution the moment you `nvm install` and invoke `node`, and no validation inside `nvm` can prevent that - you have chosen to execute that code.
+Installing from source (`nvm install -s`) is if anything more direct: the mirror-supplied source tarball is unpacked and its `configure`/`make` build runs arbitrary code on your machine *at install time*, before `node` is ever invoked.
+Checksum verification protects **integrity** (a corrupted or truncated download, or a network intermediary that cannot also forge the same-origin `SHASUMS`), not **authenticity** against the mirror itself, since the checksums come from the same origin as the payload.
+Selecting a mirror is therefore equivalent to selecting whom you trust for arbitrary code execution in your account.
+A malicious payload from the configured mirror is consequently **out of scope**: no privilege boundary is crossed, so there is no privilege to escalate.
+
+### Metadata is not trusted
+
+Parsing a version list is a pure data operation.
+A user who runs `nvm ls-remote` to browse available versions - and installs nothing - has not opted into running any code from the mirror.
+Metadata can also be attacker-controlled with no mirror misconfiguration at all, via a compromised mirror/CDN or a man-in-the-middle of the channel (see *Threat ID 3*), so it is treated as hostile input.
+The invariant `nvm` maintains is:
+
+> Mirror-supplied metadata must never reach a shell/command evaluator, an `awk`/`sed` program body, or an unvalidated filesystem path (see *Threat ID 2*).
+
+This is why version strings from `index.tab` are passed to the downloader as literal `argv` elements rather than re-parsed by the shell ([CVE-2026-10796](https://github.com/advisories/GHSA-3c52-35h2-gfmm), [CVE-2026-1665](https://github.com/advisories/GHSA-4fc5-r4vr-8rp7)); why checksum comparisons pass the mirror's values as `awk -v` **data** and never as program text; and why LTS codenames are constrained to safe alias filenames before naming a file under `$NVM_DIR/alias/lts`, so a hostile codename such as `../../../.bashrc` cannot traverse out of the alias directory.
+
+The point is not that metadata is "more dangerous" than a payload — a trusted payload can obviously do anything.
+It is that metadata carries **no** implied grant of code execution, so any code-execution or arbitrary-write primitive reachable purely by parsing it is a defect worth removing on its own merits, independent of how much the payload channel is trusted.

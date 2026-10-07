@@ -1,0 +1,20 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+# Create an alias file where the first line has a valid version
+# followed by a second line of binary-like data
+printf 'v22.1.0\n' > ../../../alias/test-edge-binary
+printf '\001\002\003\377\n' >> ../../../alias/test-edge-binary
+ACTUAL="$(nvm_alias test-edge-binary)"
+# nvm_alias emits every non-blank, non-comment line — first line should be the version
+FIRST_LINE="$(nvm_echo "${ACTUAL}" | command head -n 1)"
+EXPECTED='v22.1.0'
+[ "${FIRST_LINE}" = "${EXPECTED}" ] || die "expected first line >${EXPECTED}<, got >${FIRST_LINE}<"
+
+rm -f ../../../alias/test-edge-binary

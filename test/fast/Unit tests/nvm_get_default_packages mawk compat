@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Test that nvm_get_default_packages awk patterns work with mawk
+# This test runs with mawk explicitly if available, to catch POSIX
+# character class compatibility issues (mawk doesn't support [[:space:]])
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# The awk command from nvm_get_default_packages
+AWK_SCRIPT='
+  /^[ \t]*#/ { next }
+  /^[ \t]*$/ { next }
+  /[ \t]/ && !/^[ \t]*#/ {
+    print "error" > "/dev/stderr"
+    exit 1
+  }
+  {
+    if (NR > 1 && !prev_space) printf " "
+    printf "%s", $0
+    prev_space = 0
+  }
+'
+
+TEST_INPUT="rimraf
+object-inspect@1.0.2
+
+# commented-package
+
+stevemao/left-pad"
+
+EXPECTED_OUTPUT="rimraf object-inspect@1.0.2 stevemao/left-pad"
+
+# Test with system awk
+OUTPUT="$(printf '%s\n' "${TEST_INPUT}" | awk "${AWK_SCRIPT}")"
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "system awk: expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+# Test with mawk explicitly if available
+if command -v mawk > /dev/null 2>&1; then
+  OUTPUT="$(printf '%s\n' "${TEST_INPUT}" | mawk "${AWK_SCRIPT}")"
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "mawk: expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+  echo "mawk test passed"
+else
+  echo "mawk not available, skipping mawk-specific test"
+fi
+
+# Test with gawk explicitly if available
+if command -v gawk > /dev/null 2>&1; then
+  OUTPUT="$(printf '%s\n' "${TEST_INPUT}" | gawk "${AWK_SCRIPT}")"
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "gawk: expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+  echo "gawk test passed"
+else
+  echo "gawk not available, skipping gawk-specific test"
+fi
+
+echo "All awk compatibility tests passed"

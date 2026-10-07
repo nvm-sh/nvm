@@ -21,7 +21,7 @@ jobs:
           github.com:443
           registry.npmjs.org:443
           api.github.com:443
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         # https://github.com/actions/checkout/issues/217#issue-599945005
         # pulls all commits (needed for lerna / semantic release to correctly version)
@@ -29,7 +29,7 @@ jobs:
 
     # pulls all tags (needed for lerna / semantic release to correctly version)
     - run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
         node-version: 'lts/*'
     - run: npm install

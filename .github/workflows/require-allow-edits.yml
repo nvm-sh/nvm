@@ -8,17 +8,11 @@ permissions:
 jobs:
   _:
     permissions:
-      pull-requests: read
+      pull-requests: read  # for ljharb/require-allow-edits to check 'allow edits' on PR
+
     name: "Require “Allow Edits”"
 
     runs-on: ubuntu-latest
 
     steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@v2
-      with:
-        allowed-endpoints:
-          api.github.com:443
-    - uses: ljharb/require-allow-edits@main
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ljharb/require-allow-edits@main

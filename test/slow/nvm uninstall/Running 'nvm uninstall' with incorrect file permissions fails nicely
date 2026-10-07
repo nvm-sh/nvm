@@ -1,30 +1,51 @@
 #!/bin/sh
 
-die () { echo "$@" ; exit 1; }
+die () { echo "$@" ; cleanup ; exit 1; }
 
 # Source nvm
 \. ../../../nvm.sh
 
-# Version to install/uninstall
-NVM_TEST_VERSION=5.10.1
+\. ../../common.sh
 
-# Make sure it's not already here
-[ -e ../../../$NVM_TEST_VERSION ] && rm -R ../../../$NVM_TEST_VERSION
+NVM_TEST_VERSION=v5.99.99
 
-# Install it
-nvm install $NVM_TEST_VERSION
+cleanup() {
+  VERSION_PATH="${VERSION_PATH-}"
+  if [ -n "${VERSION_PATH}" ] && [ -d "${VERSION_PATH}" ]; then
+    sudo -n rm -f "${VERSION_PATH}/lib/root-owned-file" 2>/dev/null
+    rm -rf "${VERSION_PATH}"
+  fi
+}
 
-# Make sure it installed
-nvm ls | grep "$NVM_TEST_VERSION" || die "Failed to install node"
+# The permissions check only trips on files that are neither writable nor
+# self-owned, and creating one requires another user: skip where passwordless
+# sudo is unavailable; CI always has it.
+if ! sudo -n true 2>/dev/null; then
+  echo 'passwordless sudo is not available, skipping'
+  exit 0
+fi
 
-# Install global module as root
-npm_path=$(which npm)
-sudo -n "$npm_path" install jspm@'<2' -g || die 'either sudo failed, or `npm install jspm -g` failed`'
+# Install a fake version to uninstall
+make_fake_node "${NVM_TEST_VERSION}" || die 'unable to make fake node'
+VERSION_PATH="$(nvm_version_path "${NVM_TEST_VERSION}")"
 
-# Switch to another version so we can uninstall
-nvm use 0.12.7
+# Make part of the installation folder unwritable, and not self-owned
+mkdir -p "${VERSION_PATH}/lib"
+sudo -n touch "${VERSION_PATH}/lib/root-owned-file" || die 'sudo touch failed'
+sudo -n chmod 444 "${VERSION_PATH}/lib/root-owned-file" || die 'sudo chmod failed'
+
+# Make sure the version to uninstall is not the active one
+nvm deactivate >/dev/null 2>&1 || true
 
 # Attempt to uninstall it
-RETURN_MESSAGE="$(nvm uninstall $NVM_TEST_VERSION 2>&1)"
+RETURN_MESSAGE="$(nvm uninstall "${NVM_TEST_VERSION}" 2>&1)"
 CHECK_FOR="Cannot uninstall, incorrect permissions on installation folder"
-test "${RETURN_MESSAGE#*$CHECK_FOR}" != "$RETURN_MESSAGE" || die "Failed to show error message"
+case "${RETURN_MESSAGE}" in
+  *"${CHECK_FOR}"*) ;;
+  *) die "Failed to show error message; got: ${RETURN_MESSAGE}" ;;
+esac
+
+# ... and the version must not have been removed
+nvm_is_version_installed "${NVM_TEST_VERSION}" || die 'version was uninstalled despite the permissions error'
+
+cleanup

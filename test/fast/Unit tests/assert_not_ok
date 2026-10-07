@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../common.sh
+
+_returns_zero() { return 0; }
+_returns_nonzero() { return 1; }
+
+# assert_not_ok should pass for a non-zero-exit function
+assert_not_ok _returns_nonzero \
+  || die 'assert_not_ok failed on a function that returns 1'
+
+# assert_not_ok should fail for a zero-exit function
+if (assert_not_ok _returns_zero 2>/dev/null); then
+  die 'assert_not_ok incorrectly passed for a function that returns 0'
+fi

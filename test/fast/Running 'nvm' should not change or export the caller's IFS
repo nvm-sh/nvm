@@ -1,0 +1,19 @@
+#!/bin/sh
+
+die () { IFS=' '; echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../nvm.sh
+
+IFS=':'
+nvm --version >/dev/null
+[ "${IFS}" = ':' ] || die "nvm changed the caller's IFS; got >${IFS}<"
+
+set -e
+nvm --version >/dev/null
+set +e
+[ "${IFS}" = ':' ] || die "nvm changed the caller's IFS under set -e; got >${IFS}<"
+
+! env | grep -q '^IFS=' || die 'nvm exported IFS'
+
+IFS=' '

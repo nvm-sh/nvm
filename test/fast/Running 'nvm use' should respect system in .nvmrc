@@ -1,0 +1,43 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  rm -f .nvmrc
+  if [ -f .nvmrc.orig ]; then
+    mv .nvmrc.orig .nvmrc
+  fi
+  if [ -n "${SYSTEM_DIR-}" ]; then
+    rm -rf "${SYSTEM_DIR}"
+  fi
+  if [ -n "${ORIG_PATH-}" ]; then
+    PATH="${ORIG_PATH}"
+  fi
+  unset -f nvm_print_npm_version
+}
+
+\. ../../nvm.sh
+
+if [ -f .nvmrc ]; then mv .nvmrc .nvmrc.orig; fi
+printf 'system\n' > .nvmrc
+ORIG_PATH="${PATH}"
+SYSTEM_VERSION="v0.0.0"
+SYSTEM_DIR="$(mktemp -d)"
+cat > "${SYSTEM_DIR}/node" <<EOF
+#!/bin/sh
+command printf '%s\n' "${SYSTEM_VERSION}"
+EOF
+chmod +x "${SYSTEM_DIR}/node"
+PATH="${SYSTEM_DIR}:${PATH}"
+nvm_print_npm_version() { command printf ' (npm v1.2.3)'; }
+
+NVMRC_PATH="${PWD}/.nvmrc"
+EXPECTED_OUTPUT="Found '${NVMRC_PATH}' with version <system>
+Now using system version of node: ${SYSTEM_VERSION}$(nvm_print_npm_version)"
+set +ex # since stderr is needed
+OUTPUT="$(nvm use 2>&1)"
+set -ex
+[ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "Could not use system via .nvmrc. Got >${OUTPUT}<, expected >${EXPECTED_OUTPUT}<"
+
+cleanup

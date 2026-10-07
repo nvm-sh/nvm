@@ -3,7 +3,7 @@
 die () { echo "$@" ; cleanup ; exit 1; }
 
 cleanup() {
-  unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs
+  unset -f nvm_download nvm_ls_remote nvm_ls_remote_iojs nvm_get_remote_aliases nvm_has_italics
   if [ -n "${TEMP_NVM_COLORS-}" ]; then
     export NVM_COLORS=TEMP_NVM_COLORS
   fi
@@ -12,6 +12,7 @@ cleanup() {
   mv "${NVM_DIR}/alias/lts-backup" "${NVM_DIR}/alias/lts"
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 if [ -n "${NVM_COLORS-}" ]; then
   export TEMP_NVM_COLORS=NVM_COLORS
@@ -31,6 +32,8 @@ echo "${STAR}" > "${NVM_DIR}/alias/lts/\*"
 printf '%s\n' "$(cat "${LTS_NAMES_PATH}" | tail -n +1)" | while IFS= read -r LTS; do
   cp "${NVM_DIR}/alias/lts-backup/${LTS}" "${NVM_DIR}/alias/lts/"
 done
+
+nvm_has_colors() { return 0; }
 
 nvm deactivate 2>/dev/null || die 'unable to deactivate'
 
@@ -66,12 +69,14 @@ printf '%s\n' "${LTS_LIST}" | while IFS= read -r LTS; do
   INDEX=$(($INDEX + 1))
 done
 
+nvm_has_colors() { return 1; }
 OUTPUT="$(nvm ls-remote lts/ARGON 2>&1)"
 EXIT_CODE=$?
+nvm_has_colors() { return 0; }
 [ $EXIT_CODE -eq 3 ] || die "nvm ls-remote lts/ARGON did not exit 3, got '${EXIT_CODE}'"
 
 EXPECTED_OUTPUT="LTS names must be lowercase
-            N/A"
+            N/A *"
 [ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/ARGON did not output expected error message; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 REMOTE="${PWD}/mocks/nvm_ls_remote.txt"
@@ -82,6 +87,9 @@ REMOTE_IOJS="${PWD}/mocks/nvm_ls_remote_iojs.txt"
 nvm_ls_remote_iojs() {
   cat "${REMOTE_IOJS}"
 }
+# the mock must not depend on whatever local aliases exist in $NVM_DIR
+nvm_get_remote_aliases() { :; }
+nvm_has_italics() { return 0; }
 
 EXPECTED_OUTPUT_PATH="${MOCKS_DIR}/nvm ls-remote.txt"
 OUTPUT="$(nvm ls-remote | sed 's/[ \t]*$//')"
