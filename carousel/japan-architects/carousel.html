@@ -26,7 +26,8 @@
   .who { position:absolute; right:112px; top:500px; text-align:right; font-size:34px; }
   .lead { position:absolute; left:115px; top:150px; width:1060px; }
   .art { position:absolute; left:300px; top:760px; width:1210px; height:770px; }
-  .art > img { width:100%; height:100%; object-fit:cover; display:block; }
+  .art .ph { display:flex; gap:14px; width:100%; height:100%; }
+  .art .ph img { flex:1; min-width:0; height:100%; object-fit:cover; display:block; }
   .credit { position:absolute; left:0; top:782px; font-family:'JetBrains Mono'; font-size:18px; color:#999; letter-spacing:0.04em; white-space:nowrap; }
   .portrait { display:none; position:absolute; right:100px; top:100px; width:400px; height:480px; object-fit:cover; object-position:50% 20%; filter:grayscale(1) contrast(1.12); }
   .has-portrait .portrait { display:block; }
@@ -77,7 +78,7 @@
   <div class="mono lead"><span class="hand">1914 ГОД.</span> ТАЦУНО КИНГО — ВЫПУСКНИК ПЕРВОГО В ЯПОНИИ КУРСА АРХИТЕКТУРЫ И УЧЕНИК КОНДОРА — ОТКРЫВАЕТ ТОКИЙСКИЙ ВОКЗАЛ: 335 МЕТРОВ КРАСНОГО КИРПИЧА С БЕЛЫМИ ПОЯСАМИ КАМНЯ И ДВУМЯ КУПОЛАМИ</div>
   <div class="hand num">01</div>
   <div class="mono who"><b>ТАЦУНО КИНГО</b><br>1854–1919</div>
-  <div class="art" data-art="station" data-photo="tokyo-station"></div>
+  <div class="art" data-art="station" data-photo="tokyo-station" data-pos="50% 75%"></div>
   <img class="portrait" data-portrait="tatsuno" alt="">
   <div class="hand tag" style="right:70px;top:640px">ТОКИЙСКИЙ<br>&nbsp;&nbsp;ВОКЗАЛ</div>
   <div class="mono after">ЯПОНИЯ ДОКАЗЫВАЕТ ЗАПАДУ, ЧТО ВЫУЧИЛА ЕГО ЯЗЫК. В 1945-М КУПОЛА СГОРЕЛИ ПРИ БОМБАРДИРОВКЕ, В 2012-М ИХ ВЕРНУЛИ ПО ИСХОДНЫМ ЧЕРТЕЖАМ ТАЦУНО.</div>
@@ -103,7 +104,7 @@
   <div class="mono lead"><span class="hand">1972 ГОД.</span> ГИНДЗА. КИСЁ КУРОКАВА ПРИКРУЧИВАЕТ 140 КАПСУЛ 2,5 × 4 МЕТРА К ДВУМ БЕТОННЫМ СТВОЛАМ. МЕТАБОЛИЗМ: ГОРОД — ОРГАНИЗМ, КВАРТИРА — КЛЕТКА, КОТОРУЮ МОЖНО ЗАМЕНИТЬ</div>
   <div class="hand num">03</div>
   <div class="mono who"><b>КИСЁ КУРОКАВА</b><br>1934–2007</div>
-  <div class="art" data-art="nakagin" data-photo="nakagin"></div>
+  <div class="art" data-art="nakagin" data-photo="nakagin,nakagin-2"></div>
   <img class="portrait" data-portrait="kurokawa" alt="">
   <div class="hand tag" style="right:50px;top:650px">НАКАГИН<br>&nbsp;&nbsp;КАПСУЛ ТАУЭР</div>
   <div class="mono after">КАПСУЛЫ ПЛАНИРОВАЛИ МЕНЯТЬ РАЗ В 25 ЛЕТ. НЕ ПОМЕНЯЛИ НИ ОДНОЙ. В 2022-М БАШНЮ РАЗОБРАЛИ, ЧАСТЬ КАПСУЛ СПАСЛИ И ОТРЕСТАВРИРОВАЛИ ДЛЯ МУЗЕЕВ.</div>
@@ -343,10 +344,12 @@ const find = async name => { for (const ext of ['jpg','jpeg','png','webp']) { co
 const credit = name => CREDITS[name] ? `ФОТО: ${CREDITS[name]}` : '';
 window.__ready = Promise.all([
   ...[...document.querySelectorAll('[data-art]')].map(async el => {
-    const img = await find(el.dataset.photo);
-    if (!img) { el.innerHTML = art[el.dataset.art](); return; }
-    el.innerHTML = ''; el.appendChild(img);
-    const c = credit(el.dataset.photo); if (c) el.insertAdjacentHTML('beforeend', `<div class="credit">${c}</div>`);
+    const names = el.dataset.photo.split(',');
+    const imgs = (await Promise.all(names.map(find))).filter(Boolean);
+    if (!imgs.length) { el.innerHTML = art[el.dataset.art](); return; }
+    el.innerHTML = '<div class="ph"></div>';
+    imgs.forEach(i => { if (el.dataset.pos) i.style.objectPosition = el.dataset.pos; el.firstChild.appendChild(i); });
+    const c = credit(names[0]); if (c) el.insertAdjacentHTML('beforeend', `<div class="credit">${c}</div>`);
   }),
   ...[...document.querySelectorAll('[data-portrait]')].map(async el => {
     const img = await find(el.dataset.portrait);
