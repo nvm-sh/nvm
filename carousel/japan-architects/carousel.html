@@ -32,8 +32,8 @@
   .portrait { display:none; position:absolute; right:90px; top:90px; width:420px; height:500px; object-fit:contain; object-position:50% 100%; filter:grayscale(1) contrast(1.15); }
   .has-portrait .portrait { display:block; }
   .has-portrait .num { right:auto; left:auto; top:420px; right:430px; font-size:190px; -webkit-text-stroke:3px var(--red); text-shadow:0 0 10px #fff; z-index:2; }
-  .has-portrait .who { top:622px; font-size:30px; }
-  .has-portrait .tag { margin-top:90px; }
+  .has-portrait .who { top:648px; font-size:30px; }
+  .has-portrait .tag { margin-top:110px; }
   .tag { position:absolute; font-size:118px; transform:rotate(-3deg); text-shadow:0 0 12px #fff, 0 0 4px #fff; }
   .after { position:absolute; left:415px; top:1590px; width:1110px; font-size:38px; }
   svg { display:block; }
@@ -355,7 +355,7 @@ window.__ready = Promise.all([
     const img = await find(el.dataset.portrait);
     if (!img) return;
     el.src = img.src; el.closest('.slide').classList.add('has-portrait');
-    const c = credit(el.dataset.portrait); if (c) el.insertAdjacentHTML('afterend', `<div class="credit" style="left:auto;right:100px;top:584px;width:400px;white-space:normal;text-align:right;font-size:15px;position:absolute">${c}</div>`);
+    const c = credit(el.dataset.portrait); if (c) el.insertAdjacentHTML('afterend', `<div class="credit" style="left:auto;right:100px;top:600px;width:420px;white-space:normal;text-align:right;font-size:15px;position:absolute">${c}</div>`);
   }),
 ]);
 
