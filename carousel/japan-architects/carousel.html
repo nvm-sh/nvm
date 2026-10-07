@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Japan Architects Carousel</title>
+<link href="https://fonts.googleapis.com/css2?family=Neucha&family=Noto+Serif+JP:wght@700&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet">
+<style>
+  :root { --red:#E3172B; --ink:#111; --grey:#9a9a9a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#ddd; display:flex; flex-direction:column; gap:40px; align-items:center; padding:40px 0; }
+  .slide { width:1818px; height:2000px; position:relative; background:#fff; overflow:hidden; }
+
+  .hand { font-family:'Neucha', cursive; color:var(--red); -webkit-text-stroke:2.5px var(--red); text-transform:uppercase; line-height:1; letter-spacing:-0.01em; }
+  .mono { font-family:'JetBrains Mono', monospace; font-weight:500; color:var(--ink); text-transform:uppercase; font-size:40px; line-height:1.42; letter-spacing:0.03em; }
+  .mono .hand { font-size:58px; -webkit-text-stroke:1.5px var(--red); letter-spacing:0; }
+  .mono b { font-weight:700; }
+  .jp { font-family:'Noto Serif JP', serif; font-weight:700; color:var(--red); text-transform:none; }
+  .abs { position:absolute; }
+
+  .logo { position:absolute; left:58px; bottom:38px; width:312px; mix-blend-mode:multiply; }
+  .quip { position:absolute; right:90px; bottom:70px; font-size:66px; -webkit-text-stroke:1.5px var(--red); text-align:right; }
+  .counter { position:absolute; right:96px; top:64px; font-family:'JetBrains Mono'; font-size:28px; color:var(--grey); letter-spacing:0.12em; }
+
+  /* architect slide template */
+  .num { position:absolute; right:110px; top:150px; font-size:330px; -webkit-text-stroke:4px var(--red); }
+  .who { position:absolute; right:112px; top:500px; text-align:right; font-size:34px; }
+  .lead { position:absolute; left:115px; top:150px; width:1060px; }
+  .art { position:absolute; left:300px; top:760px; width:1210px; height:770px; }
+  .tag { position:absolute; font-size:118px; transform:rotate(-3deg); text-shadow:0 0 12px #fff, 0 0 4px #fff; }
+  .after { position:absolute; left:415px; top:1590px; width:1110px; font-size:38px; }
+  svg { display:block; }
+</style>
+</head>
+<body>
+
+<!-- 01 COVER -->
+<section class="slide" id="s1">
+  <div class="mono abs" style="left:0;right:0;top:90px;text-align:center;font-size:52px;letter-spacing:0.12em">ИЛИ КАК ВЛЮБИТЬСЯ В ПУСТОТУ</div>
+  <div class="abs" style="left:259px;top:330px" id="enso"></div>
+  <div class="hand abs" style="left:0;right:0;top:470px;text-align:center;font-size:330px;-webkit-text-stroke:5px var(--red)">ЯПОНИЯ</div>
+  <div class="hand abs" style="left:0;right:0;top:820px;text-align:center;font-size:120px;color:var(--ink);-webkit-text-stroke:3px var(--ink)">5 АРХИТЕКТОРОВ</div>
+  <div class="hand abs" style="left:0;right:0;top:950px;text-align:center;font-size:120px;color:var(--ink);-webkit-text-stroke:3px var(--ink)">200 ЛЕТ</div>
+  <div class="mono abs" style="left:0;right:0;top:1130px;text-align:center;font-size:48px;letter-spacing:0.08em">1800 → 2026</div>
+  <img src="assets/giorno.png" class="abs" style="left:110px;bottom:40px;width:620px;mix-blend-mode:multiply">
+  <div class="mono abs" style="right:110px;top:1360px;width:860px;font-size:40px">
+    ОТ КОПИИ ЕВРОПЕЙСКОГО КИРПИЧА<br>ДО КРУПНЕЙШЕГО ДЕРЕВЯННОГО<br>СООРУЖЕНИЯ В МИРЕ.<br><br>ЛИСТАЙ →
+  </div>
+  <div class="hand quip">— А Я ДУМАЛ, ЭТО ПРОСТО БЕТОН</div>
+</section>
+
+<!-- 02 CONTEXT / TIMELINE -->
+<section class="slide" id="s2">
+  <div class="counter">02 / 08</div>
+  <div class="hand abs" style="left:115px;top:150px;font-size:120px">ДО ТОГО КАК ВСЁ НАЧАЛОСЬ</div>
+  <div class="mono abs" style="left:415px;top:340px;width:1060px">
+    <span class="hand">1800 ГОД.</span> ЯПОНИЯ ЗАКРЫТА ОТ МИРА УЖЕ 160 ЛЕТ. ДЕРЕВО, БУМАГА, РАЗДВИЖНЫЕ СТЕНЫ И <span class="jp">間</span> — «МА»: ПУСТОТА МЕЖДУ ВЕЩАМИ, КОТОРАЯ ВАЖНЕЕ САМИХ ВЕЩЕЙ.<br><br>
+    <span class="hand">1853.</span> ЧЁРНЫЕ КОРАБЛИ КОММОДОРА ПЕРРИ.<br>
+    <span class="hand">1868.</span> РЕВОЛЮЦИЯ МЭЙДЗИ.<br>
+    <span class="hand">1877.</span> В ТОКИО ПРИЕЗЖАЕТ БРИТАНЕЦ ДЖОСАЙЯ КОНДОР — УЧИТЬ ПЕРВЫХ ЯПОНСКИХ АРХИТЕКТОРОВ.<br><br>
+    ДАЛЬШЕ — 5 ИМЁН И 150 ЛЕТ, ЗА КОТОРЫЕ УЧЕНИК ПЕРЕРОС УЧИТЕЛЯ.
+  </div>
+  <div class="abs" style="left:110px;top:1270px" id="timeline"></div>
+  <img src="assets/giorno.png" class="logo">
+  <div class="hand quip">— ЛИСТАЙ, БУДЕТ ДУШНО</div>
+</section>
+
+<!-- 03..07 ARCHITECTS -->
+<section class="slide" id="s3">
+  <div class="counter">03 / 08</div>
+  <div class="mono lead"><span class="hand">1914 ГОД.</span> ТАЦУНО КИНГО — ВЫПУСКНИК ПЕРВОГО В ЯПОНИИ КУРСА АРХИТЕКТУРЫ И УЧЕНИК КОНДОРА — ОТКРЫВАЕТ ТОКИЙСКИЙ ВОКЗАЛ: 335 МЕТРОВ КРАСНОГО КИРПИЧА С БЕЛЫМИ ПОЯСАМИ КАМНЯ И ДВУМЯ КУПОЛАМИ</div>
+  <div class="hand num">01</div>
+  <div class="mono who"><b>ТАЦУНО КИНГО</b><br>1854–1919</div>
+  <div class="art" data-art="station"></div>
+  <div class="hand tag" style="right:70px;top:640px">ТОКИЙСКИЙ<br>&nbsp;&nbsp;ВОКЗАЛ</div>
+  <div class="mono after">ЯПОНИЯ ДОКАЗЫВАЕТ ЗАПАДУ, ЧТО ВЫУЧИЛА ЕГО ЯЗЫК. В 1945-М КУПОЛА СГОРЕЛИ ПРИ БОМБАРДИРОВКЕ, В 2012-М ИХ ВЕРНУЛИ ПО ИСХОДНЫМ ЧЕРТЕЖАМ ТАЦУНО.</div>
+  <img src="assets/giorno.png" class="logo">
+  <div class="hand quip">— ВЫУЧИЛ ЯЗЫК, НО С АКЦЕНТОМ</div>
+</section>
+
+<section class="slide" id="s4">
+  <div class="counter">04 / 08</div>
+  <div class="mono lead"><span class="hand">1964 ГОД.</span> ПЕРВАЯ ОЛИМПИАДА В АЗИИ. КЭНДЗО ТАНГЭ ПОДВЕШИВАЕТ КРЫШУ АРЕНЫ ЁЁГИ НА СТАЛЬНЫХ ТРОСАХ, КАК ВИСЯЧИЙ МОСТ. ЛИНИЯ КРОВЛИ ИЗГИБАЕТСЯ, КАК КОНЁК СТАРОГО ХРАМА</div>
+  <div class="hand num">02</div>
+  <div class="mono who"><b>КЭНДЗО ТАНГЭ</b><br>1913–2005</div>
+  <div class="art" data-art="yoyogi"></div>
+  <div class="hand tag" style="right:90px;top:660px">АРЕНА ЁЁГИ</div>
+  <div class="mono after">МОДЕРНИЗМ, НО УЖЕ С ЯПОНСКИМ ГОЛОСОМ. ДО ЭТОГО ТАНГЭ ПОСТРОИЛ МУЗЕЙ МИРА В ХИРОСИМЕ. В 1987-М — ПЕРВЫЙ ЯПОНСКИЙ ПРИТЦКЕР.</div>
+  <img src="assets/giorno.png" class="logo">
+  <div class="hand quip">— КРЫША, КОТОРАЯ ВИСИТ</div>
+</section>
+
+<section class="slide" id="s5">
+  <div class="counter">05 / 08</div>
+  <div class="mono lead"><span class="hand">1972 ГОД.</span> ГИНДЗА. КИСЁ КУРОКАВА ПРИКРУЧИВАЕТ 140 КАПСУЛ 2,5 × 4 МЕТРА К ДВУМ БЕТОННЫМ СТВОЛАМ. МЕТАБОЛИЗМ: ГОРОД — ОРГАНИЗМ, КВАРТИРА — КЛЕТКА, КОТОРУЮ МОЖНО ЗАМЕНИТЬ</div>
+  <div class="hand num">03</div>
+  <div class="mono who"><b>КИСЁ КУРОКАВА</b><br>1934–2007</div>
+  <div class="art" data-art="nakagin"></div>
+  <div class="hand tag" style="right:50px;top:650px">НАКАГИН<br>&nbsp;&nbsp;КАПСУЛ ТАУЭР</div>
+  <div class="mono after">КАПСУЛЫ ПЛАНИРОВАЛИ МЕНЯТЬ РАЗ В 25 ЛЕТ. НЕ ПОМЕНЯЛИ НИ ОДНОЙ. В 2022-М БАШНЮ РАЗОБРАЛИ, ЧАСТЬ КАПСУЛ СПАСЛИ И ОТРЕСТАВРИРОВАЛИ ДЛЯ МУЗЕЕВ.</div>
+  <img src="assets/giorno.png" class="logo">
+  <div class="hand quip">— БУДУЩЕЕ БЕЗ ОБНОВЛЕНИЙ</div>
+</section>
+
+<section class="slide" id="s6">
+  <div class="counter">06 / 08</div>
+  <div class="mono lead"><span class="hand">1989 ГОД.</span> ПРИГОРОД ОСАКИ. БЫВШИЙ БОКСЁР-САМОУЧКА БЕЗ АРХИТЕКТУРНОГО ДИПЛОМА ПРОРЕЗАЕТ В БЕТОННОЙ СТЕНЕ КРЕСТ. ДРУГОГО ДЕКОРА В ЦЕРКВИ НЕТ — ТОЛЬКО СВЕТ</div>
+  <div class="hand num">04</div>
+  <div class="mono who"><b>ТАДАО АНДО</b><br>Р. 1941</div>
+  <div class="art" data-art="church"></div>
+  <div class="hand tag" style="right:110px;top:660px">ЦЕРКОВЬ СВЕТА</div>
+  <div class="mono after">АНДО МЕЧТАЛ УБРАТЬ ИЗ КРЕСТА СТЕКЛО, ЧТОБЫ ВНУТРЬ ЗАХОДИЛ ВЕТЕР. БЮДЖЕТ БЫЛ МИЗЕРНЫЙ — ОН СДЕЛАЛ ИЗ ЭТОГО МАНИФЕСТ. 1995 — ПРИТЦКЕР.</div>
+  <img src="assets/giorno.png" class="logo">
+  <div class="hand quip">— МИНИМАЛИЗМ МНЕ НЕ ПО КАРМАНУ</div>
+</section>
+
+<section class="slide" id="s7">
+  <div class="counter">07 / 08</div>
+  <div class="mono lead"><span class="hand">2025 ГОД.</span> EXPO В ОСАКЕ. СУ ФУДЗИМОТО СОБИРАЕТ «БОЛЬШОЕ КОЛЬЦО» ОКОЛО 2 КМ ПО ОКРУЖНОСТИ: КЕДР И КИПАРИС НА ХРАМОВЫХ ВРУБКАХ «НУКИ», БЕЗ ЕДИНОГО ГВОЗДЯ В УЗЛАХ</div>
+  <div class="hand num">05</div>
+  <div class="mono who"><b>СУ ФУДЗИМОТО</b><br>Р. 1971</div>
+  <div class="art" data-art="ring"></div>
+  <div class="hand tag" style="right:60px;top:650px">БОЛЬШОЕ<br>&nbsp;&nbsp;КОЛЬЦО</div>
+  <div class="mono after">КНИГА ГИННЕССА: КРУПНЕЙШЕЕ ДЕРЕВЯННОЕ СООРУЖЕНИЕ В МИРЕ. КРУГ ЗАМКНУЛСЯ — ОТ ЧУЖОГО КИРПИЧА К СОБСТВЕННОМУ ДЕРЕВУ. ЧАСТЬ КОЛЬЦА РЕШИЛИ СОХРАНИТЬ.</div>
+  <img src="assets/giorno.png" class="logo">
+  <div class="hand quip">— 200 ЛЕТ, ЧТОБЫ ВЕРНУТЬСЯ К ДЕРЕВУ</div>
+</section>
+
+<!-- 08 OUTRO -->
+<section class="slide" id="s8">
+  <div class="counter">08 / 08</div>
+  <div class="hand abs" style="left:115px;top:150px;font-size:130px">ЧТО ЗАБРАТЬ С СОБОЙ</div>
+  <div class="mono abs" style="left:415px;top:360px;width:1060px">
+    <span class="hand">01.</span> СНАЧАЛА ВЫУЧИ ЧУЖОЙ ЯЗЫК — ПОТОМ ЗАГОВОРИ СВОИМ. <b>ТАЦУНО → ТАНГЭ</b><br><br>
+    <span class="hand">02.</span> БУДУЩЕЕ СТАРЕЕТ БЫСТРЕЕ ВСЕГО. ТРАДИЦИЯ — НЕТ. <b>КУРОКАВА → ФУДЗИМОТО</b><br><br>
+    <span class="hand">03.</span> ПУСТОТА — ТОЖЕ МАТЕРИАЛ. И САМЫЙ ДЕШЁВЫЙ. <b>АНДО</b>
+  </div>
+  <img src="assets/vesper.png" class="abs" style="right:40px;bottom:0;width:640px;mix-blend-mode:multiply">
+  <div class="hand abs" style="right:600px;top:1180px;font-size:76px;-webkit-text-stroke:1.5px var(--red);text-align:right">— А В МОСКВЕ<br>ТАК МОЖНО?</div>
+  <img src="assets/giorno.png" class="abs" style="left:70px;bottom:40px;width:420px;mix-blend-mode:multiply">
+  <div class="hand abs" style="left:520px;bottom:250px;font-size:66px;-webkit-text-stroke:1.5px var(--red)">— ПОГОВОРИМ<br>В КОММЕНТАРИЯХ</div>
+  <div class="mono abs" style="left:520px;bottom:90px;font-size:32px;color:#555">СОХРАНИ, ЧТОБЫ ДУШНИТЬ<br>НА СВИДАНИИ</div>
+</section>
+
+<script>
+const RED='#E3172B', INK='#111';
+const defs = `<defs>
+  <filter id="rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter>
+  <filter id="brush" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="2"/><feDisplacementMap in="SourceGraphic" scale="16"/></filter>
+  <pattern id="brick" width="14" height="10" patternUnits="userSpaceOnUse"><path d="M0 9.5H14" stroke="${RED}" stroke-width="2"/></pattern>
+  <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V12" stroke="${RED}" stroke-width="2.2"/></pattern>
+  <pattern id="hatchInk" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><path d="M0 0V10" stroke="${INK}" stroke-width="1.4" opacity=".55"/></pattern>
+  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>`;
+const svg = (w,h,body,plain='') => `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${defs}<g filter="url(#rough)" stroke-linecap="round" stroke-linejoin="round">${body}</g>${plain}</svg>`;
+const S = `stroke="${INK}" stroke-width="3" fill="none"`;
+
+// seeded random
+let seed = 11; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+
+const art = {
+  station() {
+    let b = '';
+    const G = 650;
+    // main long body
+    b += `<rect x="40" y="430" width="1120" height="${G-430}" fill="url(#brick)" ${S}/>`;
+    // end pavilions
+    for (const x of [70, 930]) {
+      b += `<rect x="${x}" y="370" width="200" height="${G-370}" fill="url(#brick)" ${S}/>`;
+      const cx = x + 100;
+      b += `<path d="M${x-6} 370 H${x+206}" ${S}/>`;
+      b += `<path d="M${x+8} 370 C${x+8} 300 ${cx-60} 250 ${cx} 215 C${cx+60} 250 ${x+192} 300 ${x+192} 370 Z" fill="#fff" ${S}/>`;
+      for (const k of [-50, 0, 50]) b += `<path d="M${cx+k*0.9} 370 Q${cx+k*0.55} 270 ${cx} 215" ${S} stroke-width="2"/>`;
+      b += `<rect x="${cx-14}" y="180" width="28" height="36" fill="#fff" ${S}/><path d="M${cx-18} 180 L${cx} 152 L${cx+18} 180 Z" fill="${RED}" ${S}/><path d="M${cx} 152 V128" ${S}/>`;
+    }
+    // central pavilion
+    b += `<rect x="510" y="395" width="180" height="${G-395}" fill="url(#brick)" ${S}/>`;
+    b += `<path d="M500 395 L540 345 H660 L700 395 Z" fill="#fff" ${S}/>`;
+    // stone bands
+    for (const y of [470, 540, 610]) b += `<path d="M40 ${y} H1160" stroke="${INK}" stroke-width="2"/><path d="M40 ${y+7} H1160" stroke="${INK}" stroke-width="1.2"/>`;
+    // windows
+    for (const y of [482, 552]) for (let x = 60; x < 1150; x += 34) {
+      if ((x > 268 && x < 300) || (x > 900 && x < 935) || (x > 500 && x < 520) || (x > 680 && x < 700)) continue;
+      b += `<rect x="${x}" y="${y}" width="16" height="44" fill="#fff" ${S} stroke-width="2"/>`;
+    }
+    for (const x of [100, 150, 200, 960, 1010, 1060]) b += `<path d="M${x} 440 V395 A13 13 0 0 1 ${x+26} 395 V440 Z" fill="#fff" ${S} stroke-width="2"/>`;
+    // entrance arches
+    for (const x of [540, 585, 630]) b += `<path d="M${x} ${G} V${G-26} A14 14 0 0 1 ${x+28} ${G-26} V${G}" fill="#fff" ${S}/>`;
+    // ground + people
+    b += `<path d="M0 ${G} H1200" ${S} stroke-width="4"/>`;
+    b += `<path d="M10 ${G+40} H1190" stroke="${INK}" stroke-width="1.5" stroke-dasharray="40 26"/>`;
+    for (const x of [330, 352, 760, 790, 1180]) b += `<circle cx="${x}" cy="${G-28}" r="6" ${S} stroke-width="2"/><path d="M${x} ${G-22} V${G-6} M${x-6} ${G} L${x} ${G-6} L${x+6} ${G}" ${S} stroke-width="2"/>`;
+    const t = `<text x="40" y="735" font-family="JetBrains Mono" font-size="20" fill="#777" letter-spacing="2">ФАСАД МАРУНОУТИ · 335 М · 1914 / 2012</text>`;
+    return svg(1210, 770, b, t);
+  },
+
+  yoyogi() {
+    let b = '';
+    const G = 610;
+    const q = (p0,p1,p2,t) => [(1-t)**2*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0], (1-t)**2*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1]];
+    const c = (p0,p1,p2,p3,t) => { const u=1-t; return [u**3*p0[0]+3*u*u*t*p1[0]+3*u*t*t*p2[0]+t**3*p3[0], u**3*p0[1]+3*u*u*t*p1[1]+3*u*t*t*p2[1]+t**3*p3[1]]; };
+    // cable segments (anchor → mast → sag → mast → anchor)
+    const A=[110,G-50], M1=[450,230], M2=[760,230], B=[1100,G-50];
+    const cab = [[A,[330,470],M1],[M1,[605,330],M2],[M2,[880,470],B]];
+    // roof rim
+    const R0=[110,G-50], R1=[360,500], R2=[850,500], R3=[1100,G-50];
+    // roof fill between cable and rim
+    b += `<path d="M${A} Q330,470 ${M1} Q605,330 ${M2} Q880,470 ${B} C${R2} ${R1} ${R0} Z" fill="url(#hatch)" stroke="none"/>`;
+    // ribs
+    for (let i = 1; i < 36; i++) {
+      const t = i/36, seg = Math.min(2, Math.floor(t*3)), lt = t*3 - seg;
+      const p = q(...cab[seg], lt), r = c(R0,R1,R2,R3,t);
+      b += `<path d="M${p} L${r}" stroke="${INK}" stroke-width="1.6"/>`;
+    }
+    b += `<path d="M${A} Q330,470 ${M1} Q605,330 ${M2} Q880,470 ${B}" ${S} stroke-width="5"/>`;
+    b += `<path d="M${A} Q60,${G-40} 40,${G-90}" ${S} stroke-width="4"/><path d="M${B} Q1150,${G-40} 1170,${G-90}" ${S} stroke-width="4"/>`;
+    b += `<path d="M${R0} C${R1} ${R2} ${R3}" ${S} stroke-width="4"/>`;
+    // masts
+    for (const m of [M1, M2]) b += `<path d="M${m[0]-12} ${G-70} L${m[0]} ${m[1]-40} L${m[0]+12} ${G-70}" fill="#fff" ${S} stroke-width="4"/>`;
+    // concrete base
+    b += `<path d="M140 ${G} L150 ${G-40} Q600 ${G-110} 1060 ${G-40} L1070 ${G}" fill="#fff" ${S}/>`;
+    for (let x = 230; x < 1000; x += 70) b += `<path d="M${x} ${G-2} V${G-60+Math.abs(600-x)/12}" stroke="${INK}" stroke-width="2"/>`;
+    b += `<path d="M0 ${G} H1210" ${S} stroke-width="4"/>`;
+    for (const x of [300, 322, 870, 900]) b += `<circle cx="${x}" cy="${G-28}" r="6" ${S} stroke-width="2"/><path d="M${x} ${G-22} V${G-6} M${x-6} ${G} L${x} ${G-6} L${x+6} ${G}" ${S} stroke-width="2"/>`;
+    const t = `<text x="40" y="700" font-family="JetBrains Mono" font-size="20" fill="#777" letter-spacing="2">ВИСЯЧАЯ КРОВЛЯ · СТАЛЬНЫЕ ТРОСЫ · ТОКИО 1964</text>`;
+    return svg(1210, 770, b, t);
+  },
+
+  nakagin() {
+    let b = '';
+    const G = 700, s = 74, d = 16;
+    seed = 5;
+    const capsule = (x, y, red) => {
+      const f = red ? RED : '#fff';
+      return `<path d="M${x} ${y} l${d} -${d} h${s} l-${d} ${d} Z" fill="#eee" ${S} stroke-width="2"/>`+
+             `<path d="M${x+s} ${y} l${d} -${d} v${s} l-${d} ${d} Z" fill="url(#hatchInk)" ${S} stroke-width="2"/>`+
+             `<rect x="${x}" y="${y}" width="${s}" height="${s}" fill="${f}" ${S} stroke-width="2.5"/>`+
+             `<circle cx="${x+s/2}" cy="${y+s/2}" r="22" fill="${red?'#fff':'#fff'}" ${S} stroke-width="2.5"/>`+
+             `<path d="M${x+s/2-22} ${y+s/2} H${x+s/2+22} M${x+s/2} ${y+s/2-22} V${y+s/2+22}" stroke="${INK}" stroke-width="1.2"/>`;
+    };
+    // cores
+    b += `<rect x="470" y="40" width="80" height="${G-40}" fill="#fff" ${S}/><rect x="660" y="80" width="80" height="${G-80}" fill="#fff" ${S}/>`;
+    for (let y = 60; y < G; y += 30) b += `<path d="M480 ${y} H540" stroke="${INK}" stroke-width="1"/>`;
+    for (let y = 100; y < G; y += 30) b += `<path d="M670 ${y} H730" stroke="${INK}" stroke-width="1"/>`;
+    const cols = [{x:236,top:150},{x:314,top:110},{x:392,top:70},{x:556,top:200},{x:746,top:120},{x:824,top:160},{x:902,top:230}];
+    const out = [];
+    for (const col of cols) for (let y = col.top; y < G - 60; y += s + 4) {
+      if (rnd() < 0.18) continue;
+      out.push([col.x, y]);
+    }
+    const redIdx = out.findIndex(([x,y]) => x === 824 && y > 300);
+    out.sort((a,b2) => b2[1]-a[1] || a[0]-b2[0]);
+    const red = out.filter(([x,y]) => x === 824 && y > 300).sort((a,c2)=>a[1]-c2[1])[0];
+    for (const p of out) b += capsule(p[0], p[1], p === red);
+    b += `<path d="M0 ${G} H1210" ${S} stroke-width="4"/>`;
+    // annotation to red capsule
+    b += `<path d="M1000 330 C1060 320 1090 300 1110 260" stroke="${RED}" stroke-width="3" fill="none"/><path d="M1096 268 L1112 256 L1114 276" stroke="${RED}" stroke-width="3" fill="none"/>`;
+    b += `<text x="1000" y="240" font-family="Neucha" font-size="44" fill="${RED}">В МУЗЕЙ</text>`;
+    const t = `<text x="40" y="745" font-family="JetBrains Mono" font-size="20" fill="#777" letter-spacing="2">140 КАПСУЛ · 2 СТВОЛА · ГИНДЗА 1972–2022</text>`;
+    return svg(1210, 770, b, t);
+  },
+
+  church() {
+    let b = '';
+    b += `<rect x="0" y="0" width="1210" height="770" fill="${INK}"/>`;
+    // floor perspective
+    b += `<path d="M0 770 L470 470 H1210 V770 Z" fill="#1d1d1d"/>`;
+    // light beams from the cross onto floor
+    b += `<path d="M845 90 L870 90 L1060 770 L640 770 Z" fill="url(#beam)" opacity=".35"/>`;
+    b += `<path d="M620 300 L1100 300 L1210 520 L470 560 Z" fill="url(#beam)" opacity=".18"/>`;
+    // cross cut
+    b += `<rect x="845" y="70" width="24" height="560" fill="#fff"/>`;
+    b += `<rect x="610" y="290" width="500" height="24" fill="#fff"/>`;
+    // pews (perspective lines)
+    for (let i = 0; i < 6; i++) {
+      const y = 560 + i*38, x0 = 30 + i*10, x1 = 420 + i*58;
+      b += `<path d="M${x0} ${y} L${x1} ${y-40}" stroke="#555" stroke-width="5"/><path d="M${x0} ${y+20} L${x1} ${y-20}" stroke="#444" stroke-width="3"/>`;
+    }
+    // concrete form-tie dots
+    for (let y = 60; y < 460; y += 90) for (let x = 60; x < 560; x += 110) b += `<circle cx="${x}" cy="${y}" r="4" fill="#3a3a3a"/>`;
+    b += `<path d="M560 0 V470" stroke="#2c2c2c" stroke-width="3"/>`;
+    const t = `<text x="40" y="745" font-family="JetBrains Mono" font-size="20" fill="#888" letter-spacing="2">ИБАРАКИ, ОСАКА · БЕТОН · СВЕТ · 1989</text>`;
+    return svg(1210, 770, b, t);
+  },
+
+  ring() {
+    let b = '';
+    const cx = 605, rx = 560, ry = 175, top = 330, bot = 470;
+    const P = (th, cy) => [cx + rx*Math.cos(th), cy + ry*Math.sin(th)];
+    // ground ellipse + inner field
+    b += `<ellipse cx="${cx}" cy="${bot+20}" rx="${rx+30}" ry="${ry+20}" fill="none" stroke="${INK}" stroke-width="1.2" stroke-dasharray="10 12"/>`;
+    // far half posts (thin grey)
+    for (let i = 0; i < 48; i++) {
+      const th = Math.PI + i*Math.PI/48;
+      const a = P(th, top), z = P(th, bot);
+      b += `<path d="M${a} L${z}" stroke="#999" stroke-width="2"/>`;
+    }
+    b += `<path d="M${P(Math.PI,top)} A${rx} ${ry} 0 0 1 ${P(0,top)}" stroke="#999" stroke-width="3" fill="none"/>`;
+    b += `<path d="M${P(Math.PI,(top+bot)/2)} A${rx} ${ry} 0 0 1 ${P(0,(top+bot)/2)}" stroke="#bbb" stroke-width="2" fill="none"/>`;
+    // pavilions inside
+    for (const [x,w,h] of [[330,120,60],[520,90,90],[700,140,50],[860,80,70]]) b += `<rect x="${x}" y="${bot-h}" width="${w}" height="${h}" fill="#fff" stroke="#999" stroke-width="2"/>`;
+    // near half: deck band with red hatch (green roof walkway)
+    b += `<path d="M${P(0,top)} A${rx} ${ry} 0 0 1 ${P(Math.PI,top)} L${P(Math.PI,top-26)} A${rx} ${ry} 0 0 0 ${P(0,top-26)} Z" fill="url(#hatch)" ${S}/>`;
+    // near posts
+    for (let i = 0; i <= 48; i++) {
+      const th = i*Math.PI/48;
+      const a = P(th, top), z = P(th, bot);
+      b += `<path d="M${a} L${z}" stroke="${INK}" stroke-width="${i%4===0?4:2.4}"/>`;
+    }
+    // nuki beams on near half
+    for (const y of [top, top+45, top+95, bot]) b += `<path d="M${P(0,y)} A${rx} ${ry} 0 0 1 ${P(Math.PI,y)}" ${S} stroke-width="${y===top||y===bot?4:2.5}"/>`;
+    // people on deck
+    for (const th of [1.2, 1.35, 1.9, 2.3]) { const [x,y] = P(th, top-26); b += `<circle cx="${x}" cy="${y-22}" r="5" ${S} stroke-width="2"/><path d="M${x} ${y-17} V${y-5}" ${S} stroke-width="2"/>`; }
+    // nuki joint detail box
+    const jx = 30, jy = 20;
+    b += `<rect x="${jx}" y="${jy}" width="220" height="200" fill="#fff" ${S} stroke-width="2"/>`;
+    b += `<rect x="${jx+90}" y="${jy+20}" width="40" height="165" fill="#fff" ${S}/>`;
+    b += `<rect x="${jx+20}" y="${jy+70}" width="180" height="26" fill="url(#hatch)" ${S}/>`;
+    b += `<rect x="${jx+20}" y="${jy+125}" width="180" height="26" fill="url(#hatch)" ${S}/>`;
+    b += `<path d="M${jx+135} ${jy+60} l10 -12 M${jx+135} ${jy+115} l10 -12" ${S} stroke-width="2"/>`;
+    b += `<text x="${jx+12}" y="${jy+190}" font-family="JetBrains Mono" font-size="17" fill="#777">УЗЕЛ «НУКИ» 貫</text>`;
+    const t = `<text x="40" y="745" font-family="JetBrains Mono" font-size="20" fill="#777" letter-spacing="2">ДЕРЕВО · ≈2 КМ · ОСАКА 2025</text>`;
+    return svg(1210, 770, b, t);
+  },
+};
+
+document.querySelectorAll('[data-art]').forEach(el => el.innerHTML = art[el.dataset.art]());
+
+// cover ensō
+(() => {
+  const r = 650, c = 650; let paths = '';
+  const arc = (a0, a1, w, op) => {
+    const p = a => [c + r*Math.cos(a), c + r*Math.sin(a)];
+    return `<path d="M${p(a0)} A${r} ${r} 0 1 1 ${p(a1)}" stroke="${RED}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linecap="round"/>`;
+  };
+  paths += arc(-1.2, -1.75, 70, 0.95);
+  paths += arc(-1.0, -1.9, 40, 0.5);
+  paths += arc(-0.9, -2.2, 14, 0.6);
+  document.getElementById('enso').innerHTML = `<svg width="1300" height="1300" viewBox="-60 -60 1420 1420">${defs}<g filter="url(#brush)" opacity=".28">${paths}</g></svg>`;
+})();
+
+// timeline 1800 → 2026
+(() => {
+  const W = 1600, x = y => 40 + (y - 1800) / 226 * (W - 80);
+  let b = `<path d="M${x(1800)} 200 H${x(2026)}" ${S} stroke-width="4"/><path d="M${x(2026)-14} 188 L${x(2026)} 200 L${x(2026)-14} 212" ${S} stroke-width="4"/>`;
+  for (let y = 1800; y <= 2020; y += 20) b += `<path d="M${x(y)} 190 V210" stroke="${INK}" stroke-width="2"/><text x="${x(y)}" y="250" text-anchor="middle" font-family="JetBrains Mono" font-size="22" fill="#777">${y}</text>`;
+  for (const y of [1853, 1868, 1877]) b += `<circle cx="${x(y)}" cy="200" r="9" fill="#fff" ${S}/><text x="${x(y)}" y="160" text-anchor="middle" font-family="JetBrains Mono" font-size="22" fill="#555">${y}</text>`;
+  const pts = [[1914,'ТАЦУНО',0,'middle'],[1964,'ТАНГЭ',1,'end'],[1972,'КУРОКАВА',0,'middle'],[1989,'АНДО',1,'start'],[2025,'ФУДЗИМОТО',0,'end']];
+  for (const [y, n, up, an] of pts) {
+    const yy = up ? 60 : 330;
+    b += `<circle cx="${x(y)}" cy="200" r="17" fill="${RED}"/><path d="M${x(y)} ${up?183:217} V${up?95:300}" stroke="${RED}" stroke-width="3"/>`;
+    b += `<text x="${x(y)+(an==='end'?20:an==='start'?-20:0)}" y="${yy + (up?0:28)}" text-anchor="${an}" font-family="Neucha" font-size="52" fill="${RED}" stroke="${RED}" stroke-width="1">${n}</text>`;
+    b += `<text x="${x(y)+(an==='end'?20:an==='start'?-20:0)}" y="${up ? yy+34 : yy+62}" text-anchor="${an}" font-family="JetBrains Mono" font-size="24" fill="${INK}">${y}</text>`;
+  }
+  b += `<text x="${x(1800)}" y="330" font-family="Neucha" font-size="44" fill="#999">ЭДО · САКОКУ</text>`;
+  document.getElementById('timeline').innerHTML = svg(W, 420, b);
+})();
+</script>
+</body>
+</html>
