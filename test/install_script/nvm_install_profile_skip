@@ -1,0 +1,62 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f install_nvm_from_git install_nvm_as_script nvm_detect_profile nvm_has
+  unset -f setup cleanup die
+  unset NVM_ENV METHOD PROFILE
+}
+
+setup() {
+  NVM_ENV=testing \. ../../install.sh
+
+  # Mock installation functions to do nothing
+  install_nvm_from_git() { :; }
+  install_nvm_as_script() { :; }
+
+  # Mock nvm_has to return true for git (to take the git path)
+  nvm_has() {
+    case "$1" in
+      git) return 0 ;;
+      xcode-select) return 1 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  # Mock nvm_detect_profile to return empty (no profile found)
+  nvm_detect_profile() {
+    echo ""
+  }
+}
+
+setup
+
+#
+# Test: When PROFILE="/dev/null", no "Profile not found" warning should appear
+#
+
+OUTPUT="$(PROFILE='/dev/null' METHOD='' NVM_DIR="$(mktemp -d)" nvm_do_install 2>&1)"
+if echo "$OUTPUT" | grep -q "Profile not found"; then
+  die "nvm_do_install should NOT show 'Profile not found' when PROFILE=/dev/null, got: $OUTPUT"
+fi
+
+#
+# Test: When PROFILE is empty/unset, the "Profile not found" warning SHOULD appear
+#
+
+OUTPUT="$(PROFILE='' METHOD='' NVM_DIR="$(mktemp -d)" nvm_do_install 2>&1)"
+if ! echo "$OUTPUT" | grep -q "Profile not found"; then
+  die "nvm_do_install should show 'Profile not found' when PROFILE is empty, got: $OUTPUT"
+fi
+
+#
+# Test: When PROFILE points to a non-existent file, the "Profile not found" warning SHOULD appear
+#
+
+OUTPUT="$(PROFILE='/nonexistent/profile' METHOD='' NVM_DIR="$(mktemp -d)" nvm_do_install 2>&1)"
+if ! echo "$OUTPUT" | grep -q "Profile not found"; then
+  die "nvm_do_install should show 'Profile not found' when PROFILE points to nonexistent file, got: $OUTPUT"
+fi
+
+cleanup

@@ -20,6 +20,16 @@ nvm_make_alias() {
   return 0
 }
 
+nvm_get_remote_aliases() {
+  # prevent local aliases from leaking into `nvm ls-remote` mocks
+  return 0
+}
+
+nvm_has_italics() {
+  # keep mocks independent of the local terminal's italics support
+  return 0
+}
+
 nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote.txt"
 nvm_ls_remote_iojs > "$MOCKS_DIR/nvm_ls_remote_iojs.txt"
 NVM_LTS=* nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote LTS.txt"

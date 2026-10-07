@@ -1,0 +1,197 @@
+#!/bin/sh
+
+ONESHOT=''
+cleanup () {
+  if [ -n "${ONESHOT}" ]; then
+    command rm -f "${ONESHOT}"
+  fi
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+set -e
+
+# assert about nvm, not about the caller's environment
+NVM_HAS_COLORS_WAS="${NVM_HAS_COLORS-}"
+unset NVM_HAS_COLORS
+
+ESC="$(printf '\033')"
+# The legend's letters are wrapped in color codes when the terminal supports
+# them, so every text assertion below compares against the output with any
+# escapes removed. That keeps these checks about structure and alignment only.
+strip_colors() { command sed "s/${ESC}\[[0-9;]*m//g"; }
+
+# Exact whole-line match against an already-captured string. Deliberately
+# pipe-free: `grep -q` exits at its first match and hands SIGPIPE to whatever
+# feeds it, which BSD sed swallows but GNU sed reports as "couldn't flush
+# stdout", polluting the test's stderr.
+contains_line () {
+  case "
+${2}
+" in
+    *"
+${1}
+"*) return 0 ;;
+  esac
+  return 1
+}
+
+# This test file is itself an executable named `nvm_print_color_legend`, so a
+# plain `command -v` keeps finding it long after the function is gone. Emptying
+# `PATH` for the lookup is the only reliable way to ask about the function
+# alone: filtering on a `/` is not enough, because dash and zsh report a bare
+# name for a current-directory match reached through an empty `PATH` component.
+is_function () {
+  [ -n "$(PATH=/nonexistent command -v "${1}" 2>/dev/null)" ]
+}
+
+is_function nvm_print_color_legend \
+  || die 'nvm_print_color_legend is not defined'
+
+OUTPUT="$(nvm_print_color_legend)"
+
+LINES="$(nvm_echo "${OUTPUT}" | command wc -l | command tr -d ' ')"
+[ "${LINES}" = 11 ] || die "expected 11 legend lines, got ${LINES}: ${OUTPUT}"
+
+PLAIN="$(nvm_echo "${OUTPUT}" | strip_colors)"
+
+# the two labels are literal, and their indentation lines the legend up under
+# the `nvm set-colors` entry in the help output
+contains_line '                                               Initial colors are:' "${PLAIN}" \
+  || die "the 'Initial colors are:' label is missing or misaligned: ${PLAIN}"
+contains_line '                                               Color codes:' "${PLAIN}" \
+  || die "the 'Color codes:' label is missing or misaligned: ${PLAIN}"
+
+# the default-palette sample, indented one level deeper than its label
+contains_line '                                                  bygre' "${PLAIN}" \
+  || die "the initial-colors sample is missing or misaligned: ${PLAIN}"
+
+# all eight rows of the code table, in order, each with both letter forms
+for ROW in \
+  'r/R = red / bold red' \
+  'g/G = green / bold green' \
+  'b/B = blue / bold blue' \
+  'c/C = cyan / bold cyan' \
+  'm/M = magenta / bold magenta' \
+  'y/Y = yellow / bold yellow' \
+  'k/K = black / bold black' \
+  'e/W = light grey / white' \
+; do
+  contains_line "                                                ${ROW}" "${PLAIN}" \
+    || die "color code row '${ROW}' is missing or misaligned: ${PLAIN}"
+done
+
+# the extracted function has to stay wired into the help output
+HELP_PLAIN="$(nvm --help | strip_colors)"
+contains_line '                                               Color codes:' "${HELP_PLAIN}" \
+  || die 'nvm --help no longer includes the color legend'
+
+# --- the fix: colors have to survive command substitution ------------------
+
+# the bug condition: inside `$( )`, `[ -t 1 ]` sees the capture pipe, so
+# `nvm_has_colors` always fails
+nvm_has_colors () { return 1; }
+
+WRAPPED="$(nvm_wrap_with_color_code 'b' 'b')"
+case "${WRAPPED}" in
+  *"${ESC}"*) die "expected plain text when colors are unsupported, got >${WRAPPED}<" ;;
+esac
+
+NVM_HAS_COLORS=1
+export NVM_HAS_COLORS
+WRAPPED="$(nvm_wrap_with_color_code 'b' 'b')"
+[ "${WRAPPED}" = "${ESC}[0;34mb${ESC}[0m" ] \
+  || die "expected a colored 'b' with NVM_HAS_COLORS=1, got >${WRAPPED}<"
+
+WRAPPED="$(nvm_wrap_with_color_code 'X' 'X')"
+[ "${WRAPPED}" = 'X' ] \
+  || die "expected plain text for an unknown color code, got >${WRAPPED}<"
+unset NVM_HAS_COLORS
+
+# `0` is what the resolving callers start from, so it must not read as truthy
+NVM_HAS_COLORS=0
+export NVM_HAS_COLORS
+WRAPPED="$(nvm_wrap_with_color_code 'b' 'b')"
+case "${WRAPPED}" in
+  *"${ESC}"*) die "NVM_HAS_COLORS=0 must not enable colors, got >${WRAPPED}<" ;;
+esac
+unset NVM_HAS_COLORS
+
+UNSUPPORTED="$(nvm_print_color_legend)"
+case "${UNSUPPORTED}" in
+  *"${ESC}"*) die "the legend emitted colors while unsupported: ${UNSUPPORTED}" ;;
+esac
+
+# Model the real asymmetry: yes to the first, direct call, no to every later
+# one. The state has to live in a file, because each `$( )` is a fresh subshell
+# that would take its own copy of an in-shell counter and answer yes every time.
+ONESHOT="$(command mktemp)"
+oneshot_reset () { nvm_echo 0 > "${ONESHOT}"; }
+nvm_has_colors () {
+  if [ "$(command cat "${ONESHOT}")" = 0 ]; then
+    nvm_echo 1 > "${ONESHOT}"
+    return 0
+  fi
+  return 1
+}
+
+oneshot_reset
+COLORED_OUTPUT="$(nvm_print_color_legend)"
+# `grep -c` drains its input, so it cannot SIGPIPE its producer
+COLORED="$(nvm_echo "${COLORED_OUTPUT}" | nvm_grep -c "${ESC}" || true)"
+[ "${COLORED}" = 9 ] \
+  || die "expected all 9 legend lines colored, got ${COLORED}: ${COLORED_OUTPUT}"
+
+# the sample specifically, which is the case #3896 reports
+case "${COLORED_OUTPUT}" in
+  *"${ESC}[0;34mb${ESC}[0m${ESC}[0;33my${ESC}[0m"*) : ;;
+  *) die "the initial-colors sample was not colored: ${COLORED_OUTPUT}" ;;
+esac
+
+# in a substitution, so `nvm_set_colors`' `export NVM_COLORS` stays contained
+oneshot_reset
+SET_COLORS_OUTPUT="$(nvm_set_colors 'bygre')"
+case "${SET_COLORS_OUTPUT}" in
+  *"${ESC}"*) : ;;
+  *) die "nvm_set_colors did not color its confirmation line: ${SET_COLORS_OUTPUT}" ;;
+esac
+
+# coloring must change only the escapes, never the text or the alignment
+COLORED_STRIPPED="$(nvm_echo "${COLORED_OUTPUT}" | strip_colors)"
+[ "${COLORED_STRIPPED}" = "${PLAIN}" ] \
+  || die 'the colored legend does not match the plain legend once escapes are stripped'
+
+# called directly rather than in a substitution, so a leak is observable at all
+oneshot_reset
+nvm_print_color_legend >/dev/null
+[ -z "${NVM_HAS_COLORS-}" ] \
+  || die "nvm_print_color_legend leaked NVM_HAS_COLORS=${NVM_HAS_COLORS}"
+
+# And `nvm unload` has to clean it up, the way it does its sibling helpers.
+# `set +e` inside the subshell so a non-zero `nvm unload` cannot abort it before
+# the lookup runs; its status is reported separately, so "unload failed" can
+# never be misreported as "the function survived".
+UNLOAD_OUT="$(
+  set +e
+  nvm unload >/dev/null 2>&1
+  # plain `echo`: `nvm unload` has just unset `nvm_echo`
+  echo "unload_rc=$?"
+  if is_function nvm_print_color_legend; then
+    echo present
+  else
+    echo gone
+  fi
+)"
+case "${UNLOAD_OUT}" in
+  *gone*) : ;;
+  *) die "nvm unload did not remove nvm_print_color_legend (${UNLOAD_OUT})" ;;
+esac
+
+if [ -n "${NVM_HAS_COLORS_WAS}" ]; then
+  NVM_HAS_COLORS="${NVM_HAS_COLORS_WAS}"
+  export NVM_HAS_COLORS
+fi
+
+cleanup
+echo "nvm_print_color_legend: passed"

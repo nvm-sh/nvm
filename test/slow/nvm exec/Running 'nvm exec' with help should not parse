@@ -6,4 +6,6 @@ die () { echo "$@" ; exit 1; }
 
 nvm use 0.10
 
-nvm exec stable -- node --help | grep 'Usage: node [options]' || die "Help menu should have been displayed for node and not nvm"
+# note: in a BRE, `[options]` is a bracket expression, so the literal `[options]`
+# in node's help output could never match; match the unbracketed prefix instead
+nvm exec stable -- node --help | grep 'Usage: node' || die "Help menu should have been displayed for node and not nvm"

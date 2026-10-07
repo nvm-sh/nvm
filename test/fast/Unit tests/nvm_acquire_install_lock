@@ -1,0 +1,56 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${NVM_DIR}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup
+  unset NVM_DIR NVM_INSTALL_LOCK NVM_INSTALL_LOCK_TIMEOUT NVM_INSTALL_LOCK_STALE \
+    version lock OUTPUT EXIT_CODE
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+type nvm_acquire_install_lock > /dev/null 2>&1 || die 'nvm_acquire_install_lock is not available'
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'unable to create temp NVM_DIR'
+version='v20.0.0'
+lock="$(nvm_cache_dir)/locks/$(nvm_install_lock_name "${version}")"
+
+# An empty version is a no-op that succeeds and takes no lock.
+unset NVM_INSTALL_LOCK
+nvm_acquire_install_lock '' || die 'acquiring with an empty version should succeed as a no-op'
+[ -z "${NVM_INSTALL_LOCK-}" ] || die 'an empty-version acquire should not record a lock'
+
+# Acquiring a free lock succeeds, creates the lock dir, and records its path.
+nvm_acquire_install_lock "${version}" || die 'acquiring a free lock should succeed'
+[ -d "${lock}" ] || die 'acquire should create the lock directory'
+[ "${NVM_INSTALL_LOCK}" = "${lock}" ] || die 'acquire should record NVM_INSTALL_LOCK'
+
+# Release it so the following contention checks start from a held-by-someone-else state.
+command rmdir "${lock}" 2>/dev/null
+unset NVM_INSTALL_LOCK
+
+# A lock held by "another process", with no wait budget, fails and names the path.
+command mkdir -p "${lock}"
+OUTPUT="$(NVM_INSTALL_LOCK_TIMEOUT=0 nvm_acquire_install_lock "${version}" 2>&1)"; EXIT_CODE=$?
+[ "${EXIT_CODE}" != "0" ] || die 'acquire should fail when the lock is held and the timeout is 0'
+case "${OUTPUT}" in
+  *"${lock}"*) ;;
+  *) die "the timeout message should name the lock path; got >${OUTPUT}<" ;;
+esac
+[ -d "${lock}" ] || die 'a failed acquire must not remove the held lock'
+
+# By default, a held lock is never stolen no matter how old it is.
+touch -t 202001010000 "${lock}" 2>/dev/null || die 'unable to age the lock dir'
+NVM_INSTALL_LOCK_TIMEOUT=0 nvm_acquire_install_lock "${version}" 2>/dev/null && die 'an old lock must not be stolen unless NVM_INSTALL_LOCK_STALE is set'
+[ -d "${lock}" ] || die 'the old lock should still be held'
+
+# With NVM_INSTALL_LOCK_STALE set, a sufficiently old lock is stolen and re-acquired.
+unset NVM_INSTALL_LOCK
+NVM_INSTALL_LOCK_STALE=1 NVM_INSTALL_LOCK_TIMEOUT=0 nvm_acquire_install_lock "${version}" || die 'a stale lock should be stolen when NVM_INSTALL_LOCK_STALE is set'
+[ "${NVM_INSTALL_LOCK}" = "${lock}" ] || die 'stealing a stale lock should acquire it'
+
+cleanup

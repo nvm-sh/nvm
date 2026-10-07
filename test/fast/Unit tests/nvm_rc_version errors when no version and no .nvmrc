@@ -1,0 +1,39 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  cd "${ORIG_PWD}" 2>/dev/null || true
+  [ -n "${TMP_DIR-}" ] && rm -rf "${TMP_DIR}"
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+ORIG_PWD="$(pwd)"
+
+# Run from a fresh, empty directory so no ambient .nvmrc above the test dir
+# is found by the upward lookup.
+TMP_DIR="$(mktemp -d)"
+cd "${TMP_DIR}" || die "could not cd to temp dir"
+
+# The message must name both halves of the problem: no argument AND no .nvmrc.
+try_err nvm_rc_version
+EXPECTED='No version provided and no .nvmrc file found'
+[ "_${CAPTURED_STDERR}" = "_${EXPECTED}" ] \
+  || die "nvm_rc_version did not print >${EXPECTED}<; got >${CAPTURED_STDERR}<"
+[ "_${CAPTURED_EXIT_CODE}" = "_1" ] \
+  || die "nvm_rc_version expected exit code 1; got ${CAPTURED_EXIT_CODE}"
+
+# NVM_SILENT suppresses the message but the call still fails.
+export NVM_SILENT=1
+try_err nvm_rc_version
+unset NVM_SILENT
+[ -z "${CAPTURED_STDERR}" ] \
+  || die "NVM_SILENT nvm_rc_version should be silent; got >${CAPTURED_STDERR}<"
+[ "_${CAPTURED_EXIT_CODE}" = "_1" ] \
+  || die "NVM_SILENT nvm_rc_version expected exit code 1; got ${CAPTURED_EXIT_CODE}"
+
+cleanup

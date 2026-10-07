@@ -1,0 +1,27 @@
+#!/bin/sh
+
+: nvm.sh
+\. ../../../nvm.sh
+\. ../../common.sh
+
+die () { echo "$@" ; exit 1; }
+
+set -e
+
+# Force nvm_has_colors to return true so nvm_list_aliases sets NVM_HAS_COLORS=1
+nvm_has_colors() { return 0; }
+
+nvm_alias_path() {
+  nvm_echo "../../../alias"
+}
+
+# nvm_list_aliases pipes through `sort`, which makes [ -t 1 ] false.
+# Before the fix in 2eb8bbd0, colors were lost inside the pipeline.
+# With the fix, NVM_HAS_COLORS is evaluated before the pipe and propagated.
+OUTPUT=$(nvm_list_aliases test-stable-1)
+COLORED_ARROW="$(command printf %b '\033[0;90m->\033[0m')"
+
+case "${OUTPUT}" in
+  *"${COLORED_ARROW}"*) : ;; # pass - colored arrow survived the pipeline
+  *) die "Expected colored arrow in nvm_list_aliases output through pipeline, got >${OUTPUT}<" ;;
+esac

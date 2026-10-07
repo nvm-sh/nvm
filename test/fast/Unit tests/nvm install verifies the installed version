@@ -1,0 +1,71 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${NVM_DIR}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup make_healthy make_broken \
+    nvm_remote_version nvm_has_executable nvm_binary_available \
+    nvm_install_binary nvm_install_source nvm_use_if_needed \
+    nvm_install_npm_if_needed nvm_install_default_packages nvm_ensure_default_set
+  unset NVM_DIR version version_path REINSTALL_MARKER OUTPUT EXIT_CODE
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+unset npm_config_prefix NPM_CONFIG_PREFIX
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'unable to create temp NVM_DIR'
+
+version='v20.0.0'
+version_path="${NVM_DIR}/versions/node/${version}"
+REINSTALL_MARKER="${NVM_DIR}/reinstalled"
+
+# Stay offline and keep the post-install activation path inert; only the
+# verification behaviour is under test here.
+nvm_remote_version() { nvm_echo "${version}"; }
+nvm_has_executable() { return 0; }
+nvm_binary_available() { return 0; }
+nvm_install_source() { return 1; }
+nvm_use_if_needed() { return 0; }
+nvm_install_npm_if_needed() { return 0; }
+nvm_install_default_packages() { return 0; }
+nvm_ensure_default_set() { return 0; }
+
+make_healthy() {
+  mkdir -p "${version_path}/bin"
+  printf '#!/bin/sh\necho "%s"\n' "${version}" > "${version_path}/bin/node"
+  chmod +x "${version_path}/bin/node"
+}
+make_broken() {
+  mkdir -p "${version_path}/bin"
+  : > "${version_path}/bin/node" # zero-byte but +x: passes nvm_is_version_installed
+  chmod +x "${version_path}/bin/node"
+}
+
+# 1) An install that reports success but leaves a broken node must fail loudly
+#    and must not be activated.
+rm -rf "${version_path}"
+nvm_install_binary() { make_broken; return 0; }
+OUTPUT="$(nvm install -b "${version}" 2>&1)"; EXIT_CODE=$?
+[ "${EXIT_CODE}" != "0" ] || die "a broken install should fail; got exit 0, output >${OUTPUT}<"
+case "${OUTPUT}" in
+  *'failed verification'*) ;;
+  *) die "expected a verification-failure message; got >${OUTPUT}<" ;;
+esac
+
+# 2) An already-present but broken version must not short-circuit as "already
+#    installed"; it must be reinstalled.
+rm -rf "${version_path}"
+make_broken
+nvm_install_binary() { command touch "${REINSTALL_MARKER}"; make_healthy; return 0; }
+OUTPUT="$(nvm install -b "${version}" 2>&1)"; EXIT_CODE=$?
+case "${OUTPUT}" in
+  *'is already installed'*) die "a broken version should not be treated as already installed: >${OUTPUT}<" ;;
+esac
+[ -f "${REINSTALL_MARKER}" ] || die 'a broken already-present version was not reinstalled'
+[ "${EXIT_CODE}" = "0" ] || die "the healing reinstall should succeed; got ${EXIT_CODE}, output >${OUTPUT}<"
+
+cleanup

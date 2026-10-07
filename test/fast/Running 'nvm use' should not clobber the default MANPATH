@@ -1,0 +1,68 @@
+#!/bin/sh
+
+set -e
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+# `--delete-prefix` covers only the npmrc files, so an inherited prefix in the
+# environment would still abort `nvm use`
+unset PREFIX npm_config_prefix NPM_CONFIG_PREFIX
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+# the block under test is gated on `nvm_has manpath`, and the Alpine CI images
+# ship no `manpath`; the output is recognizable so that a reintroduced
+# `$(manpath)` call fails the assertions instead of passing vacuously
+manpath() {
+  echo '/usr/share/man'
+}
+
+make_fake_node v0.10.2
+make_fake_node v0.10.3
+
+MAN_2="$(nvm_version_path v0.10.2)/share/man"
+MAN_3="$(nvm_version_path v0.10.3)/share/man"
+
+# nvm has to contribute the empty entry itself when there is nothing to preserve
+unset MANPATH
+nvm use --delete-prefix v0.10.2 --silent || die "Failed to activate v0.10.2"
+[ "${MANPATH}" = "${MAN_2}:" ] || die "MANPATH should be '${MAN_2}:'; got '${MANPATH}'"
+
+nvm deactivate --silent || die "Failed to deactivate v0.10.2"
+[ -z "${MANPATH-}" ] || die "MANPATH should be unset again; got '${MANPATH}'"
+
+# nvm's entry first, the empty entry last: the reverse of what a leading empty
+# entry produces
+MANPATH='/opt/foo/man'
+nvm use --delete-prefix v0.10.2 --silent || die "Failed to activate v0.10.2"
+[ "${MANPATH}" = "${MAN_2}:/opt/foo/man:" ] || die "MANPATH should be '${MAN_2}:/opt/foo/man:'; got '${MANPATH}'"
+
+# switching versions replaces nvm's entry without accruing more empty ones
+nvm use --delete-prefix v0.10.3 --silent || die "Failed to activate v0.10.3"
+[ "${MANPATH}" = "${MAN_3}:/opt/foo/man:" ] || die "MANPATH should be '${MAN_3}:/opt/foo/man:'; got '${MANPATH}'"
+
+nvm use --delete-prefix v0.10.2 --silent || die "Failed to reactivate v0.10.2"
+[ "${MANPATH}" = "${MAN_2}:/opt/foo/man:" ] || die "MANPATH should be '${MAN_2}:/opt/foo/man:'; got '${MANPATH}'"
+
+nvm deactivate --silent || die "Failed to deactivate v0.10.2"
+[ "${MANPATH}" = '/opt/foo/man:' ] || die "MANPATH should be '/opt/foo/man:'; got '${MANPATH}'"
+
+# a value with no empty entry at all still deactivates to nothing
+MANPATH="${MAN_2}"
+nvm deactivate --silent || die "Failed to deactivate v0.10.2"
+[ -z "${MANPATH-}" ] || die "MANPATH should be unset again; got '${MANPATH}'"
+
+# an empty entry the user placed themselves stays where they put it
+for TEST_MANPATH in ':/opt/foo/man' '/opt/foo/man:' '/a/man::/b/man'; do
+  MANPATH="${TEST_MANPATH}"
+
+  nvm use --delete-prefix v0.10.2 --silent || die "Failed to activate v0.10.2 with MANPATH '${TEST_MANPATH}'"
+  [ "${MANPATH}" = "${MAN_2}:${TEST_MANPATH}" ] || die "MANPATH should be '${MAN_2}:${TEST_MANPATH}'; got '${MANPATH}'"
+
+  nvm deactivate --silent || die "Failed to deactivate v0.10.2 with MANPATH '${TEST_MANPATH}'"
+  [ "${MANPATH}" = "${TEST_MANPATH}" ] || die "MANPATH should be '${TEST_MANPATH}'; got '${MANPATH}'"
+done

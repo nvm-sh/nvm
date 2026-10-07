@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -e
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+
+\. ../common.sh
+
+HELP="$(nvm --help 2>&1)"
+
+# Signatures for use/exec/run advertise `current` (mirroring `nvm which`).
+for EXPECTED in \
+  'nvm use [current | <version>]' \
+  'nvm exec [current | <version>] [<command>]' \
+  'nvm run [current | <version>] [<args>]' \
+  'nvm which [current | <version>]' \
+; do
+  case "${HELP}" in
+    *"${EXPECTED}"*) ;;
+    *) die "nvm --help did not contain signature >${EXPECTED}<" ;;
+  esac
+done
+
+# The .nvmrc fallback is documented as conditional, not free.
+case "${HELP}" in
+  *'Uses .nvmrc if version is omitted; otherwise errors.'*) ;;
+  *) die "nvm --help did not document the .nvmrc fallback caveat" ;;
+esac
+
+# The stale, looser phrasing must be gone.
+case "${HELP}" in
+  *'if available and version is omitted'*) die "nvm --help still contains the old .nvmrc phrasing" ;;
+esac
+
+# `nvm current` is documented as resolving via \$PATH, not .nvmrc.
+case "${HELP}" in
+  *'Display the active node version (resolved via $PATH; not affected by .nvmrc).'*) ;;
+  *) die "nvm --help did not document that 'nvm current' resolves via \$PATH" ;;
+esac

@@ -3,6 +3,7 @@
 cleanup () { unalias foo; unalias grep; }
 die () { echo "$@" ; cleanup ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 alias foo='bar'

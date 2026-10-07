@@ -12,6 +12,7 @@ typeset -f | awk '/ \(\) $/ && !/^main / {print $1}' > "${BEFORE}"
 env | grep -v PATH= | grep -v IFS= | grep -v NVM_ | grep -v TRAVIS_ | sort >> "${BEFORE}"
 
 set +e # TODO: fix
+: nvm.sh
 \. ../../nvm.sh
 set -e
 

@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "$(nvm_alias_path)/circular_test"
+}
+
+: nvm.sh
+\. ../../nvm.sh
+
+\. ../common.sh
+
+nvm_make_alias circular_test circular_test
+
+try_err nvm which circular_test
+EXPECTED_OUTPUT='The alias "circular_test" leads to an infinite loop. Aborting.'
+[ "_${CAPTURED_STDERR}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "'nvm which circular_test' did not output >${EXPECTED_OUTPUT}<; got >${CAPTURED_STDERR}<"
+[ "_$CAPTURED_EXIT_CODE" = "_8" ] || die "Expected exit code 8; got ${CAPTURED_EXIT_CODE}"
+
+cleanup

@@ -13,6 +13,7 @@ cleanup() {
   unset -f nvm_ls_remote nvm_ls_remote_iojs
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 \. ../../common.sh
 

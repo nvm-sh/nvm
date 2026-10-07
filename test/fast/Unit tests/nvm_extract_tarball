@@ -2,6 +2,7 @@
 
 die () { echo "$@" ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 [ "$(nvm_extract_tarball 2>&1)" = "nvm_extract_tarball requires exactly 4 arguments" ] || die 'incorrect error message with no args'

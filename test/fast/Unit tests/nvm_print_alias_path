@@ -7,6 +7,7 @@ cleanup () {
   unset -f nvm_alias nvm_version
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 NVM_ALIAS_DIR='path/to/the alias/dir'
@@ -23,12 +24,11 @@ nvm_alias() {
   echo ''
 }
 
-OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" foo | strip_colors)"
+try nvm_print_alias_path "$NVM_ALIAS_DIR" foo
+OUTPUT="$(echo "$CAPTURED_STDOUT" | strip_colors)"
 EXPECTED_OUTPUT=''
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" foo' should produce no output when nvm_alias does not; got '$OUTPUT'"
-
-EXIT_CODE="$(nvm_print_alias_path "$NVM_ALIAS_DIR" foo >/dev/null 2>&1 ; echo $?)"
-[ "$EXIT_CODE" = '0' ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" foo' should exit zero when nvm_alias produces no output; got $EXIT_CODE"
+[ "$CAPTURED_EXIT_CODE" = '0' ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" foo' should exit zero when nvm_alias produces no output; got $CAPTURED_EXIT_CODE"
 
 nvm_alias() {
   echo "\"$1\""
@@ -38,7 +38,7 @@ nvm_version() {
 }
 
 OUTPUT="$(nvm_print_alias_path "$NVM_ALIAS_DIR" "$NVM_ALIAS_DIR/blah" | strip_colors)"
-EXPECTED_OUTPUT='blah -> "blah" (-> v"blah")'
+EXPECTED_OUTPUT='blah -> "blah" (-> v"blah" *)'
 [ "$OUTPUT" = "$EXPECTED_OUTPUT" ] || die "'nvm_print_alias_path \"\$NVM_ALIAS_DIR\" \"\$NVM_ALIAS_DIR/blah\"' should strip alias dir and print nvm_alias output; got '$OUTPUT', expected '$EXPECTED_OUTPUT'"
 
 cleanup

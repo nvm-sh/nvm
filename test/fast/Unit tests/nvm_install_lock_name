@@ -1,0 +1,32 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${NVM_DIR}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup
+  unset NVM_DIR
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+type nvm_install_lock_name > /dev/null 2>&1 || die 'nvm_install_lock_name is not available'
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'unable to create temp NVM_DIR'
+
+# A normal version passes through unchanged.
+[ "$(nvm_install_lock_name 'v20.0.0')" = 'v20.0.0' ] || die "v20.0.0 => >$(nvm_install_lock_name 'v20.0.0')<"
+
+# Dots, hyphens, plus, and underscores are all preserved.
+[ "$(nvm_install_lock_name 'iojs-v1.0.0')" = 'iojs-v1.0.0' ] || die "iojs-v1.0.0 => >$(nvm_install_lock_name 'iojs-v1.0.0')<"
+
+# Path separators and other unsafe characters become underscores.
+[ "$(nvm_install_lock_name 'lts/*')" = 'lts__' ] || die "lts/* => >$(nvm_install_lock_name 'lts/*')<"
+[ "$(nvm_install_lock_name 'a b/c')" = 'a_b_c' ] || die "a b/c => >$(nvm_install_lock_name 'a b/c')<"
+
+# The empty string maps to the empty string (no trailing-newline artifact).
+[ "$(nvm_install_lock_name '')" = '' ] || die "empty => >$(nvm_install_lock_name '')<"
+
+cleanup

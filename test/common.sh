@@ -1,15 +1,41 @@
+# Runs a command once and captures stdout and exit code.
+# Suppresses xtrace in the subshell. Discards stderr.
+#
+# Sets: CAPTURED_STDOUT, CAPTURED_EXIT_CODE
+#
+# Usage:
+#   try nvm_version current
+#   [ "$CAPTURED_STDOUT" = "v20.0.0" ] || die "wrong output"
+#   [ "$CAPTURED_EXIT_CODE" = 0 ] || die "wrong exit code"
+try() {
+  CAPTURED_STDOUT="$(set +x; "$@" 2>/dev/null)" && CAPTURED_EXIT_CODE=0 || CAPTURED_EXIT_CODE=$?
+}
+
+# Runs a command once and captures stderr and exit code.
+# Suppresses xtrace in the subshell. Discards stdout.
+#
+# Sets: CAPTURED_STDERR, CAPTURED_EXIT_CODE
+#
+# Usage:
+#   try_err nvm_alias
+#   [ "$CAPTURED_STDERR" = "An alias is required." ] || die "wrong error"
+#   [ "$CAPTURED_EXIT_CODE" = 1 ] || die "wrong exit code"
+try_err() {
+  CAPTURED_STDERR="$(set +x; "$@" 2>&1 >/dev/null)" && CAPTURED_EXIT_CODE=0 || CAPTURED_EXIT_CODE=$?
+}
+
 assert_ok() {
   local FUNCTION=$1
   shift
 
-  $($FUNCTION $@) || die '"'"$FUNCTION $@"'" should have succeeded, but failed'
+  "$FUNCTION" "$@" || die '"'"$FUNCTION $@"'" should have succeeded, but failed'
 }
 
 assert_not_ok() {
   local FUNCTION=$1
   shift
 
-  ! $($FUNCTION $@) || die '"'"$FUNCTION $@"'" should have failed, but succeeded'
+  ! "$FUNCTION" "$@" || die '"'"$FUNCTION $@"'" should have failed, but succeeded'
 }
 
 strip_colors() {
@@ -20,8 +46,41 @@ strip_colors() {
 
 make_echo() {
   echo "#!/bin/sh" > "$1"
-  echo "echo \"${2}\"" > "$1"
+  echo "echo \"${2}\"" >> "$1"
   chmod a+x "$1"
+}
+
+# `command curl` bypasses shell functions and aliases, so tests that mock curl
+# must provide an actual executable on the PATH: this creates one in the given
+# directory. Invoked as `curl -V`, it prints ${VERSION_MESSAGE} (exported here
+# on the mock's behalf); any other invocation runs the body given as the
+# second argument, or fails.
+make_fake_curl() {
+  local FAKE_BIN_DIR
+  FAKE_BIN_DIR="${1-}"
+  [ -n "${FAKE_BIN_DIR}" ] || return 1
+
+  local FAKE_CURL_BODY
+  FAKE_CURL_BODY="${2-}"
+  if [ -z "${FAKE_CURL_BODY}" ]; then
+    FAKE_CURL_BODY='echo >&2 "This fake curl only takes one parameter, -V"
+exit 1'
+  fi
+
+  mkdir -p "${FAKE_BIN_DIR}" || return 2
+
+  {
+    echo '#!/bin/sh'
+    echo 'if [ "$#" -eq 1 ] && [ "$1" = "-V" ]; then'
+    echo '  echo "${VERSION_MESSAGE}"'
+    echo '  exit 0'
+    echo 'fi'
+    printf '%s\n' "${FAKE_CURL_BODY}"
+  } > "${FAKE_BIN_DIR}/curl"
+  chmod +x "${FAKE_BIN_DIR}/curl"
+
+  # the fake curl reads VERSION_MESSAGE from the environment
+  export VERSION_MESSAGE
 }
 
 make_fake_node() {

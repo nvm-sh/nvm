@@ -2,6 +2,7 @@
 
 die () { echo "$@" ; exit 1; }
 
+: nvm.sh
 \. ../../../nvm.sh
 
 TEST_PATH=/usr/bin:/usr/local/bin
@@ -41,6 +42,20 @@ NEW_PATH=`nvm_change_path "$EMPTY_PATH" "/bin" "$NVM_DIR/versions/node/v7.1.0"`
 NEW_PATH=`nvm_change_path "$EMPTY_PATH" "/bin" "$NVM_DIR/v0.1.2"`
 
 [ "$NEW_PATH" = "$NVM_DIR/v0.1.2/bin" ] || die "Not correctly prepended: $NEW_PATH "
+
+
+# empty entries select `man`'s own search path, so they have to survive intact
+MAN_PATH_WITH_EMPTY_ENTRIES=/opt/foo/man::/opt/bar/man:
+
+# New version dir
+NEW_PATH=`nvm_change_path "$MAN_PATH_WITH_EMPTY_ENTRIES" "/share/man" "$NVM_DIR/versions/node/v7.1.0"`
+
+[ "$NEW_PATH" = "$NVM_DIR/versions/node/v7.1.0/share/man:$MAN_PATH_WITH_EMPTY_ENTRIES" ] || die "Not correctly prepended: $NEW_PATH "
+
+# Replacing an existing version dir
+NEW_PATH=`nvm_change_path "$NVM_DIR/versions/node/v4.5.0/share/man::/opt/bar/man:" "/share/man" "$NVM_DIR/versions/node/v7.1.0"`
+
+[ "$NEW_PATH" = "$NVM_DIR/versions/node/v7.1.0/share/man::/opt/bar/man:" ] || die "Not correctly changed: $NEW_PATH "
 
 
 # https://github.com/nvm-sh/nvm/issues/1652#issuecomment-342571223

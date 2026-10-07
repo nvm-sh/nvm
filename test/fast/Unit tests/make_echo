@@ -1,0 +1,22 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../common.sh
+
+TMPFILE="$(mktemp)"
+trap 'rm -f "${TMPFILE}"' EXIT
+
+make_echo "${TMPFILE}" "hello_nvm" || die 'make_echo returned non-zero'
+
+# shebang must still be on line 1
+[ "$(head -n 1 "${TMPFILE}")" = '#!/bin/sh' ] \
+  || die 'make_echo overwrote the shebang'
+
+# script body must be present
+grep -q 'hello_nvm' "${TMPFILE}" \
+  || die 'make_echo did not write the echo body'
+
+# file must be executable
+[ -x "${TMPFILE}" ] \
+  || die 'make_echo did not chmod the file'

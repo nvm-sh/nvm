@@ -33,5 +33,10 @@ NVM_LS_CURRENT="$(nvm ls current | strip_colors | command grep -o v0.10.2)"
 [ "_$NVM_LS_CURRENT" = '_v0.10.2' ] || die "'nvm ls current' did not return '-> v0.10.2', >${NVM_LS_CURRENT}<\n$(nvm_ls)"
 
 NVM_ALIAS_DEFAULT="$(nvm alias default | strip_colors)"
-[ "_$NVM_ALIAS_DEFAULT" = "_default -> 0.10.2 (-> v0.10.2)" ] \
-  || die "'nvm alias default did not return 'default -> 0.10.2 (-> v0.10.2)', got >${NVM_ALIAS_DEFAULT}<\n$(nvm_ls)"
+[ "_$NVM_ALIAS_DEFAULT" = "_default -> 0.10.2 (-> v0.10.2 *)" ] \
+  || die "'nvm alias default' without colors did not return 'default -> 0.10.2 (-> v0.10.2 *)', got >${NVM_ALIAS_DEFAULT}<\n$(nvm_ls)"
+
+nvm_has_colors() { return 0; }
+NVM_ALIAS_DEFAULT_STRIPPED="$(nvm alias default | strip_colors)"
+[ "_$NVM_ALIAS_DEFAULT_STRIPPED" = "_default -> 0.10.2 (-> v0.10.2)" ] \
+  || die "'nvm alias default' with colors stripped did not return 'default -> 0.10.2 (-> v0.10.2)', got >${NVM_ALIAS_DEFAULT_STRIPPED}<\n$(nvm_ls)"

@@ -94,6 +94,8 @@ jobs:
           bash.exe "%USERPROFILE%\setup.sh"
 
   wsl_matrix:
+    permissions:
+      contents: none
     continue-on-error: true
     name: 'WSL nvm install'
     defaults:
@@ -105,10 +107,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # each line gets a pin, plus the newest setup-wsl offers for it; the
+        # newest only moves when the action's major does, so bumping the `uses:`
+        # ref below is what keeps this current
         wsl-distrib:
-          - Debian
-        # - Alpine # fails
+          - Debian-12
+          - Debian-13
+        # - Alpine-3.17 # fails
           - Ubuntu-20.04
+          - Ubuntu-24.04
           - Ubuntu-18.04
         npm-node-version:
           - '--lts'
@@ -125,14 +132,88 @@ jobs:
             npm-node-version: '21'
           - wsl-distrib: Ubuntu-18.04
             npm-node-version: '18'
+          # node v24+ doesn't work on WSL1 (exec format error)
+          - wsl-distrib: Debian-12
+            npm-node-version: '--lts'
+          - wsl-distrib: Debian-13
+            npm-node-version: '--lts'
+          - wsl-distrib: Ubuntu-20.04
+            npm-node-version: '--lts'
+          - wsl-distrib: Ubuntu-24.04
+            npm-node-version: '--lts'
         method:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v3
+      # For Ubuntu: install with packages directly
+      - if: ${{ !startsWith(matrix.wsl-distrib, 'Debian') }}
+        uses: Vampire/setup-wsl@v7
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
+
+      # For Debian, install without packages: `additional-packages` would run
+      # `apt-get update` before we get to fix up sources.list
+      # see https://github.com/Vampire/setup-wsl/issues/76
+      - if: ${{ startsWith(matrix.wsl-distrib, 'Debian') }}
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: ${{ matrix.wsl-distrib }}
+      # Debian's mirror layout shifts as a release ages out of LTS: main moves to
+      # archive.debian.org, and the security suite is both renamed and moved, on
+      # its own schedule. Offer every layout and let `apt-get update` discard the
+      # ones that 404, so this needs no edits as the image's release ages.
+      - if: ${{ startsWith(matrix.wsl-distrib, 'Debian') }}
+        name: 'Point apt at whichever mirrors still carry this release'
+        shell: 'wsl-bash {0}'
+        run: |
+          codename="$(. /etc/os-release && printf '%s' "${VERSION_CODENAME-}")"
+          if [ -z "${codename}" ]; then
+            echo 'no VERSION_CODENAME in /etc/os-release' >&2
+            exit 1
+          fi
+          # Debian 13 moved to deb822; drop both formats so what we write is the
+          # only thing apt reads, whichever release is pinned
+          rm -f /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources
+          {
+            echo "deb http://deb.debian.org/debian ${codename} main"
+            echo "deb http://archive.debian.org/debian ${codename} main"
+            echo "deb http://security.debian.org/debian-security ${codename}-security main"
+            echo "deb http://archive.debian.org/debian-security ${codename}-security main"
+            echo "deb http://archive.debian.org/debian-security ${codename}/updates main"
+          } >/etc/apt/sources.list
+          cat /etc/apt/sources.list
+      - if: ${{ startsWith(matrix.wsl-distrib, 'Debian') }}
+        name: 'Install packages with retries'
+        shell: 'wsl-bash {0}'
+        run: |
+          retry() {
+            local n=0
+            local max=3
+            local delay=5
+            while true; do
+              "$@" && break || {
+                n=$((n+1))
+                if [ $n -lt $max ]; then
+                  echo "Command failed. Attempt $n/$max. Retrying in $delay seconds..."
+                  sleep $delay
+                else
+                  echo "Command failed after $max attempts."
+                  return 1
+                fi
+              }
+            done
+          }
+          packages=(bash git curl ca-certificates wget)
+          retry apt-get update || true
+          if ! retry apt-get install --yes "${packages[@]}"; then
+            # a security index can outlive the pool objects it advertises, which
+            # no retry resolves; main is complete once a release is archived
+            sed -i '/debian-security/d' /etc/apt/sources.list
+            retry apt-get update || true
+            retry apt-get install --yes "${packages[@]}"
+          fi
+
       - name: Retrieve nvm on WSL
         run: |
           if [ -z "${{ matrix.method }}" ]; then
@@ -145,6 +226,8 @@ jobs:
           node -v
 
   wsl_matrix_unofficial:
+    permissions:
+      contents: none
     continue-on-error: true
     name: 'WSL nvm install'
     defaults:
@@ -158,7 +241,8 @@ jobs:
       fail-fast: false
       matrix:
         wsl-distrib:
-          - Alpine
+          - Alpine-3.17
+          - Alpine-3.23
         npm-node-version:
           - '--lts'
           - '21'
@@ -172,10 +256,11 @@ jobs:
           - ''
           - 'script'
     steps:
-      - uses: Vampire/setup-wsl@v3
+      - uses: Vampire/setup-wsl@v7
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
+
       - name: Retrieve nvm on WSL
         run: |
           if [ -z "${{ matrix.method }}" ]; then

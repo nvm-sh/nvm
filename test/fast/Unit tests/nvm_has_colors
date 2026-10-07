@@ -1,0 +1,30 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# nvm_has_colors should be false in command substitution (stdout is not a terminal)
+[ "$(nvm_has_colors; echo $?)" = "1" ] || die 'nvm_has_colors should be false in command substitution'
+
+# nvm_has_colors should be false when stdout goes to /dev/null
+! nvm_has_colors >/dev/null || die 'nvm_has_colors should be false when stdout goes to /dev/null'
+
+# nvm_has_colors should be false when stdout goes to a pipe
+(! nvm_has_colors || echo "boo!") | read && die 'nvm_has_colors should be false when stdout goes to a pipe'
+
+# nvm_has_colors should be false when NVM_NO_COLORS is set, even if stdout is a terminal
+if [ -t 1 ]; then
+  ! NVM_NO_COLORS="--no-colors" nvm_has_colors || die 'nvm_has_colors should be false when NVM_NO_COLORS is set'
+fi
+
+# nvm_has_colors should be true when stdout is a terminal and colors are supported
+if [ -t 1 ] && nvm_has tput && [ "$(command tput -T "${TERM:-vt100}" colors)" -ge 8 ]; then
+  nvm_has_colors || die 'nvm_has_colors should be true when stdout is a terminal with color support'
+fi
+
+# nvm_has_colors should be true when redirected to /dev/tty (if available)
+if (exec >/dev/tty) 2>/dev/null && nvm_has tput && [ "$(command tput -T "${TERM:-vt100}" colors)" -ge 8 ]; then
+  nvm_has_colors >/dev/tty || die 'nvm_has_colors should be true when stdout goes to /dev/tty'
+fi

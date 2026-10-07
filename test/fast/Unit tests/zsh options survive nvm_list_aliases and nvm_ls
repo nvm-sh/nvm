@@ -1,0 +1,54 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup () {
+  rm -rf "${TEST_DIR-}"
+  unset TEST_DIR NVM_DIR
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+# `local_options` is zsh-only, so no other shell can regress this
+[ -n "${ZSH_VERSION-}" ] || exit 0
+
+# an isolated NVM_DIR with a single known version, so that ambient versions
+# and aliases can not affect any assertions. `alias/lts` is deliberately absent:
+# globbing it is why `nvm_list_aliases` has to suppress `nomatch` at all.
+TEST_DIR="${PWD}/nvm_zsh_options_tmp"
+mkdir -p "${TEST_DIR}/alias" "${TEST_DIR}/versions/node/v24.13.0/bin" || die 'failed to create test dirs'
+make_echo "${TEST_DIR}/versions/node/v24.13.0/bin/node" 'v24.13.0' || die 'failed to create test node binary'
+echo '24' > "${TEST_DIR}/alias/default" || die 'failed to create default alias'
+NVM_DIR="${TEST_DIR}"
+
+setopt nomatch
+unsetopt markdirs
+unsetopt shwordsplit
+
+nvm_list_aliases >/dev/null 2>&1
+[[ -o nomatch ]] || die 'nvm_list_aliases left nomatch unset'
+
+nvm alias >/dev/null 2>&1
+[[ -o nomatch ]] || die '"nvm alias" left nomatch unset'
+
+nvm ls >/dev/null 2>&1
+[[ -o nomatch ]] || die '"nvm ls" left nomatch unset'
+
+# called directly rather than in a command substitution, so that anything
+# `nvm_ls` fails to restore is visible here
+nvm_ls 24 >/dev/null 2>&1
+[[ -o markdirs ]] && die 'nvm_ls left markdirs set'
+[[ -o shwordsplit ]] && die 'nvm_ls left shwordsplit set'
+
+# and the inverse: a caller that wants these on has to get them back
+setopt markdirs
+setopt shwordsplit
+
+nvm_ls 24 >/dev/null 2>&1
+[[ -o markdirs ]] || die 'nvm_ls left markdirs unset'
+[[ -o shwordsplit ]] || die 'nvm_ls left shwordsplit unset'
+
+cleanup

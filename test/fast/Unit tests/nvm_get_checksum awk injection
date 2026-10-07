@@ -1,0 +1,28 @@
+#!/bin/sh
+
+WORK="${TMPDIR:-/tmp}/nvm_get_checksum_awk.$$"
+PROOF="${WORK}/PWNED"
+
+cleanup () {
+  unset -f die cleanup nvm_download
+  rm -rf "${WORK}"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+mkdir -p "${WORK}"
+
+# GHSA-3c52-35h2-gfmm: nvm_get_checksum must treat the (untrusted, version-derived)
+# slug as awk data, never as awk program text.
+# given a crafted slug carrying an unconditional awk system() action
+# and a mock that supplies one SHASUMS record (so such an action would fire)
+nvm_download () { printf 'deadbeef  sometarball\n'; }
+# when nvm_get_checksum runs with that slug as its 4th argument
+rm -f "${PROOF}"
+nvm_get_checksum node std v1 'x" == $2) print $1} {system("touch${IFS}'"$PROOF"'")} #' tar.gz >/dev/null 2>&1
+# then the injected awk code must not execute
+[ ! -e "${PROOF}" ] || die 'awk injection fires in nvm_get_checksum (slug interpolated into awk program text)'
+
+cleanup
+echo 'nvm_get_checksum awk injection: passed'

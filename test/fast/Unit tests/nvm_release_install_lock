@@ -1,0 +1,35 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${NVM_DIR}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup
+  unset NVM_DIR NVM_INSTALL_LOCK version lock
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+type nvm_release_install_lock > /dev/null 2>&1 || die 'nvm_release_install_lock is not available'
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'unable to create temp NVM_DIR'
+version='v20.0.0'
+lock="$(nvm_cache_dir)/locks/$(nvm_install_lock_name "${version}")"
+
+# Releasing when nothing is held is a no-op that succeeds.
+unset NVM_INSTALL_LOCK
+nvm_release_install_lock || die 'releasing with no lock held should succeed'
+
+# After acquiring, releasing removes the lock directory and clears the marker.
+nvm_acquire_install_lock "${version}" || die 'setup: acquire failed'
+[ -d "${lock}" ] || die 'setup: lock dir should exist after acquire'
+nvm_release_install_lock || die 'release should succeed'
+[ ! -d "${lock}" ] || die 'release should remove the lock directory'
+[ -z "${NVM_INSTALL_LOCK-}" ] || die 'release should clear NVM_INSTALL_LOCK'
+
+# Releasing again is a harmless no-op.
+nvm_release_install_lock || die 'a second release should be a no-op'
+
+cleanup

@@ -13,6 +13,7 @@ cleanup() {
   unset TEMP_NVM_COLORS
 }
 
+: nvm.sh
 \. ../../../nvm.sh
 # NVM_COLORS is not set
 if [ -n ${NVM_COLORS} ]; then

@@ -1,0 +1,62 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${tmp_dir}" ] && [ -d "${tmp_dir}" ] && rm -rf "${tmp_dir}"
+  [ -n "${NVM_DIR}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup nvm_supports_xz
+  unset NVM_DIR tmp_dir version archi node_dir version_path
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# Use gzip so the test does not depend on xz being installed.
+nvm_supports_xz() { return 1; }
+
+set -ex
+
+type nvm_install_binary_extract > /dev/null 2>&1 || die 'nvm_install_binary_extract is not available'
+
+NVM_DIR="$(mktemp -d)"
+tmp_dir="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] && [ -n "${tmp_dir}" ] || die 'Unable to create temporary folders'
+
+version='v14.15.4'
+archi='linux-x64'
+node_dir="${tmp_dir}/node-${version}-${archi}"
+
+# Build a fake binary tarball: a runnable node, an npm symlink, and a lib tree.
+mkdir -p "${node_dir}/bin" "${node_dir}/lib/node_modules/npm/bin" || die 'setup mkdir failed'
+printf '#!/bin/sh\necho "%s"\n' "${version}" > "${node_dir}/bin/node"
+chmod +x "${node_dir}/bin/node"
+echo 'npm-cli' > "${node_dir}/lib/node_modules/npm/bin/npm-cli.js"
+( cd "${node_dir}/bin" && ln -s ../lib/node_modules/npm/bin/npm-cli.js npm )
+echo 'fresh' > "${node_dir}/lib/FRESHFILE"
+( cd "${tmp_dir}" && tar -czf "${node_dir}.tar.gz" "node-${version}-${archi}" ) || die 'unable to create fake tarball'
+
+# Pre-create a BROKEN, non-empty version directory: npm and a stale lib file
+# are present, but bin/node is missing - exactly the shape that wedges a
+# per-entry move onto existing non-empty subdirectories.
+version_path="${NVM_DIR}/versions/node/${version}"
+mkdir -p "${version_path}/bin" "${version_path}/lib" || die 'unable to stage broken dir'
+echo 'stale-npm' > "${version_path}/bin/npm"
+echo 'stale' > "${version_path}/lib/STALEFILE"
+[ -e "${version_path}/bin/node" ] && die 'precondition: broken dir should have no bin/node'
+
+# Extract over the broken directory.
+nvm_install_binary_extract 'linux' "${version}" "$(expr "${version}" : '.\(.*\)')" "${node_dir}.tar.gz" "${tmp_dir}/files" || die 'nvm_install_binary_extract failed over a broken version dir'
+
+# bin/node is restored and runnable.
+[ -x "${version_path}/bin/node" ] || die 'bin/node was not restored'
+[ "$("${version_path}/bin/node")" = "${version}" ] || die 'restored bin/node has wrong contents'
+
+# The stale file is gone: the whole directory was replaced, not merged into.
+[ ! -e "${version_path}/lib/STALEFILE" ] || die 'stale lib file survived: install was not atomic'
+[ -e "${version_path}/lib/FRESHFILE" ] || die 'fresh lib content missing after install'
+
+# npm resolves to the freshly installed target.
+[ -e "${version_path}/bin/npm" ] || die 'npm missing after install'
+
+cleanup
