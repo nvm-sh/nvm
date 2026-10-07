@@ -6,6 +6,7 @@ const path = require('path');
   const page = await browser.newPage({ viewport: { width: 1900, height: 2100 } });
   await page.goto('file://' + path.join(__dirname, 'carousel.html'));
   await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => window.__ready);
   await page.waitForTimeout(800);
   const slides = await page.$$('.slide');
   for (let i = 0; i < slides.length; i++) {

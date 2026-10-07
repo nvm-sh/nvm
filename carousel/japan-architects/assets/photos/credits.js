@@ -1,0 +1,1 @@
+window.CREDITS = window.CREDITS || {};

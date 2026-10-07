@@ -26,6 +26,13 @@
   .who { position:absolute; right:112px; top:500px; text-align:right; font-size:34px; }
   .lead { position:absolute; left:115px; top:150px; width:1060px; }
   .art { position:absolute; left:300px; top:760px; width:1210px; height:770px; }
+  .art > img { width:100%; height:100%; object-fit:cover; display:block; }
+  .credit { position:absolute; left:0; top:782px; font-family:'JetBrains Mono'; font-size:18px; color:#999; letter-spacing:0.04em; white-space:nowrap; }
+  .portrait { display:none; position:absolute; right:100px; top:100px; width:400px; height:480px; object-fit:cover; object-position:50% 20%; filter:grayscale(1) contrast(1.12); }
+  .has-portrait .portrait { display:block; }
+  .has-portrait .num { right:auto; left:auto; top:420px; right:430px; font-size:190px; -webkit-text-stroke:3px var(--red); text-shadow:0 0 10px #fff; z-index:2; }
+  .has-portrait .who { top:622px; font-size:30px; }
+  .has-portrait .tag { margin-top:90px; }
   .tag { position:absolute; font-size:118px; transform:rotate(-3deg); text-shadow:0 0 12px #fff, 0 0 4px #fff; }
   .after { position:absolute; left:415px; top:1590px; width:1110px; font-size:38px; }
   svg { display:block; }
@@ -70,7 +77,8 @@
   <div class="mono lead"><span class="hand">1914 ГОД.</span> ТАЦУНО КИНГО — ВЫПУСКНИК ПЕРВОГО В ЯПОНИИ КУРСА АРХИТЕКТУРЫ И УЧЕНИК КОНДОРА — ОТКРЫВАЕТ ТОКИЙСКИЙ ВОКЗАЛ: 335 МЕТРОВ КРАСНОГО КИРПИЧА С БЕЛЫМИ ПОЯСАМИ КАМНЯ И ДВУМЯ КУПОЛАМИ</div>
   <div class="hand num">01</div>
   <div class="mono who"><b>ТАЦУНО КИНГО</b><br>1854–1919</div>
-  <div class="art" data-art="station"></div>
+  <div class="art" data-art="station" data-photo="tokyo-station"></div>
+  <img class="portrait" data-portrait="tatsuno" alt="">
   <div class="hand tag" style="right:70px;top:640px">ТОКИЙСКИЙ<br>&nbsp;&nbsp;ВОКЗАЛ</div>
   <div class="mono after">ЯПОНИЯ ДОКАЗЫВАЕТ ЗАПАДУ, ЧТО ВЫУЧИЛА ЕГО ЯЗЫК. В 1945-М КУПОЛА СГОРЕЛИ ПРИ БОМБАРДИРОВКЕ, В 2012-М ИХ ВЕРНУЛИ ПО ИСХОДНЫМ ЧЕРТЕЖАМ ТАЦУНО.</div>
   <img src="assets/giorno.png" class="logo">
@@ -82,7 +90,8 @@
   <div class="mono lead"><span class="hand">1964 ГОД.</span> ПЕРВАЯ ОЛИМПИАДА В АЗИИ. КЭНДЗО ТАНГЭ ПОДВЕШИВАЕТ КРЫШУ АРЕНЫ ЁЁГИ НА СТАЛЬНЫХ ТРОСАХ, КАК ВИСЯЧИЙ МОСТ. ЛИНИЯ КРОВЛИ ИЗГИБАЕТСЯ, КАК КОНЁК СТАРОГО ХРАМА</div>
   <div class="hand num">02</div>
   <div class="mono who"><b>КЭНДЗО ТАНГЭ</b><br>1913–2005</div>
-  <div class="art" data-art="yoyogi"></div>
+  <div class="art" data-art="yoyogi" data-photo="yoyogi"></div>
+  <img class="portrait" data-portrait="tange" alt="">
   <div class="hand tag" style="right:90px;top:660px">АРЕНА ЁЁГИ</div>
   <div class="mono after">МОДЕРНИЗМ, НО УЖЕ С ЯПОНСКИМ ГОЛОСОМ. ДО ЭТОГО ТАНГЭ ПОСТРОИЛ МУЗЕЙ МИРА В ХИРОСИМЕ. В 1987-М — ПЕРВЫЙ ЯПОНСКИЙ ПРИТЦКЕР.</div>
   <img src="assets/giorno.png" class="logo">
@@ -94,7 +103,8 @@
   <div class="mono lead"><span class="hand">1972 ГОД.</span> ГИНДЗА. КИСЁ КУРОКАВА ПРИКРУЧИВАЕТ 140 КАПСУЛ 2,5 × 4 МЕТРА К ДВУМ БЕТОННЫМ СТВОЛАМ. МЕТАБОЛИЗМ: ГОРОД — ОРГАНИЗМ, КВАРТИРА — КЛЕТКА, КОТОРУЮ МОЖНО ЗАМЕНИТЬ</div>
   <div class="hand num">03</div>
   <div class="mono who"><b>КИСЁ КУРОКАВА</b><br>1934–2007</div>
-  <div class="art" data-art="nakagin"></div>
+  <div class="art" data-art="nakagin" data-photo="nakagin"></div>
+  <img class="portrait" data-portrait="kurokawa" alt="">
   <div class="hand tag" style="right:50px;top:650px">НАКАГИН<br>&nbsp;&nbsp;КАПСУЛ ТАУЭР</div>
   <div class="mono after">КАПСУЛЫ ПЛАНИРОВАЛИ МЕНЯТЬ РАЗ В 25 ЛЕТ. НЕ ПОМЕНЯЛИ НИ ОДНОЙ. В 2022-М БАШНЮ РАЗОБРАЛИ, ЧАСТЬ КАПСУЛ СПАСЛИ И ОТРЕСТАВРИРОВАЛИ ДЛЯ МУЗЕЕВ.</div>
   <img src="assets/giorno.png" class="logo">
@@ -106,7 +116,8 @@
   <div class="mono lead"><span class="hand">1989 ГОД.</span> ПРИГОРОД ОСАКИ. БЫВШИЙ БОКСЁР-САМОУЧКА БЕЗ АРХИТЕКТУРНОГО ДИПЛОМА ПРОРЕЗАЕТ В БЕТОННОЙ СТЕНЕ КРЕСТ. ДРУГОГО ДЕКОРА В ЦЕРКВИ НЕТ — ТОЛЬКО СВЕТ</div>
   <div class="hand num">04</div>
   <div class="mono who"><b>ТАДАО АНДО</b><br>Р. 1941</div>
-  <div class="art" data-art="church"></div>
+  <div class="art" data-art="church" data-photo="church-of-light"></div>
+  <img class="portrait" data-portrait="ando" alt="">
   <div class="hand tag" style="right:110px;top:660px">ЦЕРКОВЬ СВЕТА</div>
   <div class="mono after">АНДО МЕЧТАЛ УБРАТЬ ИЗ КРЕСТА СТЕКЛО, ЧТОБЫ ВНУТРЬ ЗАХОДИЛ ВЕТЕР. БЮДЖЕТ БЫЛ МИЗЕРНЫЙ — ОН СДЕЛАЛ ИЗ ЭТОГО МАНИФЕСТ. 1995 — ПРИТЦКЕР.</div>
   <img src="assets/giorno.png" class="logo">
@@ -118,7 +129,8 @@
   <div class="mono lead"><span class="hand">2025 ГОД.</span> EXPO В ОСАКЕ. СУ ФУДЗИМОТО СОБИРАЕТ «БОЛЬШОЕ КОЛЬЦО» ОКОЛО 2 КМ ПО ОКРУЖНОСТИ: КЕДР И КИПАРИС НА ХРАМОВЫХ ВРУБКАХ «НУКИ», БЕЗ ЕДИНОГО ГВОЗДЯ В УЗЛАХ</div>
   <div class="hand num">05</div>
   <div class="mono who"><b>СУ ФУДЗИМОТО</b><br>Р. 1971</div>
-  <div class="art" data-art="ring"></div>
+  <div class="art" data-art="ring" data-photo="grand-ring"></div>
+  <img class="portrait" data-portrait="fujimoto" alt="">
   <div class="hand tag" style="right:60px;top:650px">БОЛЬШОЕ<br>&nbsp;&nbsp;КОЛЬЦО</div>
   <div class="mono after">КНИГА ГИННЕССА: КРУПНЕЙШЕЕ ДЕРЕВЯННОЕ СООРУЖЕНИЕ В МИРЕ. КРУГ ЗАМКНУЛСЯ — ОТ ЧУЖОГО КИРПИЧА К СОБСТВЕННОМУ ДЕРЕВУ. ЧАСТЬ КОЛЬЦА РЕШИЛИ СОХРАНИТЬ.</div>
   <img src="assets/giorno.png" class="logo">
@@ -141,6 +153,7 @@
   <div class="mono abs" style="left:520px;bottom:90px;font-size:32px;color:#555">СОХРАНИ, ЧТОБЫ ДУШНИТЬ<br>НА СВИДАНИИ</div>
 </section>
 
+<script src="assets/photos/credits.js"></script>
 <script>
 const RED='#E3172B', INK='#111';
 const defs = `<defs>
@@ -323,7 +336,25 @@ const art = {
   },
 };
 
-document.querySelectorAll('[data-art]').forEach(el => el.innerHTML = art[el.dataset.art]());
+// Real photos from assets/photos/ win; line drawings are the fallback.
+const CREDITS = window.CREDITS || {};
+const load = src => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
+const find = async name => { for (const ext of ['jpg','jpeg','png','webp']) { const i = await load(`assets/photos/${name}.${ext}`); if (i) return i; } return null; };
+const credit = name => CREDITS[name] ? `ФОТО: ${CREDITS[name]}` : '';
+window.__ready = Promise.all([
+  ...[...document.querySelectorAll('[data-art]')].map(async el => {
+    const img = await find(el.dataset.photo);
+    if (!img) { el.innerHTML = art[el.dataset.art](); return; }
+    el.innerHTML = ''; el.appendChild(img);
+    const c = credit(el.dataset.photo); if (c) el.insertAdjacentHTML('beforeend', `<div class="credit">${c}</div>`);
+  }),
+  ...[...document.querySelectorAll('[data-portrait]')].map(async el => {
+    const img = await find(el.dataset.portrait);
+    if (!img) return;
+    el.src = img.src; el.closest('.slide').classList.add('has-portrait');
+    const c = credit(el.dataset.portrait); if (c) el.insertAdjacentHTML('afterend', `<div class="credit" style="left:auto;right:100px;top:584px;width:400px;white-space:normal;text-align:right;font-size:15px;position:absolute">${c}</div>`);
+  }),
+]);
 
 // cover ensō
 (() => {
