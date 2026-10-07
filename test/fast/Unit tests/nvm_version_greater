@@ -6,6 +6,8 @@ die () { echo "$@" ; exit 1; }
 \. ../../../nvm.sh
 
 nvm_version_greater 0.10.0 0.2.12 || die '"nvm_version_greater 0.10.0 0.2.12" did not return true'
+nvm_version_greater 0.20.12 0.10.0 || die '"nvm_version_greater 0.20.12 0.10.0" did not return true'
+nvm_version_greater v18.20.0 v18.19.9 || die '"nvm_version_greater v18.20.0 v18.19.9" did not return true'
 
 if nvm_version_greater 0.10.0 0.20.12; then
   die '"nvm_version_greater 0.10.0 0.20.12" returned true'
@@ -14,3 +16,40 @@ fi
 if nvm_version_greater 0.10.0 0.10.0; then
   die '"nvm_version_greater" returned false for the same two versions'
 fi
+
+if nvm_version_greater v18.20.0 v18.20.0; then
+  die '"nvm_version_greater v18.20.0 v18.20.0" returned true for the same two versions'
+fi
+
+if nvm_version_greater v18.19.9 v18.20.0; then
+  die '"nvm_version_greater v18.19.9 v18.20.0" returned true'
+fi
+
+# a partial version is not a plain `x.y.z`, so it keeps the awk comparison
+nvm_version_greater 0.10 0.2.12 || die '"nvm_version_greater 0.10 0.2.12" did not return true'
+
+# the comparison must not write anything to stdout (zsh's `typeset` prints a
+# local variable when it is redeclared)
+OUTPUT="$(nvm_version_greater 0.10.0 0.2.12 2>&1)"
+[ -z "${OUTPUT}" ] || die "nvm_version_greater 0.10.0 0.2.12 wrote output: '${OUTPUT}'"
+
+# `nvm_version_greater` must not fork a command for a plain `x.y.z` pair:
+# mock `awk`, which the comparison used, and fail if it runs
+TEST_DIR="$(pwd)/nvm_version_greater_tmp"
+[ ! -e "${TEST_DIR}" ] && mkdir "${TEST_DIR}"
+MOCK_BIN="${TEST_DIR}/bin"
+mkdir -p "${MOCK_BIN}"
+{
+  echo '#!/bin/sh'
+  echo 'echo "awk was called" >&2'
+  echo 'exit 1'
+} > "${MOCK_BIN}/awk"
+chmod +x "${MOCK_BIN}/awk"
+
+PATH="${MOCK_BIN}:${PATH}" nvm_version_greater 0.10.0 0.2.12 \
+  || die 'nvm_version_greater 0.10.0 0.2.12 forked a command'
+
+PATH="${MOCK_BIN}:${PATH}" nvm_version_greater v18.20.0 v18.19.9 \
+  || die 'nvm_version_greater v18.20.0 v18.19.9 forked a command'
+
+rm -rf "${TEST_DIR}"

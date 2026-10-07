@@ -796,33 +796,81 @@ nvm_curl_version() {
   command curl -V | command awk '{ if ($1 == "curl") print $2 }' | command sed 's/-.*$//g'
 }
 
+# Try to do some shell magic to do semver greater-than maths.
+# Fall through to the expensive test by calling `awk` if we can't be sure.
 nvm_version_greater() {
-  command awk 'BEGIN {
+  local NVM_LEFT
+  NVM_LEFT="${1#v}"
+  local NVM_RIGHT
+  NVM_RIGHT="${2#v}"
+  local NVM_PLAIN
+  # a third, more complex, argument of `1` (a flag) compares equal versions as true; `0` or
+  # no argument compares them as false.
+  local NVM_OR_EQUAL
+  NVM_OR_EQUAL="${3:-0}"
+  NVM_PLAIN='true'
+
+  # `x.y.z` operands are compared in shell arithmetic, which avoids a fork,
+  # except when a group is long enough to overflow it; anything else - partial
+  # versions, prereleases, and malformed operands - keeps the comparison this
+  # function has always made
+  case "${NVM_LEFT}" in
+    '' | *[!0-9.]* | *..* | .* | *. | *.*.*.*) NVM_PLAIN='false' ;;
+    *.*.*) ;;
+    *) NVM_PLAIN='false' ;;
+  esac
+  case "${NVM_RIGHT}" in
+    '' | *[!0-9.]* | *..* | .* | *. | *.*.*.*) NVM_PLAIN='false' ;;
+    *.*.*) ;;
+    *) NVM_PLAIN='false' ;;
+  esac
+
+  if [ "${NVM_PLAIN}" = 'true' ] && [ "${#NVM_LEFT}" -lt 19 ] && [ "${#NVM_RIGHT}" -lt 19 ]; then
+    local NVM_GROUP
+    local NVM_LEFT_GROUP
+    local NVM_RIGHT_GROUP
+    NVM_GROUP=1
+    while [ "${NVM_GROUP}" -le 3 ]; do
+      NVM_LEFT_GROUP="${NVM_LEFT%%.*}"
+      NVM_LEFT="${NVM_LEFT#*.}"
+      NVM_RIGHT_GROUP="${NVM_RIGHT%%.*}"
+      NVM_RIGHT="${NVM_RIGHT#*.}"
+      if [ "${NVM_LEFT_GROUP}" -lt "${NVM_RIGHT_GROUP}" ]; then
+        return 1
+      elif [ "${NVM_LEFT_GROUP}" -gt "${NVM_RIGHT_GROUP}" ]; then
+        return 0
+      fi
+      NVM_GROUP=$((NVM_GROUP + 1))
+    done
+    if [ "${NVM_OR_EQUAL}" = 1 ]; then
+      return 0
+    fi
+    return 1
+  fi
+  command awk -v or_equal="${NVM_OR_EQUAL}" 'BEGIN {
     if (ARGV[1] == "" || ARGV[2] == "") exit(1)
     split(ARGV[1], a, /\./);
     split(ARGV[2], b, /\./);
     for (i=1; i<=3; i++) {
       if (a[i] && a[i] !~ /^[0-9]+$/) exit(2);
-      if (b[i] && b[i] !~ /^[0-9]+$/) { exit(0); }
+      if (b[i] && b[i] !~ /^[0-9]+$/) {
+        # a non-numeric right-hand group (a prerelease): the left is greater,
+        # unless equality counts, in which case the comparison below decides
+        if (or_equal != 1) { exit(0); }
+      }
       if (a[i] < b[i]) exit(3);
       else if (a[i] > b[i]) exit(0);
     }
+    if (or_equal == 1) { exit(0); }
     exit(4)
-  }' "${1#v}" "${2#v}"
+  }' "${NVM_LEFT}" "${NVM_RIGHT}"
 }
 
+# Try to do some shell magic to do semver greater-than or equal-to maths.
+# Fall through to the expensive test by calling `awk` if we can't be sure.
+# see `nvm_version_greater`
 nvm_version_greater_than_or_equal_to() {
-  command awk 'BEGIN {
-    if (ARGV[1] == "" || ARGV[2] == "") exit(1)
-    split(ARGV[1], a, /\./);
-    split(ARGV[2], b, /\./);
-    for (i=1; i<=3; i++) {
-      if (a[i] && a[i] !~ /^[0-9]+$/) exit(2);
-      if (a[i] < b[i]) exit(3);
-      else if (a[i] > b[i]) exit(0);
-    }
-    exit(0)
-  }' "${1#v}" "${2#v}"
+  nvm_version_greater "${1-}" "${2-}" 1
 }
 
 nvm_version_dir() {
