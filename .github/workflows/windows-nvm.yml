@@ -157,11 +157,13 @@ jobs:
         name: 'Install packages with retries'
         shell: 'wsl-bash {0}'
         run: |
+          # never prompt: an upgrade (e.g. libssl asking to restart services) would wait forever
+          export DEBIAN_FRONTEND=noninteractive
           attempt=1
           delay=15
           while true; do
-            apt-get -o Acquire::Retries=5 update || true
-            if apt-get -o Acquire::Retries=5 install --yes bash git curl ca-certificates wget; then
+            apt-get -o Acquire::Retries=5 update < /dev/null || true
+            if apt-get -o Acquire::Retries=5 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install --yes bash git curl ca-certificates wget < /dev/null; then
               break
             fi
             if [ "${attempt}" -ge 8 ]; then
@@ -227,14 +229,17 @@ jobs:
               }
             done
           }
+          # never prompt: an upgrade (e.g. libssl asking to restart services) would wait forever
+          export DEBIAN_FRONTEND=noninteractive
           packages=(bash git curl ca-certificates wget)
-          retry apt-get update || true
-          if ! retry apt-get install --yes "${packages[@]}"; then
+          install_options=(-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install --yes)
+          retry apt-get update < /dev/null || true
+          if ! retry apt-get "${install_options[@]}" "${packages[@]}" < /dev/null; then
             # a security index can outlive the pool objects it advertises, which
             # no retry resolves; main is complete once a release is archived
             sed -i '/debian-security/d' /etc/apt/sources.list
-            retry apt-get update || true
-            retry apt-get install --yes "${packages[@]}"
+            retry apt-get update < /dev/null || true
+            retry apt-get "${install_options[@]}" "${packages[@]}" < /dev/null
           fi
 
       - name: Retrieve nvm on WSL

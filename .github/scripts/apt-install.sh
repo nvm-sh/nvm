@@ -20,11 +20,14 @@ if [ "$(id -u)" != '0' ]; then
 fi
 
 apt_get() {
+  # never prompt: an upgrade (e.g. libssl asking to restart services) would wait forever
   $SUDO env DEBIAN_FRONTEND=noninteractive apt-get \
     -o Acquire::Retries=5 \
     -o Acquire::http::Timeout=30 \
     -o Acquire::https::Timeout=30 \
-    "$@"
+    -o Dpkg::Options::=--force-confdef \
+    -o Dpkg::Options::=--force-confold \
+    "$@" < /dev/null
 }
 
 ATTEMPT=1
