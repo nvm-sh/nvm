@@ -61,15 +61,22 @@ jobs:
           skip-ls-check: true
       - run: npm ls urchin
       - run: npx which urchin
+      # Pull through Google's Docker Hub mirror, which is not subject to Docker Hub's
+      # anonymous pull rate limits, and cache the image; a cached image is only used
+      # if it matches the digests the registry serves now
+      - name: Resolve the ubuntu:16.04 image digests
+        id: image
+        run: sh .github/scripts/docker-image.sh resolve mirror.gcr.io/library/ubuntu:16.04 >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/docker-image.tar
+          key: docker-image-${{ runner.arch }}-${{ steps.image.outputs.key }}
+      - name: Load or pull the ubuntu:16.04 image
+        env:
+          DIGESTS: ${{ steps.image.outputs.digests }}
+        run: sh .github/scripts/docker-image.sh ensure mirror.gcr.io/library/ubuntu:16.04 "${RUNNER_TEMP}/docker-image.tar"
       - name: Run xenial tests in container
         run: |
-          # Pull through Google's Docker Hub mirror, which is not subject to Docker Hub's
-          # anonymous pull rate limits; retry to tolerate transient registry failures
-          for i in 1 2 3 4 5; do
-            docker pull mirror.gcr.io/library/ubuntu:16.04 && break
-            echo "docker pull failed, attempt $i/5"
-            sleep $((i * 5))
-          done
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
