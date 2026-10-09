@@ -41,6 +41,7 @@ jobs:
             production.cloudfront.docker.com:443
             registry-1.docker.io:443
             auth.docker.io:443
+            mirror.gcr.io:443
       - uses: actions/checkout@v6
         id: checkout
         continue-on-error: true
@@ -62,9 +63,10 @@ jobs:
       - run: npx which urchin
       - name: Run xenial tests in container
         run: |
-          # Retry the image pull to tolerate transient Docker registry failures
+          # Pull through Google's Docker Hub mirror, which is not subject to Docker Hub's
+          # anonymous pull rate limits; retry to tolerate transient registry failures
           for i in 1 2 3 4 5; do
-            docker pull ubuntu:16.04 && break
+            docker pull mirror.gcr.io/library/ubuntu:16.04 && break
             echo "docker pull failed, attempt $i/5"
             sleep $((i * 5))
           done
@@ -75,7 +77,7 @@ jobs:
             -e "TERM=xterm-256color" \
             -e "DEBIAN_FRONTEND=noninteractive" \
             -e "GITHUB_ACTIONS=true" \
-            ubuntu:16.04 \
+            mirror.gcr.io/library/ubuntu:16.04 \
             bash -c '
               set -ex
 

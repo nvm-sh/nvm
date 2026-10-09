@@ -46,6 +46,7 @@ jobs:
             dl-cdn.alpinelinux.org:80
             registry-1.docker.io:443
             auth.docker.io:443
+            mirror.gcr.io:443
             production.cloudflare.docker.com:443
             production.cloudfront.docker.com:443
       - uses: actions/checkout@v6
@@ -68,8 +69,10 @@ jobs:
       - run: npm ls urchin
       - name: 'Run fast tests on Alpine ${{ matrix.alpine }} (${{ matrix.arch }})'
         run: |
+          # Pull through Google's Docker Hub mirror, which is not subject to Docker Hub's
+          # anonymous pull rate limits; retry to tolerate transient registry failures
           for i in 1 2 3 4 5; do
-            docker pull alpine:${{ matrix.alpine }} && break
+            docker pull mirror.gcr.io/library/alpine:${{ matrix.alpine }} && break
             echo "docker pull failed, attempt $i/5"; sleep $((i * 5))
           done
           docker run --rm \
@@ -78,7 +81,7 @@ jobs:
             -e "TEST_SHELL=${{ matrix.shell }}" \
             -e "TERM=xterm-256color" \
             -e "GITHUB_ACTIONS=true" \
-            alpine:${{ matrix.alpine }} \
+            mirror.gcr.io/library/alpine:${{ matrix.alpine }} \
             sh -c '
               set -ex
               cat /etc/alpine-release; uname -m
@@ -142,6 +145,7 @@ jobs:
             dl-cdn.alpinelinux.org:80
             registry-1.docker.io:443
             auth.docker.io:443
+            mirror.gcr.io:443
             production.cloudflare.docker.com:443
             production.cloudfront.docker.com:443
       - uses: actions/checkout@v6
@@ -149,8 +153,10 @@ jobs:
           submodules: false
       - name: 'Install node ${{ matrix.node }} from a musl binary on Alpine ${{ matrix.alpine }}'
         run: |
+          # Pull through Google's Docker Hub mirror, which is not subject to Docker Hub's
+          # anonymous pull rate limits; retry to tolerate transient registry failures
           for i in 1 2 3 4 5; do
-            docker pull alpine:${{ matrix.alpine }} && break
+            docker pull mirror.gcr.io/library/alpine:${{ matrix.alpine }} && break
             echo "docker pull failed, attempt $i/5"; sleep $((i * 5))
           done
           docker run --rm \
@@ -158,7 +164,7 @@ jobs:
             -w /workspace \
             -e "NODE_VERSION=${{ matrix.node }}" \
             -e "TERM=xterm-256color" \
-            alpine:${{ matrix.alpine }} \
+            mirror.gcr.io/library/alpine:${{ matrix.alpine }} \
             sh -c '
               set -ex
               cat /etc/alpine-release; uname -m
