@@ -41,7 +41,13 @@ nvm_echo_with_colors() {
 }
 
 nvm_cd() {
-  \cd "$@"
+  # `\cd` still runs a user-defined `cd` function; in zsh, `command cd` runs `/usr/bin/cd` instead of the builtin
+  if [ -n "${ZSH_VERSION-}" ]; then
+    # shellcheck disable=SC3044
+    builtin cd "$@"
+  else
+    command cd "$@"
+  fi
 }
 
 # a caller that closed stderr, rather than redirecting it to /dev/null, makes
@@ -3516,7 +3522,7 @@ nvm_die_on_prefix() {
     local NVM_CONFIG_VALUE
     eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_x_PREFIX_ENV}\""
     if [ -n "${NVM_CONFIG_VALUE-}" ] && [ "_${NVM_OS}" = "_win" ]; then
-      NVM_CONFIG_VALUE="$(cd "$NVM_CONFIG_VALUE" 2>/dev/null && pwd)"
+      NVM_CONFIG_VALUE="$(nvm_cd "$NVM_CONFIG_VALUE" 2>/dev/null && pwd)"
     fi
     if [ -n "${NVM_CONFIG_VALUE-}" ] && ! nvm_tree_contains_path "${NVM_DIR}" "${NVM_CONFIG_VALUE}"; then
       nvm deactivate >/dev/null 2>&1

@@ -1,0 +1,23 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+EXPECTED="$(\cd .. && pwd)"
+
+# a user-defined `cd` function that rejects nvm's arguments, like cdhist's (#3835)
+cd() {
+  echo 'user-defined cd function was called' >&2
+  return 1
+}
+
+OUTPUT="$(nvm_cd .. 2>&1 && pwd)"
+[ "${OUTPUT}" = "${EXPECTED}" ] || die "expected '${EXPECTED}', got '${OUTPUT}'"
+
+# shellcheck disable=SC2086
+OUTPUT="$(nvm_cd ${NVM_CD_FLAGS} .. 2>&1 && pwd)"
+[ "${OUTPUT}" = "${EXPECTED}" ] || die "with NVM_CD_FLAGS '${NVM_CD_FLAGS}', expected '${EXPECTED}', got '${OUTPUT}'"
+
+unset -f cd
