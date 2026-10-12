@@ -1,0 +1,40 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+# For 0.x releases the minor version is effectively the major version
+# (0.10.x and 0.12.x were distinct release lines), so even without --minor
+# they must be grouped - and kept - separately.
+nvm_ls() {
+  echo "       v0.10.48"
+  echo "       v0.10.49"
+  echo "       v0.12.18"
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  return 0
+}
+
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+nvm_prune --force
+
+EXPECTED=" v0.10.48"
+if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then
+  die "Expected uninstalled: '${EXPECTED}', got: '${UNINSTALLED_VERSIONS}'"
+fi
+
+echo "All tests passed"

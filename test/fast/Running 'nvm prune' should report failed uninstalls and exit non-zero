@@ -1,0 +1,55 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+nvm_ls() {
+  echo "       v18.0.0"
+  echo "       v18.1.0"
+  echo "       v18.2.0"
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  return 0
+}
+
+ATTEMPTED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    ATTEMPTED_VERSIONS="${ATTEMPTED_VERSIONS} $2"
+    # Simulate every uninstall failing.
+    return 1
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+# Redirect (not pipe) so `nvm_prune` runs in this shell: a pipe would run it
+# in a subshell, losing ATTEMPTED_VERSIONS' mutations from the `nvm` mock.
+nvm_prune --force > output.tmp 2>&1
+EXIT_CODE=$?
+OUTPUT="$(cat output.tmp)"
+rm -f output.tmp
+
+[ "${EXIT_CODE}" -ne 0 ] || die "expected a non-zero exit code when uninstalls fail"
+
+EXPECTED_ATTEMPTS=" v18.0.0 v18.1.0"
+if [ "${ATTEMPTED_VERSIONS}" != "${EXPECTED_ATTEMPTS}" ]; then
+  die "Expected attempted uninstalls: '${EXPECTED_ATTEMPTS}', got: '${ATTEMPTED_VERSIONS}'"
+fi
+
+case "${OUTPUT}" in
+  *'Failed to uninstall v18.0.0'*) ;;
+  *) die "expected a failure message for v18.0.0, got: ${OUTPUT}" ;;
+esac
+
+case "${OUTPUT}" in
+  *'Failed to uninstall v18.1.0'*) ;;
+  *) die "expected a failure message for v18.1.0, got: ${OUTPUT}" ;;
+esac
+
+echo "All tests passed"

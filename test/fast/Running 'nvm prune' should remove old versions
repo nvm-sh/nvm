@@ -10,9 +10,7 @@ die () { echo "$@" ; exit 1; }
 . ../../nvm.sh
 
 # Mock nvm_ls to return specific versions as if they were installed
-# The implementation of nvm_prune calls: nvm_ls --no-colors --no-alias
-# We must mock nvm_ls to respond to that or just return the list.
-# Note: nvm_prune strips output except vX.Y.Z.
+# nvm_prune calls `nvm_ls` with no arguments and strips everything except vX.Y.Z.
 nvm_ls() {
   echo "       v16.20.2"
   echo "       v18.20.5"
@@ -43,33 +41,20 @@ nvm() {
   echo "nvm called with unexpected args: $*"
 }
 
-# Run prune
-nvm_prune
+# Run prune (--force: these cases exercise immediate deletion, not the
+# confirmation prompt - that has its own dedicated test)
+nvm_prune --force
 
-# Expected:
-# v16.20.2 (Keep: Only one v16)
-# v18.20.5 (Delete: v18.20.7 is newer) -> WAIT. v18.20.7 is newer. So keep 18.20.7. Delete 18.20.5.
-# v18.20.7 (Keep: Latest v18)
-# v20.17.0 (Keep: Only one v20)
-# v22.22.0 (Keep: Current)
-# v24.13.0 (Keep: Only one v24)
-
-# Wait, my logic for nvm_prune was to keep latest per major.
-# v18.20.5 and v18.20.7 are Major 18.
-# Latest is v18.20.7.
-# So v18.20.5 should be pruned.
-
-# Check UNINSTALLED_VERSIONS
+# v16.20.2, v20.17.0, v24.13.0 are each the only version in their major: kept.
+# v18.20.5 and v18.20.7 share major 18; v18.20.7 is newer, so v18.20.5 is pruned.
+# v22.22.0 is the current version: kept.
 EXPECTED=" v18.20.5"
 if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then
   die "Expected uninstalled: '${EXPECTED}', got: '${UNINSTALLED_VERSIONS}'"
 fi
 
 # New Test Case: Current version is NOT the latest.
-# v18.1.0 (Current)
-# v18.2.0 (Latest)
-# v18.0.0 (Old)
-
+# v18.1.0 (Current), v18.2.0 (Latest), v18.0.0 (Old)
 nvm_ls() {
   echo "       v18.0.0"
   echo "->     v18.1.0"
@@ -81,13 +66,10 @@ nvm_ls_current() {
 }
 
 UNINSTALLED_VERSIONS=""
-nvm_prune
+nvm_prune --force
 
-# Expected:
-# v18.0.0 (Prune)
-# v18.1.0 (Keep: Current)
-# v18.2.0 (Keep: Latest)
-
+# v18.0.0 is neither the latest nor current: pruned.
+# v18.1.0 is kept because it's current; v18.2.0 is kept because it's latest.
 EXPECTED=" v18.0.0"
 
 if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then

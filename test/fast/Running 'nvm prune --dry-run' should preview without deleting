@@ -1,0 +1,50 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+nvm_ls() {
+  echo "       v18.20.5"
+  echo "       v18.20.7"
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  return 0
+}
+
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+# --dry-run must never prompt (no stdin provided here - a prompt would hang)
+# and must never call `nvm uninstall`. Redirect (not pipe) so `nvm_prune`
+# runs in this shell: a pipe would run it in a subshell, losing
+# UNINSTALLED_VERSIONS' mutations from the `nvm` mock.
+nvm_prune --dry-run > output.tmp
+EXIT_CODE=$?
+OUTPUT="$(cat output.tmp)"
+rm -f output.tmp
+
+[ "${EXIT_CODE}" -eq 0 ] || die "expected exit 0, got ${EXIT_CODE}"
+[ -z "${UNINSTALLED_VERSIONS}" ] || die "dry-run should not uninstall anything, got: '${UNINSTALLED_VERSIONS}'"
+
+case "${OUTPUT}" in
+  *v18.20.5*) ;;
+  *) die "expected dry-run output to mention v18.20.5, got: ${OUTPUT}" ;;
+esac
+
+case "${OUTPUT}" in
+  *'Proceed?'*) die "dry-run should not show the confirmation prompt" ;;
+esac
+
+echo "All tests passed"

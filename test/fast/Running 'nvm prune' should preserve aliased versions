@@ -1,0 +1,57 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. "${NVM_DIR}/nvm.sh"
+
+nvm_ls() {
+  echo "       v18.20.5"
+  echo "       v18.20.7"
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  return 0
+}
+
+# `nvm_resolve_local_alias` is the alias-resolution entry point nvm_prune
+# uses; mocking it keeps this test focused on nvm_prune's own protection
+# logic instead of the full alias-file resolution chain (covered elsewhere).
+nvm_resolve_local_alias() {
+  if [ "$1" = "default" ]; then
+    echo "v18.20.5"
+    return 0
+  fi
+  echo "N/A"
+  return 3
+}
+
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+printf 'v18.20.5' > "${NVM_DIR}/alias/default"
+
+nvm_prune --force
+
+rm -f "${NVM_DIR}/alias/default"
+
+# v18.20.5 is older than v18.20.7, but `default` points to it, so it must
+# be kept even though it is not the latest in its group.
+EXPECTED=""
+if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then
+  die "Expected uninstalled: '${EXPECTED}', got: '${UNINSTALLED_VERSIONS}'"
+fi
+
+echo "All tests passed"
