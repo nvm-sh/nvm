@@ -1243,7 +1243,8 @@ nvm_strip_path() {
     return 1
   fi
   local RESULT
-  RESULT="$(command printf %s "${1-}" | command awk -v NVM_DIR="${NVM_DIR}" -v RS=: '
+  RESULT="$(command printf %s "${1-}" | NVM_DIR="${NVM_DIR}" command awk -v RS=: '
+  BEGIN { NVM_DIR = ENVIRON["NVM_DIR"] }
   index($0, NVM_DIR) == 1 {
     path = substr($0, length(NVM_DIR) + 1)
     if (path ~ "^(/versions/[^/]*)?/[^/]*'"${2-}"'.*$") { next }
