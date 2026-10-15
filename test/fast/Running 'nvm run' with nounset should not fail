@@ -1,0 +1,17 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+make_fake_node v0.12.34 || die 'unable to make fake node v0.12.34'
+
+# Enable no unset variable
+set -u
+
+OUTPUT="$(nvm run --silent v0.12.34 2>&1)" || die "nvm run with nounset failed: >${OUTPUT}<"
+[ "${OUTPUT}" = 'v0.12.34' ] || die "expected >v0.12.34<, got >${OUTPUT}<"
