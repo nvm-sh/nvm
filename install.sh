@@ -166,12 +166,23 @@ install_nvm_from_git() {
   fi
 
   local fetch_error
+  local NVM_REMOTE_NAME
   if [ -d "$INSTALL_DIR/.git" ]; then
     # Updating repo
     nvm_echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
     command printf '\r=> '
     fetch_error="Failed to update nvm with $NVM_VERSION, run 'git fetch' in $INSTALL_DIR yourself."
+    NVM_REMOTE_NAME="$(command git --git-dir="${INSTALL_DIR}/.git" remote 2>/dev/null | command head -n1)"
+    if [ -z "${NVM_REMOTE_NAME}" ]; then
+      NVM_REMOTE_NAME="nvm-origin"
+      command git --git-dir="${INSTALL_DIR}/.git" remote add "${NVM_REMOTE_NAME}" "$(nvm_source)" 2> /dev/null \
+        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url "${NVM_REMOTE_NAME}" "$(nvm_source)" || {
+        nvm_echo >&2 'Failed to add remote "'"${NVM_REMOTE_NAME}"'" (or set the URL). Please report this!'
+        exit 2
+      }
+    fi
   else
+    NVM_REMOTE_NAME="nvm-origin"
     fetch_error="Failed to fetch origin with $NVM_VERSION. Please report this!"
     nvm_echo "=> Downloading nvm from git to '$INSTALL_DIR'"
     command printf '\r=> '
@@ -185,24 +196,24 @@ install_nvm_from_git() {
         nvm_echo >&2 'Failed to initialize nvm repo. Please report this!'
         exit 2
       }
-      command git --git-dir="${INSTALL_DIR}/.git" remote add origin "$(nvm_source)" 2> /dev/null \
-        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url origin "$(nvm_source)" || {
-        nvm_echo >&2 'Failed to add remote "origin" (or set the URL). Please report this!'
+      command git --git-dir="${INSTALL_DIR}/.git" remote add "${NVM_REMOTE_NAME}" "$(nvm_source)" 2> /dev/null \
+        || command git --git-dir="${INSTALL_DIR}/.git" remote set-url "${NVM_REMOTE_NAME}" "$(nvm_source)" || {
+        nvm_echo >&2 'Failed to add remote "'"${NVM_REMOTE_NAME}"'" (or set the URL). Please report this!'
         exit 2
       }
     else
       # Cloning repo
-      command git clone -o origin "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
+      command git clone -c clone.defaultRemoteName="${NVM_REMOTE_NAME}" -o "${NVM_REMOTE_NAME}" "$(nvm_source)" --depth=1 "${INSTALL_DIR}" || {
         nvm_echo >&2 'Failed to clone nvm repo. Please report this!'
         exit 2
       }
     fi
   fi
   # Try to fetch tag
-  if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin tag "$NVM_VERSION" --depth=1 2>/dev/null; then
+  if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch "${NVM_REMOTE_NAME}" tag "$NVM_VERSION" --depth=1 2>/dev/null; then
     :
   # Fetch given version
-  elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin "$NVM_VERSION" --depth=1; then
+  elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch "${NVM_REMOTE_NAME}" "$NVM_VERSION" --depth=1; then
     nvm_echo >&2 "$fetch_error"
     exit 1
   fi

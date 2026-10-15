@@ -66,3 +66,16 @@ echo "$OUTPUT" | grep -q "unterminated" && \
 [ "$OUTPUT" = "v24.13.0" ] || die "nvm_ls with partial version + comments should output v24.13.0, got: $OUTPUT"
 
 cleanup
+
+TEST_DIR="${PWD}/nvm_ls_hash_pattern_tmp with spaces"
+mkdir -p "${TEST_DIR}/versions/node/v24.13.0/bin" || die 'failed to create test version dir with spaces'
+make_echo "${TEST_DIR}/versions/node/v24.13.0/bin/node" 'v24.13.0' || die 'failed to create test node binary with spaces'
+NVM_DIR="${TEST_DIR}"
+
+OUTPUT="$(nvm_ls 24 2>&1)"
+EXIT_CODE=$?
+
+[ "$EXIT_CODE" = "0" ] || die "nvm_ls with spaces in NVM_DIR should exit with code 0, got $EXIT_CODE"
+[ "$OUTPUT" = "v24.13.0" ] || die "nvm_ls with spaces in NVM_DIR should output v24.13.0, got: $OUTPUT"
+
+cleanup

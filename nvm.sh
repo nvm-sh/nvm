@@ -836,8 +836,9 @@ nvm_ensure_version_installed() {
   EXIT_CODE="$?"
   local NVM_VERSION_DIR
   if [ "${EXIT_CODE}" != "0" ] || ! nvm_is_version_installed "${LOCAL_VERSION}"; then
-    if VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"; then
-      nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
+    local NVM_RESOLVED_VERSION
+    if NVM_RESOLVED_VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"; then
+      nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${NVM_RESOLVED_VERSION}\" is not yet installed."
     else
       local PREFIXED_VERSION
       PREFIXED_VERSION="$(nvm_ensure_version_prefix "${PROVIDED_VERSION}")"
@@ -1538,12 +1539,12 @@ nvm_ls_current() {
   elif nvm_tree_contains_path "$(nvm_version_dir iojs)" "${NVM_LS_CURRENT_NODE_PATH}"; then
     nvm_add_iojs_prefix "$(iojs --version 2>/dev/null)"
   elif nvm_tree_contains_path "${NVM_DIR}" "${NVM_LS_CURRENT_NODE_PATH}"; then
-    local VERSION
-    VERSION="$(node --version 2>/dev/null)"
-    if [ "${VERSION}" = "v0.6.21-pre" ]; then
+    local NVM_DETECTED_VERSION
+    NVM_DETECTED_VERSION="$(node --version 2>/dev/null)"
+    if [ "${NVM_DETECTED_VERSION}" = "v0.6.21-pre" ]; then
       nvm_echo 'v0.6.21'
     else
-      nvm_echo "${VERSION:-none}"
+      nvm_echo "${NVM_DETECTED_VERSION:-none}"
     fi
   else
     nvm_echo 'system'
@@ -1624,17 +1625,17 @@ nvm_resolve_local_alias() {
     return 1
   fi
 
-  local VERSION
+  local NVM_DETECTED_VERSION
   local EXIT_CODE
-  VERSION="$(nvm_resolve_alias "${1-}")"
+  NVM_DETECTED_VERSION="$(nvm_resolve_alias "${1-}")"
   EXIT_CODE=$?
-  if [ -z "${VERSION}" ]; then
+  if [ -z "${NVM_DETECTED_VERSION}" ]; then
     return $EXIT_CODE
   fi
-  if [ "_${VERSION}" != '_∞' ]; then
-    nvm_version "${VERSION}"
+  if [ "_${NVM_DETECTED_VERSION}" != '_∞' ]; then
+    nvm_version "${NVM_DETECTED_VERSION}"
   else
-    nvm_echo "${VERSION}"
+    nvm_echo "${NVM_DETECTED_VERSION}"
   fi
 }
 
@@ -1748,6 +1749,17 @@ nvm_ls() {
 
     nvm_is_zsh && setopt local_options shwordsplit
     nvm_is_zsh && setopt local_options nomarkdirs
+    nvm_is_zsh && setopt local_options nonomatch
+    if ! nvm_is_zsh; then
+      local NVM_NULLGLOB_WAS_SET
+      case $- in
+        *f*) NVM_NULLGLOB_WAS_SET=true ;;
+        *) NVM_NULLGLOB_WAS_SET=false ;;
+      esac
+      if [ -n "${BASH_VERSION-}" ]; then
+        shopt -s nullglob
+      fi
+    fi
 
     local NVM_DIRS_TO_SEARCH1
     NVM_DIRS_TO_SEARCH1=''
@@ -1797,21 +1809,36 @@ nvm_ls() {
       SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's#\.#\\\.#g; s|#|\\#|g')"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
-      VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
-        | command sed -e "
-            s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
-            s#^${NVM_DIR}/##;
-            \\#^[^v]# d;
-            \\#^versions\$# d;
-            s#^versions/##;
-            s#^v#${NVM_NODE_PREFIX}/v#;
-            \\#${SEARCH_PATTERN}# !d;
-          " \
-          -e 's#^\([^/]\{1,\}\)/\(.*\)$#\2.\1#;' \
-        | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
-        | command sed -e 's#\(.*\)\.\([^\.]\{1,\}\)$#\2-\1#;' \
-                      -e "s#^${NVM_NODE_PREFIX}-##;" \
-      )"
+      local NVM_FIND_DIR
+      set --
+      for NVM_FIND_DIR in "${NVM_DIRS_TO_SEARCH1}" "${NVM_DIRS_TO_SEARCH2}" "${NVM_DIRS_TO_SEARCH3}"; do
+        if [ -n "${NVM_FIND_DIR}" ] && [ -d "${NVM_FIND_DIR}" ]; then
+          set -- "$@" "${NVM_FIND_DIR}"
+        fi
+      done
+      if [ "$#" -gt 0 ]; then
+        VERSIONS="$(
+          command find "$@" -mindepth 1 -maxdepth 1 -type d -name "${PATTERN}*" \
+            | command sed -e "
+                s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
+                s#^${NVM_DIR}/##;
+                \\#^[^v]# d;
+                \\#^versions\$# d;
+                s#^versions/##;
+                s#^v#${NVM_NODE_PREFIX}/v#;
+                \\#${SEARCH_PATTERN}# !d;
+              " \
+              -e 's#^\([^/]\{1,\}\)/\(.*\)$#\2.\1#;' \
+            | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
+            | command sed -e 's#\(.*\)\.\([^\.]\{1,\}\)$#\2-\1#;' \
+                          -e "s#^${NVM_NODE_PREFIX}-##;" \
+        )"
+      fi
+    fi
+    if ! nvm_is_zsh; then
+      if [ "${NVM_NULLGLOB_WAS_SET-}" = false ] && [ -n "${BASH_VERSION-}" ]; then
+        shopt -u nullglob
+      fi
     fi
   fi
 
@@ -5172,14 +5199,14 @@ nvm_auto() {
   case "${NVM_MODE}" in
     none) return 0 ;;
     use)
-      local VERSION
+      local NVM_DETECTED_VERSION
       local NVM_CURRENT
       NVM_CURRENT="$(nvm_ls_current)"
       if [ "_${NVM_CURRENT}" = '_none' ] || [ "_${NVM_CURRENT}" = '_system' ]; then
-        VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
-        if [ -n "${VERSION}" ]; then
-          if [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-            nvm use --silent "${VERSION}" >/dev/null
+        NVM_DETECTED_VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+        if [ -n "${NVM_DETECTED_VERSION}" ]; then
+          if [ "_${NVM_DETECTED_VERSION}" != '_N/A' ] && nvm_is_valid_version "${NVM_DETECTED_VERSION}"; then
+            nvm use --silent "${NVM_DETECTED_VERSION}" >/dev/null
           else
             return 0
           fi
@@ -5191,10 +5218,10 @@ nvm_auto() {
       fi
     ;;
     install)
-      local VERSION
-      VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
-      if [ -n "${VERSION}" ] && [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-        nvm install "${VERSION}" >/dev/null
+      local NVM_DETECTED_VERSION
+      NVM_DETECTED_VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
+      if [ -n "${NVM_DETECTED_VERSION}" ] && [ "_${NVM_DETECTED_VERSION}" != '_N/A' ] && nvm_is_valid_version "${NVM_DETECTED_VERSION}"; then
+        nvm install "${NVM_DETECTED_VERSION}" >/dev/null
       elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
         nvm install >/dev/null
       else
