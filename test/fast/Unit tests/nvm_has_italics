@@ -1,0 +1,80 @@
+#!/bin/sh
+
+WORK="${PWD}/nvm-has-italics-work.$$"
+FAKE_BIN="${WORK}/bin"
+TPUT_LOG="${WORK}/tput.log"
+
+cleanup() {
+  command rm -rf "${WORK}"
+  unset -f cleanup die nvm_has_colors
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_has_colors() { return 0; }
+
+command mkdir -p "${FAKE_BIN}"
+command cat > "${FAKE_BIN}/tput" <<EOF
+#!/bin/sh
+echo "\$*" > "${TPUT_LOG}"
+command printf '\033[3m'
+exit "\${FAKE_TPUT_STATUS-0}"
+EOF
+command chmod +x "${FAKE_BIN}/tput"
+
+(
+  export PATH="${FAKE_BIN}:${PATH}" TERM=xterm-256color
+  nvm_has_italics
+) || die 'nvm_has_italics should be true when terminfo has the sitm capability'
+[ "$(command cat "${TPUT_LOG}")" = '-T xterm-256color sitm' ] \
+  || die "nvm_has_italics should query sitm for the current TERM; got >$(command cat "${TPUT_LOG}")<"
+
+OUTPUT="$(
+  export PATH="${FAKE_BIN}:${PATH}" TERM=xterm-256color
+  nvm_has_italics
+)"
+[ -z "${OUTPUT}" ] \
+  || die "nvm_has_italics should not print the escape sequence; got >${OUTPUT}<"
+
+(
+  export PATH="${FAKE_BIN}:${PATH}" TERM=screen FAKE_TPUT_STATUS=1
+  ! nvm_has_italics
+) || die 'nvm_has_italics should be false when terminfo lacks the sitm capability'
+
+(
+  export PATH="${FAKE_BIN}:${PATH}" TERM=not-a-terminal FAKE_TPUT_STATUS=3
+  ! nvm_has_italics
+) || die 'nvm_has_italics should be false when the terminal is unknown'
+
+(
+  export PATH="${FAKE_BIN}:${PATH}"
+  unset TERM
+  nvm_has_italics
+) || die 'nvm_has_italics should query vt100 when TERM is unset'
+[ "$(command cat "${TPUT_LOG}")" = '-T vt100 sitm' ] \
+  || die "nvm_has_italics should fall back to vt100 when TERM is unset; got >$(command cat "${TPUT_LOG}")<"
+
+(
+  PATH="${WORK}"
+  ! nvm_has_italics
+) || die 'nvm_has_italics should be false when tput is unavailable'
+
+command rm -f "${TPUT_LOG}"
+(
+  export PATH="${FAKE_BIN}:${PATH}" TERM=xterm-256color
+  nvm_has_colors() { return 1; }
+  ! nvm_has_italics
+) || die 'nvm_has_italics should be false when colors are disabled'
+[ ! -f "${TPUT_LOG}" ] \
+  || die 'nvm_has_italics should not query terminfo when colors are disabled'
+
+if nvm_has tput; then
+  (
+    export TERM=dumb
+    ! nvm_has_italics
+  ) || die 'nvm_has_italics should be false for the dumb terminal'
+fi
+
+cleanup

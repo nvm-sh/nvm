@@ -1,0 +1,29 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+HOME='/home/user'
+
+for DIR in '/tmp/a&b/.nvm' '/tmp/a#b/.nvm' '/tmp/a[1]/.nvm' '/tmp/a*b/.nvm' '/tmp/a+(b)/.nvm' '/tmp/a.b/.nvm' '/tmp/a\b/.nvm' '/tmp/a$b/.nvm' '/tmp/a|b/.nvm'; do
+  NVM_DIR="${DIR}"
+
+  OUTPUT="$(nvm_sanitize_path "${NVM_DIR}/versions/node/v4.5.0")"
+  EXPECTED='${NVM_DIR}/versions/node/v4.5.0'
+  [ "${OUTPUT}" = "${EXPECTED}" ] || die "NVM_DIR=${DIR}: expected >${EXPECTED}<, got >${OUTPUT}<"
+
+  OUTPUT="$(nvm_sanitize_path "${NVM_DIR}")"
+  [ "${OUTPUT}" = "${NVM_DIR}" ] || die "NVM_DIR=${DIR}: path equal to NVM_DIR should be left alone, got >${OUTPUT}<"
+done
+
+# `.` in NVM_DIR must match itself only, not any character
+NVM_DIR='/tmp/a.b/.nvm'
+OUTPUT="$(nvm_sanitize_path '/tmp/aXb/.nvm/foo')"
+[ "${OUTPUT}" = '/tmp/aXb/.nvm/foo' ] || die "unrelated path was rewritten: >${OUTPUT}<"
+
+# HOME is replaced too
+NVM_DIR='/tmp/a#b/.nvm'
+OUTPUT="$(nvm_sanitize_path "${HOME}/.npmrc")"
+[ "${OUTPUT}" = '${HOME}/.npmrc' ] || die "expected >\${HOME}/.npmrc<, got >${OUTPUT}<"

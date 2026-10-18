@@ -1,0 +1,30 @@
+#!/bin/sh
+
+WORK="${PWD}/nvm-inherited-tmpdir-work.$$"
+
+cleanup() {
+  command rm -rf "${WORK}"
+  unset -f cleanup die nvm_download_artifact
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_download_artifact() { return 1; }
+
+make_canary() {
+  command rm -rf "${WORK}/tmp"
+  command mkdir -p "${WORK}/tmp"
+  echo canary > "${WORK}/tmp/canary"
+}
+
+make_canary
+TMPDIR="${WORK}/tmp" nvm_install_binary node std 8.0.0 0 < /dev/null > /dev/null 2>&1
+[ -f "${WORK}/tmp/canary" ] || die 'nvm_install_binary removed the TMPDIR it inherited after a failed download'
+
+make_canary
+TMPDIR="${WORK}/tmp" nvm_install_source node std 8.0.0 < /dev/null > /dev/null 2>&1
+[ -f "${WORK}/tmp/canary" ] || die 'nvm_install_source removed the TMPDIR it inherited after a failed download'
+
+cleanup

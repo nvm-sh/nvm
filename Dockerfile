@@ -15,14 +15,14 @@ LABEL version="latest"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Prevent dialog during apt install
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # ShellCheck version
 ENV SHELLCHECK_VERSION=0.7.0
 
 # Pick a Ubuntu apt mirror site for better speed
 # ref: https://launchpad.net/ubuntu/+archivemirrors
-ENV UBUNTU_APT_SITE ubuntu.cs.utah.edu
+ENV UBUNTU_APT_SITE=ubuntu.cs.utah.edu
 
 # Replace origin apt package site with the mirror site
 RUN sed -E -i "s/([a-z]+.)?archive.ubuntu.com/$UBUNTU_APT_SITE/g" /etc/apt/sources.list
@@ -92,7 +92,7 @@ RUN echo 'nvm ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 USER nvm
 
 # Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV /home/nvm/.bash_env
+ENV BASH_ENV=/home/nvm/.bash_env
 RUN touch "$BASH_ENV"
 RUN echo '. "$BASH_ENV"' >> "$HOME/.bashrc"
 

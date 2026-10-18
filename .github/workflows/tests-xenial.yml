@@ -41,6 +41,7 @@ jobs:
             production.cloudfront.docker.com:443
             registry-1.docker.io:443
             auth.docker.io:443
+            mirror.gcr.io:443
       - uses: actions/checkout@v6
         id: checkout
         continue-on-error: true
@@ -60,14 +61,22 @@ jobs:
           skip-ls-check: true
       - run: npm ls urchin
       - run: npx which urchin
+      # Pull through Google's Docker Hub mirror, which is not subject to Docker Hub's
+      # anonymous pull rate limits, and cache the image; a cached image is only used
+      # if it matches the digests the registry serves now
+      - name: Resolve the ubuntu:16.04 image digests
+        id: image
+        run: sh .github/scripts/docker-image.sh resolve mirror.gcr.io/library/ubuntu:16.04 >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/docker-image.tar
+          key: docker-image-${{ runner.arch }}-${{ steps.image.outputs.key }}
+      - name: Load or pull the ubuntu:16.04 image
+        env:
+          DIGESTS: ${{ steps.image.outputs.digests }}
+        run: sh .github/scripts/docker-image.sh ensure mirror.gcr.io/library/ubuntu:16.04 "${RUNNER_TEMP}/docker-image.tar"
       - name: Run xenial tests in container
         run: |
-          # Retry the image pull to tolerate transient Docker registry failures
-          for i in 1 2 3 4 5; do
-            docker pull ubuntu:16.04 && break
-            echo "docker pull failed, attempt $i/5"
-            sleep $((i * 5))
-          done
           docker run --rm \
             -v "${{ github.workspace }}:/workspace" \
             -w /workspace \
@@ -75,25 +84,13 @@ jobs:
             -e "TERM=xterm-256color" \
             -e "DEBIAN_FRONTEND=noninteractive" \
             -e "GITHUB_ACTIONS=true" \
-            ubuntu:16.04 \
+            mirror.gcr.io/library/ubuntu:16.04 \
             bash -c '
               set -ex
 
-              # Retry apt-get update up to 5 times due to flaky Ubuntu mirrors
-              # apt-get update can return 0 even with partial failures, so check for warnings
-              for i in 1 2 3 4 5; do
-                if apt-get update 2>&1 | tee /tmp/apt-update.log | grep -qE "^(W:|E:|Err:)"; then
-                  echo "apt-get update had warnings/errors, attempt $i/5"
-                  cat /tmp/apt-update.log
-                  sleep $((i * 5))
-                else
-                  break
-                fi
-              done
-
-              apt-get install -y git curl wget make build-essential python zsh libssl-dev
+              sh /workspace/.github/scripts/apt-install.sh git curl wget make build-essential python zsh libssl-dev
               if [ "$TEST_SHELL" != "sh" ] && [ "$TEST_SHELL" != "bash" ]; then
-                apt-get install -y $TEST_SHELL || true
+                sh /workspace/.github/scripts/apt-install.sh $TEST_SHELL || true
               fi
 
               # Use nvm to install Node.js for running urchin

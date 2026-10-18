@@ -15,6 +15,10 @@ die () { cleanup; echo "$@" ; exit 1; }
 MOCKS_DIR="$(pwd)/../../mocks"
 export PATH=".:${PATH}"
 
+# `nvm_get_os` reads `/etc/os-release` where it is available; this test drives
+# the OS through the mocked `uname`, so point it at a file that does not exist
+export NVM_OS_RELEASE="${MOCKS_DIR}/nonexistent-os-release"
+
 # On Alpine (where /etc/alpine-release exists), both x64 and arm64 should get
 # the -musl suffix, since unofficial-builds publishes musl binaries for both.
 # On non-Alpine, neither should get -musl.

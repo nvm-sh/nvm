@@ -1,0 +1,126 @@
+#!/bin/sh
+
+WORK="${PWD}/nvm-ls-remote-aliases-work.$$"
+export HOME="${WORK}/home"
+export NVM_DIR="${HOME}/.nvm"
+
+cleanup() {
+  command rm -rf "${WORK}"
+  unset -f cleanup die nvm_has_colors nvm_has_italics nvm_remote_versions expected_row
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+command mkdir -p "${NVM_DIR}/alias/lts" "${NVM_DIR}/versions/node/v1.5.0"
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_has_colors() { return 1; }
+nvm_remote_versions() {
+  if [ -n "${NVM_LTS-}" ] || [ -n "${1-}" ]; then
+    command printf '%s\n' 'v2.0.0'
+  else
+    # io.js sorts last here, so the latest node release is not the last row
+    command printf '%s\n' 'v0.11.16' 'v0.12.18' 'v1.0.0 Argon' 'v1.5.0' 'v2.0.0 Iron *' 'iojs-v3.3.1'
+  fi
+  return "${NVM_REMOTE_STATUS-0}"
+}
+
+nvm_make_alias 'project' '1' >/dev/null
+nvm_make_alias 'argon-project' '1.0' >/dev/null
+nvm_make_alias 'lts/iron' 'v2.0.0' >/dev/null
+nvm_make_alias 'iron-project' 'lts/iron' >/dev/null
+nvm_make_alias 'latest-project' 'node' >/dev/null
+nvm_make_alias 'stable-project' 'stable' >/dev/null
+nvm_make_alias 'unstable-project' 'unstable' >/dev/null
+nvm_make_alias 'io-project' 'iojs' >/dev/null
+nvm_make_alias '.hidden-project' '1' >/dev/null
+command printf '%s\n' '[' > "${NVM_DIR}/alias/invalid-pattern"
+command printf '%s\n' '1' > "${NVM_DIR}/alias/$(command printf 'control\rname')"
+
+# the version cell is 17 wide (`%15s` plus the ` *` installed marker or two spaces), then LTS, Latest, and Aliases columns
+expected_row() {
+  command printf '%-17s%-19s  %-15s  %s\n' "$1" "$2" "$3" "$4" | command sed 's/[[:space:]]*$//'
+}
+EXPECTED_OUTPUT="$(
+  expected_row '       v0.11.16' '' '' ' (Aliases: unstable-project)'
+  expected_row '       v0.12.18'
+  expected_row '         v1.0.0' ' (LTS: Argon)' '' ' (Aliases: argon-project)'
+  expected_row '         v1.5.0 *' '' '' ' (Aliases: project)'
+  expected_row '         v2.0.0' ' (Latest LTS: Iron)' ' (Latest: node)' ' (Aliases: iron-project, latest-project, stable-project)'
+  expected_row '    iojs-v3.3.1' '' '' ' (Aliases: io-project)'
+)"
+
+REMOTE_ERROR="${WORK}/remote-error"
+OUTPUT="$(NVM_REMOTE_LATEST_ALIAS='injected' NVM_REMOTE_NAMED_ALIASES="$(command printf 'v0.12.18\tinjected')" nvm ls-remote --no-colors 2>"${REMOTE_ERROR}")"
+
+[ ! -s "${REMOTE_ERROR}" ] \
+  || die "bare nvm ls-remote emitted an error; got >$(command cat "${REMOTE_ERROR}")<"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "bare nvm ls-remote did not annotate aliases in stable columns; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
+ALIASES_COLUMN="$(command printf '%s\n' "${OUTPUT}" | command cut -c56-65 | command sort -u)"
+[ "_${ALIASES_COLUMN}" = "_$(command printf '\n (Aliases:')" ] \
+  || die "bare nvm ls-remote did not start every Aliases annotation in the same column; got >${ALIASES_COLUMN}<"
+
+case "${OUTPUT}" in
+  *'node, stable'* | *unstable,* | *hidden* | *invalid* | *control* | *injected*)
+    die "bare nvm ls-remote showed an alias it should omit; got >${OUTPUT}<"
+  ;;
+esac
+
+EXPECTED_FILTERED_OUTPUT='v2.0.0'
+OUTPUT="$(nvm ls-remote 2 --no-colors | command sed 's/^[[:space:]]*//')"
+[ "_${OUTPUT}" = "_${EXPECTED_FILTERED_OUTPUT}" ] \
+  || die "filtered nvm ls-remote annotated aliases; got >${OUTPUT}< expected >${EXPECTED_FILTERED_OUTPUT}<"
+
+OUTPUT="$(nvm ls-remote --lts --no-colors | command sed 's/^[[:space:]]*//')"
+[ "_${OUTPUT}" = "_${EXPECTED_FILTERED_OUTPUT}" ] \
+  || die "LTS nvm ls-remote annotated aliases; got >${OUTPUT}< expected >${EXPECTED_FILTERED_OUTPUT}<"
+
+NVM_REMOTE_STATUS=1
+OUTPUT="$(nvm ls-remote --no-colors 2>/dev/null)"
+COMMAND_STATUS=$?
+NVM_REMOTE_STATUS=0
+[ "${COMMAND_STATUS}" -eq 1 ] \
+  || die "failed nvm ls-remote returned ${COMMAND_STATUS}; expected 1"
+case "${OUTPUT}" in
+  *Latest:* | *Aliases:*) die "failed nvm ls-remote annotated aliases; got >${OUTPUT}<" ;;
+esac
+
+nvm_has_colors() { return 0; }
+nvm_has_italics() { return 0; }
+
+ESC="$(command printf '\033')"
+OUTPUT="$(nvm ls-remote)"
+EXPECTED_LATEST_ROW="$(command printf '         v2.0.0  \033[1;32m (Latest LTS: Iron)\033[0m  \033[0;32m (Latest: \033[3mnode\033[23m)\033[0m  \033[0;32m (Aliases: \033[3miron-project\033[23m, \033[3mlatest-project\033[23m, \033[3mstable-project\033[23m)\033[0m')"
+case "${OUTPUT}" in
+  *"${EXPECTED_LATEST_ROW}"*) ;;
+  *) die "colored nvm ls-remote did not use an unbolded color and italic names for aliases; got >${OUTPUT}<" ;;
+esac
+
+nvm_has_italics() { return 1; }
+NO_ITALICS_OUTPUT="$(nvm ls-remote)"
+nvm_has_italics() { return 0; }
+EXPECTED_LATEST_ROW="$(command printf '         v2.0.0  \033[1;32m (Latest LTS: Iron)\033[0m  \033[0;32m (Latest: node)\033[0m  \033[0;32m (Aliases: iron-project, latest-project, stable-project)\033[0m')"
+case "${NO_ITALICS_OUTPUT}" in
+  *"${EXPECTED_LATEST_ROW}"*) ;;
+  *) die "colored nvm ls-remote used italics on a terminal without italics support; got >${NO_ITALICS_OUTPUT}<" ;;
+esac
+
+OUTPUT="$(command printf '%s\n' "${OUTPUT}" | command sed "s/${ESC}\[[0-9;]*m//g")"
+EXPECTED_OUTPUT="$(command printf '%s\n' "${EXPECTED_OUTPUT}" | command sed 's/^\(         v1\.5\.0\) \*/\1  /')"
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+  || die "colored nvm ls-remote did not keep annotation columns aligned; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
+
+nvm_has_colors() { return 1; }
+nvm_remote_versions() {
+  command printf '%s\n' 'v2.0.0-nightly20240101abcdef0123 Iron *' 'v3.0.0-nightly2024020201234567890abc'
+}
+nvm_make_alias 'nightly-project' 'v2.0.0-nightly20240101abcdef0123' >/dev/null
+OUTPUT="$(nvm ls-remote --no-colors)"
+ALIASES_COLUMNS="$(command printf '%s\n' "${OUTPUT}" | command awk 'index($0, "(Aliases:") { print index($0, "(Aliases:") }' | command sort -u)"
+[ "$(command printf '%s\n' "${ALIASES_COLUMNS}" | command wc -l | command tr -d ' ')" = 1 ] \
+  || die "versions wider than the version column did not keep Aliases annotations in one column; got >${OUTPUT}<"
+
+cleanup

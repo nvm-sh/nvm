@@ -45,6 +45,47 @@ type nvm_is_version_installed > /dev/null 2>&1 || die 'nvm_is_version_installed 
 
 check_version '12.0.0' 'node'
 
+# the pre-0.12 layout is still found via the fallback
+OLD_VERSION='0.11.15'
+mkdir -p "$NVM_DIR/$OLD_VERSION/bin"
+touch "$NVM_DIR/$OLD_VERSION/bin/node"
+chmod +x "$NVM_DIR/$OLD_VERSION/bin/node"
+nvm_is_version_installed "$OLD_VERSION" || die "nvm_is_version_installed $OLD_VERSION should work with the pre-0.12 layout"
+
+# a pre-0.12 version does not count as installed from the modern layout
+for STRAY_VERSION in '0.10.48' 'v0.10.48'; do
+  mkdir -p "$NODE_PATH/$STRAY_VERSION/bin"
+  touch "$NODE_PATH/$STRAY_VERSION/bin/node"
+  chmod +x "$NODE_PATH/$STRAY_VERSION/bin/node"
+  ! nvm_is_version_installed "$STRAY_VERSION" || die "nvm_is_version_installed $STRAY_VERSION should not find a pre-0.12 version in the modern layout"
+done
+
+# io.js versions live in a separate tree and are still found via the fallback
+IOJS_VERSION='v2.0.0'
+mkdir -p "$NVM_DIR/versions/io.js/$IOJS_VERSION/bin"
+touch "$NVM_DIR/versions/io.js/$IOJS_VERSION/bin/node"
+chmod +x "$NVM_DIR/versions/io.js/$IOJS_VERSION/bin/node"
+nvm_is_version_installed "iojs-$IOJS_VERSION" || die "nvm_is_version_installed iojs-$IOJS_VERSION should work via the fallback"
+
+# the modern layout is found without shelling out to detect the OS
+FAST_VERSION='14.0.0'
+! nvm_is_version_installed "$FAST_VERSION" || die "nvm_is_version_installed $FAST_VERSION should fail before it is installed"
+nvm_get_os() {
+  die 'nvm_is_version_installed must not call nvm_get_os when the modern-layout binary exists'
+}
+mkdir -p "$NODE_PATH/$FAST_VERSION/bin"
+touch "$NODE_PATH/$FAST_VERSION/bin/node"
+chmod +x "$NODE_PATH/$FAST_VERSION/bin/node"
+nvm_is_version_installed "$FAST_VERSION" || die "nvm_is_version_installed $FAST_VERSION should succeed via the fast path"
+# 0.12.x is the first version in the modern layout
+for FAST_VERSION in '0.12.18' 'v0.12.18'; do
+  mkdir -p "$NODE_PATH/$FAST_VERSION/bin"
+  touch "$NODE_PATH/$FAST_VERSION/bin/node"
+  chmod +x "$NODE_PATH/$FAST_VERSION/bin/node"
+  nvm_is_version_installed "$FAST_VERSION" || die "nvm_is_version_installed $FAST_VERSION should succeed via the fast path"
+done
+unset -f nvm_get_os
+
 # Checking for Windows
 nvm_get_os() {
   echo "win"

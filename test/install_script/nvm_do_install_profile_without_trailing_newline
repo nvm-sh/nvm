@@ -1,0 +1,65 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f install_nvm_from_git install_nvm_as_script nvm_detect_profile nvm_has
+  unset -f nvm_check_global_modules nvm_install_node
+  unset -f setup cleanup die assert_profile
+  unset NVM_ENV METHOD PROFILE
+  rm -rf "${TMPDIR_FOR_TEST-}" 2>/dev/null
+}
+
+setup() {
+  NVM_ENV=testing \. ../../install.sh
+
+  # Mock installation functions to do nothing
+  install_nvm_from_git() { :; }
+  install_nvm_as_script() { :; }
+  nvm_check_global_modules() { :; }
+  nvm_install_node() { :; }
+
+  # Mock nvm_has to return true for git
+  nvm_has() {
+    case "$1" in
+      git) return 0 ;;
+      xcode-select) return 1 ;;
+      *) return 1 ;;
+    esac
+  }
+}
+
+setup
+
+TMPDIR_FOR_TEST="$(mktemp -d)"
+TEST_PROFILE="${TMPDIR_FOR_TEST}/.bashrc"
+EXPECTED_PROFILE="${TMPDIR_FOR_TEST}/expected"
+COMPLETION_LINE='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion'
+
+# runs the installer against $TEST_PROFILE, and compares the whole file, byte for byte, with $EXPECTED_PROFILE.
+# `nvm_do_install` unsets every `nvm_` function when it finishes, so each run sources the installer and mocks afresh.
+assert_profile() {
+  setup
+  nvm_detect_profile() {
+    echo "${TEST_PROFILE}"
+  }
+  PROFILE='' METHOD='' NVM_DIR="$(cd ../.. && pwd)" nvm_do_install > /dev/null 2>&1
+  command cmp -s "${TEST_PROFILE}" "${EXPECTED_PROFILE}" || die "$1; got: >$(command cat "${TEST_PROFILE}")<"
+}
+
+#
+# Test: when the profile already sources nvm.sh but does not end with a newline,
+# the bash_completion line must be appended on its own line, and the profile must end with a newline
+#
+command printf '%s\n%s' '. "$HOME/.nvm/nvm.sh"' "alias ll='ls -l'" > "${TEST_PROFILE}"
+command printf '%s\n%s\n%s\n' '. "$HOME/.nvm/nvm.sh"' "alias ll='ls -l'" "${COMPLETION_LINE}" > "${EXPECTED_PROFILE}"
+assert_profile 'bash_completion line was not appended on its own line, ending with a newline'
+
+#
+# Test: when the profile already ends with a newline, no blank line is added before the bash_completion line
+#
+command printf '%s\n%s\n' '. "$HOME/.nvm/nvm.sh"' "alias ll='ls -l'" > "${TEST_PROFILE}"
+command printf '%s\n%s\n%s\n' '. "$HOME/.nvm/nvm.sh"' "alias ll='ls -l'" "${COMPLETION_LINE}" > "${EXPECTED_PROFILE}"
+assert_profile 'a profile ending with a newline got an extra blank line before the bash_completion line'
+
+cleanup

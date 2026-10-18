@@ -37,7 +37,7 @@ jobs:
             formulae.brew.sh:443
       - uses: actions/checkout@v6
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@HEAD
       - name: Install latest shellcheck
         run: brew install shellcheck
         env:

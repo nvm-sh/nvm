@@ -1,0 +1,38 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+cleanup() {
+  rm -rf "${TEST_DIR}"
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TEST_DIR="$(pwd)/nvm_echo_tmp"
+[ ! -e "${TEST_DIR}" ] && mkdir "${TEST_DIR}"
+
+# a `printf` that reports that it ran: `nvm_echo` must use a shell builtin
+# rather than resolving `printf` through `PATH` (zsh's `command` skips the
+# builtin and runs `/usr/bin/printf` on every call)
+MOCK_BIN="${TEST_DIR}/bin"
+mkdir -p "${MOCK_BIN}"
+{
+  echo '#!/bin/sh'
+  echo "echo 'MOCKED-PRINTF'"
+} > "${MOCK_BIN}/printf"
+chmod +x "${MOCK_BIN}/printf"
+
+OUTPUT="$(nvm_echo 'hello world')"
+[ "${OUTPUT}" = 'hello world' ] || die "expected 'hello world', got '${OUTPUT}'"
+
+OUTPUT="$(nvm_echo)"
+[ -z "${OUTPUT}" ] || die "expected no output, got '${OUTPUT}'"
+
+OUTPUT="$(PATH="${MOCK_BIN}:${PATH}" nvm_echo 'no fork, please' 2>&1)"
+[ "${OUTPUT}" = 'no fork, please' ] || die "for nvm_echo, expected 'no fork, please', got '${OUTPUT}'"
+
+OUTPUT="$(PATH="${MOCK_BIN}:${PATH}" nvm_echo_with_colors 'no fork, please' 2>&1)"
+[ "${OUTPUT}" = 'no fork, please' ] || die "for nvm_echo_with_colors, expected 'no fork, please', got '${OUTPUT}'"
+
+cleanup

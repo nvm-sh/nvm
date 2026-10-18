@@ -1,0 +1,66 @@
+#!/bin/sh
+
+set -ex
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  cd "${ORIG_PWD}" 2>/dev/null || true
+  [ -n "${TMP_DIR-}" ] && rm -rf "${TMP_DIR}"
+}
+
+export NVM_DIR="$(cd ../.. && pwd)"
+
+: nvm.sh
+\. ../../nvm.sh
+
+\. ../common.sh
+
+ORIG_PWD="$(pwd)"
+
+# Run from a fresh, empty directory so no ambient .nvmrc above the test dir
+# can satisfy the lookup and mask the warning.
+TMP_DIR="$(mktemp -d)"
+cd "${TMP_DIR}" || die "could not cd to temp dir"
+
+EXEC_WARNING='WARNING: `nvm exec` was invoked without a version argument and without an .nvmrc file.'
+RUN_WARNING='WARNING: `nvm run` was invoked without a version argument and without an .nvmrc file.'
+
+for FILE in 123.js v1.23.js 1.2.3.js; do
+  set +ex # needed for stderr
+  RUN_STDERR="$(nvm run "${FILE}" </dev/null 2>&1 1>/dev/null)"
+  set -ex
+  case "${RUN_STDERR}" in
+    *"N/A: version \"v${FILE#v}\""*) die "'nvm run ${FILE}' treated the file as a version; got >${RUN_STDERR}<" ;;
+    *"${RUN_WARNING}"*) ;;
+    *) die "'nvm run ${FILE}' did not fall back with a warning; got >${RUN_STDERR}<" ;;
+  esac
+done
+
+set +ex # needed for stderr
+EXEC_STDERR="$(nvm exec 1.2.3.js </dev/null 2>&1 1>/dev/null)"
+set -ex
+case "${EXEC_STDERR}" in
+  *'N/A: version "v1.2.3.js"'*) die "'nvm exec 1.2.3.js' treated the command as a version; got >${EXEC_STDERR}<" ;;
+  *"${EXEC_WARNING}"*) ;;
+  *) die "'nvm exec 1.2.3.js' did not fall back with a warning; got >${EXEC_STDERR}<" ;;
+esac
+
+# an uninstalled prerelease is still a version, not a file
+set +ex # needed for stderr
+RUN_RC_STDERR="$(nvm run v999.0.0-rc.1 app.js </dev/null 2>&1 1>/dev/null)"
+set -ex
+case "${RUN_RC_STDERR}" in
+  *'N/A: version "v999.0.0-rc.1" is not yet installed.'*) ;;
+  *) die "'nvm run v999.0.0-rc.1' did not report the prerelease as not installed; got >${RUN_RC_STDERR}<" ;;
+esac
+
+set +ex # needed for stderr
+EXEC_RC_STDERR="$(nvm exec v999.0.0-rc.1 node </dev/null 2>&1 1>/dev/null)"
+set -ex
+case "${EXEC_RC_STDERR}" in
+  *'N/A: version "v999.0.0-rc.1" is not yet installed.'*) ;;
+  *) die "'nvm exec v999.0.0-rc.1' did not report the prerelease as not installed; got >${EXEC_RC_STDERR}<" ;;
+esac
+
+cleanup

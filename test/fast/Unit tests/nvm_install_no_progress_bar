@@ -24,10 +24,13 @@ fi
 
 cleanup
 
+SLUG="$(nvm_get_download_slug node binary v0.12.18)"
+CHECKSUM_LINE="$(nvm_compute_checksum ../../../nvm.sh 2>&1 >/dev/null)"
+
 OUTPUT="$(TERM=dumb 2>&1 nvm install --no-progress v0.12.18)"
 EXPECTED_OUTPUT="Downloading and installing node v0.12.18...
-Downloading https://nodejs.org/dist/v0.12.18/node-v0.12.18-linux-x64.tar.xz...
-Computing checksum with sha256sum
+Downloading https://nodejs.org/dist/v0.12.18/${SLUG}.tar.xz...
+${CHECKSUM_LINE}
 Checksums matched!
 Now using node v0.12.18 (npm v2.15.11)
 Creating default alias: default -> v0.12.18 *"
@@ -40,9 +43,9 @@ cleanup
 
 OUTPUT="$(TERM=dumb 2>&1 nvm install v0.12.18)"
 EXPECTED_OUTPUT="Downloading and installing node v0.12.18...
-Downloading https://nodejs.org/dist/v0.12.18/node-v0.12.18-linux-x64.tar.xz...
+Downloading https://nodejs.org/dist/v0.12.18/${SLUG}.tar.xz...
 ######################################################################### 100.0%
-Computing checksum with sha256sum
+${CHECKSUM_LINE}
 Checksums matched!
 Now using node v0.12.18 (npm v2.15.11)
 Creating default alias: default -> v0.12.18 *"

@@ -1,0 +1,67 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias/lts" || die 'could not create the scratch alias dir'
+
+# a file outside $NVM_DIR that alias resolution must never reach
+printf '%s\n' 'SECRET_OUTSIDE_NVM_DIR' > "${TMP_DIR}/outside"
+
+# legitimate aliases, to prove the guard does not reject the names nvm uses
+printf '%s\n' 'v1.2.3' > "${NVM_DIR}/alias/default"
+printf '%s\n' 'v4.5.6' > "${NVM_DIR}/alias/lts/iron"
+
+for TRAVERSAL in '../../outside' 'lts/../../../outside' '..' 'lts/..' 'a/../../outside'; do
+  OUTPUT="$(nvm_alias "${TRAVERSAL}" 2>/dev/null)"
+  EXIT_CODE=$?
+  [ "_${EXIT_CODE}" = '_3' ] || die "'nvm_alias ${TRAVERSAL}' exited with ${EXIT_CODE}, expected 3"
+  [ -z "${OUTPUT}" ] || die "'nvm_alias ${TRAVERSAL}' produced output: ${OUTPUT}"
+  # capture stderr through a file, and match rather than compare: ksh 93u+ has
+  # no `local`, so it interleaves its own noise with anything nvm.sh writes
+  nvm_alias "${TRAVERSAL}" >/dev/null 2>"${TMP_DIR}/stderr"
+  grep -qF "invalid alias name: ${TRAVERSAL}" "${TMP_DIR}/stderr" \
+    || die "'nvm_alias ${TRAVERSAL}' produced stderr: $(cat "${TMP_DIR}/stderr")"
+done
+
+# the disclosure path the advisory reports: resolution must not echo the file
+for TRAVERSAL in '../../outside' 'lts/../../../outside'; do
+  OUTPUT="$(nvm_resolve_alias "${TRAVERSAL}" 2>&1)"
+  case "${OUTPUT}" in
+    *SECRET_OUTSIDE_NVM_DIR*) die "'nvm_resolve_alias ${TRAVERSAL}' leaked a file outside \$NVM_DIR" ;;
+  esac
+done
+
+OUTPUT="$(nvm_alias default)"
+[ "_${OUTPUT}" = '_v1.2.3' ] || die "'nvm_alias default' produced \"${OUTPUT}\", expected v1.2.3"
+
+OUTPUT="$(nvm_alias lts/iron)"
+[ "_${OUTPUT}" = '_v4.5.6' ] || die "'nvm_alias lts/iron' produced \"${OUTPUT}\", expected v4.5.6"
+
+for BAD_VERSION in '../../outside' 'v1.2.3/../../..' '..'; do
+  OUTPUT="$(nvm_version_path "${BAD_VERSION}" 2>/dev/null)"
+  EXIT_CODE=$?
+  [ "_${EXIT_CODE}" = '_3' ] || die "'nvm_version_path ${BAD_VERSION}' exited with ${EXIT_CODE}, expected 3"
+  [ -z "${OUTPUT}" ] || die "'nvm_version_path ${BAD_VERSION}' produced output: ${OUTPUT}"
+done
+
+OUTPUT="$(nvm_version_path v18.0.0)"
+[ "_${OUTPUT}" = "_${NVM_DIR}/versions/node/v18.0.0" ] || die "'nvm_version_path v18.0.0' produced \"${OUTPUT}\""
+
+cleanup

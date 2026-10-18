@@ -1,0 +1,31 @@
+#!/bin/sh
+
+cleanup () {
+  rm -rf "$NVM_DIR"
+  unset -f die cleanup nvm_version
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+NVM_DIR="$(mktemp -d)"
+NODE_BIN="$NVM_DIR/versions/node/v12.0.0/bin"
+mkdir -p "$NODE_BIN"
+printf '#!/bin/sh\necho v12.0.0\n' > "$NODE_BIN/node"
+chmod +x "$NODE_BIN/node"
+
+# the slow path resolves through nvm_version; make it fail so only the fast path can succeed
+nvm_version() {
+  return 42
+}
+
+nvm use --silent v12.0.0 || die 'nvm use with an exact, installed version should not need nvm_version'
+case ":${PATH}:" in
+  *":${NODE_BIN}:"*) ;;
+  *) die "nvm use did not put ${NODE_BIN} on PATH; got ${PATH}" ;;
+esac
+
+! nvm use --silent v12 2>/dev/null || die 'nvm use with a partial version should still resolve it through nvm_version'
+
+cleanup

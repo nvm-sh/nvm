@@ -45,7 +45,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  nvm_echo "v0.40.7"
+  nvm_echo "v0.40.8"
 }
 
 nvm_profile_is_bash_or_zsh() {
@@ -490,6 +490,9 @@ nvm_do_install() {
     # shellcheck disable=SC2016
     if ${BASH_OR_ZSH} && ! command grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
       nvm_echo "=> Appending bash_completion source string to $NVM_PROFILE"
+      if [ -n "$(command tail -c 1 "$NVM_PROFILE")" ]; then
+        nvm_echo >> "$NVM_PROFILE"
+      fi
       command printf '%b' "$COMPLETION_STR" >> "$NVM_PROFILE"
     else
       nvm_echo "=> bash_completion source string already in ${NVM_PROFILE}"
