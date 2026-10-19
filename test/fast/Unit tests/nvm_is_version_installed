@@ -67,6 +67,11 @@ touch "$NVM_DIR/versions/io.js/$IOJS_VERSION/bin/node"
 chmod +x "$NVM_DIR/versions/io.js/$IOJS_VERSION/bin/node"
 nvm_is_version_installed "iojs-$IOJS_VERSION" || die "nvm_is_version_installed iojs-$IOJS_VERSION should work via the fallback"
 
+# a version that nvm_version_path rejects is never installed
+for BAD_VERSION in '..' 'v/../x' '../node/12.0.0' 'iojs-v/../x'; do
+  ! nvm_is_version_installed "$BAD_VERSION" || die "nvm_is_version_installed $BAD_VERSION should fail with a '..' path component"
+done
+
 # the modern layout is found without shelling out to detect the OS
 FAST_VERSION='14.0.0'
 ! nvm_is_version_installed "$FAST_VERSION" || die "nvm_is_version_installed $FAST_VERSION should fail before it is installed"
@@ -91,6 +96,15 @@ nvm_get_os() {
   echo "win"
 }
 check_version '13.0.0' 'node.exe'
+
+# nvm_version_path's failure must be honored, not just its (usually empty) output,
+# which would otherwise turn the check into one for `/bin/node`
+nvm_version_path() {
+  echo "$NODE_PATH/13.0.0"
+  return 3
+}
+! nvm_is_version_installed 'v/../x' || die "nvm_is_version_installed must fail when nvm_version_path fails"
+unset -f nvm_version_path
 
 
 cleanup

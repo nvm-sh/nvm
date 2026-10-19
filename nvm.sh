@@ -273,7 +273,9 @@ nvm_is_version_installed() {
   if [ "_$(nvm_get_os)" = '_win' ]; then
     NVM_NODE_BINARY='node.exe'
   fi
-  if [ -x "$(nvm_version_path "$1" 2>/dev/null)/bin/${NVM_NODE_BINARY}" ]; then
+  local VERSION_PATH
+  VERSION_PATH="$(nvm_version_path "$1" 2>/dev/null)" || return 1
+  if [ -x "${VERSION_PATH}/bin/${NVM_NODE_BINARY}" ]; then
     return 0
   fi
   return 1
