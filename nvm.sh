@@ -217,8 +217,10 @@ nvm_sanitize_auth_header() {
     # `Basic <base64>` and `Bearer <token>` survive intact.
     # '~' is also allowed, completing RFC 7235 `token68` (and thus RFC 6750
     # `b64token`), so opaque Bearer tokens containing it are not corrupted.
-    # Note: '-' must be at the end of the bracket expression to be treated as a literal.
-    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=~-]//g'
+    # Note: '-' must be at the end of the set to be treated as a literal.
+    # `tr`, not `sed`: sed is line-based and would keep newlines, eg from a
+    # `base64` credential that was wrapped at 76 columns.
+    nvm_echo "$1" | command tr -cd 'a-zA-Z0-9 :_.+/=~-'
 }
 
 nvm_has_system_node() {
