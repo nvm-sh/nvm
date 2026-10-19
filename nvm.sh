@@ -688,9 +688,10 @@ all non-commented content (anything after # is a comment) must be either:
 
 additionally, a single bare nvm-recognized version-ish must be present (after stripping comments)."
 
+  # show control characters (other than tabs and newlines) as `?`, so the parsed content is printed as plain text
   local warn_text
   warn_text="non-commented content parsed:
-${1}"
+$(nvm_echo "${1}" | command tr '\001-\010\013-\037\177' '??????????????????????????????')"
 
   nvm_err "$(nvm_wrap_with_color_code 'r' "${error_text}")
 
@@ -705,6 +706,12 @@ nvm_process_nvmrc_content() {
   lines=$(nvm_echo "${NVMRC_CONTENT}" | command sed 's/#.*//' | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
 
   if [ -z "$lines" ]; then
+    nvm_nvmrc_invalid_msg "${lines}"
+    return 1
+  fi
+
+  # control characters, other than tabs, are not valid in any line
+  if [ -n "$(nvm_echo "${lines}" | command tr -d '\t\n' | command tr -cd '[:cntrl:]')" ]; then
     nvm_nvmrc_invalid_msg "${lines}"
     return 1
   fi

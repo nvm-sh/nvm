@@ -1,0 +1,52 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+has_control_characters() {
+  [ -n "$(nvm_echo "${1-}" | command tr -d '\t\n' | command tr -cd '[:cntrl:]')" ]
+}
+
+ESC="$(printf '\033')"
+BEL="$(printf '\007')"
+CR="$(printf '\r')"
+DEL="$(printf '\177')"
+TAB="$(printf '\t')"
+
+for CHAR in "${ESC}" "${BEL}" "${CR}" "${DEL}"; do
+  try_err nvm_process_nvmrc_content "2${CHAR}0"
+  [ "${CAPTURED_EXIT_CODE}" != 0 ] || die "expected a control character inside a version to be invalid; got exit code ${CAPTURED_EXIT_CODE}"
+  ! has_control_characters "$(nvm_echo "${CAPTURED_STDERR}" | strip_colors)" || die "expected no control characters in the error; got \`${CAPTURED_STDERR}\`"
+  nvm_echo "${CAPTURED_STDERR}" | strip_colors | nvm_grep -q '^2?0$' || die "expected the control character to be shown as \`?\`; got \`${CAPTURED_STDERR}\`"
+
+  try nvm_process_nvmrc_content "2${CHAR}0"
+  [ -z "${CAPTURED_STDOUT}" ] || die "expected no version for a control character inside a version; got \`${CAPTURED_STDOUT}\`"
+
+  try_err nvm_process_nvmrc_content "20
+foo=b${CHAR}r"
+  [ "${CAPTURED_EXIT_CODE}" != 0 ] || die "expected a control character in a key=value line to be invalid; got exit code ${CAPTURED_EXIT_CODE}"
+  ! has_control_characters "$(nvm_echo "${CAPTURED_STDERR}" | strip_colors)" || die "expected no control characters in the error; got \`${CAPTURED_STDERR}\`"
+done
+
+try_err nvm_process_nvmrc_content "20${ESC}]0;title${BEL}
+21${ESC}[2K"
+[ "${CAPTURED_EXIT_CODE}" != 0 ] || die "expected two versions with control characters to be invalid; got exit code ${CAPTURED_EXIT_CODE}"
+! has_control_characters "$(nvm_echo "${CAPTURED_STDERR}" | strip_colors)" || die "expected no control characters in the error; got \`${CAPTURED_STDERR}\`"
+
+try nvm_process_nvmrc_content "20${CR}
+"
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected a CRLF line ending to be valid; got exit code ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDOUT}" = '20' ] || die "expected \`20\` from a CRLF line ending; got \`${CAPTURED_STDOUT}\`"
+
+try nvm_process_nvmrc_content "${TAB}lts/*${TAB}
+foo${TAB}=${TAB}bar"
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected tabs to be valid; got exit code ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDOUT}" = 'lts/*' ] || die "expected \`lts/*\` with tabs; got \`${CAPTURED_STDOUT}\`"
+
+try nvm_process_nvmrc_content 'v20.0.0-rc.1 # comment'
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected a prerelease to be valid; got exit code ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDOUT}" = 'v20.0.0-rc.1' ] || die "expected \`v20.0.0-rc.1\`; got \`${CAPTURED_STDOUT}\`"
