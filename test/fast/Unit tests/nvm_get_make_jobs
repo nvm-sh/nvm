@@ -132,6 +132,18 @@ run darwin
 assert_jobs 3 'darwin uses sysctl'
 assert_not_nagged 'darwin uses sysctl'
 
+# BSD-derived `wc`s right-align the count
+shim wc "echo '       4'"
+shim psrinfo 'echo 0; echo 1; echo 2; echo 3'
+run sunos
+assert_jobs 3 'sunos with a padded wc'
+assert_not_nagged 'sunos with a padded wc'
+
+shim pmcycles 'echo 0; echo 1; echo 2; echo 3'
+run aix
+assert_jobs 3 'aix with a padded wc'
+assert_not_nagged 'aix with a padded wc'
+
 export PATH="${ORIG_PATH}"
 
 # an explicit count short-circuits detection entirely

@@ -3247,10 +3247,11 @@ nvm_get_make_jobs() {
       NVM_CPU_CORES="$(sysctl -n hw.ncpu)"
     ;;
     "_sunos")
-      NVM_CPU_CORES="$(psrinfo | wc -l)"
+      # some `wc`s pad the count with whitespace
+      NVM_CPU_CORES="$(psrinfo | wc -l | command tr -d '[:space:]')"
     ;;
     "_aix")
-      NVM_CPU_CORES="$(pmcycles -m | wc -l)"
+      NVM_CPU_CORES="$(pmcycles -m | wc -l | command tr -d '[:space:]')"
     ;;
     *)
       # `_NPROCESSORS_ONLN` is how glibc, FreeBSD, macOS, and Cygwin spell it;
@@ -3690,6 +3691,7 @@ nvm_is_natural_num() {
   case "$1" in
     0) return 1 ;;
     -*) return 3 ;; # some BSDs return false positives for double-negated args
+    *[!0-9]*) return 2 ;; # `-eq` also accepts signs and whitespace, and in ksh, any arithmetic expression
     *)
       [ "$1" -eq "$1" ] 2>/dev/null # returns 2 if it doesn't match
     ;;
