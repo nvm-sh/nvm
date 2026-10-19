@@ -4549,8 +4549,9 @@ nvm() {
         fi
 
         if [ $EXIT_CODE -ne 0 ] && [ $nosource -ne 1 ]; then
-          if [ -z "${NVM_MAKE_JOBS-}" ]; then
-            nvm_get_make_jobs
+          # `-j` was validated when parsed, but an inherited value was not
+          if ! nvm_is_natural_num "${NVM_MAKE_JOBS-}"; then
+            nvm_get_make_jobs "${NVM_MAKE_JOBS-}"
           fi
 
           if [ "_${NVM_OS}" = "_win" ]; then

@@ -1,0 +1,57 @@
+#!/bin/sh
+
+cleanup () {
+  [ -n "${NVM_DIR-}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset NVM_DIR NVM_MAKE_JOBS
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+unset npm_config_prefix NPM_CONFIG_PREFIX
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'unable to create a temp NVM_DIR'
+VERSION='v20.0.0'
+JOBS_FILE="${NVM_DIR}/make-jobs"
+
+# stay offline, and record the job count that would be handed to `make -j`
+nvm_remote_version () { nvm_echo "${VERSION}"; }
+nvm_has_executable () { return 0; }
+nvm_install_source () { nvm_echo "${4-}" > "${JOBS_FILE}"; return 1; }
+
+# a natural number is kept as-is
+NVM_MAKE_JOBS=7
+OUTPUT="$(nvm install -s "${VERSION}" 2>&1)"
+JOBS="$(cat "${JOBS_FILE}")"
+[ "_${JOBS}" = '_7' ] || die "expected an inherited NVM_MAKE_JOBS of 7 to be kept, got >${JOBS}<"
+case "${OUTPUT}" in
+  *'is invalid for number of `make` jobs'*) die "a valid NVM_MAKE_JOBS was rejected: >${OUTPUT}<" ;;
+esac
+
+# anything else is rejected, as `-j` rejects it, instead of reaching `make`
+for NVM_MAKE_JOBS in 'SHELL=/bin/false' '-f/dev/null' 'install' 'V=1' '+3' ' 3' '0' '-1'; do
+  rm -f "${JOBS_FILE}"
+  OUTPUT="$(nvm install -s "${VERSION}" 2>&1)"
+  JOBS="$(cat "${JOBS_FILE}")"
+  nvm_is_natural_num "${JOBS}" \
+    || die "NVM_MAKE_JOBS='${NVM_MAKE_JOBS}': expected a natural number to reach nvm_install_source, got >${JOBS}<"
+  case "${OUTPUT}" in
+    *"${NVM_MAKE_JOBS} is invalid for number of \`make\` jobs, must be a natural number"*) ;;
+    *) die "NVM_MAKE_JOBS='${NVM_MAKE_JOBS}': expected it to be reported as invalid, got >${OUTPUT}<" ;;
+  esac
+done
+
+# an empty value is still detected silently
+NVM_MAKE_JOBS=''
+rm -f "${JOBS_FILE}"
+OUTPUT="$(nvm install -s "${VERSION}" 2>&1)"
+JOBS="$(cat "${JOBS_FILE}")"
+nvm_is_natural_num "${JOBS}" || die "expected a detected job count, got >${JOBS}<"
+case "${OUTPUT}" in
+  *'is invalid for number of `make` jobs'*) die "an empty NVM_MAKE_JOBS was reported as invalid: >${OUTPUT}<" ;;
+esac
+
+cleanup
