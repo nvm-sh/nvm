@@ -10,9 +10,6 @@
 # shellcheck disable=SC2039,SC2016,SC2001,SC3043
 { # this ensures the entire script is downloaded #
 
-# shellcheck disable=SC3028
-NVM_SCRIPT_SOURCE="${_:-}"
-
 nvm_is_zsh() {
   [ -n "${ZSH_VERSION-}" ]
 }
@@ -589,12 +586,40 @@ fi
 
 # Auto detect the NVM_DIR when not set
 if [ -z "${NVM_DIR-}" ]; then
+  NVM_SCRIPT_SOURCE=''
   # shellcheck disable=SC2128
   if [ -n "${BASH_SOURCE-}" ]; then
     NVM_SCRIPT_SOURCE="${BASH_SOURCE}"
+  elif nvm_is_zsh; then
+    # `%x` names the file being sourced even when `$0` does not, eg under `emulate sh`
+    eval 'NVM_SCRIPT_SOURCE="${(%):-%x}"'
+  elif [ -n "${KSH_VERSION-}" ] && (eval ': "${.sh.file}"') 2>/dev/null; then
+    # only ksh93 has `.sh.file`; other shells abort on the syntax, so it is probed in a subshell first
+    eval 'NVM_SCRIPT_SOURCE="${.sh.file}"'
   fi
-  # shellcheck disable=SC2086
-  NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" >/dev/null && \pwd)"
+  if [ -n "${NVM_SCRIPT_SOURCE}" ] && [ -f "${NVM_SCRIPT_SOURCE}" ]; then
+    # shellcheck disable=SC2086
+    NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE}")" >/dev/null && \pwd)"
+  else
+    # other shells (eg, dash) cannot tell where a sourced file lives (`$0` names the shell or the calling script),
+    # and a file sourced from a pipe (eg, `/dev/fd/63`) has no directory, so use the default install location, as `install.sh` does
+    if [ -n "${XDG_CONFIG_HOME-}" ]; then
+      NVM_DIR="${XDG_CONFIG_HOME}/nvm"
+    else
+      NVM_DIR="${HOME-}/.nvm"
+    fi
+    if [ -f "${NVM_DIR}/nvm.sh" ]; then
+      # shellcheck disable=SC2086
+      NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "${NVM_DIR}" >/dev/null && \pwd)"
+    else
+      NVM_DIR=''
+    fi
+  fi
+  if [ -z "${NVM_DIR}" ]; then
+    unset NVM_DIR NVM_SCRIPT_SOURCE 2>/dev/null
+    nvm_err 'nvm: unable to detect $NVM_DIR; set it to the directory containing nvm.sh before sourcing it'
+    return 1
+  fi
   export NVM_DIR
 else
   # https://unix.stackexchange.com/a/198289

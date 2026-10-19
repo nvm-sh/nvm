@@ -909,7 +909,7 @@ Nota bene: Avoid running nvm while the tests are running.
 
 nvm exposes the following environment variables:
 
-- `NVM_DIR` - nvm's installation directory.
+- `NVM_DIR` - nvm's installation directory. If it is not set when `nvm.sh` is sourced, bash, zsh, and ksh93 use the directory containing `nvm.sh`; other shells (like dash) cannot tell where a sourced file lives, so they use the default install location (`$XDG_CONFIG_HOME/nvm` when `XDG_CONFIG_HOME` is set, otherwise `~/.nvm`). If nvm is installed elsewhere, set `NVM_DIR` before sourcing `nvm.sh`.
 - `NVM_BIN` - where node, npm, and global packages for the active version of node are installed.
 - `NVM_INC` - node's include file directory (useful for building C/C++ addons for node).
 - `NVM_CD_FLAGS` - used to maintain compatibility with zsh.
