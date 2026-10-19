@@ -1,0 +1,82 @@
+#!/bin/sh
+
+WORK="$PWD/nvm_download-auth-mirror-work.$$"
+TEST_BIN="$WORK/bin"
+REQUEST_LOG="$WORK/request.log"
+
+cleanup() {
+  unset -f die cleanup sends_header
+  unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+OLDPATH="$PATH"
+
+# fake curl: record every argument, and anything given on stdin, then succeed
+make_fake_curl "$TEST_BIN" '{ for a in "$@"; do printf "%s\n" "$a"; done; cat; } > "$REQUEST_LOG"'
+VERSION_MESSAGE="curl 7.99.0 (fake)"
+export REQUEST_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+
+# args: url; whether nvm_download handed the credential to curl for that url
+sends_header() {
+  NVM_AUTH_HEADER='Bearer test-token' nvm_download -L -s "$1" -o - < /dev/null || die "nvm_download returned nonzero for $1"
+  grep -Fq 'test-token' "$REQUEST_LOG"
+}
+
+# given no mirror is configured
+unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR
+# then both default mirrors are sent the header, and nothing else is
+sends_header 'https://nodejs.org/dist/index.tab' || die 'no mirror: header not sent to the default node mirror'
+sends_header 'https://iojs.org/dist/index.tab' || die 'no mirror: header not sent to the default iojs mirror'
+! sends_header 'https://npmjs.org/install.sh' || die 'no mirror: header sent to npmjs.org'
+! sends_header 'https://nodejs.org.example.com/dist/index.tab' || die 'no mirror: header sent to a host that merely starts with the mirror host'
+! sends_header 'https://nodejs.org/distx/index.tab' || die 'no mirror: header sent to a path that merely starts with the mirror path'
+
+# given only the node mirror is configured
+NVM_NODEJS_ORG_MIRROR='http://127.0.0.1:8080/dist'
+export NVM_NODEJS_ORG_MIRROR
+# then only that mirror is sent the header
+sends_header 'http://127.0.0.1:8080/dist/index.tab' || die 'node mirror: header not sent to it'
+sends_header 'http://127.0.0.1:8080/dist/v22.0.0/SHASUMS256.txt' || die 'node mirror: header not sent to a path under it'
+! sends_header 'https://iojs.org/dist/index.tab' || die 'node mirror: header sent to the default iojs mirror'
+! sends_header 'https://nodejs.org/dist/index.tab' || die 'node mirror: header sent to the default node mirror'
+! sends_header 'http://127.0.0.1:8080/distx/index.tab' || die 'node mirror: header sent outside the mirror path'
+! sends_header 'https://npmjs.org/install.sh' || die 'node mirror: header sent to npmjs.org'
+
+# given only the iojs mirror is configured
+unset NVM_NODEJS_ORG_MIRROR
+NVM_IOJS_ORG_MIRROR='http://127.0.0.1:8080/iojs'
+export NVM_IOJS_ORG_MIRROR
+# then only that mirror is sent the header
+sends_header 'http://127.0.0.1:8080/iojs/index.tab' || die 'iojs mirror: header not sent to it'
+! sends_header 'https://nodejs.org/dist/index.tab' || die 'iojs mirror: header sent to the default node mirror'
+! sends_header 'https://iojs.org/dist/index.tab' || die 'iojs mirror: header sent to the default iojs mirror'
+
+# given both mirrors are configured
+NVM_NODEJS_ORG_MIRROR='http://127.0.0.1:8080/dist'
+export NVM_NODEJS_ORG_MIRROR
+# then both are sent the header, and the default hosts are not
+sends_header 'http://127.0.0.1:8080/dist/index.tab' || die 'both mirrors: header not sent to the node mirror'
+sends_header 'http://127.0.0.1:8080/iojs/index.tab' || die 'both mirrors: header not sent to the iojs mirror'
+! sends_header 'https://nodejs.org/dist/index.tab' || die 'both mirrors: header sent to the default node mirror'
+! sends_header 'https://iojs.org/dist/index.tab' || die 'both mirrors: header sent to the default iojs mirror'
+
+# given an invalid mirror, nothing is sent the header (rather than everything)
+NVM_NODEJS_ORG_MIRROR='ftp://127.0.0.1/dist'
+unset NVM_IOJS_ORG_MIRROR
+! sends_header 'https://nodejs.org/dist/index.tab' || die 'invalid mirror: header sent to the default node mirror'
+! sends_header 'https://iojs.org/dist/index.tab' || die 'invalid mirror: header sent to the default iojs mirror'
+
+# given a mirror whose name has glob characters, they match only literally
+NVM_NODEJS_ORG_MIRROR='http://127.0.0.1:8080/[d]ist'
+! sends_header 'http://127.0.0.1:8080/dist/index.tab' || die 'glob mirror: header sent to a URL matching the mirror as a pattern'
+sends_header 'http://127.0.0.1:8080/[d]ist/index.tab' || die 'glob mirror: header not sent to the mirror itself'
+
+cleanup

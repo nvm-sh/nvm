@@ -156,7 +156,24 @@ nvm_download() {
   local sanitized_header
   sanitized_header=''
   if [ -n "${NVM_AUTH_HEADER:-}" ]; then
-    sanitized_header="$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")"
+    local NVM_DOWNLOAD_AUTH
+    NVM_DOWNLOAD_AUTH=''
+    local NVM_DOWNLOAD_ARG
+    for NVM_DOWNLOAD_ARG in "$@"; do
+      case "${NVM_DOWNLOAD_ARG}" in
+        http://* | https://*)
+          if nvm_auth_header_applies_to "${NVM_DOWNLOAD_ARG}"; then
+            NVM_DOWNLOAD_AUTH=1
+          else
+            NVM_DOWNLOAD_AUTH=''
+            break
+          fi
+        ;;
+      esac
+    done
+    if [ -n "${NVM_DOWNLOAD_AUTH}" ]; then
+      sanitized_header="$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")"
+    fi
   fi
 
   local NVM_DOWNLOADER
@@ -202,11 +219,41 @@ nvm_download() {
     return 0
   fi
 
-  if [ -n "${NVM_AUTH_HEADER:-}" ]; then
+  if [ -n "${sanitized_header}" ]; then
     set -- "$@" --header "Authorization: ${sanitized_header}"
   fi
 
   command "${NVM_DOWNLOADER}" "$@"
+}
+
+# args: url
+# Whether `$NVM_AUTH_HEADER` applies to a request for the given URL: only URLs
+# under a mirror qualify, never any other host (eg, npmjs.org). When exactly one
+# of `$NVM_NODEJS_ORG_MIRROR` and `$NVM_IOJS_ORG_MIRROR` is set, the header is
+# that mirror's credential, so the other flavor's default host does not get it.
+nvm_auth_header_applies_to() {
+  local NVM_AUTH_FLAVOR
+  local NVM_AUTH_MIRROR
+  for NVM_AUTH_FLAVOR in node iojs; do
+    case "${NVM_AUTH_FLAVOR}" in
+      node)
+        if [ -z "${NVM_NODEJS_ORG_MIRROR-}" ] && [ -n "${NVM_IOJS_ORG_MIRROR-}" ]; then
+          continue
+        fi
+      ;;
+      iojs)
+        if [ -z "${NVM_IOJS_ORG_MIRROR-}" ] && [ -n "${NVM_NODEJS_ORG_MIRROR-}" ]; then
+          continue
+        fi
+      ;;
+    esac
+    # an invalid mirror matches nothing; the download itself reports it
+    NVM_AUTH_MIRROR="$(nvm_get_mirror "${NVM_AUTH_FLAVOR}" std 2>/dev/null)" || continue
+    case "${1-}" in
+      "${NVM_AUTH_MIRROR}"/*) return 0 ;;
+    esac
+  done
+  return 1
 }
 
 nvm_sanitize_auth_header() {
@@ -5530,7 +5577,7 @@ nvm() {
         nvm_replace_literal nvm_sanitize_path nvm_sanitize_url nvm_has_colors nvm_has_italics nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
-        nvm_npmrc_bad_news_bears nvm_sanitize_auth_header \
+        nvm_npmrc_bad_news_bears nvm_sanitize_auth_header nvm_auth_header_applies_to \
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code \
         nvm_print_color_legend \
         nvm_echo_with_colors nvm_err_with_colors \

@@ -667,6 +667,8 @@ To pass an Authorization header through to the mirror url, set `$NVM_AUTH_HEADER
 NVM_AUTH_HEADER="Bearer secret-token" nvm install node
 ```
 
+The header is only sent with requests for URLs under a mirror, never to any other host. If exactly one of `$NVM_NODEJS_ORG_MIRROR` and `$NVM_IOJS_ORG_MIRROR` is set, only that mirror receives it; if both are set, both do; if neither is, the default mirrors (`https://nodejs.org/dist` and `https://iojs.org/dist`) do.
+
 `$NVM_AUTH_HEADER` is the recommended way to authenticate to a mirror. Credentials embedded in the mirror URL itself (`https://user:password@host/...`) also work, and nvm prints such URLs with the credentials masked as `***@`.
 
 ### Platforms without official binaries
