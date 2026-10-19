@@ -1,0 +1,84 @@
+#!/bin/sh
+
+WORK="${PWD}/nvm-is-cached-artifact-work.$$"
+
+cleanup() {
+  command rm -rf "${WORK}"
+  NVM_DIR="${OLD_NVM_DIR}"
+  unset -f cleanup die check
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+OLD_NVM_DIR="${NVM_DIR}"
+
+check() {
+  EXPECTED="${1}"
+  shift
+  ACTUAL=0
+  nvm_is_cached_artifact "$@" || ACTUAL=$?
+  [ "${ACTUAL}" = "${EXPECTED}" ] || die "nvm_is_cached_artifact '$*' (NVM_DIR '${NVM_DIR}'): expected exit code ${EXPECTED}, got ${ACTUAL}"
+}
+
+NVM_DIR="${WORK}/nvm"
+CACHE="$(nvm_cache_dir)"
+[ "${CACHE}" = "${NVM_DIR}/.cache" ] || die "expected cache dir '${NVM_DIR}/.cache', got '${CACHE}'"
+
+command mkdir -p "${CACHE}/bin/node-v8.0.0-linux-x64" "${CACHE}/src/node-v8.0.0/files" "${WORK}/project" "${WORK}/nvm/.cache-other" "${WORK}/outside"
+echo tarball > "${CACHE}/bin/node-v8.0.0-linux-x64/node-v8.0.0-linux-x64.tar.xz"
+echo tarball > "${CACHE}/top-level.tar.gz"
+echo not-a-cached-tarball > "${WORK}/project/404"
+echo not-a-cached-tarball > "${WORK}/outside/node-v8.0.0.tar.xz"
+echo not-a-cached-tarball > "${WORK}/nvm/.cache-other/node-v8.0.0.tar.xz"
+echo not-a-cached-tarball > "${WORK}/nvm/.cachefile"
+
+# existing files inside the cache are accepted, at any depth
+check 0 "${CACHE}/bin/node-v8.0.0-linux-x64/node-v8.0.0-linux-x64.tar.xz"
+check 0 "${CACHE}/top-level.tar.gz"
+
+# no argument, or an empty one, is rejected
+check 1
+check 1 ''
+
+# paths in the cache that are not existing regular files are rejected
+check 1 "${CACHE}"
+check 1 "${CACHE}/"
+check 1 "${CACHE}/bin"
+check 1 "${CACHE}/src/node-v8.0.0/files"
+check 1 "${CACHE}/bin/node-v8.0.0-linux-x64/missing.tar.xz"
+
+# existing files outside the cache are rejected
+check 1 "${WORK}/outside/node-v8.0.0.tar.xz"
+check 1 "${NVM_DIR}/.cachefile"
+check 1 "${NVM_DIR}/.cache-other/node-v8.0.0.tar.xz"
+
+# a downloader's stray output that names a file relative to the current directory is rejected
+(
+  cd "${WORK}/project" || exit 2
+  [ -f 404 ] || exit 2
+  nvm_is_cached_artifact 404 && exit 3
+  exit 0
+)
+RESULT=$?
+[ "${RESULT}" = 0 ] || die "nvm_is_cached_artifact '404' in a directory containing '404': expected rejection, got subshell exit code ${RESULT}"
+
+# a relative path that happens to reach a cached file is still rejected, since it is not under the cache dir
+(
+  cd "${CACHE}" || exit 2
+  [ -f top-level.tar.gz ] || exit 2
+  nvm_is_cached_artifact top-level.tar.gz && exit 3
+  exit 0
+)
+RESULT=$?
+[ "${RESULT}" = 0 ] || die "nvm_is_cached_artifact 'top-level.tar.gz' from inside the cache dir: expected rejection, got subshell exit code ${RESULT}"
+
+# glob characters in NVM_DIR are matched literally, not as a pattern
+NVM_DIR="${WORK}/n*"
+command mkdir -p "$(nvm_cache_dir)"
+echo tarball > "$(nvm_cache_dir)/glob.tar.xz"
+echo not-a-cached-tarball > "${WORK}/nvm/.cache/glob.tar.xz"
+check 0 "${WORK}/n*/.cache/glob.tar.xz"
+check 1 "${WORK}/nvm/.cache/glob.tar.xz"
+
+cleanup

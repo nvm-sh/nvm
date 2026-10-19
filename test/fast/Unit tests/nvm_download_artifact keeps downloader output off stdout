@@ -1,0 +1,54 @@
+#!/bin/sh
+
+WORK="${PWD}/nvm-download-artifact-stdout-work.$$"
+
+cleanup() {
+  command rm -rf "${WORK}"
+  NVM_DIR="${OLD_NVM_DIR}"
+  unset -f cleanup die nvm_download nvm_get_checksum nvm_compare_checksum
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+OLD_NVM_DIR="${NVM_DIR}"
+NVM_DIR="${WORK}/nvm"
+command mkdir -p "${NVM_DIR}"
+
+nvm_get_checksum() { echo checksum; }
+nvm_compare_checksum() { return 0; }
+
+# a downloader that prints to stdout, as curl does with a `write-out` setting
+nvm_download() {
+  while [ $# -gt 0 ]; do
+    if [ "$1" = '-o' ]; then
+      echo tarball > "$2"
+    fi
+    shift
+  done
+  echo 200
+}
+
+try nvm_download_artifact node binary std 8.0.0
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "nvm_download_artifact failed; got exit code ${CAPTURED_EXIT_CODE}"
+case "${CAPTURED_STDOUT}" in
+  "$(nvm_cache_dir)"/bin/*) ;;
+  *) die "nvm_download_artifact printed more than the cached tarball path; got '${CAPTURED_STDOUT}'" ;;
+esac
+[ -f "${CAPTURED_STDOUT}" ] || die "nvm_download_artifact printed a path that does not exist: '${CAPTURED_STDOUT}'"
+
+command rm -rf "$(nvm_cache_dir)"
+
+nvm_download() {
+  echo 404
+  return 22
+}
+
+try nvm_download_artifact node binary std 8.0.0
+[ "${CAPTURED_EXIT_CODE}" = 4 ] || die "a failed download should exit with 4; got ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDOUT}" ] || die "a failed download should print nothing to stdout; got '${CAPTURED_STDOUT}'"
+
+cleanup

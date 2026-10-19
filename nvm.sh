@@ -2974,8 +2974,8 @@ nvm_install_binary() {
     PROGRESS_BAR="--progress-bar"
   fi
   nvm_echo "Downloading and installing ${NODE_OR_IOJS-} ${VERSION}..."
-  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
-  if [ -f "${TARBALL}" ]; then
+  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}")" || TARBALL=''
+  if nvm_is_cached_artifact "${TARBALL}"; then
     TMPDIR="$(dirname "${TARBALL}")/files"
   fi
 
@@ -3169,7 +3169,8 @@ nvm_download_artifact() {
     command rm -rf "${TARBALL}"
   fi
   nvm_err "Downloading ${TARBALL_URL}..."
-  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || {
+  # stdout is reserved for the tarball path, so nothing the downloader prints may reach it
+  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" >&2 || {
     command rm -rf "${TARBALL}" "${tmpdir}"
     nvm_err "download from ${TARBALL_URL} failed"
     return 4
@@ -3187,6 +3188,14 @@ nvm_download_artifact() {
   }
 
   nvm_echo "${TARBALL}"
+}
+
+# a tarball path from nvm_download_artifact is only usable if it is an existing file in nvm's cache
+nvm_is_cached_artifact() {
+  case "${1-}" in
+    "$(nvm_cache_dir)"/*) [ -f "${1}" ] ;;
+    *) return 1 ;;
+  esac
 }
 
 # args: nvm_os, version, tarball, tmpdir
@@ -3376,8 +3385,8 @@ nvm_install_source() {
 
   nvm_is_zsh && setopt local_options shwordsplit
 
-  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
-  [ -f "${TARBALL}" ] && \
+  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}")" && \
+  nvm_is_cached_artifact "${TARBALL}" && \
   TMPDIR="$(dirname "${TARBALL}")/files" && \
   if ! (
     # shellcheck disable=SC2086
@@ -5443,7 +5452,7 @@ nvm() {
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_binary nvm_install_source nvm_clang_version \
-        nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
+        nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
         nvm_print_versions nvm_compute_checksum \
         nvm_get_checksum_binary \
