@@ -3168,17 +3168,17 @@ nvm_download_artifact() {
     nvm_err "Removing the broken local cache..."
     command rm -rf "${TARBALL}"
   fi
-  nvm_err "Downloading ${TARBALL_URL}..."
+  nvm_err "Downloading $(nvm_sanitize_url "${TARBALL_URL}")..."
   # stdout is reserved for the tarball path, so nothing the downloader prints may reach it
   nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" >&2 || {
     command rm -rf "${TARBALL}" "${tmpdir}"
-    nvm_err "download from ${TARBALL_URL} failed"
+    nvm_err "download from $(nvm_sanitize_url "${TARBALL_URL}") failed"
     return 4
   }
 
   if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
     command rm -rf "${TARBALL}" "${tmpdir}"
-    nvm_err "HTTP 404 at URL ${TARBALL_URL}"
+    nvm_err "HTTP 404 at URL $(nvm_sanitize_url "${TARBALL_URL}")"
     return 5
   fi
 
@@ -3697,6 +3697,12 @@ nvm_sanitize_path() {
   nvm_echo "${SANITIZED_PATH}"
 }
 
+# Replace the `user:password@` part of any URL with `***@`, for printing.
+# Like curl and wget, everything up to the last `@` before the path is userinfo.
+nvm_sanitize_url() {
+  nvm_echo "${1-}" | command sed -e 's#://[^/[:space:]]*@#://***@#g'
+}
+
 nvm_is_natural_num() {
   if [ -z "$1" ]; then
     return 4
@@ -4093,8 +4099,8 @@ nvm() {
       nvm_err "\${PATH}: $(nvm_sanitize_path "${PATH}")"
       nvm_err "\$PREFIX: '$(nvm_sanitize_path "${PREFIX-}")'"
       nvm_err "\${NPM_CONFIG_PREFIX}: '$(nvm_sanitize_path "${NPM_CONFIG_PREFIX-}")'"
-      nvm_err "\$NVM_NODEJS_ORG_MIRROR: '${NVM_NODEJS_ORG_MIRROR-}'"
-      nvm_err "\$NVM_IOJS_ORG_MIRROR: '${NVM_IOJS_ORG_MIRROR-}'"
+      nvm_err "\$NVM_NODEJS_ORG_MIRROR: '$(nvm_sanitize_url "${NVM_NODEJS_ORG_MIRROR-}")'"
+      nvm_err "\$NVM_IOJS_ORG_MIRROR: '$(nvm_sanitize_url "${NVM_IOJS_ORG_MIRROR-}")'"
       nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
       nvm_err "uname -a: '$(command uname -a | command awk '{$2=""; print}' | command xargs)'"
       nvm_err "checksum binary: '$(nvm_get_checksum_binary 2>/dev/null)'"
@@ -5480,7 +5486,7 @@ nvm() {
         nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
         nvm_list_aliases nvm_make_alias nvm_print_alias_file nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
-        nvm_replace_literal nvm_sanitize_path nvm_has_colors nvm_has_italics nvm_process_parameters \
+        nvm_replace_literal nvm_sanitize_path nvm_sanitize_url nvm_has_colors nvm_has_italics nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears nvm_sanitize_auth_header \

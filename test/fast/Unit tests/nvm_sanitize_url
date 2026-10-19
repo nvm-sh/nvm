@@ -1,0 +1,31 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+check() {
+  ACTUAL="$(nvm_sanitize_url "${1}")"
+  [ "${ACTUAL}" = "${2}" ] || die "nvm_sanitize_url '${1}': expected >${2}<, got >${ACTUAL}<"
+}
+
+# URLs without userinfo are unchanged
+check '' ''
+check 'https://nodejs.org/dist' 'https://nodejs.org/dist'
+check 'https://nodejs.org' 'https://nodejs.org'
+check 'http://127.0.0.1:8080/dist/v20.0.0/node-v20.0.0.tar.xz' 'http://127.0.0.1:8080/dist/v20.0.0/node-v20.0.0.tar.xz'
+check 'https://[::1]:8080/dist' 'https://[::1]:8080/dist'
+check 'https://nodejs.org/a@b/dist' 'https://nodejs.org/a@b/dist'
+
+# userinfo is masked
+check 'https://user:pw@nexus.example.com/repository/nodejs-dist' 'https://***@nexus.example.com/repository/nodejs-dist'
+check 'https://user:pw@nexus.example.com' 'https://***@nexus.example.com'
+check 'https://token@nexus.example.com:8443/dist' 'https://***@nexus.example.com:8443/dist'
+check 'http://user:p%40w@[::1]:8080/dist' 'http://***@[::1]:8080/dist'
+# everything up to the last `@` before the path is userinfo; an `@` in the path is kept
+check 'https://user:p@w@nexus.example.com/a@b' 'https://***@nexus.example.com/a@b'
+
+# every URL in multiline text is masked
+check 'URL:http://user:pw@a.example.com/x [1/1]
+https://user:pw@b.example.com/y' 'URL:http://***@a.example.com/x [1/1]
+https://***@b.example.com/y'
