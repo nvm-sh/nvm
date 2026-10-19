@@ -220,10 +220,89 @@ nvm_download() {
   fi
 
   if [ -n "${sanitized_header}" ]; then
+    if [ "${NVM_DOWNLOADER}" = 'wget' ] && nvm_wget_is_gnu; then
+      nvm_wget_same_origin "${sanitized_header}" "$@"
+      return $?
+    fi
     set -- "$@" --header "Authorization: ${sanitized_header}"
   fi
 
   command "${NVM_DOWNLOADER}" "$@"
+}
+
+# BusyBox wget rejects `--version`; GNU Wget2 reports itself as "GNU Wget2"
+nvm_wget_is_gnu() {
+  command wget --version 2>/dev/null | nvm_grep -q '^GNU Wget '
+}
+
+# args: url; prints its `scheme://authority`
+nvm_url_origin() {
+  local NVM_URL_REST
+  NVM_URL_REST="${1#*://}"
+  nvm_echo "${1%%://*}://${NVM_URL_REST%%/*}"
+}
+
+# args: sanitized Authorization header value, wget arguments
+# `curl -L` (7.58.0 and later) does not send a custom Authorization header to a
+# redirect target on another host, but wget sends `--header` along to every
+# one. So GNU Wget is stopped at every redirect, which is then followed only if
+# it stays on the same origin (scheme, host, and port). Other wgets, like
+# BusyBox's, cannot be stopped from following redirects.
+nvm_wget_same_origin() {
+  local NVM_WGET_HEADER
+  NVM_WGET_HEADER="Authorization: ${1-}"
+  shift
+  local NVM_WGET_URL
+  NVM_WGET_URL=''
+  local NVM_WGET_ARG
+  for NVM_WGET_ARG in "$@"; do
+    case "${NVM_WGET_ARG}" in
+      http://* | https://*) NVM_WGET_URL="${NVM_WGET_ARG}" ;;
+    esac
+  done
+  local NVM_WGET_REQUESTED_URL
+  NVM_WGET_REQUESTED_URL="${NVM_WGET_URL}"
+  local NVM_WGET_EXIT_CODE
+  local NVM_WGET_LOCATION
+  local NVM_WGET_ARG_COUNT
+  local NVM_WGET_REDIRECTS
+  NVM_WGET_REDIRECTS=0
+  while :; do
+    command wget --max-redirect=0 "$@" --header "${NVM_WGET_HEADER}"
+    NVM_WGET_EXIT_CODE=$?
+    # wget exits with 8 for an HTTP error status, including a redirect it did not follow
+    if [ "${NVM_WGET_EXIT_CODE}" != 8 ] || [ -z "${NVM_WGET_URL}" ]; then
+      return "${NVM_WGET_EXIT_CODE}"
+    fi
+    NVM_WGET_LOCATION="$(command wget --max-redirect=0 -q -S -O /dev/null "${NVM_WGET_URL}" --header "${NVM_WGET_HEADER}" 2>&1 \
+      | command awk 'tolower($1) == "location:" { print $2; exit }' | command tr -d '\r')"
+    case "${NVM_WGET_LOCATION}" in
+      '') return "${NVM_WGET_EXIT_CODE}" ;;
+      http://* | https://*) ;;
+      //*) NVM_WGET_LOCATION="${NVM_WGET_URL%%//*}${NVM_WGET_LOCATION}" ;;
+      /*) NVM_WGET_LOCATION="$(nvm_url_origin "${NVM_WGET_URL}")${NVM_WGET_LOCATION}" ;;
+      *) NVM_WGET_LOCATION="${NVM_WGET_URL%/*}/${NVM_WGET_LOCATION}" ;;
+    esac
+    if [ "$(nvm_url_origin "${NVM_WGET_LOCATION}")" != "$(nvm_url_origin "${NVM_WGET_URL}")" ]; then
+      nvm_err "${NVM_WGET_REQUESTED_URL} redirects to another origin; wget would send \$NVM_AUTH_HEADER there too, so it is not followed. Install curl to download from this mirror."
+      return "${NVM_WGET_EXIT_CODE}"
+    fi
+    NVM_WGET_REDIRECTS=$((NVM_WGET_REDIRECTS + 1))
+    if [ "${NVM_WGET_REDIRECTS}" -gt 20 ]; then
+      nvm_err "${NVM_WGET_REQUESTED_URL}: too many redirects"
+      return "${NVM_WGET_EXIT_CODE}"
+    fi
+    NVM_WGET_ARG_COUNT=$#
+    for NVM_WGET_ARG in "$@"; do
+      if [ "${NVM_WGET_ARG}" = "${NVM_WGET_URL}" ]; then
+        set -- "$@" "${NVM_WGET_LOCATION}"
+      else
+        set -- "$@" "${NVM_WGET_ARG}"
+      fi
+    done
+    shift "${NVM_WGET_ARG_COUNT}"
+    NVM_WGET_URL="${NVM_WGET_LOCATION}"
+  done
 }
 
 # args: url
@@ -5578,6 +5657,7 @@ nvm() {
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears nvm_sanitize_auth_header nvm_auth_header_applies_to \
+        nvm_wget_is_gnu nvm_url_origin nvm_wget_same_origin \
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code \
         nvm_print_color_legend \
         nvm_echo_with_colors nvm_err_with_colors \

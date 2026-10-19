@@ -1,0 +1,92 @@
+#!/bin/sh
+
+WORK="$PWD/nvm_download-wget-redirect-work.$$"
+TEST_BIN="$WORK/bin"
+CALL_LOG="$WORK/calls.log"
+
+cleanup() {
+  unset -f die cleanup nvm_has_executable
+  unset NVM_NODEJS_ORG_MIRROR NVM_AUTH_HEADER WGET_VERSION
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+OLDPATH="$PATH"
+
+mkdir -p "$TEST_BIN"
+
+# fake wget: prints $WGET_VERSION for `--version`, logs every other call on one
+# line, and answers like a mirror whose /same and /other paths redirect; with
+# `--max-redirect=0` it stops there (exit 8) and, given `-S`, shows the Location
+{
+  echo '#!/bin/sh'
+  echo 'if [ "$1" = --version ]; then [ -n "${WGET_VERSION-}" ] && echo "${WGET_VERSION}"; exit 0; fi'
+  echo 'url=""; show=""; stop=""'
+  echo 'for a in "$@"; do case "$a" in http://*) url="$a" ;; -S) show=1 ;; --max-redirect=0) stop=1 ;; esac; done'
+  echo 'printf "%s\n" "$*" >> "$CALL_LOG"'
+  echo 'case "$url" in'
+  echo '  */same) [ -n "$stop" ] || exit 0; [ -z "$show" ] || echo "  location: /dist/target" >&2; exit 8 ;;'
+  echo '  */other) [ -n "$stop" ] || exit 0; [ -z "$show" ] || echo "  Location: http://elsewhere.example/dist/target" >&2; exit 8 ;;'
+  echo '  */missing) exit 8 ;;'
+  echo 'esac'
+} > "$TEST_BIN/wget"
+chmod +x "$TEST_BIN/wget"
+
+export CALL_LOG WGET_VERSION
+export PATH="$TEST_BIN:$OLDPATH"
+nvm_has_executable() { [ "$1" != curl ] && command -v "$1" >/dev/null 2>&1; }
+
+NVM_NODEJS_ORG_MIRROR='http://127.0.0.1:8080/dist'
+export NVM_NODEJS_ORG_MIRROR
+
+# given GNU Wget and a credential
+WGET_VERSION='GNU Wget 1.21.2 built on linux-gnu.'
+NVM_AUTH_HEADER='Bearer test-token'
+export NVM_AUTH_HEADER
+
+# when the mirror redirects within its own origin
+: > "$CALL_LOG"
+nvm_download -L -s 'http://127.0.0.1:8080/dist/same' -o - || die "a same-origin redirect was not followed; calls: $(cat "$CALL_LOG")"
+# then wget is stopped at every redirect, and nvm follows it
+grep -q 'http://127.0.0.1:8080/dist/target' "$CALL_LOG" || die "the same-origin redirect target was not requested; calls: $(cat "$CALL_LOG")"
+! grep -v -e '--max-redirect=0' "$CALL_LOG" || die "wget was allowed to follow redirects itself; calls: $(cat "$CALL_LOG")"
+
+# when the mirror redirects to another origin
+: > "$CALL_LOG"
+try_err nvm_download -L -s 'http://127.0.0.1:8080/dist/other' -o -
+# then the redirect is not followed, and the user is told why
+[ "${CAPTURED_EXIT_CODE}" = 8 ] || die "a cross-origin redirect did not fail with wget's exit code 8; got ${CAPTURED_EXIT_CODE}"
+! grep -q 'elsewhere.example' "$CALL_LOG" || die "the cross-origin redirect target was requested; calls: $(cat "$CALL_LOG")"
+case "${CAPTURED_STDERR}" in
+  *'redirects to another origin'*) ;;
+  *) die "no error explained the unfollowed redirect; got: ${CAPTURED_STDERR}" ;;
+esac
+
+# when the mirror answers with an error
+: > "$CALL_LOG"
+try_err nvm_download -L -s 'http://127.0.0.1:8080/dist/missing' -o -
+# then that is the result, with no redirect error
+[ "${CAPTURED_EXIT_CODE}" = 8 ] || die "an HTTP error did not exit with 8; got ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDERR}" ] || die "an HTTP error printed: ${CAPTURED_STDERR}"
+
+# given no credential, wget follows redirects itself as before
+unset NVM_AUTH_HEADER
+: > "$CALL_LOG"
+nvm_download -L -s 'http://127.0.0.1:8080/dist/same' -o - || die 'an unauthenticated download did not succeed'
+! grep -q -e '--max-redirect' "$CALL_LOG" || die "wget was stopped at redirects without a credential; calls: $(cat "$CALL_LOG")"
+
+# given a wget that is not GNU Wget (eg, BusyBox, which has no --max-redirect)
+WGET_VERSION=''
+NVM_AUTH_HEADER='Bearer test-token'
+export NVM_AUTH_HEADER
+: > "$CALL_LOG"
+nvm_download -L -s 'http://127.0.0.1:8080/dist/same' -o - || die 'a non-GNU wget download did not succeed'
+# then it gets no option it does not support
+! grep -q -e '--max-redirect' "$CALL_LOG" || die "a non-GNU wget was given --max-redirect; calls: $(cat "$CALL_LOG")"
+
+cleanup

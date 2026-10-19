@@ -1,0 +1,209 @@
+#!/bin/sh
+
+WORK="$PWD/nvm_wget_same_origin-work.$$"
+TEST_BIN="$WORK/bin"
+CALL_LOG="$WORK/calls.log"
+
+cleanup() {
+  unset -f die cleanup run expect_calls
+  unset CALL_LOG
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+OLDPATH="$PATH"
+
+mkdir -p "$TEST_BIN"
+
+# `command wget` bypasses shell functions, so the fake must be an executable.
+# It logs each call as one line of <arg>s, and answers like a mirror: a path
+# that redirects exits with 8 under `--max-redirect=0` (and shows its Location
+# given `-S`), and fails the test otherwise, since wget must never follow one.
+{
+  echo '#!/bin/sh'
+  echo 'url=""; show=""; stop=""'
+  echo 'for a in "$@"; do case "$a" in http://* | https://* | ftp://*) url="$a" ;; -S) show=1 ;; --max-redirect=0) stop=1 ;; esac; done'
+  echo 'printf "<%s>" "$@" >> "$CALL_LOG"; echo >> "$CALL_LOG"'
+  echo 'redirect() { [ -n "$stop" ] || exit 97; [ -z "$show" ] || printf "  HTTP/1.1 302 Found\n  Location: %s\n" "$1" >&2; exit 8; }'
+  echo 'case "$url" in'
+  echo '  ftp://*) exit 8 ;;'
+  echo '  */dist/target | */dist/ok) exit 0 ;;'
+  echo '  */dist/unreachable) exit 4 ;;'
+  echo '  */dist/missing | */dist/failure) [ -z "$show" ] || printf "  HTTP/1.1 404 Not Found\n" >&2; exit 8 ;;'
+  echo '  */dist/absolute) redirect http://mirror.example/dist/target ;;'
+  echo '  https://mirror.example/dist/https-absolute) redirect https://mirror.example/dist/target ;;'
+  echo '  */dist/path-absolute) redirect /dist/target ;;'
+  echo '  */dist/scheme-relative) redirect //mirror.example/dist/target ;;'
+  echo '  */dist/relative) redirect target ;;'
+  echo '  */dist/crlf) [ -n "$stop" ] || exit 97; [ -z "$show" ] || printf "  LOCATION: /dist/target\r\n" >&2; exit 8 ;;'
+  echo '  */dist/two-locations) [ -n "$stop" ] || exit 97; [ -z "$show" ] || printf "  HTTP/1.1 302 Found\n  Location: /dist/target\n  Location: http://elsewhere.example/dist/target\n" >&2; exit 8 ;;'
+  echo '  */dist/hop1) redirect /dist/hop2 ;;'
+  echo '  */dist/hop2) redirect http://mirror.example/dist/target ;;'
+  echo '  */dist/to-failure) redirect /dist/failure ;;'
+  echo '  */dist/other-host) redirect http://elsewhere.example/dist/target ;;'
+  echo '  */dist/scheme-relative-other-host) redirect //elsewhere.example/dist/target ;;'
+  echo '  */dist/other-port) redirect http://mirror.example:8080/dist/target ;;'
+  echo '  https://mirror.example/dist/downgrade) redirect http://mirror.example/dist/target ;;'
+  echo '  */dist/lookalike) redirect http://mirror.example.elsewhere.example/dist/target ;;'
+  echo '  */dist/userinfo) redirect http://mirror.example@elsewhere.example/dist/target ;;'
+  echo '  */dist/hop-then-other-host) redirect /dist/other-host ;;'
+  echo '  */dist/loop) redirect /dist/loop ;;'
+  echo 'esac'
+  echo 'exit 98'
+} > "$TEST_BIN/wget"
+chmod +x "$TEST_BIN/wget"
+
+export CALL_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+
+# the Authorization header goes along with every request
+HEADER='<--header><Authorization: Bearer test-token>'
+run() {
+  : > "$CALL_LOG"
+  try_err nvm_wget_same_origin 'Bearer test-token' "$@"
+}
+
+# args: description, expected calls (one per argument)
+expect_calls() {
+  EXPECTED_DESCRIPTION="${1}"
+  shift
+  EXPECTED_CALLS="$(printf '%s\n' "$@")"
+  ACTUAL_CALLS="$(cat "$CALL_LOG")"
+  [ "${ACTUAL_CALLS}" = "${EXPECTED_CALLS}" ] || die "${EXPECTED_DESCRIPTION}: expected calls
+${EXPECTED_CALLS}
+got
+${ACTUAL_CALLS}"
+}
+
+# a download that does not redirect is made once, with wget stopped at redirects
+run -q -O - 'http://mirror.example/dist/ok'
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "a successful download: expected exit code 0, got ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDERR}" ] || die "a successful download: expected no error, got >${CAPTURED_STDERR}<"
+expect_calls 'a successful download' \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/ok>${HEADER}"
+
+# any failure but an HTTP error is returned as is, with no Location lookup
+run -q -O - 'http://mirror.example/dist/unreachable'
+[ "${CAPTURED_EXIT_CODE}" = 4 ] || die "a network failure: expected exit code 4, got ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDERR}" ] || die "a network failure: expected no error, got >${CAPTURED_STDERR}<"
+expect_calls 'a network failure' \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/unreachable>${HEADER}"
+
+# an HTTP error with no Location is returned as is
+run -q -O - 'http://mirror.example/dist/missing'
+[ "${CAPTURED_EXIT_CODE}" = 8 ] || die "an HTTP error: expected exit code 8, got ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDERR}" ] || die "an HTTP error: expected no error, got >${CAPTURED_STDERR}<"
+expect_calls 'an HTTP error' \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/missing>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/missing>${HEADER}"
+
+# with no http(s) URL in the arguments, there is nothing to look up
+run -q -O - 'ftp://mirror.example/dist/missing'
+[ "${CAPTURED_EXIT_CODE}" = 8 ] || die "no http(s) URL: expected exit code 8, got ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDERR}" ] || die "no http(s) URL: expected no error, got >${CAPTURED_STDERR}<"
+expect_calls 'no http(s) URL' \
+  "<--max-redirect=0><-q><-O><-><ftp://mirror.example/dist/missing>${HEADER}"
+
+# a same-origin redirect is followed, with the URL replaced in place and every other argument kept
+for LOCATION_KIND in absolute path-absolute scheme-relative relative crlf; do
+  run -q -O - 'http://mirror.example/dist/'"${LOCATION_KIND}" --tries=1
+  [ "${CAPTURED_EXIT_CODE}" = 0 ] || die "a same-origin ${LOCATION_KIND} redirect: expected exit code 0, got ${CAPTURED_EXIT_CODE}; stderr >${CAPTURED_STDERR}<"
+  [ -z "${CAPTURED_STDERR}" ] || die "a same-origin ${LOCATION_KIND} redirect: expected no error, got >${CAPTURED_STDERR}<"
+  expect_calls "a same-origin ${LOCATION_KIND} redirect" \
+    "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/${LOCATION_KIND}><--tries=1>${HEADER}" \
+    "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/${LOCATION_KIND}>${HEADER}" \
+    "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/target><--tries=1>${HEADER}"
+done
+
+# a doubled slash in the path does not change where a path-absolute or scheme-relative Location resolves
+for LOCATION_KIND in path-absolute scheme-relative; do
+  run -q -O - 'http://mirror.example//dist/'"${LOCATION_KIND}"
+  [ "${CAPTURED_EXIT_CODE}" = 0 ] || die "a same-origin ${LOCATION_KIND} redirect from a path with a doubled slash: expected exit code 0, got ${CAPTURED_EXIT_CODE}; stderr >${CAPTURED_STDERR}<"
+  [ -z "${CAPTURED_STDERR}" ] || die "a same-origin ${LOCATION_KIND} redirect from a path with a doubled slash: expected no error, got >${CAPTURED_STDERR}<"
+  expect_calls "a same-origin ${LOCATION_KIND} redirect from a path with a doubled slash" \
+    "<--max-redirect=0><-q><-O><-><http://mirror.example//dist/${LOCATION_KIND}>${HEADER}" \
+    "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example//dist/${LOCATION_KIND}>${HEADER}" \
+    "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/target>${HEADER}"
+done
+
+# only the first Location header is used
+run -q -O - 'http://mirror.example/dist/two-locations'
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "a redirect with two Location headers: expected exit code 0, got ${CAPTURED_EXIT_CODE}; stderr >${CAPTURED_STDERR}<"
+[ -z "${CAPTURED_STDERR}" ] || die "a redirect with two Location headers: expected no error, got >${CAPTURED_STDERR}<"
+expect_calls 'a redirect with two Location headers' \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/two-locations>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/two-locations>${HEADER}" \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/target>${HEADER}"
+
+# https stays https
+run -q -O - 'https://mirror.example/dist/https-absolute'
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "a same-origin https redirect: expected exit code 0, got ${CAPTURED_EXIT_CODE}; stderr >${CAPTURED_STDERR}<"
+expect_calls 'a same-origin https redirect' \
+  "<--max-redirect=0><-q><-O><-><https://mirror.example/dist/https-absolute>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><https://mirror.example/dist/https-absolute>${HEADER}" \
+  "<--max-redirect=0><-q><-O><-><https://mirror.example/dist/target>${HEADER}"
+
+# a chain of same-origin redirects is followed, each Location looked up at the current URL
+run -q -O - 'http://mirror.example/dist/hop1'
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "a chain of same-origin redirects: expected exit code 0, got ${CAPTURED_EXIT_CODE}; stderr >${CAPTURED_STDERR}<"
+expect_calls 'a chain of same-origin redirects' \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/hop1>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/hop1>${HEADER}" \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/hop2>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/hop2>${HEADER}" \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/target>${HEADER}"
+
+# the redirect target's own HTTP error is the result
+run -q -O - 'http://mirror.example/dist/to-failure'
+[ "${CAPTURED_EXIT_CODE}" = 8 ] || die "a redirect to an HTTP error: expected exit code 8, got ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDERR}" ] || die "a redirect to an HTTP error: expected no error, got >${CAPTURED_STDERR}<"
+expect_calls 'a redirect to an HTTP error' \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/to-failure>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/to-failure>${HEADER}" \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/failure>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/failure>${HEADER}"
+
+# a redirect to another origin is not followed, so the header never reaches it
+for REDIRECT in \
+  'http://mirror.example/dist/other-host' \
+  'http://mirror.example/dist/scheme-relative-other-host' \
+  'http://mirror.example/dist/other-port' \
+  'https://mirror.example/dist/downgrade' \
+  'http://mirror.example/dist/lookalike' \
+  'http://mirror.example/dist/userinfo' \
+; do
+  run -q -O - "${REDIRECT}"
+  [ "${CAPTURED_EXIT_CODE}" = 8 ] || die "a cross-origin redirect from ${REDIRECT}: expected exit code 8, got ${CAPTURED_EXIT_CODE}"
+  [ "${CAPTURED_STDERR}" = "${REDIRECT} redirects to another origin; wget would send \$NVM_AUTH_HEADER there too, so it is not followed. Install curl to download from this mirror." ] \
+    || die "a cross-origin redirect from ${REDIRECT}: expected an error naming it, got >${CAPTURED_STDERR}<"
+  expect_calls "a cross-origin redirect from ${REDIRECT}" \
+    "<--max-redirect=0><-q><-O><-><${REDIRECT}>${HEADER}" \
+    "<--max-redirect=0><-q><-S><-O></dev/null><${REDIRECT}>${HEADER}"
+done
+
+# a cross-origin redirect after a same-origin one names the URL that was requested
+run -q -O - 'http://mirror.example/dist/hop-then-other-host'
+[ "${CAPTURED_EXIT_CODE}" = 8 ] || die "a cross-origin redirect after a same-origin one: expected exit code 8, got ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDERR}" = "http://mirror.example/dist/hop-then-other-host redirects to another origin; wget would send \$NVM_AUTH_HEADER there too, so it is not followed. Install curl to download from this mirror." ] \
+  || die "a cross-origin redirect after a same-origin one: expected an error naming the requested URL, got >${CAPTURED_STDERR}<"
+expect_calls 'a cross-origin redirect after a same-origin one' \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/hop-then-other-host>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/hop-then-other-host>${HEADER}" \
+  "<--max-redirect=0><-q><-O><-><http://mirror.example/dist/other-host>${HEADER}" \
+  "<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/other-host>${HEADER}"
+
+# at most 20 redirects are followed
+run -q -O - 'http://mirror.example/dist/loop'
+[ "${CAPTURED_EXIT_CODE}" = 8 ] || die "a redirect loop: expected exit code 8, got ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDERR}" = 'http://mirror.example/dist/loop: too many redirects' ] || die "a redirect loop: expected a too many redirects error, got >${CAPTURED_STDERR}<"
+DOWNLOADS="$(command grep -c -e '^<--max-redirect=0><-q><-O><-><http://mirror.example/dist/loop>' "$CALL_LOG")"
+[ "${DOWNLOADS}" = 21 ] || die "a redirect loop: expected the request and 20 redirects, got ${DOWNLOADS} requests"
+LOOKUPS="$(command grep -c -e '^<--max-redirect=0><-q><-S><-O></dev/null><http://mirror.example/dist/loop>' "$CALL_LOG")"
+[ "${LOOKUPS}" = 21 ] || die "a redirect loop: expected 21 Location lookups, got ${LOOKUPS}"
+
+cleanup

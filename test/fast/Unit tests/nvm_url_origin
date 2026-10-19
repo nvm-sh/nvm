@@ -1,0 +1,38 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+check() {
+  ACTUAL="$(nvm_url_origin "${1}")"
+  [ "${ACTUAL}" = "${2}" ] || die "nvm_url_origin '${1}': expected >${2}<, got >${ACTUAL}<"
+}
+
+# the path is dropped
+check 'https://nodejs.org/dist' 'https://nodejs.org'
+check 'https://nodejs.org/dist/v20.0.0/node-v20.0.0.tar.xz' 'https://nodejs.org'
+check 'https://nodejs.org/' 'https://nodejs.org'
+check 'http://mirror.example//dist' 'http://mirror.example'
+
+# a URL with no path is its own origin
+check 'https://nodejs.org' 'https://nodejs.org'
+
+# the scheme and port are kept, so they take part in the comparison
+check 'http://nodejs.org/dist' 'http://nodejs.org'
+check 'http://127.0.0.1:8080/dist/target' 'http://127.0.0.1:8080'
+check 'https://nodejs.org:443/dist' 'https://nodejs.org:443'
+check 'https://[::1]:8080/dist' 'https://[::1]:8080'
+
+# the authority runs to the first `/` after the scheme, so a host spelled
+# differently later in the URL does not change it
+check 'https://mirror.example/http://elsewhere.example/dist' 'https://mirror.example'
+check 'https://mirror.example/@elsewhere.example/dist' 'https://mirror.example'
+
+# userinfo is part of the authority
+check 'https://user:pw@mirror.example/dist' 'https://user:pw@mirror.example'
+
+# anything before the first `/` is kept as is, so a lookalike authority differs
+check 'https://mirror.example@elsewhere.example/dist' 'https://mirror.example@elsewhere.example'
+check 'https://mirror.example.elsewhere.example/dist' 'https://mirror.example.elsewhere.example'
+check 'https://mirror.example?@elsewhere.example/dist' 'https://mirror.example?@elsewhere.example'
