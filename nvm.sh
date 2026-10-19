@@ -1101,6 +1101,10 @@ nvm_remote_versions() {
       NVM_FLAVOR="${NVM_NODE_PREFIX}"
       unset PATTERN
     ;;
+    [04-9]* | [1-9][0-9]* | v[04-9]* | v[1-9][0-9]*)
+      # io.js only released v1 through v3, so it has no versions matching any other major
+      NVM_FLAVOR="${NVM_NODE_PREFIX}"
+    ;;
   esac
 
   if nvm_validate_implicit_alias "${PATTERN-}" 2>/dev/null; then

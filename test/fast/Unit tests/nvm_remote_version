@@ -74,6 +74,7 @@ try nvm_remote_version node
 nvm_ls_remote() {
   case "${1-}" in
     20 | v20.0.0) echo "v20.0.0" ;;
+    0.12) echo "v0.12.18" ;;
     *) echo "N/A"; return 3 ;;
   esac
 }
@@ -85,6 +86,14 @@ for PATTERN in 20 v20.0.0; do
   [ "_$CAPTURED_STDOUT" = "_v20.0.0" ] || die "nvm_remote_version ${PATTERN} should return v20.0.0, got $CAPTURED_STDOUT"
   [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version ${PATTERN} should exit with code 0, got $CAPTURED_EXIT_CODE"
 done
+
+# io.js only released v1 through v3, so it is not consulted for any other major
+try nvm_remote_version 0.12
+[ "_$CAPTURED_STDOUT" = "_v0.12.18" ] || die "nvm_remote_version 0.12 should return v0.12.18, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 0.12 should exit with code 0, got $CAPTURED_EXIT_CODE"
+try nvm_remote_version 99
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nvm_remote_version 99 should return N/A, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nvm_remote_version 99 should exit with code 3, got $CAPTURED_EXIT_CODE"
 
 # Test LTS name rejection (Issue #3474)
 # When nvm_remote_versions returns a line with LTS name in description,

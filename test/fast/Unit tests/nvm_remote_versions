@@ -69,6 +69,22 @@ try nvm_remote_versions iojs
   || die "nvm_remote_versions iojs did not return contents of nvm_ls_remote_iojs; got $CAPTURED_STDOUT"
 [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_versions iojs did not exit with 0, got $CAPTURED_EXIT_CODE"
 
+# io.js only released v1 through v3, so only node is consulted for any other major
+for PATTERN in 0 0.12 v0.12.18 4 4.1 v4.0.0 9 10 v20 20.0 v20.0.0 30.1; do
+  try nvm_remote_versions "${PATTERN}"
+  [ "_$CAPTURED_STDOUT" = "_$(nvm_ls_remote "${PATTERN}")" ] \
+    || die "nvm_remote_versions ${PATTERN} did not return contents of nvm_ls_remote ${PATTERN} only; got $CAPTURED_STDOUT"
+  [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_versions ${PATTERN} did not exit with 0, got $CAPTURED_EXIT_CODE"
+done
+
+for PATTERN in 1 v1 1.8 2 v2.5.0 3 3.3; do
+  try nvm_remote_versions "${PATTERN}"
+  [ "_$CAPTURED_STDOUT" = "_$(nvm_ls_remote "${PATTERN}")
+$(nvm_ls_remote_iojs "${PATTERN}")" ] \
+    || die "nvm_remote_versions ${PATTERN} did not return contents of nvm_ls_remote ${PATTERN} combined with nvm_ls_remote_iojs ${PATTERN}; got $CAPTURED_STDOUT"
+  [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_versions ${PATTERN} did not exit with 0, got $CAPTURED_EXIT_CODE"
+done
+
 # io.js versions sort after node v0.x and before node v4+, even when node's list has no v4.0.0
 nvm_ls_remote() {
   echo "v0.10.48"
@@ -113,5 +129,17 @@ iojs-v1.0.0
 iojs-v3.3.1" ] \
   || die "nvm_remote_versions foo did not put io.js versions after node v0.x when node has no v4+; got $CAPTURED_STDOUT"
 [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_versions foo did not exit with 0, got $CAPTURED_EXIT_CODE"
+
+# io.js having no matching versions does not make a node-only pattern fail
+nvm_ls_remote() {
+  echo "v20.0.0 Iron *"
+}
+nvm_ls_remote_iojs() {
+  echo "N/A"
+  return 3
+}
+try nvm_remote_versions 20
+[ "_$CAPTURED_STDOUT" = "_v20.0.0 Iron *" ] || die "nvm_remote_versions 20 did not return node's list; got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_versions 20 did not exit with 0, got $CAPTURED_EXIT_CODE"
 
 cleanup
