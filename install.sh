@@ -157,7 +157,7 @@ install_nvm_from_git() {
   NVM_VERSION="${NVM_INSTALL_VERSION:-$(nvm_latest_version)}"
   if [ -n "${NVM_INSTALL_VERSION:-}" ]; then
     # Check if version is an existing ref
-    if command git ls-remote "$(nvm_source "git")" "$NVM_VERSION" | nvm_grep -q -e "$NVM_VERSION" ; then
+    if command git --git-dir="$INSTALL_DIR"/.git ls-remote "$(nvm_source "git")" "$NVM_VERSION" | nvm_grep -q -e "$NVM_VERSION" ; then
       :
     # Check if version is an existing changeset
     elif ! nvm_download -o /dev/null "$(nvm_source "script-nvm-exec")"; then
