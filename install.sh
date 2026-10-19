@@ -272,26 +272,50 @@ install_nvm_as_script() {
   else
     nvm_echo "=> Downloading nvm as script to '$INSTALL_DIR'"
   fi
-  nvm_download -s "$NVM_SOURCE_LOCAL" -o "$INSTALL_DIR/nvm.sh" || {
+  # download to temporary names, and only move them into place once every download has succeeded,
+  # so that a failed download never replaces a working install with a partial or empty file
+  nvm_download -s "$NVM_SOURCE_LOCAL" -o "$INSTALL_DIR/nvm.sh.download" || {
     nvm_echo >&2 "Failed to download '$NVM_SOURCE_LOCAL'"
     return 1
   } &
-  nvm_download -s "$NVM_EXEC_SOURCE" -o "$INSTALL_DIR/nvm-exec" || {
+  local NVM_SH_PID
+  NVM_SH_PID=$!
+  nvm_download -s "$NVM_EXEC_SOURCE" -o "$INSTALL_DIR/nvm-exec.download" || {
     nvm_echo >&2 "Failed to download '$NVM_EXEC_SOURCE'"
     return 2
   } &
-  nvm_download -s "$NVM_BASH_COMPLETION_SOURCE" -o "$INSTALL_DIR/bash_completion" || {
+  local NVM_EXEC_PID
+  NVM_EXEC_PID=$!
+  nvm_download -s "$NVM_BASH_COMPLETION_SOURCE" -o "$INSTALL_DIR/bash_completion.download" || {
     nvm_echo >&2 "Failed to download '$NVM_BASH_COMPLETION_SOURCE'"
     return 2
   } &
-  for job in $(jobs -p | command sort)
+  local NVM_BASH_COMPLETION_PID
+  NVM_BASH_COMPLETION_PID=$!
+  # wait for every download, so that none is still writing when the partial files are removed
+  local NVM_DOWNLOAD_STATUS
+  NVM_DOWNLOAD_STATUS=0
+  local job
+  for job in "$NVM_SH_PID" "$NVM_EXEC_PID" "$NVM_BASH_COMPLETION_PID"
   do
-    wait "$job" || return $?
+    wait "$job" || NVM_DOWNLOAD_STATUS=$?
   done
-  chmod a+x "$INSTALL_DIR/nvm-exec" || {
+  if [ "$NVM_DOWNLOAD_STATUS" -ne 0 ]; then
+    command rm -f "$INSTALL_DIR/nvm.sh.download" "$INSTALL_DIR/nvm-exec.download" "$INSTALL_DIR/bash_completion.download"
+    return "$NVM_DOWNLOAD_STATUS"
+  fi
+  chmod a+x "$INSTALL_DIR/nvm-exec.download" || {
     nvm_echo >&2 "Failed to mark '$INSTALL_DIR/nvm-exec' as executable"
     return 3
   }
+  local NVM_SCRIPT_FILE
+  for NVM_SCRIPT_FILE in nvm-exec bash_completion nvm.sh
+  do
+    command mv -f "$INSTALL_DIR/$NVM_SCRIPT_FILE.download" "$INSTALL_DIR/$NVM_SCRIPT_FILE" || {
+      nvm_echo >&2 "Failed to move '$INSTALL_DIR/$NVM_SCRIPT_FILE.download' into place"
+      return 3
+    }
+  done
 }
 
 nvm_try_profile() {
@@ -428,7 +452,7 @@ nvm_do_install() {
     if nvm_has git; then
       install_nvm_from_git
     elif nvm_has_executable curl || nvm_has_executable wget; then
-      install_nvm_as_script
+      install_nvm_as_script || exit $?
     else
       nvm_echo >&2 'You need git, curl, or wget to install nvm'
       exit 1
@@ -444,7 +468,7 @@ nvm_do_install() {
       nvm_echo >&2 "You need curl or wget to install nvm"
       exit 1
     fi
-    install_nvm_as_script
+    install_nvm_as_script || exit $?
   else
     nvm_echo >&2 "The environment variable \$METHOD is set to \"${METHOD}\", which is not recognized as a valid installation method."
     exit 1
