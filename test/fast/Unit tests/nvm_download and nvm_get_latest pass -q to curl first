@@ -1,0 +1,51 @@
+#!/bin/sh
+
+WORK="$PWD/curl-q-first-work.$$"
+TEST_BIN="$WORK/bin"
+ARGV_LOG="$WORK/argv.log"
+
+cleanup () {
+  unset -f die cleanup
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../../nvm.sh
+
+\. ../../common.sh
+
+OLDPATH="$PATH"
+
+# curl only skips reading `.curlrc` when `-q` is its very first argument
+make_fake_curl "$TEST_BIN" ': > "$ARGV_LOG"
+for a in "$@"; do printf "%s\n" "$a" >> "$ARGV_LOG"; done
+echo "https://github.com/nvm-sh/nvm/releases/tag/v0.0.0"'
+
+export ARGV_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+
+# with compression support, --compressed must still come after -q
+VERSION_MESSAGE="curl 7.99.0 (fake)
+Features: libz"
+
+nvm_download -s 'http://example.com/' -o /dev/null || die 'nvm_download failed with compression support'
+[ "$(head -n 1 "$ARGV_LOG")" = '-q' ] || die "nvm_download (with compression) did not pass -q first; got: $(cat "$ARGV_LOG")"
+grep -Fxqe '--compressed' "$ARGV_LOG" || die "nvm_download (with compression) did not pass --compressed; got: $(cat "$ARGV_LOG")"
+
+nvm_get_latest > /dev/null || die 'nvm_get_latest failed with compression support'
+[ "$(head -n 1 "$ARGV_LOG")" = '-q' ] || die "nvm_get_latest (with compression) did not pass -q first; got: $(cat "$ARGV_LOG")"
+grep -Fxqe '--compressed' "$ARGV_LOG" || die "nvm_get_latest (with compression) did not pass --compressed; got: $(cat "$ARGV_LOG")"
+
+# without compression support
+VERSION_MESSAGE="curl 7.99.0 (fake)
+Features: SSL"
+
+nvm_download -s 'http://example.com/' -o /dev/null || die 'nvm_download failed without compression support'
+[ "$(head -n 1 "$ARGV_LOG")" = '-q' ] || die "nvm_download (without compression) did not pass -q first; got: $(cat "$ARGV_LOG")"
+
+nvm_get_latest > /dev/null || die 'nvm_get_latest failed without compression support'
+[ "$(head -n 1 "$ARGV_LOG")" = '-q' ] || die "nvm_get_latest (without compression) did not pass -q first; got: $(cat "$ARGV_LOG")"
+
+cleanup

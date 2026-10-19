@@ -118,7 +118,8 @@ nvm_node_version() {
 
 nvm_download() {
   if nvm_has_executable "curl"; then
-    command curl --fail --compressed -q "$@"
+    # curl only skips reading `.curlrc` when `-q` is its very first argument
+    command curl -q --fail --compressed "$@"
   elif nvm_has_executable "wget"; then
     # Emulate curl with wget
     local NVM_DOWNLOAD_WGET_COUNT

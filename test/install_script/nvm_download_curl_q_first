@@ -1,0 +1,36 @@
+#!/bin/sh
+
+OLDPATH="$PATH"
+WORK="$PWD/nvm_download-q-first-work.$$"
+TEST_BIN="$WORK/bin"
+ARGV_LOG="$WORK/argv.log"
+
+cleanup() {
+  unset -f die cleanup
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+mkdir -p "$TEST_BIN"
+
+# fake curl: record each received argument, then succeed
+{
+  echo '#!/bin/sh'
+  echo ': > "$ARGV_LOG"'
+  echo 'for a in "$@"; do printf "%s\n" "$a" >> "$ARGV_LOG"; done'
+  echo 'exit 0'
+} > "$TEST_BIN/curl"
+chmod +x "$TEST_BIN/curl"
+
+export ARGV_LOG
+export PATH="$TEST_BIN:$OLDPATH"
+
+nvm_download -s 'http://example.test/nvm.sh' -o - || die 'nvm_download returned nonzero'
+
+# curl only skips reading `.curlrc` when `-q` is its very first argument
+[ "$(head -n 1 "$ARGV_LOG")" = '-q' ] || die "curl did not receive -q as its first argument; got: $(cat "$ARGV_LOG")"
+
+cleanup
