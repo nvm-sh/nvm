@@ -1,0 +1,113 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "${TEST_DIR-}"
+  unset TEST_DIR NVM_SH BASH_COMPLETION OUTPUT EXPECTED_OUTPUT SUBCOMMAND COMPLETION_SHELL
+}
+
+\. ../../common.sh
+
+NVM_SH="$(cd ../../.. && pwd)/nvm.sh"
+BASH_COMPLETION="$(cd ../../.. && pwd)/bash_completion"
+
+# an isolated NVM_DIR whose alias and version directory names `compgen -W` would
+# expand, and a cwd holding only one file, which a glob would list and next to
+# which any command run by such an expansion would leave another file
+TEST_DIR="${PWD}/bash_completion_expansion_tmp"
+mkdir -p "${TEST_DIR}/nvm/alias/lts" "${TEST_DIR}/nvm/versions/node/v0.0.1/bin" "${TEST_DIR}/cwd" || die 'failed to create test dirs'
+make_echo "${TEST_DIR}/nvm/versions/node/v0.0.1/bin/node" 'v0.0.1' || die 'failed to create test node binary'
+mkdir "${TEST_DIR}/nvm/versions/node/v\$(:>expanded-version)" || die 'failed to create test version dir'
+echo v0.0.1 > "${TEST_DIR}/nvm/alias/my_alias"
+echo v0.0.1 > "${TEST_DIR}/nvm/alias/lts/iron"
+echo v0.0.1 > "${TEST_DIR}/nvm/alias/\$(:>expanded-dollar)"
+echo v0.0.1 > "${TEST_DIR}/nvm/alias/\`:>expanded-backtick\`"
+echo v0.0.1 > "${TEST_DIR}/nvm/alias/\${NVM_DIR}"
+echo v0.0.1 > "${TEST_DIR}/nvm/alias/*"
+: > "${TEST_DIR}/cwd/globbed-file"
+
+# prints the sorted completions for the given command line, the last word being completed
+complete_nvm() {
+  (
+    cd "${TEST_DIR}/cwd" || exit 1
+    case "${COMPLETION_SHELL}" in
+      bash)
+        BASH_ENV='' NVM_DIR="${TEST_DIR}/nvm" bash --noprofile --norc -c '
+          \. "${1}" --no-use
+          \. "${2}"
+          shift 2
+          COMP_WORDS=("${@}")
+          COMP_CWORD=$(($# - 1))
+          __nvm
+          printf "%s\n" "${COMPREPLY[@]}"
+        ' bash "${NVM_SH}" "${BASH_COMPLETION}" "$@"
+      ;;
+      zsh)
+        # bashcompinit runs `complete -F` functions from its `compgen`, under `emulate -L sh`
+        NVM_DIR="${TEST_DIR}/nvm" zsh -f -c '
+          \. "${1}" --no-use
+          \. "${2}"
+          shift 2
+          COMP_WORDS=("${@}")
+          COMP_CWORD=$(($# - 1))
+          compgen -F __nvm -- "${@[-1]}"
+        ' zsh "${NVM_SH}" "${BASH_COMPLETION}" "$@"
+      ;;
+    esac
+  ) | LC_ALL=C sort
+}
+
+for COMPLETION_SHELL in bash zsh; do
+  command -v "${COMPLETION_SHELL}" > /dev/null 2>&1 || continue
+
+  for SUBCOMMAND in use run exec ls list uninstall alias unalias; do
+    OUTPUT="$(complete_nvm nvm "${SUBCOMMAND}" '')"
+    [ "$(ls -A "${TEST_DIR}/cwd")" = 'globbed-file' ] || die "${COMPLETION_SHELL}: completing 'nvm ${SUBCOMMAND}' ran a command from an alias or version name: $(ls -A "${TEST_DIR}/cwd")"
+    case "${OUTPUT}" in
+      *"${TEST_DIR}"*) die "${COMPLETION_SHELL}: completing 'nvm ${SUBCOMMAND}' expanded a variable from an alias name: ${OUTPUT}" ;;
+      *globbed-file*) die "${COMPLETION_SHELL}: completing 'nvm ${SUBCOMMAND}' globbed an alias name: ${OUTPUT}" ;;
+    esac
+  done
+
+  OUTPUT="$(complete_nvm nvm alias foo '')"
+  [ "$(ls -A "${TEST_DIR}/cwd")" = 'globbed-file' ] || die "${COMPLETION_SHELL}: completing 'nvm alias foo' ran a command from an alias or version name: $(ls -A "${TEST_DIR}/cwd")"
+
+  OUTPUT="$(complete_nvm nvm unalias '')"
+  EXPECTED_OUTPUT='$(:>expanded-dollar)
+${NVM_DIR}
+*
+`:>expanded-backtick`
+iojs
+lts/iron
+my_alias
+node
+stable
+unstable'
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "${COMPLETION_SHELL}: completing 'nvm unalias' should list alias names literally: expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+  OUTPUT="$(complete_nvm nvm use '$(')"
+  EXPECTED_OUTPUT='$(:>expanded-dollar)'
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "${COMPLETION_SHELL}: completing 'nvm use \$(' should give >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+  OUTPUT="$(complete_nvm nvm use 'v')"
+  EXPECTED_OUTPUT='v$(:>expanded-version)
+v0.0.1'
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "${COMPLETION_SHELL}: completing 'nvm use v' should list version names literally: expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+  OUTPUT="$(complete_nvm nvm use m)"
+  EXPECTED_OUTPUT='my_alias'
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "${COMPLETION_SHELL}: completing 'nvm use m' should give >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+  OUTPUT="$(complete_nvm nvm use lts/)"
+  EXPECTED_OUTPUT='lts/iron'
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "${COMPLETION_SHELL}: completing 'nvm use lts/' should give >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+  OUTPUT="$(complete_nvm nvm un)"
+  EXPECTED_OUTPUT='unalias
+uninstall
+unload'
+  [ "${OUTPUT}" = "${EXPECTED_OUTPUT}" ] || die "${COMPLETION_SHELL}: completing 'nvm un' should give >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+done
+
+cleanup

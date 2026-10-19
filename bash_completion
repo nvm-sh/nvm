@@ -8,9 +8,25 @@ fi
 
 __nvm_generate_completion() {
   declare current_word
+  declare word
+  declare glob_was_off
   current_word="${COMP_WORDS[COMP_CWORD]}"
-  # shellcheck disable=SC2207
-  COMPREPLY=($(compgen -W "$1" -- "${current_word}"))
+  # not `compgen -W`: it expands every word (including command substitution),
+  # and the words include alias and version directory names
+  COMPREPLY=()
+  glob_was_off=false
+  case $- in
+    *f*) glob_was_off=true ;;
+  esac
+  set -f
+  for word in $1; do
+    case "${word}" in
+      "${current_word}"*) COMPREPLY+=("${word}") ;;
+    esac
+  done
+  if [ "${glob_was_off}" = false ]; then
+    set +f
+  fi
   return 0
 }
 
