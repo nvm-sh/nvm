@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -ex
+
+# nvm-exec is a separate bash process: give it the same NVM_DIR as this shell,
+# and empty BASH_ENV so a profile there (like the one in this repo's Dockerfile) can't replace it
+export NVM_DIR="$(cd ../.. && pwd)"
+unset NODE_VERSION
+
+: nvm.sh
+\. ../../nvm.sh
+\. ../common.sh
+
+ORIG_PWD="$(pwd)"
+NVM_EXEC="${NVM_DIR}/nvm-exec"
+
+cleanup() {
+  cd "${ORIG_PWD}" 2>/dev/null || true
+  rm -rf "$(nvm_version_path v0.0.1)"
+  [ -n "${TMP_DIR-}" ] && rm -rf "${TMP_DIR}"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+make_fake_node v0.0.1
+
+TMP_DIR="$(mktemp -d)"
+cd "${TMP_DIR}" || die 'could not cd to temp dir'
+
+HAND_WRITTEN='0.0.1'
+printf '%s\n' "${HAND_WRITTEN}" > .nvmrc
+
+try nvm use -- -w
+[ "$(cat .nvmrc)" = "${HAND_WRITTEN}" ] || die "\`nvm use -- -w\` rewrote .nvmrc to >$(cat .nvmrc)<"
+[ "${CAPTURED_EXIT_CODE}" != 0 ] || die '`nvm use -- -w` should fail, since `-w` is not a version'
+
+try nvm use -- --save
+[ "$(cat .nvmrc)" = "${HAND_WRITTEN}" ] || die "\`nvm use -- --save\` rewrote .nvmrc to >$(cat .nvmrc)<"
+[ "${CAPTURED_EXIT_CODE}" != 0 ] || die '`nvm use -- --save` should fail, since `--save` is not a version'
+
+try env BASH_ENV= NODE_VERSION=0.0.1 "${NVM_EXEC}" node --version
+[ "${CAPTURED_STDOUT}" = 'v0.0.1' ] || die "\`NODE_VERSION=0.0.1 nvm-exec node --version\` should run v0.0.1, got >${CAPTURED_STDOUT}<"
+
+try env BASH_ENV= NODE_VERSION=-w "${NVM_EXEC}" node --version
+[ "$(cat .nvmrc)" = "${HAND_WRITTEN}" ] || die "\`NODE_VERSION=-w nvm-exec\` rewrote .nvmrc to >$(cat .nvmrc)<"
+[ "${CAPTURED_EXIT_CODE}" = 127 ] || die "\`NODE_VERSION=-w nvm-exec\` should exit 127, got >${CAPTURED_EXIT_CODE}<"
+
+try nvm use --
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "a lone \`nvm use --\` should fall back to .nvmrc, got exit >${CAPTURED_EXIT_CODE}<"
+
+try nvm use -- 0.0.1
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "\`nvm use -- 0.0.1\` should succeed, got exit >${CAPTURED_EXIT_CODE}<"
+[ "$(cat .nvmrc)" = "${HAND_WRITTEN}" ] || die "\`nvm use -- 0.0.1\` rewrote .nvmrc to >$(cat .nvmrc)<"
+
+try nvm use --save -- 0.0.1
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "\`nvm use --save -- 0.0.1\` should succeed, got exit >${CAPTURED_EXIT_CODE}<"
+[ "$(cat .nvmrc)" = 'v0.0.1' ] || die "\`nvm use --save -- 0.0.1\` should write v0.0.1 to .nvmrc, got >$(cat .nvmrc)<"
+
+cleanup

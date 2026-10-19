@@ -4759,7 +4759,12 @@ nvm() {
             NVM_SILENT_ARG='--silent'
           ;;
           --delete-prefix) NVM_DELETE_PREFIX=1 ;;
-          --) ;;
+          --)
+            if [ -n "${2-}" ]; then
+              PROVIDED_VERSION="$2"
+            fi
+            break
+          ;;
           --lts) NVM_LTS='*' ;;
           --lts=*) NVM_LTS="${1##--lts=}" ;;
           --save | -w)
