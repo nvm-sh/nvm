@@ -66,14 +66,19 @@ fi
 : "${REPO_SLUG:=nvm-sh/nvm}"
 
 TAB="$(printf '\t')"
+# U+0080 through U+009F, as UTF-8 bytes
+C1_CONTROLS="$(printf '\302[\200-\237]')"
 
 COMMITS_FILE="$(mktemp)" || exit 1
 GH_ERR_FILE="$(mktemp)" || exit 1
 trap 'rm -f "${COMMITS_FILE}" "${GH_ERR_FILE}"' EXIT
 
 # each line: <section key> TAB <sha> TAB <bullet text>, in git log order
-git log --no-merges --format='%H %s' "${PREV_REF}..${END_REF}" | while IFS=' ' read -r SHA SUBJECT; do
-  LOWERED="$(printf '%s' "${SUBJECT}" | tr '[:upper:]' '[:lower:]')"
+# control characters in a subject would corrupt the terminal and the tab-separated output;
+# replacing them (rather than removing them) keeps the bytes around them from joining into another one
+git log --no-merges --format='%H %s' "${PREV_REF}..${END_REF}" | LC_ALL=C sed "s/[[:cntrl:]]/?/g;s/${C1_CONTROLS}/?/g" | while IFS=' ' read -r SHA SUBJECT; do
+  # match bytes: in a UTF-8 locale, BSD tr stops at a byte that is not valid UTF-8
+  LOWERED="$(printf '%s' "${SUBJECT}" | LC_ALL=C tr '[:upper:]' '[:lower:]')"
   STRIPPED="${SUBJECT#\[*\] }"
   case "${LOWERED}" in
     v[0-9]*.[0-9]*.[0-9]*)
@@ -115,7 +120,8 @@ print_section() {
     return 0
   fi
   printf '\n%s\n\n' "$2"
-  grep "^$1${TAB}" "${COMMITS_FILE}" | while IFS="${TAB}" read -r _KEY SHA TEXT; do
+  # match bytes: in a UTF-8 locale, GNU grep stops printing matches at a line that is not valid UTF-8
+  LC_ALL=C grep "^$1${TAB}" "${COMMITS_FILE}" | while IFS="${TAB}" read -r _KEY SHA TEXT; do
     REF=''
     case "${TEXT}" in
       *'(#'[0-9]*')') ;; # the subject already carries a reference

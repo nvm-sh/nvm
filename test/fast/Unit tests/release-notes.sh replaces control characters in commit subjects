@@ -1,0 +1,87 @@
+#!/bin/sh
+
+RELEASE_NOTES="${PWD}/../../../release-notes.sh"
+WORK="$(mktemp -d)" || exit 1
+
+cleanup() {
+  cd / && rm -rf "${WORK}"
+}
+die() { echo "$@" ; cleanup ; exit 1; }
+
+export HOME="${WORK}/home"
+export GIT_CONFIG_NOSYSTEM=1
+unset XDG_CONFIG_HOME GIT_DIR GIT_WORK_TREE
+export NVM_RELEASE_NOTES_SKIP_PRS=1
+export GIT_COMMITTER_NAME=nvm GIT_COMMITTER_EMAIL=nvm@example.com
+
+IDENT='contributor <contributor@example.com> 0 +0000'
+
+# writes the commit object byte for byte; `git commit` would repair a subject that is not valid UTF-8
+commit() {
+  PARENT=''
+  if git rev-parse --quiet --verify HEAD >/dev/null; then
+    PARENT="parent $(git rev-parse HEAD)
+"
+  fi
+  COMMIT="$(
+    {
+      printf 'tree %s\n%sauthor %s\ncommitter %s\n\n' "${EMPTY_TREE}" "${PARENT}" "${IDENT}" "${IDENT}"
+      # shellcheck disable=SC2059
+      printf "$1\n"
+    } | git hash-object -t commit -w --stdin
+  )" || die 'failed to write a commit'
+  git update-ref HEAD "${COMMIT}" || die 'failed to update HEAD'
+}
+
+mkdir -p "${HOME}" "${WORK}/repo" || die 'failed to create the scratch dirs'
+cd "${WORK}/repo" || die 'failed to enter the scratch repo'
+git init --quiet . || die 'failed to create the scratch repo'
+EMPTY_TREE="$(git hash-object -t tree -w /dev/null)" || die 'failed to write the empty tree'
+
+commit 'v0.0.1'
+PREV_REF="$(git rev-parse HEAD)"
+commit '[Fix] older bullet'
+commit '[New] \342\200\234quoted\342\200\235 bullet'
+commit '[Fix] stray \233 byte'
+commit '[Fix] U+009B once the escape is gone: \302\033\2332K'
+commit '[Fix] U+009B: \302\2332K'
+commit '[Fix] tab\tand delete\177'
+commit '[Fix] escapes\033]0;title\007\r\033[2K\033[1A'
+commit 'no prefix\033[2K'
+
+EXPECTED_OUTPUT="$(printf '%b\n' \
+  'v0.0.2' \
+  '' \
+  'New Stuff' \
+  '' \
+  ' - \0342\0200\0234quoted\0342\0200\0235 bullet' \
+  '' \
+  'Bug Fixes' \
+  '' \
+  ' - escapes?]0;title???[2K?[1A' \
+  ' - tab?and delete?' \
+  ' - U+009B: ?2K' \
+  ' - U+009B once the escape is gone: \0302?\02332K' \
+  ' - stray \0233 byte' \
+  ' - older bullet' \
+  '' \
+  'Misc' \
+  '' \
+  ' - no prefix?[2K')"
+EXPECTED_STDERR='release-notes: no category prefix, filing under Misc: no prefix?[2K'
+
+for LOCALE in C C.UTF-8 en_US.UTF-8; do
+  case "${LOCALE}" in
+    *.UTF-8) [ "$(LC_ALL="${LOCALE}" locale charmap 2>/dev/null)" = 'UTF-8' ] || continue ;;
+  esac
+
+  OUTPUT="$(LC_ALL="${LOCALE}" "${RELEASE_NOTES}" v0.0.2 "${PREV_REF}" 2>/dev/null)"
+  [ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] \
+    || die "${LOCALE}: expected >${EXPECTED_OUTPUT}<, got >$(printf '%s' "${OUTPUT}" | od -c)<"
+
+  STDERR="$(LC_ALL="${LOCALE}" "${RELEASE_NOTES}" v0.0.2 "${PREV_REF}" 2>&1 >/dev/null)"
+  [ "_${STDERR}" = "_${EXPECTED_STDERR}" ] \
+    || die "${LOCALE}: expected stderr >${EXPECTED_STDERR}<, got >$(printf '%s' "${STDERR}" | od -c)<"
+done
+
+cleanup
