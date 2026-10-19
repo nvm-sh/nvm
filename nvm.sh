@@ -1119,8 +1119,13 @@ nvm_remote_versions() {
     # extra space is needed here to avoid weird behavior when `nvm_ls_remote` ends in a `*`
     NVM_LS_REMOTE_OUTPUT="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN-}") " &&:
     NVM_LS_REMOTE_EXIT_CODE=$?
-    # split output into two
-    NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%v4\.0\.0*}"
+    # split output into two: node v0.x sorts before io.js, and node v4+ after it.
+    # the list is sorted, so cut at the first line whose major is nonzero.
+    case "${NVM_LS_REMOTE_OUTPUT}" in
+      v[1-9]*) NVM_LS_REMOTE_PRE_MERGED_OUTPUT='' ;;
+      *) NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%
+v[1-9]*}" ;;
+    esac
     NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#"$NVM_LS_REMOTE_PRE_MERGED_OUTPUT"}"
   fi
 
@@ -1135,7 +1140,7 @@ nvm_remote_versions() {
     NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
   fi
 
-  # the `sed` removes both blank lines, and only-whitespace lines (see "weird behavior" ~19 lines up)
+  # the `sed` removes both blank lines, and only-whitespace lines (see "weird behavior" ~24 lines up)
   VERSIONS="$(nvm_echo "${NVM_LS_REMOTE_PRE_MERGED_OUTPUT}
 ${NVM_LS_REMOTE_IOJS_OUTPUT}
 ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^ *$/d')"
@@ -1144,7 +1149,7 @@ ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^ *$/d'
     nvm_echo 'N/A'
     return 3
   fi
-  # the `sed` is to remove trailing whitespaces (see "weird behavior" ~25 lines up)
+  # the `sed` is to remove trailing whitespaces (see "weird behavior" ~33 lines up)
   nvm_echo "${VERSIONS}" | command sed 's/ *$//g'
   # shellcheck disable=SC2317
   if [ "${NVM_LS_REMOTE_EXIT_CODE}" != '0' ]; then
