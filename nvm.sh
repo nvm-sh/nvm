@@ -1023,7 +1023,8 @@ nvm_remote_version() {
   if [ -n "${PATTERN}" ] && [ "_${VERSION}" != "_N/A" ] && ! nvm_validate_implicit_alias "${PATTERN}" 2>/dev/null; then
     local VERSION_NUM
     VERSION_NUM="$(nvm_echo "${VERSION}" | command awk '{print $1}')"
-    if ! nvm_echo "${VERSION_NUM}" | nvm_grep -q "${PATTERN}"; then
+    # the `v` prefix and the trailing non-digit keep `20` from matching `v10.20.0` or `v200.0.0`
+    if ! nvm_echo "${VERSION_NUM} " | nvm_grep -q "$(nvm_ensure_version_prefix "${PATTERN%.}")[^0-9]"; then
       VERSION='N/A'
     fi
   fi
