@@ -374,6 +374,16 @@ nvm_detect_profile() {
   fi
 }
 
+nvm_is_wsl() {
+  if [ -e /proc/sys/fs/binfmt_misc/WSLInterop ] || [ -e /proc/sys/fs/binfmt_misc/WSLInterop-late ]; then
+    return 0
+  fi
+  case "$(command uname -r 2>/dev/null)" in
+    *[Mm]icrosoft*) return 0 ;;
+  esac
+  return 1
+}
+
 #
 # Check whether the user has any globally-installed npm modules in their system
 # Node, and warn them if so.
@@ -382,6 +392,11 @@ nvm_check_global_modules() {
   local NPM_COMMAND
   NPM_COMMAND="$(command -v npm 2>/dev/null)" || return 0
   [ -n "${NVM_DIR}" ] && [ -z "${NPM_COMMAND%%"$NVM_DIR"/*}" ] && return 0
+
+  # under WSL, a Windows npm (with its `npm.cmd` beside it) is not a system node that nvm would shadow
+  case "${NPM_COMMAND}" in
+    */*) nvm_is_wsl && [ -f "${NPM_COMMAND%/*}/npm.cmd" ] && return 0 ;;
+  esac
 
   local NPM_VERSION
   NPM_VERSION="$(npm --version)"
@@ -552,7 +567,7 @@ nvm_do_install() {
 nvm_reset() {
   unset -f nvm_has nvm_has_executable nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
-    install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_check_global_modules \
+    install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_is_wsl nvm_check_global_modules \
     nvm_do_install nvm_reset nvm_default_install_dir nvm_grep
 }
 

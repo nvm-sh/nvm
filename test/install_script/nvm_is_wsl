@@ -1,0 +1,40 @@
+#!/bin/sh
+
+cleanup () {
+  rm -rf "${FAKE_BIN_DIR}"
+  PATH="$ORIGINAL_PATH"
+  unset -f cleanup die fake_uname
+  unset ORIGINAL_PATH FAKE_BIN_DIR
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+ORIGINAL_PATH="$PATH"
+FAKE_BIN_DIR="$(mktemp -d)"
+PATH="${FAKE_BIN_DIR}:${PATH}"
+
+fake_uname() {
+  printf '#!/bin/sh\necho %s\n' "$1" > "${FAKE_BIN_DIR}/uname"
+  chmod +x "${FAKE_BIN_DIR}/uname"
+}
+
+type nvm_is_wsl > /dev/null 2>&1 || die 'nvm_is_wsl is not available'
+
+fake_uname '6.6.87.2-microsoft-standard-WSL2'
+nvm_is_wsl || die 'a WSL2 kernel release should be detected as WSL'
+
+fake_uname '4.4.0-19041-Microsoft'
+nvm_is_wsl || die 'a WSL1 kernel release should be detected as WSL'
+
+if [ -e /proc/sys/fs/binfmt_misc/WSLInterop ] || [ -e /proc/sys/fs/binfmt_misc/WSLInterop-late ]; then
+  echo 'skipping the non-WSL checks: this machine has a WSL interop entry'
+else
+  fake_uname '6.8.0-45-generic'
+  ! nvm_is_wsl || die 'a non-WSL kernel release should not be detected as WSL'
+
+  fake_uname '24.5.0'
+  ! nvm_is_wsl || die 'a macOS kernel release should not be detected as WSL'
+fi
+
+cleanup
