@@ -4285,7 +4285,9 @@ nvm() {
 
   # initialize local variables
   local VERSION
+  VERSION=''
   local ADDITIONAL_PARAMETERS
+  ADDITIONAL_PARAMETERS=''
 
   case $COMMAND in
     "cache")
@@ -4424,15 +4426,20 @@ nvm() {
       nosource=0
       NVM_OFFLINE=0
       local LTS
+      LTS=''
       local ALIAS
+      ALIAS=''
       local NVM_UPGRADE_NPM
       NVM_UPGRADE_NPM=0
       local NVM_WRITE_TO_NVMRC
       NVM_WRITE_TO_NVMRC=0
 
       local PROVIDED_REINSTALL_PACKAGES_FROM
+      PROVIDED_REINSTALL_PACKAGES_FROM=''
       local REINSTALL_PACKAGES_FROM
+      REINSTALL_PACKAGES_FROM=''
       local SKIP_DEFAULT_PACKAGES
+      SKIP_DEFAULT_PACKAGES=''
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -4624,6 +4631,7 @@ nvm() {
 
       if [ "${VERSION}" = 'N/A' ] || [ $EXIT_CODE -ne 0 ]; then
         local LTS_MSG
+        LTS_MSG=''
         local REMOTE_CMD
         if [ "${LTS-}" = '*' ]; then
           LTS_MSG='(with LTS filter) '
@@ -4944,6 +4952,7 @@ nvm() {
     ;;
     "deactivate")
       local NVM_SILENT
+      NVM_SILENT=''
       while [ $# -ne 0 ]; do
         case "${1}" in
           --silent) NVM_SILENT=1 ;;
@@ -4997,11 +5006,15 @@ nvm() {
     ;;
     "use")
       local PROVIDED_VERSION
+      PROVIDED_VERSION=''
       local NVM_SILENT
+      NVM_SILENT=''
       local NVM_SILENT_ARG
+      NVM_SILENT_ARG=''
       local NVM_DELETE_PREFIX
       NVM_DELETE_PREFIX=0
       local NVM_LTS
+      NVM_LTS=''
       local IS_VERSION_FROM_NVMRC
       IS_VERSION_FROM_NVMRC=0
       local NVM_WRITE_TO_NVMRC
@@ -5152,6 +5165,7 @@ nvm() {
     ;;
     "run")
       local provided_version
+      provided_version=''
       local has_checked_nvmrc
       has_checked_nvmrc=0
       local IS_VERSION_FROM_NVMRC
@@ -5159,8 +5173,11 @@ nvm() {
       # run given version of node
 
       local NVM_SILENT
+      NVM_SILENT=''
       local NVM_SILENT_ARG
+      NVM_SILENT_ARG=''
       local NVM_LTS
+      NVM_LTS=''
       while [ $# -gt 0 ]; do
         case "$1" in
           --silent)
@@ -5182,6 +5199,7 @@ nvm() {
 
       if [ $# -lt 1 ] && [ -z "${NVM_LTS-}" ]; then
         local NVM_RC_VERSION
+        NVM_RC_VERSION=''
         { NVM_RC_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
         if [ -n "${NVM_RC_VERSION}" ]; then
           VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
@@ -5221,6 +5239,7 @@ nvm() {
       fi
 
       local NVM_IOJS
+      NVM_IOJS=''
       if nvm_is_iojs_version "${VERSION}"; then
         NVM_IOJS=true
       fi
@@ -5229,6 +5248,7 @@ nvm() {
 
       nvm_is_zsh && setopt local_options shwordsplit
       local LTS_ARG
+      LTS_ARG=''
       if [ -n "${NVM_LTS-}" ]; then
         LTS_ARG="--lts=${NVM_LTS-}"
         VERSION=''
@@ -5245,7 +5265,9 @@ nvm() {
     ;;
     "exec")
       local NVM_SILENT
+      NVM_SILENT=''
       local NVM_LTS
+      NVM_LTS=''
       while [ $# -gt 0 ]; do
         case "$1" in
           --silent) NVM_SILENT=1 ; shift ;;
@@ -5320,8 +5342,11 @@ nvm() {
     ;;
     "ls" | "list")
       local PATTERN
+      PATTERN=''
       local NVM_NO_COLORS
+      NVM_NO_COLORS=''
       local NVM_NO_ALIAS
+      NVM_NO_ALIAS=''
 
       while [ $# -gt 0 ]; do
         case "${1}" in
@@ -5358,8 +5383,11 @@ nvm() {
     ;;
     "ls-remote" | "list-remote")
       local NVM_LTS
+      NVM_LTS=''
       local PATTERN
+      PATTERN=''
       local NVM_NO_COLORS
+      NVM_NO_COLORS=''
 
       while [ $# -gt 0 ]; do
         case "${1-}" in
@@ -5420,7 +5448,9 @@ nvm() {
     ;;
     "which")
       local NVM_SILENT
+      NVM_SILENT=''
       local provided_version
+      provided_version=''
       while [ $# -ne 0 ]; do
         case "${1}" in
           --silent) NVM_SILENT=1 ;;
@@ -5484,6 +5514,7 @@ nvm() {
       local ALIAS
       local TARGET
       local NVM_NO_COLORS
+      NVM_NO_COLORS=''
       ALIAS='--'
       TARGET='--'
 
@@ -5651,7 +5682,9 @@ nvm() {
     ;;
     "version-remote")
       local NVM_LTS
+      NVM_LTS=''
       local PATTERN
+      PATTERN=''
       while [ $# -gt 0 ]; do
         case "${1-}" in
           --) ;;

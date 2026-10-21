@@ -1,0 +1,57 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+  unset PATTERN NVM_LTS VERSION
+  unset -f nvm_download
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+
+make_fake_node v20.0.0 || die 'fake node v20.0.0 could not be made'
+make_fake_node v22.0.0 || die 'fake node v22.0.0 could not be made'
+nvm_download() {
+  case "$*" in
+    *iojs*) return 1 ;;
+  esac
+  printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity\n'
+  printf 'v22.0.0\t2024-04-24\tsrc\t-\t-\t-\t-\t-\t-\t-\t-\n'
+  printf 'v20.0.0\t2023-04-18\tsrc\t-\t-\t-\t-\t-\t-\tIron\t-\n'
+}
+
+# dash keeps an outer value after `local`, which these commands must ignore
+PATTERN=v20
+NVM_LTS=iron
+
+OUTPUT="$(nvm ls --no-colors 22 | tr -d ' *')"
+[ "_${OUTPUT}" = '_v22.0.0' ] || die "nvm ls 22 should list v22.0.0; got >${OUTPUT}<"
+
+OUTPUT="$(nvm ls-remote --no-colors 22 | tr -d ' *')"
+[ "_${OUTPUT}" = '_v22.0.0' ] || die "nvm ls-remote 22 should list v22.0.0; got >${OUTPUT}<"
+
+OUTPUT="$(nvm version-remote 22)"
+[ "_${OUTPUT}" = '_v22.0.0' ] || die "nvm version-remote 22 should be v22.0.0; got >${OUTPUT}<"
+
+# without a version or an .nvmrc, `nvm use` fails, rather than use an outer VERSION
+VERSION=v20.0.0
+(cd "${TMP_DIR}" && nvm use >/dev/null 2>&1)
+[ $? = 127 ] || die 'nvm use without a version or an .nvmrc should fail, rather than use an outer VERSION'
+unset VERSION
+
+cleanup
