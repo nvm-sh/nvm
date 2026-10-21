@@ -1,0 +1,39 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias" || die 'could not create alias dir'
+
+make_fake_node v20.1.1 || die 'fake node v20.1.1 could not be made'
+make_fake_node v20.1.10 || die 'fake node v20.1.10 could not be made'
+nvm_make_alias one v20.1.1 || die 'could not alias one'
+nvm_make_alias ten v20.1.10 || die 'could not alias ten'
+printf 'v20.1.1 # a comment\n' > "$(nvm_alias_path)/commented" || die 'could not alias commented'
+
+nvm deactivate >/dev/null 2>&1
+nvm uninstall v20.1.1 >/dev/null 2>&1 || die 'nvm uninstall v20.1.1 failed'
+! nvm_is_version_installed v20.1.1 || die 'v20.1.1 should be uninstalled'
+[ ! -e "$(nvm_alias_path)/one" ] || die 'the alias to v20.1.1 should be removed'
+[ ! -e "$(nvm_alias_path)/commented" ] || die 'the alias to v20.1.1 with a comment should be removed'
+[ "_$(nvm_alias ten)" = '_v20.1.10' ] || die "the alias to v20.1.10 should be kept; got >$(nvm_alias ten 2>&1)<"
+
+cleanup

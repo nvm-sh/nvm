@@ -4874,8 +4874,12 @@ nvm() {
       nvm_echo "${NVM_SUCCESS_MSG}"
 
       # rm any aliases that point to uninstalled version.
-      for ALIAS in $(nvm_grep -l -e "${VERSION}" "$(nvm_alias_path)"/* 2>/dev/null); do
-        nvm unalias "$(command basename "${ALIAS}")"
+      nvm_is_zsh && setopt local_options nonomatch
+      local NVM_ALIAS_FILE
+      for NVM_ALIAS_FILE in "$(nvm_alias_path)"/*; do
+        if [ -f "${NVM_ALIAS_FILE}" ] && [ "_$(nvm_print_alias_file "${NVM_ALIAS_FILE}" | command head -n 1)" = "_${VERSION}" ]; then
+          nvm unalias "$(command basename "${NVM_ALIAS_FILE}")"
+        fi
       done
     ;;
     "deactivate")
