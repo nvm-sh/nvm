@@ -1,0 +1,83 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+  unset -f nvm_download
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+
+row () {
+  printf '%s\t2024-01-01\tsrc\t-\t-\t-\t-\t-\t-\t%s\t-\n' "$1" "$2"
+}
+DOWNLOADS="${TMP_DIR}/downloads"
+nvm_download () {
+  echo "$*" >> "${DOWNLOADS}"
+  case "$*" in
+    *index.tab*)
+      printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity\n'
+      row v24.11.0 Krypton
+      row v24.0.0 -
+    ;;
+    *) return 1 ;;
+  esac
+}
+
+recorded () {
+  [ -f "$(nvm_lts_status_path)" ] || die "no LTS status is recorded, so $1 has none"
+  OUTPUT="$(command awk -v version="$1" '$1 == version { lts = $2 } END { print (lts == "" ? "-" : lts) }' "$(nvm_lts_status_path)")"
+  [ "_${OUTPUT}" = "_$2" ] || die "the recorded LTS status of $1 is >${OUTPUT}<, expected >$2<"
+}
+
+# an index without any LTS versions, like a nightly one, cannot start the record
+{ row v27.0.0-nightly20261020abc -; row v26.0.0-rc.1 -; } | nvm_record_lts_status
+[ $? = 1 ] || die 'nvm_record_lts_status should not start a record from an index without LTS versions'
+[ ! -f "$(nvm_lts_status_path)" ] || die 'no LTS status should have been recorded'
+
+(NVM_OFFLINE=1 nvm_ensure_lts_status)
+[ $? = 3 ] || die 'nvm_ensure_lts_status should not download while offline'
+[ ! -f "${DOWNLOADS}" ] || die "nothing should have been downloaded while offline; got $(cat "${DOWNLOADS}")"
+
+nvm_ensure_lts_status || die 'nvm_ensure_lts_status should download and record LTS status'
+recorded v24.11.0 krypton
+recorded v24.0.0 -
+nvm_ensure_lts_status || die 'nvm_ensure_lts_status should succeed once LTS status is recorded'
+[ "$(wc -l < "${DOWNLOADS}" | tr -d ' ')" = 1 ] || die "LTS status should be downloaded only once; got $(cat "${DOWNLOADS}")"
+
+# later downloads merge, even without any LTS versions
+row v27.0.0-nightly20261020abc - | nvm_record_lts_status || die 'nvm_record_lts_status should merge into an existing record'
+{ row v26.0.0 -; row v24.0.0 Krypton; } | nvm_record_lts_status || die 'nvm_record_lts_status should record index rows'
+recorded v27.0.0-nightly20261020abc -
+recorded v26.0.0 -
+recorded v24.0.0 krypton
+recorded v24.11.0 krypton
+
+# a real index records what `update_test_mocks.sh` recorded from it
+MOCKS_DIR="$PWD/mocks"
+(
+  NVM_DIR="${TMP_DIR}/mock"
+  mkdir -p "${NVM_DIR}" || die 'could not create a second NVM_DIR'
+  sed 1d "${MOCKS_DIR}/nodejs.org-dist-index.tab" | nvm_record_lts_status || die 'nvm_record_lts_status should record the index mock'
+  cmp -s "$(nvm_lts_status_path)" "${MOCKS_DIR}/nodejs.org-dist-lts-status.txt" || die 'recording the index mock should match nodejs.org-dist-lts-status.txt'
+) || exit 1
+
+printf '<html>\n<body>v24.11.0 Not Found</body>\n</html>\n' | nvm_record_lts_status
+[ $? = 1 ] || die 'nvm_record_lts_status should reject content without index rows'
+recorded v24.11.0 krypton
+
+cleanup

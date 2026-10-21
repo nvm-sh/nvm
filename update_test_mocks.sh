@@ -53,6 +53,15 @@ NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ NVM_LTS=* nvm_ls_remo
 NVM_NODEJS_ORG_MIRROR=https://nodejs.org/download/nightly/ NVM_LTS=argon nvm_ls_remote > "$MOCKS_DIR/nvm_ls_remote LTS nightly argon.txt"
 set -e
 
+# the LTS status that `nodejs.org-dist-index.tab` records, written to the mock instead of `$NVM_DIR`
+(
+  nvm_lts_status_path() {
+    nvm_echo "$MOCKS_DIR/nodejs.org-dist-lts-status.txt"
+  }
+  command rm -f "$(nvm_lts_status_path)"
+  command sed 1d "$MOCKS_DIR/nodejs.org-dist-index.tab" | nvm_record_lts_status
+)
+
 ALIAS_PATH="$MOCKS_DIR/nvm_make_alias LTS alias calls.txt"
 : > "$ALIAS_PATH"
 LTS_NAMES_PATH="$MOCKS_DIR/LTS_names.txt"

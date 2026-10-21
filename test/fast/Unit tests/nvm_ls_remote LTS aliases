@@ -19,6 +19,9 @@ cleanup() {
 
 set -ex
 
+# these mocks must not be recorded as the LTS status of $NVM_DIR's versions
+nvm_record_lts_status() { :; }
+
 MOCKS_DIR="$PWD/mocks"
 
 # sample output at the time the test was written

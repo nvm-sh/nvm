@@ -2239,6 +2239,55 @@ nvm_ls_remote_iojs() {
   NVM_LTS="${NVM_LTS-}" nvm_ls_remote_index_tab iojs std "${1-}"
 }
 
+# Every node version's LTS codename, or `-` when it isn't LTS, as of the latest index.tab
+# that listed it. Versions it doesn't list have never been in an index.tab, so aren't LTS.
+nvm_lts_status_path() {
+  nvm_echo "${NVM_DIR}/.lts-status"
+}
+
+# Records LTS status from node index.tab rows on stdin, keeping versions they don't list.
+# Only rows that include an LTS version, unlike a nightly or release candidate index,
+# can start the record, since every version they don't list counts as not LTS.
+nvm_record_lts_status() {
+  local NVM_LTS_STATUS_PATH
+  NVM_LTS_STATUS_PATH="$(nvm_lts_status_path)"
+  local NVM_LTS_STATUS_TMP
+  NVM_LTS_STATUS_TMP="$(command mktemp "${NVM_LTS_STATUS_PATH}.XXXXXX" 2>/dev/null)" || return 1
+  # anything without a full row, like an error page, is not an index
+  if command awk -v previous="${NVM_LTS_STATUS_PATH}" '
+    NF >= 10 && $1 ~ /^v[0-9]+\.[0-9]+\.[0-9]+/ {
+      if (!($1 in lts)) { versions[++rows] = $1 }
+      lts[$1] = ($10 ~ /^-?$/ ? "-" : tolower($10));
+      if (lts[$1] != "-") { has_lts = 1 }
+    }
+    END {
+      if (!rows) { exit 1 }
+      if (!has_lts && (getline line < previous) <= 0) { exit 1 }
+      close(previous);
+      while ((getline line < previous) > 0) {
+        split(line, fields, " ");
+        if (!(fields[1] in lts)) { print fields[1], fields[2] }
+      }
+      for (i = 1; i <= rows; i++) { print versions[i], lts[versions[i]] }
+    }
+  ' > "${NVM_LTS_STATUS_TMP}"; then
+    command mv -f "${NVM_LTS_STATUS_TMP}" "${NVM_LTS_STATUS_PATH}" 2>/dev/null && return 0
+  fi
+  command rm -f "${NVM_LTS_STATUS_TMP}"
+  return 1
+}
+
+# Versions installed before LTS status was recorded need one download of index.tab.
+nvm_ensure_lts_status() {
+  if [ -f "$(nvm_lts_status_path)" ]; then
+    return 0
+  elif [ "${NVM_OFFLINE-}" = 1 ]; then
+    return 3
+  fi
+  NVM_LTS='' nvm_ls_remote_index_tab node std '' >/dev/null 2>&1
+  [ -f "$(nvm_lts_status_path)" ]
+}
+
 # args flavor, type, version
 nvm_ls_remote_index_tab() {
   local LTS
@@ -2332,6 +2381,12 @@ nvm_ls_remote_index_tab() {
     done; } << EOF
 $VERSION_LIST
 EOF
+
+  if [ "${FLAVOR}" = 'node' ] && [ -n "${VERSION_LIST}" ]; then
+    nvm_record_lts_status << EOF ||:
+$VERSION_LIST
+EOF
+  fi
 
   if [ -n "${LTS-}" ]; then
     LTS="$(nvm_normalize_lts "lts/${LTS}")" || return $?
@@ -5727,6 +5782,7 @@ nvm() {
         nvm_is_iojs_version nvm_is_alias nvm_has_non_aliased \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
         nvm_ls nvm_remote_version nvm_remote_versions nvm_sort_versions \
+        nvm_lts_status_path nvm_record_lts_status nvm_ensure_lts_status \
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \

@@ -1,6 +1,7 @@
 # gitignore
 HEAD
 .cache
+.lts-status
 v*
 alias
 
