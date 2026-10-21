@@ -2193,11 +2193,11 @@ nvm_ls() {
     case "${PATTERN}" in
       '' | v)
         if [ -n "${SYSTEM_VERSION}" ]; then
-          VERSIONS="${VERSIONS}
-system ${SYSTEM_VERSION}"
+          VERSIONS="${VERSIONS:+${VERSIONS}
+}system ${SYSTEM_VERSION}"
         else
-          VERSIONS="${VERSIONS}
-system"
+          VERSIONS="${VERSIONS:+${VERSIONS}
+}system"
         fi
       ;;
       system)

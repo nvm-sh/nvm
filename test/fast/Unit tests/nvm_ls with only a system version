@@ -1,0 +1,31 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+
+nvm_has_system_node() { return 0; }
+nvm_has_system_iojs() { return 1; }
+node() { echo 'v20.0.0'; }
+
+OUTPUT="$(nvm_ls)"
+[ "_${OUTPUT}" = '_system v20.0.0' ] || die "nvm_ls with nothing installed should print only the system version; got >${OUTPUT}<"
+
+cleanup
