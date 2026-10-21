@@ -635,7 +635,11 @@ To set a default Node version to be used in any new shell, use the alias 'defaul
 nvm alias default node # this refers to the latest installed version of node
 nvm alias default 18 # this refers to the latest installed v18.x version of node
 nvm alias default 18.12  # this refers to the latest installed v18.12.x version of node
+nvm alias default --lts node # this refers to the latest installed LTS version of node
+nvm alias default --lts=iron 20 # this refers to the latest installed v20.x version of node from the "iron" LTS line
 ```
+
+nvm records the LTS status of every version each time it downloads the list of available versions, so `--lts` aliases know which installed versions are LTS.
 
 ### Use a mirror of node binaries
 To use a mirror of the node binaries, set `$NVM_NODEJS_ORG_MIRROR`:

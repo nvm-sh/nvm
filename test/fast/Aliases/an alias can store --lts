@@ -1,0 +1,78 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias" || die 'could not create alias dir'
+
+for VERSION in v20.19.0 v22.11.0 v24.0.0 v24.11.0 v26.12.1; do
+  make_fake_node "${VERSION}" || die "fake node ${VERSION} could not be made"
+done
+row () {
+  printf '%s\t2024-01-01\tsrc\t-\t-\t-\t-\t-\t-\t%s\t-\n' "$1" "$2"
+}
+{ row v26.12.1 -; row v24.11.0 Krypton; row v24.0.0 -; row v22.11.0 Jod; row v20.19.0 Iron; } | nvm_record_lts_status || die 'could not record LTS status'
+
+nvm alias default --lts node >/dev/null 2>&1 || die 'nvm alias default --lts node failed'
+[ "_$(cat "$(nvm_alias_path)/default")" = '_--lts node' ] || die "the alias file should store >--lts node<; got >$(cat "$(nvm_alias_path)/default")<"
+[ "_$(nvm version default)" = '_v24.11.0' ] || die "default should be the latest installed LTS version; got >$(nvm version default)<"
+
+nvm alias nested default >/dev/null 2>&1 || die 'nvm alias nested default failed'
+[ "_$(nvm version nested)" = '_v24.11.0' ] || die "an alias to default should keep its --lts; got >$(nvm version nested)<"
+
+OUTPUT="$(nvm alias --no-colors outer --lts=iron default 2>&1)" || die 'nvm alias outer --lts=iron default failed'
+[ "_${OUTPUT}" = '_outer -> --lts=iron default (-> v20.19.0 *)' ] || die "outer flags should replace those of the alias they point at; got >${OUTPUT}<"
+[ "_$(nvm version outer)" = '_v20.19.0' ] || die "outer should be the latest installed iron version; got >$(nvm version outer)<"
+
+nvm alias work --lts=jod 22 >/dev/null 2>&1 || die 'nvm alias work --lts=jod 22 failed'
+[ "_$(nvm version work)" = '_v22.11.0' ] || die "work should be the latest installed jod version; got >$(nvm version work)<"
+nvm alias other --lts=iron 22 >/dev/null 2>&1
+[ "_$(nvm version other)" = '_N/A' ] || die "no installed v22 is iron; got >$(nvm version other)<"
+
+OUTPUT="$(nvm unalias work)"
+[ "_${OUTPUT}" = '_Deleted alias work - restore it with `nvm alias "work" --lts=jod "22"`' ] || die "the restore hint should keep --lts=jod as its own argument; got >${OUTPUT}<"
+
+try_err nvm alias bad --lts=Krypton node
+[ "_${CAPTURED_EXIT_CODE}" = '_3' ] || die "an uppercase LTS name should exit 3; got ${CAPTURED_EXIT_CODE}"
+[ ! -e "$(nvm_alias_path)/bad" ] || die 'an alias with an uppercase LTS name should not be written'
+
+try_err nvm alias bad --lts
+[ "_${CAPTURED_EXIT_CODE}" = '_55' ] || die "--lts without a target should exit 55; got ${CAPTURED_EXIT_CODE}"
+try_err nvm alias bad --lts= node
+[ "_${CAPTURED_EXIT_CODE}" = '_55' ] || die "--lts= without an LTS name should exit 55; got ${CAPTURED_EXIT_CODE}"
+[ ! -e "$(nvm_alias_path)/bad" ] || die 'an alias with an empty LTS name should not be written'
+
+# a new shell doesn't download index.tab, so explains a default that needs it
+rm -f "$(nvm_lts_status_path)"
+DOWNLOADS="${TMP_DIR}/downloads"
+nvm_download() {
+  echo "$*" >> "${DOWNLOADS}"
+  return 1
+}
+try_err nvm_auto use
+[ "_${CAPTURED_STDERR}" = '_The default alias needs the LTS status of installed versions, which is not recorded yet; run `nvm ls-remote` to record it.' ] || die "nvm_auto use should explain the missing LTS status; got >${CAPTURED_STDERR}<"
+[ ! -f "${DOWNLOADS}" ] || die "a new shell should not download index.tab; got $(cat "${DOWNLOADS}")"
+unset -f nvm_download
+
+echo '--unknown v26.12.1' > "$(nvm_alias_path)/unknown"
+[ "_$(nvm version unknown)" = '_N/A' ] || die "an alias with a flag this nvm does not know should not resolve; got >$(nvm version unknown)<"
+
+cleanup

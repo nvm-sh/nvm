@@ -1135,11 +1135,50 @@ nvm_version() {
     return $?
   fi
 
+  # flags stored in an alias, like `--lts`, precede the version they apply to
+  local NVM_LTS_FILTER
+  NVM_LTS_FILTER=''
+  while :; do
+    case "${PATTERN}" in
+      '--lts '*)
+        NVM_LTS_FILTER='*'
+      ;;
+      --lts=*' '*)
+        NVM_LTS_FILTER="${PATTERN%% *}"
+        NVM_LTS_FILTER="${NVM_LTS_FILTER#--lts=}"
+      ;;
+      --*)
+        nvm_echo 'N/A'
+        return 3
+      ;;
+      *) break ;;
+    esac
+    PATTERN="${PATTERN#* }"
+  done
+  # like `nvm_resolve_alias`, these flags replace those of an alias they precede
+  if [ -n "${NVM_LTS_FILTER}" ]; then
+    local NVM_FLAGGED_TARGET
+    if NVM_FLAGGED_TARGET="$(nvm_resolve_alias "${PATTERN}" 2>/dev/null)" && [ "_${NVM_FLAGGED_TARGET}" != '_∞' ]; then
+      while :; do
+        case "${NVM_FLAGGED_TARGET}" in
+          --*' '*) NVM_FLAGGED_TARGET="${NVM_FLAGGED_TARGET#* }" ;;
+          *) break ;;
+        esac
+      done
+      PATTERN="${NVM_FLAGGED_TARGET}"
+    fi
+  fi
+
   local NVM_NODE_PREFIX
   NVM_NODE_PREFIX="$(nvm_node_prefix)"
   case "_${PATTERN}" in
-    "_${NVM_NODE_PREFIX}" | "_${NVM_NODE_PREFIX}-")
-      PATTERN="stable"
+    "_${NVM_NODE_PREFIX}" | "_${NVM_NODE_PREFIX}-" | _stable)
+      # `stable` is only the latest version, which might not match the LTS filter
+      if [ -n "${NVM_LTS_FILTER}" ]; then
+        PATTERN="${NVM_NODE_PREFIX}"
+      else
+        PATTERN="stable"
+      fi
     ;;
   esac
 
@@ -1147,12 +1186,16 @@ nvm_version() {
   # itself, unless an alias of the same name takes precedence. Short-circuiting
   # it here avoids the `nvm_ls` subprocess pipeline on shell startup; every
   # other pattern falls through to `nvm_ls` unchanged.
-  if nvm_is_installed_exact_version "${PATTERN}"; then
+  if [ -z "${NVM_LTS_FILTER}" ] && nvm_is_installed_exact_version "${PATTERN}"; then
     nvm_echo "${PATTERN}"
     return 0
   fi
 
-  VERSION="$(nvm_ls "${PATTERN}" | command tail -1)"
+  if [ -n "${NVM_LTS_FILTER}" ]; then
+    VERSION="$(nvm_ls "${PATTERN}" | nvm_filter_lts_versions "${NVM_LTS_FILTER}" | command tail -1)"
+  else
+    VERSION="$(nvm_ls "${PATTERN}" | command tail -1)"
+  fi
   case "${VERSION}" in
     system[[:blank:]]*)
       VERSION='system'
@@ -1877,6 +1920,11 @@ nvm_resolve_alias() {
   local ALIAS_TEMP
   local ALIAS_OUTPUT
 
+  # flags stored in an alias, like `--lts`, precede its target; the outermost alias's apply
+  local ALIAS_FLAGS
+  ALIAS_FLAGS=''
+  local ALIAS_TEMP_FLAGS
+
   local SEEN_ALIASES
   SEEN_ALIASES="
 ${ALIAS}
@@ -1885,6 +1933,19 @@ ${ALIAS}
     ALIAS_OUTPUT="$(nvm_alias "${ALIAS}" 2>/dev/null)" || ALIAS_OUTPUT=''
     ALIAS_TEMP="${ALIAS_OUTPUT%%
 *}"
+    ALIAS_TEMP_FLAGS=''
+    while :; do
+      case "${ALIAS_TEMP}" in
+        --*' '*)
+          ALIAS_TEMP_FLAGS="${ALIAS_TEMP_FLAGS:+${ALIAS_TEMP_FLAGS} }${ALIAS_TEMP%% *}"
+          ALIAS_TEMP="${ALIAS_TEMP#* }"
+        ;;
+        *) break ;;
+      esac
+    done
+    if [ -z "${ALIAS_FLAGS}" ]; then
+      ALIAS_FLAGS="${ALIAS_TEMP_FLAGS}"
+    fi
 
     if [ -z "${ALIAS_TEMP}" ]; then
       break
@@ -1910,13 +1971,15 @@ ${ALIAS_TEMP}
     local NVM_NODE_PREFIX
     NVM_NODE_PREFIX="$(nvm_node_prefix)"
     case "${ALIAS}" in
-      '∞' | \
-      "${NVM_IOJS_PREFIX}" | "${NVM_IOJS_PREFIX}-" | \
-      "${NVM_NODE_PREFIX}")
+      '∞')
         nvm_echo "${ALIAS}"
       ;;
+      "${NVM_IOJS_PREFIX}" | "${NVM_IOJS_PREFIX}-" | \
+      "${NVM_NODE_PREFIX}")
+        nvm_echo "${ALIAS_FLAGS:+${ALIAS_FLAGS} }${ALIAS}"
+      ;;
       *)
-        nvm_ensure_version_prefix "${ALIAS}"
+        nvm_echo "${ALIAS_FLAGS:+${ALIAS_FLAGS} }$(nvm_ensure_version_prefix "${ALIAS}")"
       ;;
     esac
     return 0
@@ -2281,11 +2344,29 @@ nvm_record_lts_status() {
 nvm_ensure_lts_status() {
   if [ -f "$(nvm_lts_status_path)" ]; then
     return 0
-  elif [ "${NVM_OFFLINE-}" = 1 ]; then
+  elif [ "${NVM_OFFLINE-}" = 1 ] || [ -n "${NVM_INDEX_NO_FETCH-}" ]; then
     return 3
   fi
   NVM_LTS='' nvm_ls_remote_index_tab node std '' >/dev/null 2>&1
   [ -f "$(nvm_lts_status_path)" ]
+}
+
+# args: an LTS codename, or `*` for any
+# Keeps the version lines on stdin whose recorded LTS status matches.
+nvm_filter_lts_versions() {
+  if ! nvm_ensure_lts_status; then
+    nvm_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.'
+    return 3
+  fi
+  command awk -v lts="${1-}" -v record="$(nvm_lts_status_path)" '
+    BEGIN {
+      while ((getline line < record) > 0) {
+        split(line, fields, " ");
+        status[fields[1]] = fields[2];
+      }
+    }
+    ($1 in status) && status[$1] != "-" && (lts == "*" || status[$1] == lts) { print }
+  '
 }
 
 # args flavor, type, version
@@ -2589,7 +2670,8 @@ nvm_get_remote_aliases() {
 
     NVM_ALIAS_TARGET="$(nvm_resolve_alias "${NVM_ALIAS_NAME}" 2>/dev/null)" || continue
     case "${NVM_ALIAS_TARGET}" in
-      '' | *[[:cntrl:]]*) continue ;;
+      # flags, like `--lts`, select among installed versions, not remote ones
+      '' | --* | *[[:cntrl:]]*) continue ;;
     esac
 
     command printf '%s\t%s\n' "${NVM_ALIAS_TARGET}" "${NVM_ALIAS_NAME}"
@@ -4301,6 +4383,8 @@ nvm() {
         nvm_echo '  nvm alias [<pattern>]                       Show all aliases beginning with <pattern>'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm alias <name> <version>                  Set an alias named <name> pointing to <version>'
+        nvm_echo '    --lts                                     Only resolve to installed LTS (long-term support) versions'
+        nvm_echo '    --lts=<LTS name>                          Only resolve to installed versions of a specific LTS line'
         nvm_echo '  nvm unalias <name>                          Deletes the alias named <name>'
         nvm_echo '  nvm install-latest-npm                      Attempt to upgrade to the latest working `npm` on the current node version'
         nvm_echo '  nvm reinstall-packages <version>            Reinstall global `npm` packages contained in <version> to current version'
@@ -4999,8 +5083,20 @@ nvm() {
       # rm any aliases that point to uninstalled version.
       nvm_is_zsh && setopt local_options nonomatch
       local NVM_ALIAS_FILE
+      local NVM_ALIAS_TARGET
       for NVM_ALIAS_FILE in "$(nvm_alias_path)"/*; do
-        if [ -f "${NVM_ALIAS_FILE}" ] && [ "_$(nvm_print_alias_file "${NVM_ALIAS_FILE}" | command head -n 1)" = "_${VERSION}" ]; then
+        if [ ! -f "${NVM_ALIAS_FILE}" ]; then
+          continue
+        fi
+        NVM_ALIAS_TARGET="$(nvm_print_alias_file "${NVM_ALIAS_FILE}" | command head -n 1)"
+        # flags, like `--lts`, precede the target
+        while :; do
+          case "${NVM_ALIAS_TARGET}" in
+            --*' '*) NVM_ALIAS_TARGET="${NVM_ALIAS_TARGET#* }" ;;
+            *) break ;;
+          esac
+        done
+        if [ "_${NVM_ALIAS_TARGET}" = "_${VERSION}" ]; then
           nvm unalias "$(command basename "${NVM_ALIAS_FILE}")"
         fi
       done
@@ -5570,6 +5666,8 @@ nvm() {
       local TARGET
       local NVM_NO_COLORS
       NVM_NO_COLORS=''
+      local NVM_ALIAS_FLAGS
+      NVM_ALIAS_FLAGS=''
       ALIAS='--'
       TARGET='--'
 
@@ -5577,6 +5675,23 @@ nvm() {
         case "${1-}" in
           --) ;;
           --no-colors) NVM_NO_COLORS="${1}" ;;
+          --lts=)
+            nvm_err '`--lts=` needs an LTS name.'
+            return 55
+          ;;
+          --lts | --lts=*)
+            if [ -n "${NVM_ALIAS_FLAGS}" ]; then
+              nvm_err '`--lts` may only be provided once.'
+              return 55
+            fi
+            case "${1#--lts=}" in
+              *[!abcdefghijklmnopqrstuvwxyz0123456789._-]*)
+                nvm_err 'LTS names must be lowercase'
+                return 3
+              ;;
+            esac
+            NVM_ALIAS_FLAGS="${1}"
+          ;;
           --*)
             nvm_err "Unsupported option \"${1}\"."
             return 55
@@ -5606,12 +5721,16 @@ nvm() {
           nvm_err 'Aliases in subdirectories are not supported.'
           return 1
         fi
+        TARGET="${NVM_ALIAS_FLAGS:+${NVM_ALIAS_FLAGS} }${TARGET}"
         VERSION="$(nvm_version "${TARGET}")" ||:
         if [ "${VERSION}" = 'N/A' ]; then
           nvm_err "! WARNING: Version '${TARGET}' does not exist."
         fi
         nvm_make_alias "${ALIAS}" "${TARGET}"
         NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_CURRENT="${NVM_CURRENT-}" DEFAULT=false nvm_print_formatted_alias "${ALIAS}" "${TARGET}" "${VERSION}"
+      elif [ -n "${NVM_ALIAS_FLAGS}" ]; then
+        nvm_err "\`${NVM_ALIAS_FLAGS}\` needs a target version, like \`nvm alias ${ALIAS#--} ${NVM_ALIAS_FLAGS} node\`."
+        return 55
       else
         if [ "${ALIAS-}" = '--' ]; then
           unset ALIAS
@@ -5659,7 +5778,19 @@ nvm() {
       local NVM_ALIAS_ORIGINAL
       NVM_ALIAS_ORIGINAL="$(nvm_alias "${1}")"
       command rm -f "${NVM_ALIAS_DIR}/${1}"
-      nvm_echo "Deleted alias ${1} - restore it with \`nvm alias \"${1}\" \"${NVM_ALIAS_ORIGINAL}\"\`"
+      # flags, like `--lts`, are separate arguments, before the quoted target
+      local NVM_ALIAS_ORIGINAL_FLAGS
+      NVM_ALIAS_ORIGINAL_FLAGS=''
+      while :; do
+        case "${NVM_ALIAS_ORIGINAL}" in
+          --*' '*)
+            NVM_ALIAS_ORIGINAL_FLAGS="${NVM_ALIAS_ORIGINAL_FLAGS}${NVM_ALIAS_ORIGINAL%% *} "
+            NVM_ALIAS_ORIGINAL="${NVM_ALIAS_ORIGINAL#* }"
+          ;;
+          *) break ;;
+        esac
+      done
+      nvm_echo "Deleted alias ${1} - restore it with \`nvm alias \"${1}\" ${NVM_ALIAS_ORIGINAL_FLAGS}\"${NVM_ALIAS_ORIGINAL}\"\`"
     ;;
     "install-latest-npm")
       if [ $# -ne 0 ]; then
@@ -5782,7 +5913,7 @@ nvm() {
         nvm_is_iojs_version nvm_is_alias nvm_has_non_aliased \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
         nvm_ls nvm_remote_version nvm_remote_versions nvm_sort_versions \
-        nvm_lts_status_path nvm_record_lts_status nvm_ensure_lts_status \
+        nvm_lts_status_path nvm_record_lts_status nvm_ensure_lts_status nvm_filter_lts_versions \
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
@@ -5945,6 +6076,9 @@ nvm_auto() {
   case "${NVM_MODE}" in
     none) return 0 ;;
     use)
+      # don't download anything while a shell starts up
+      local NVM_INDEX_NO_FETCH
+      NVM_INDEX_NO_FETCH=1
       local VERSION
       local NVM_CURRENT
       NVM_CURRENT="$(nvm_ls_current)"
@@ -5954,6 +6088,13 @@ nvm_auto() {
           if [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
             nvm use --silent "${VERSION}" >/dev/null
           else
+            case "$(nvm_resolve_alias default 2>/dev/null)" in
+              '--lts '* | --lts=*' '*)
+                if [ ! -f "$(nvm_lts_status_path)" ]; then
+                  nvm_err 'The default alias needs the LTS status of installed versions, which is not recorded yet; run `nvm ls-remote` to record it.'
+                fi
+              ;;
+            esac
             return 0
           fi
         elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
@@ -5966,8 +6107,20 @@ nvm_auto() {
     install)
       local VERSION
       VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
+      local NVM_DEFAULT_LTS
+      NVM_DEFAULT_LTS=''
+      case "${VERSION}" in
+        '--lts '* | --lts=*' '*)
+          NVM_DEFAULT_LTS="${VERSION%% *}"
+          VERSION="${VERSION#* }"
+        ;;
+      esac
       if [ -n "${VERSION}" ] && [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-        nvm install "${VERSION}" >/dev/null
+        if [ -n "${NVM_DEFAULT_LTS}" ]; then
+          nvm install "${NVM_DEFAULT_LTS}" "${VERSION}" >/dev/null
+        else
+          nvm install "${VERSION}" >/dev/null
+        fi
       elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
         nvm install >/dev/null
       else

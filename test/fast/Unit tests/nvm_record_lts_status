@@ -51,6 +51,8 @@ recorded () {
 
 (NVM_OFFLINE=1 nvm_ensure_lts_status)
 [ $? = 3 ] || die 'nvm_ensure_lts_status should not download while offline'
+(NVM_INDEX_NO_FETCH=1 nvm_ensure_lts_status)
+[ $? = 3 ] || die 'nvm_ensure_lts_status should not download when told not to, like while a shell starts up'
 [ ! -f "${DOWNLOADS}" ] || die "nothing should have been downloaded while offline; got $(cat "${DOWNLOADS}")"
 
 nvm_ensure_lts_status || die 'nvm_ensure_lts_status should download and record LTS status'
