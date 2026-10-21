@@ -1,0 +1,31 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+
+nvm_has_system_node() { return 1; }
+nvm_has_system_iojs() { return 1; }
+
+OUTPUT="$(nvm ls --no-colors --no-alias)"
+EXPECTED="$(printf '%15s' 'N/A')"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm ls with nothing installed should not mark N/A as installed; got >${OUTPUT}<"
+
+cleanup

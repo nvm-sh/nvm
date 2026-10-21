@@ -76,7 +76,7 @@ nvm_has_colors() { return 0; }
 [ $EXIT_CODE -eq 3 ] || die "nvm ls-remote lts/ARGON did not exit 3, got '${EXIT_CODE}'"
 
 EXPECTED_OUTPUT="LTS names must be lowercase
-            N/A *"
+            N/A"
 [ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm ls-remote lts/ARGON did not output expected error message; got >${OUTPUT}< expected >${EXPECTED_OUTPUT}<"
 
 REMOTE="${PWD}/mocks/nvm_ls_remote.txt"

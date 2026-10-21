@@ -2585,7 +2585,7 @@ nvm_print_versions() {
     -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" \
     -v latest_alias="${NVM_LATEST_ALIAS}" \
     -v node_prefix="$(nvm_node_prefix)" -v iojs_prefix="$(nvm_iojs_prefix)" \
-    -v installed_versions="$(nvm_ls | tr '\n' '|')" -v current="$NVM_CURRENT" \
+    -v installed_versions="$(nvm_ls | nvm_grep -v '^N/A$' | tr '\n' '|')" -v current="$NVM_CURRENT" \
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
     -v old_lts_color="$DEFAULT_COLOR" -v has_colors="$NVM_HAS_COLORS" \
