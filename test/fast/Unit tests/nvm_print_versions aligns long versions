@@ -1,0 +1,23 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_ls_current() { echo 'none'; }
+nvm_ls() { echo 'N/A'; }
+
+OUTPUT="$(NVM_NO_COLORS=--no-colors nvm_print_versions "$(printf 'v23.11.0\nv24.0.0-nightly20241031996708042b')")"
+EXPECTED="$(printf '%33s\n%s' v23.11.0 v24.0.0-nightly20241031996708042b)"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "versions longer than 15 characters should widen the column; got >${OUTPUT}<"
+
+nvm_ls_current() { echo 'v24.0.0-nightly20241031996708042b'; }
+OUTPUT="$(NVM_NO_COLORS=--no-colors nvm_print_versions "$(printf 'v23.11.0\nv24.0.0-nightly20241031996708042b')")"
+EXPECTED="$(printf '%35s\n%s' v23.11.0 '->v24.0.0-nightly20241031996708042b *')"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "the column should also fit the current version's arrow; got >${OUTPUT}<"
+nvm_ls_current() { echo 'none'; }
+
+OUTPUT="$(NVM_NO_COLORS=--no-colors nvm_print_versions "$(printf 'v23.11.0\nv24.11.0')")"
+EXPECTED="$(printf '%15s\n%15s' v23.11.0 v24.11.0)"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "the column should stay 15 characters wide for short versions; got >${OUTPUT}<"

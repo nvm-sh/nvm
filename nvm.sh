@@ -2596,9 +2596,21 @@ function spaces(count, result) { result = ""; while (count-- > 0) result = resul
 function italicize(text) { return has_italics ? ("\033[3m" text "\033[23m") : text; }
 BEGIN {
   named_alias_list = ENVIRON["NVM_NAMED_ALIASES"];
-  fmt_installed = has_colors ? (installed_color ? "\033[" installed_color "%15s\033[0m" : "%15s") : "%15s *";
-  fmt_system = has_colors ? (system_color ? "\033[" system_color "%15s\033[0m" : "%15s") : "%15s *";
-  fmt_current = has_colors ? (current_color ? "\033[" current_color "->%13s\033[0m" : "%15s") : "->%13s *";
+  # wide enough for the longest version, like a nightly, plus the arrow before the current version
+  column = 15;
+  column_rows = split(remote_versions, column_lines, "|");
+  for (n = 1; n <= column_rows; n++) {
+    split(column_lines[n], column_fields, "[[:blank:]]+");
+    column_width = length(column_fields[1]) + (column_fields[1] == current ? 2 : 0);
+    if (column_width > column) {
+      column = column_width;
+    }
+  }
+  fmt_column = "%" column "s";
+  fmt_arrow = "->%" (column - 2) "s";
+  fmt_installed = has_colors ? (installed_color ? "\033[" installed_color fmt_column "\033[0m" : fmt_column) : fmt_column " *";
+  fmt_system = has_colors ? (system_color ? "\033[" system_color fmt_column "\033[0m" : fmt_column) : fmt_column " *";
+  fmt_current = has_colors ? (current_color ? "\033[" current_color fmt_arrow "\033[0m" : fmt_column) : fmt_arrow " *";
 
   latest_lts_color = current_color;
   sub(/0;/, "1;", latest_lts_color);
@@ -2677,7 +2689,7 @@ BEGIN {
       }
     }
 
-    fmt_version = "%15s";
+    fmt_version = fmt_column;
     if (version == current) {
       fmt_version = fmt_current;
     } else if (version == "system") {
