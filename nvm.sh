@@ -1812,9 +1812,7 @@ nvm_alias() {
     nvm_err 'An alias is required.'
     return 1
   fi
-  if ! ALIAS="$(nvm_normalize_lts "${ALIAS}")"; then
-    return $?
-  fi
+  ALIAS="$(nvm_normalize_lts "${ALIAS}")" || return $?
 
   if [ -z "${ALIAS}" ]; then
     return 2
@@ -2336,9 +2334,7 @@ $VERSION_LIST
 EOF
 
   if [ -n "${LTS-}" ]; then
-    if ! LTS="$(nvm_normalize_lts "lts/${LTS}")"; then
-      return $?
-    fi
+    LTS="$(nvm_normalize_lts "lts/${LTS}")" || return $?
     LTS="${LTS#lts/}"
   fi
 
@@ -5102,8 +5098,8 @@ nvm() {
         fi
         return 3
       # an exact, already-installed version needs no further resolution or checks
-      elif [ "${NVM_USE_EXACT_INSTALLED}" -ne 1 ] && ! nvm_ensure_version_installed "${VERSION}" "${IS_VERSION_FROM_NVMRC}"; then
-        return $?
+      elif [ "${NVM_USE_EXACT_INSTALLED}" -ne 1 ]; then
+        nvm_ensure_version_installed "${VERSION}" "${IS_VERSION_FROM_NVMRC}" || return $?
       fi
 
       local NVM_VERSION_DIR

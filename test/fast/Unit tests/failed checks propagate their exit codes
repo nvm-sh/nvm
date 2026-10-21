@@ -1,0 +1,43 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+  unset -f nvm_download
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias/lts" || die 'could not create alias dir'
+
+nvm_alias lts/FOO >/dev/null 2>&1
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] || die "nvm_alias lts/FOO should exit 3, like nvm_normalize_lts; got ${EXIT_CODE}"
+
+nvm_download() {
+  printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity\n'
+  printf 'v22.11.0\t2024-10-29\tsrc\t-\t-\t-\t-\t-\t-\tJod\t-\n'
+}
+(NVM_LTS=FOO nvm_ls_remote_index_tab node std '') >/dev/null 2>&1
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] || die "nvm_ls_remote_index_tab with an uppercase LTS name should exit 3, like nvm_normalize_lts; got ${EXIT_CODE}"
+
+# a version directory without an executable node is not installed
+mkdir -p "${NVM_DIR}/versions/node/v20.0.0/bin" || die 'could not create a broken install'
+nvm use 20 >/dev/null 2>&1
+EXIT_CODE=$?
+[ "${EXIT_CODE}" != 0 ] || die 'nvm use 20 should fail when v20.0.0 is not actually installed'
+
+cleanup
