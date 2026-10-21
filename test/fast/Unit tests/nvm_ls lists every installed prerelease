@@ -1,0 +1,43 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+
+for VERSION in v24.0.0-rc.10 v24.0.0-rc.2 v24.0.0-rc.1; do
+  mkdir -p "${NVM_DIR}/versions/node/${VERSION}/bin" || die "fake node ${VERSION} could not be made"
+  make_echo "${NVM_DIR}/versions/node/${VERSION}/bin/node" "${VERSION}"
+done
+
+OUTPUT="$(nvm_ls 24 | tr '\n' ' ')"
+[ "_${OUTPUT}" = '_v24.0.0-rc.1 v24.0.0-rc.2 v24.0.0-rc.10 ' ] || die "nvm_ls 24 should list every prerelease, in order; got >${OUTPUT}<"
+[ "_$(nvm_version 24)" = '_v24.0.0-rc.10' ] || die "nvm_version 24 should be the latest prerelease; got >$(nvm_version 24)<"
+
+make_fake_node v24.0.0 || die 'fake node v24.0.0 could not be made'
+OUTPUT="$(nvm_ls 24 | tr '\n' ' ')"
+[ "_${OUTPUT}" = '_v24.0.0-rc.1 v24.0.0-rc.2 v24.0.0-rc.10 v24.0.0 ' ] || die "nvm_ls 24 should list the prereleases before their release; got >${OUTPUT}<"
+[ "_$(nvm_version 24)" = '_v24.0.0' ] || die "nvm_version 24 should be the release; got >$(nvm_version 24)<"
+
+# semver orders prerelease identifiers in order, and a shorter run of them first
+OUTPUT="$(printf '%s\n' v24.0.0-rc-x.node v24.0.0.node v24.0.0-rc.1.a.node v24.0.0-rc.2.node v24.0.0-rc.node v24.0.0-rc.1.node | nvm_sort_versions | tr '\n' ' ')"
+[ "_${OUTPUT}" = '_v24.0.0-rc.node v24.0.0-rc.1.node v24.0.0-rc.1.a.node v24.0.0-rc.2.node v24.0.0-rc-x.node v24.0.0.node ' ] || die "nvm_sort_versions should follow semver precedence; got >${OUTPUT}<"
+
+cleanup

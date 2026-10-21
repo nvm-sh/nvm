@@ -1984,6 +1984,37 @@ nvm_strip_iojs_prefix() {
   esac
 }
 
+# Sorts version lines, keyed on their first field, which may end in `.node` or `.iojs`,
+# by semver precedence: prereleases come before their release, and their numeric
+# identifiers compare as numbers, so `v24.0.0-rc.2` comes before `v24.0.0-rc.10`.
+nvm_sort_versions() {
+  command awk '{
+    version = $1;
+    sub(/\.(node|iojs)$/, "", version);
+    sub(/^(iojs-)?v/, "", version);
+    prerelease = "~";
+    dash = index(version, "-");
+    if (dash) {
+      count = split(substr(version, dash + 1), identifiers, ".");
+      prerelease = "";
+      for (i = 1; i <= count; i++) {
+        identifier = identifiers[i];
+        if (identifier ~ /^[0-9]+$/) {
+          sub(/^0+/, "", identifier);
+          while (length(identifier) < 20) { identifier = "0" identifier }
+          identifier = "0" identifier;
+        } else {
+          identifier = "1" identifier;
+        }
+        prerelease = prerelease identifier "!";
+      }
+      version = substr(version, 1, dash - 1);
+    }
+    split(version, parts, ".");
+    printf "%d %d %d %s\t%s\n", parts[1], parts[2], parts[3], prerelease, $0;
+  }' | LC_ALL=C command sort -k 1,1n -k 2,2n -k 3,3n -k 4,4 | command cut -f 2- | command uniq
+}
+
 nvm_ls() {
   local PATTERN
   PATTERN="${1-}"
@@ -2128,7 +2159,7 @@ nvm_ls() {
             \\#${SEARCH_PATTERN}# !d;
           " \
           -e 's#^\([^/]\{1,\}\)/\(.*\)$#\2.\1#;' \
-        | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n \
+        | nvm_sort_versions \
         | command sed -e 's#\(.*\)\.\([^\.]\{1,\}\)$#\2-\1#;' \
                       -e "s#^${NVM_NODE_PREFIX}-##;" \
       )"
@@ -5634,7 +5665,7 @@ nvm() {
         nvm_add_iojs_prefix nvm_strip_iojs_prefix \
         nvm_is_iojs_version nvm_is_alias nvm_has_non_aliased \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
-        nvm_ls nvm_remote_version nvm_remote_versions \
+        nvm_ls nvm_remote_version nvm_remote_versions nvm_sort_versions \
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
