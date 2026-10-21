@@ -4027,7 +4027,7 @@ nvm_ls_cached() {
     fi
   } \
     | command sed 's/^node-//' \
-    | nvm_grep "$(nvm_ensure_version_prefix "${PATTERN}")" \
+    | nvm_grep -w "$(nvm_ensure_version_prefix "${PATTERN:-.*}")" \
     | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n
 }
 

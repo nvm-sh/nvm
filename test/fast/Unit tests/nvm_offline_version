@@ -50,6 +50,10 @@ try nvm_ls_cached "v0.99.98"
 [ "_$CAPTURED_STDOUT" = "_v0.99.98" ] \
   || die "nvm_ls_cached 'v0.99.98' should find the bin-cached node version; got '$CAPTURED_STDOUT'"
 
+try nvm_ls_cached "v0.99.9"
+[ -z "$CAPTURED_STDOUT" ] \
+  || die "nvm_ls_cached 'v0.99.9' should not match a longer version number; got '$CAPTURED_STDOUT'"
+
 try nvm_ls_cached "iojs-v0.99.97"
 [ "_$CAPTURED_STDOUT" = "_iojs-v0.99.97" ] \
   || die "nvm_ls_cached 'iojs-v0.99.97' should find the bin-cached io.js version; got '$CAPTURED_STDOUT'"
