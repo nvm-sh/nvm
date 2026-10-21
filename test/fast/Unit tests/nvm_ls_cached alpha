@@ -1,0 +1,43 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+  unset NVM_ONLY
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+unset NVM_ONLY
+
+CACHE_DIR="$(nvm_cache_dir)"
+SUFFIX="$(nvm_get_os)-$(nvm_get_arch)"
+mkdir -p "${CACHE_DIR}/bin/node-v27.0.0-alpha.1.2.0-${SUFFIX}" "${CACHE_DIR}/src/node-v27.0.0-alpha.1.10.0" "${CACHE_DIR}/bin/node-v26.12.1-${SUFFIX}" \
+  || die 'could not create cached artifacts'
+
+OUTPUT="$(nvm_ls_cached | tr '\n' ' ')"
+[ "_${OUTPUT}" = '_v26.12.1 ' ] || die "cached alphas should be excluded by default; got >${OUTPUT}<"
+
+NVM_ONLY=alpha
+OUTPUT="$(nvm_ls_cached | tr '\n' ' ')"
+[ "_${OUTPUT}" = '_v27.0.0-alpha.1.2.0 v27.0.0-alpha.1.10.0 ' ] || die "NVM_ONLY=alpha should list cached alphas, in order; got >${OUTPUT}<"
+OUTPUT="$(nvm_ls_cached 27.0.0-alpha.1.2 | tr '\n' ' ')"
+[ "_${OUTPUT}" = '_v27.0.0-alpha.1.2.0 ' ] || die "a partial alpha should match only at a dot; got >${OUTPUT}<"
+
+NVM_ONLY='alpha,lts,non-lts,iojs'
+OUTPUT="$(nvm_ls_cached v27.0.0)"
+[ -z "${OUTPUT}" ] || die "v27.0.0 is not one of its alphas; got >${OUTPUT}<"
+
+cleanup

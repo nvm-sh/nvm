@@ -1,0 +1,56 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+unset NVM_ONLY
+
+for VERSION in v26.12.1 v27.0.0 v27.0.0-alpha.1.1.1 v27.0.0-alpha.1.1.10 v27.0.0-alpha.1.2.0 v27.0.0-alpha.10.0.0 v27.0.0-alpha.20.0.10; do
+  mkdir -p "${NVM_DIR}/versions/node/${VERSION}/bin" || die "fake node ${VERSION} could not be made"
+  make_echo "${NVM_DIR}/versions/node/${VERSION}/bin/node" "${VERSION}"
+  nvm_is_version_installed "${VERSION}" || die "fake node ${VERSION} is not installed"
+done
+
+check () {
+  EXPECTED="$1"
+  shift
+  OUTPUT="$(nvm_ls "$@" | nvm_grep -v '^system' | tr '\n' ' ')"
+  [ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm_ls $* (NVM_ONLY=${NVM_ONLY-}) printed >${OUTPUT}<, expected >${EXPECTED}<"
+}
+
+check 'v26.12.1 v27.0.0 '
+check 'v27.0.0 ' 27
+check 'N/A ' v27.0.0-alpha.1.1.1
+
+NVM_ONLY=alpha
+check 'v27.0.0-alpha.1.1.1 v27.0.0-alpha.1.1.10 v27.0.0-alpha.1.2.0 v27.0.0-alpha.10.0.0 v27.0.0-alpha.20.0.10 '
+check 'v27.0.0-alpha.1.1.1 ' v27.0.0-alpha.1.1.1
+check 'v27.0.0-alpha.1.1.1 v27.0.0-alpha.1.1.10 ' v27.0.0-alpha.1.1
+check 'v27.0.0-alpha.1.1.1 v27.0.0-alpha.1.1.10 v27.0.0-alpha.1.2.0 ' v27.0.0-alpha.1
+check 'v27.0.0-alpha.10.0.0 ' v27.0.0-alpha.10
+check 'N/A ' v27.0.0-alpha.20.0.1
+
+NVM_ONLY='alpha,lts,non-lts,iojs'
+check 'v26.12.1 v27.0.0-alpha.1.1.1 v27.0.0-alpha.1.1.10 v27.0.0-alpha.1.2.0 v27.0.0-alpha.10.0.0 v27.0.0-alpha.20.0.10 v27.0.0 '
+unset NVM_ONLY
+
+cleanup

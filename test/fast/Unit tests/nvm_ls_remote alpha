@@ -1,0 +1,92 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+  unset -f nvm_download index_row
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+unset NVM_ONLY NVM_LTS
+
+index_row () {
+  printf '%s\t2026-01-01\tsrc\t-\t-\t-\t-\t-\t-\t%s\t-\n' "$1" "${2:--}"
+}
+
+nvm_download () {
+  case "$*" in
+    *iojs*index.tab*)
+      printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\n'
+      printf 'v3.3.1\t2015-09-15\tsrc\t2.14.3\t4.4.63.30\t1.7.4\t1.2.8\t1.0.2d\t45\n'
+      printf 'v1.0.0\t2015-01-14\tsrc\t1.1.0\t3.31.74.1\t1.2.0\t1.2.8\t1.0.1k\t42\n'
+    ;;
+    *index.tab*)
+      printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity\n'
+      index_row v27.0.0-alpha.1.10.2
+      index_row v27.0.0-alpha.1.2.0
+      index_row v27.0.0-alpha.0.0.0
+      index_row v26.12.10
+      index_row v26.12.2
+      index_row v24.11.0 Krypton
+      index_row v22.11.0 Jod
+      index_row v21.0.0
+    ;;
+    *) return 1 ;;
+  esac
+}
+
+OUTPUT="$(nvm_ls_remote | awk '{ print $1 }')"
+EXPECTED='v21.0.0
+v22.11.0
+v24.11.0
+v26.12.2
+v26.12.10'
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm_ls_remote should exclude alphas by default; got >${OUTPUT}<"
+
+for PAIR in 'node:v26.12.10' '27:N/A' 'v27.0.0-alpha.1.2.0:N/A'; do
+  OUTPUT="$(nvm_remote_version "${PAIR%%:*}")"
+  [ "_${OUTPUT}" = "_${PAIR#*:}" ] || die "nvm_remote_version ${PAIR%%:*} printed >${OUTPUT}<, expected >${PAIR#*:}<"
+done
+
+OUTPUT="$(NVM_ONLY=alpha nvm_ls_remote | awk '{ print $1 }')"
+EXPECTED='v27.0.0-alpha.0.0.0
+v27.0.0-alpha.1.2.0
+v27.0.0-alpha.1.10.2'
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "NVM_ONLY=alpha nvm_ls_remote should list only alphas, in order; got >${OUTPUT}<"
+
+for PAIR in '27:v27.0.0-alpha.1.10.2' 'v27.0.0-alpha.1.2.0:v27.0.0-alpha.1.2.0' 'node:v27.0.0-alpha.1.10.2'; do
+  OUTPUT="$(NVM_ONLY=alpha nvm_remote_version "${PAIR%%:*}")"
+  [ "_${OUTPUT}" = "_${PAIR#*:}" ] || die "NVM_ONLY=alpha nvm_remote_version ${PAIR%%:*} printed >${OUTPUT}<, expected >${PAIR#*:}<"
+done
+
+ALL="$(NVM_ONLY='alpha,lts,non-lts,iojs' nvm_remote_versions | awk '{ print $1 }' | sort)"
+[ "_$(echo "${ALL}" | wc -l | tr -d ' ')" = '_10' ] || die "every category should list all 10 versions; got >${ALL}<"
+UNION=''
+for CATEGORY in alpha lts non-lts iojs; do
+  LIST="$(NVM_ONLY="${CATEGORY}" nvm_remote_versions | awk '{ print $1 }')"
+  [ -n "${LIST}" ] || die "category ${CATEGORY} listed nothing"
+  UNION="${UNION:+${UNION}
+}${LIST}"
+done
+[ "_$(echo "${UNION}" | sort)" = "_${ALL}" ] || die "categories should partition the versions; got >${UNION}<, expected >${ALL}<"
+
+[ "_$(NVM_ONLY=lts nvm_remote_versions | awk '{ print $1 }' | tr '\n' ' ')" = '_v22.11.0 v24.11.0 ' ] || die 'NVM_ONLY=lts listed the wrong versions'
+[ "_$(NVM_ONLY=iojs nvm_remote_versions | awk '{ print $1 }' | tr '\n' ' ')" = '_iojs-v1.0.0 iojs-v3.3.1 ' ] || die 'NVM_ONLY=iojs listed the wrong versions'
+
+cleanup

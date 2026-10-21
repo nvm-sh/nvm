@@ -1,0 +1,16 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+for VERSION in 'v27.0.0-alpha.0.0.0' 'v27.0.0-alpha.1.10.2' '27.0.0-alpha.1.2.0' 'v28.1.2-alpha.10.20.30'; do
+  nvm_is_alpha_version "${VERSION}" || die "${VERSION} should be an alpha version"
+done
+
+for VERSION in '' 'v27.0.0' 'v27.0.0-alpha.1.0' 'v27.0.0-alpha.1' 'v27.0.0-alpha.1.0.0.0' 'v27.0.0-alpha.1..0' 'v27.0.0-alpha.1.0.0-' \
+  'v27.0-alpha.1.0.0' 'v27.0.0-alpha.' 'v27.0.0-alpha.a.b.c' 'v27.0.0-beta.1.0.0' 'iojs-v3.0.0' 'iojs-v27.0.0-alpha.1.0.0' \
+  'v11.0.0-nightly201810011be804d625' 'v24.0.0-rc.1' 'node' 'lts/*' 'system'; do
+  ! nvm_is_alpha_version "${VERSION}" || die "${VERSION} should not be an alpha version"
+done

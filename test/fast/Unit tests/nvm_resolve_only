@@ -1,0 +1,66 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+unset NVM_ONLY NVM_ONLY_SELECTED
+NVM_NO_LTS_STATUS=1
+export NVM_NO_LTS_STATUS
+
+check () {
+  EXPECTED="$1"
+  shift
+  try nvm_resolve_only "$@"
+  [ "_${CAPTURED_EXIT_CODE}" = '_0' ] || die "nvm_resolve_only $* (NVM_ONLY=${NVM_ONLY-}) exited ${CAPTURED_EXIT_CODE}"
+  [ "_${CAPTURED_STDOUT}" = "_${EXPECTED}" ] || die "nvm_resolve_only $* (NVM_ONLY=${NVM_ONLY-}) printed >${CAPTURED_STDOUT}<, expected >${EXPECTED}<"
+}
+
+check_err () {
+  EXPECTED="$1"
+  shift
+  try_err nvm_resolve_only "$@"
+  [ "_${CAPTURED_EXIT_CODE}" = "_${EXPECTED_CODE:-55}" ] || die "nvm_resolve_only $* (NVM_ONLY=${NVM_ONLY-}) exited ${CAPTURED_EXIT_CODE}, expected ${EXPECTED_CODE:-55}"
+  [ "_${CAPTURED_STDERR}" = "_${EXPECTED}" ] || die "nvm_resolve_only $* (NVM_ONLY=${NVM_ONLY-}) printed >${CAPTURED_STDERR}<, expected >${EXPECTED}<"
+}
+
+check 'lts,non-lts,iojs' 0 '' ''
+check 'alpha,iojs' 1 'iojs,alpha' ''
+check 'lts,non-lts' 0 '' '*'
+check 'lts,non-lts' 1 'alpha,lts' 'argon'
+check_err '`--only=alpha,iojs` excludes LTS versions, so it cannot be combined with an LTS selection like `--lts`.' 1 'alpha,iojs' '*'
+check_err '`--only` may only be provided once.' 2 'alpha' ''
+check_err 'Invalid `--only` value "": it must be a comma-separated list of any of: alpha, lts, non-lts, iojs' 1 '' ''
+check_err 'Invalid `--only` value ",alpha": it must be a comma-separated list of any of: alpha, lts, non-lts, iojs' 1 ',alpha' ''
+
+NVM_ONLY='iojs,alpha'
+check 'alpha,iojs' 0 '' ''
+check 'non-lts' 1 'non-lts' ''
+check 'lts,non-lts' 0 '' '*'
+NVM_ONLY='alpha,bogus'
+check_err 'Invalid `$NVM_ONLY` value "alpha,bogus": it must be a comma-separated list of any of: alpha, lts, non-lts, iojs' 0 '' ''
+check 'lts' 1 'lts' ''
+
+NVM_ONLY='lts'
+NVM_ONLY_SELECTED='alpha'
+check 'alpha' 0 '' ''
+check 'non-lts' 1 'non-lts' ''
+unset NVM_ONLY NVM_ONLY_SELECTED NVM_NO_LTS_STATUS
+
+# selecting only one of lts and non-lts needs recorded LTS status; an LTS selection does not
+NVM_INDEX_NO_FETCH=1
+export NVM_INDEX_NO_FETCH
+nvm_download() { return 1; }
+TMP_DIR="$(mktemp -d)"
+ORIG_NVM_DIR="${NVM_DIR}"
+NVM_DIR="${TMP_DIR}"
+EXPECTED_CODE=3
+check_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.' 1 'lts' ''
+unset EXPECTED_CODE
+check 'lts,non-lts' 0 '' '*'
+NVM_DIR="${ORIG_NVM_DIR}"
+rm -rf "${TMP_DIR}"
+unset NVM_INDEX_NO_FETCH

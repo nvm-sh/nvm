@@ -1,0 +1,75 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias" || die 'could not create alias dir'
+unset NVM_ONLY
+
+for VERSION in v24.11.0 v26.12.1 v27.0.0-alpha.1.2.0 v27.0.0-alpha.1.10.2; do
+  mkdir -p "${NVM_DIR}/versions/node/${VERSION}/bin" || die "fake node ${VERSION} could not be made"
+  make_echo "${NVM_DIR}/versions/node/${VERSION}/bin/node" "${VERSION}"
+done
+printf 'v26.12.1\t2026-10-21\tsrc\t-\t-\t-\t-\t-\t-\t-\t-\nv24.11.0\t2025-10-28\tsrc\t-\t-\t-\t-\t-\t-\tKrypton\t-\n' | nvm_record_lts_status || die 'could not record LTS status'
+
+nvm alias default --only=alpha node >/dev/null 2>&1 || die 'nvm alias default --only=alpha node failed'
+[ "_$(cat "$(nvm_alias_path)/default")" = '_--only=alpha node' ] || die "the alias file should store >--only=alpha node<; got >$(cat "$(nvm_alias_path)/default")<"
+[ "_$(nvm version default)" = '_v27.0.0-alpha.1.10.2' ] || die "default should be the latest installed alpha; got >$(nvm version default)<"
+[ "_$(nvm version node)" = '_v26.12.1' ] || die "node itself should still exclude alphas; got >$(nvm version node)<"
+
+nvm use --silent default || die 'nvm use default should use the alpha that default selects'
+[ "_$(nvm current)" = '_v27.0.0-alpha.1.10.2' ] || die "nvm current should be the alpha; got >$(nvm current)<"
+nvm deactivate >/dev/null 2>&1
+
+nvm_auto use || die 'nvm_auto use should use the alpha that default selects'
+[ "_$(nvm current)" = '_v27.0.0-alpha.1.10.2' ] || die "a new shell should start with the alpha; got >$(nvm current)<"
+nvm_auto use || die 'nvm_auto use should keep using the current alpha'
+nvm deactivate >/dev/null 2>&1
+
+NVM_ONLY='lts,non-lts'
+nvm use --silent --only=alpha v27.0.0-alpha.1.2.0 || die 'nvm use --only=alpha should use an alpha'
+[ "_${NVM_ONLY}" = '_lts,non-lts' ] || die "--only should not change NVM_ONLY; got >${NVM_ONLY}<"
+[ -z "${NVM_ONLY_SELECTED-}" ] || die "a command's selection should not outlive it; got >${NVM_ONLY_SELECTED}<"
+unset NVM_ONLY
+nvm deactivate >/dev/null 2>&1
+
+nvm alias both --only=lts,alpha --lts node >/dev/null 2>&1 || die 'nvm alias both --only=lts,alpha --lts node failed'
+[ "_$(cat "$(nvm_alias_path)/both")" = '_--only=alpha,lts --lts node' ] || die "the alias file should store the normalized flags; got >$(cat "$(nvm_alias_path)/both")<"
+[ "_$(nvm version both)" = '_v24.11.0' ] || die "both should be the latest installed LTS version; got >$(nvm version both)<"
+
+try_err nvm alias bad --only=alpha --lts node
+[ "_${CAPTURED_EXIT_CODE}" = '_55' ] || die "--lts with an --only that excludes LTS should exit 55; got ${CAPTURED_EXIT_CODE}"
+[ ! -e "$(nvm_alias_path)/bad" ] || die 'a conflicting alias should not be written'
+
+# a new shell survives `set -e` with a default that resolves to nothing
+nvm_make_alias default v99.0.0 || die 'could not alias default'
+(set -e; nvm_auto use 2>/dev/null; true) || die 'nvm_auto use should not fail with a default that resolves to nothing'
+
+# and explains a default whose flags need LTS status that isn't recorded yet
+rm -f "$(nvm_lts_status_path)"
+nvm_make_alias default '--only=lts node' || die 'could not alias default'
+try_err nvm_auto use
+[ "_${CAPTURED_STDERR}" = '_The default alias needs the LTS status of installed versions, which is not recorded yet; run `nvm ls-remote` to record it.' ] || die "nvm_auto use should explain the missing LTS status; got >${CAPTURED_STDERR}<"
+
+echo '--only=beta node' > "$(nvm_alias_path)/invalid"
+[ "_$(nvm version invalid 2>/dev/null)" = '_N/A' ] || die "an alias with an invalid --only should not resolve; got >$(nvm version invalid 2>/dev/null)<"
+
+cleanup

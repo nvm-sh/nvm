@@ -380,7 +380,7 @@ nvm_is_installed_exact_version() {
   if [ -e "$(nvm_alias_path)/${1}" ]; then
     return 1
   fi
-  nvm_is_version_installed "${1}"
+  nvm_is_version_installed "${1}" && nvm_is_version_selected "${1}"
 }
 
 nvm_is_version_installed() {
@@ -1111,6 +1111,9 @@ nvm_ensure_version_installed() {
   EXIT_CODE="$?"
   local NVM_VERSION_DIR
   if [ "${EXIT_CODE}" != "0" ] || ! nvm_is_version_installed "${LOCAL_VERSION}"; then
+    if nvm_explain_excluded_version "${PROVIDED_VERSION}"; then
+      return 1
+    fi
     if VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"; then
       nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
     else
@@ -1128,6 +1131,22 @@ nvm_ensure_version_installed() {
     fi
     return 1
   fi
+}
+
+# args: version
+# Explains, and succeeds, when the version only matches installed versions outside the selected categories.
+nvm_explain_excluded_version() {
+  local NVM_EXCLUDED_VERSION
+  NVM_EXCLUDED_VERSION="$(NVM_ONLY_SELECTED='alpha,lts,non-lts,iojs' nvm_version "${1-}" 2>/dev/null)" ||:
+  if [ "_${NVM_EXCLUDED_VERSION:-N/A}" = '_N/A' ] || ! nvm_is_version_installed "${NVM_EXCLUDED_VERSION}"; then
+    return 1
+  fi
+  if [ "_${NVM_EXCLUDED_VERSION}" != "_$(nvm_ensure_version_prefix "${1-}")" ]; then
+    NVM_EXCLUDED_VERSION="${1-} -> ${NVM_EXCLUDED_VERSION}"
+  fi
+  nvm_err "N/A: version \"${NVM_EXCLUDED_VERSION}\" is installed, but excluded by the selected version categories (${NVM_ONLY_SELECTED:-${NVM_ONLY:-lts,non-lts,iojs}})."
+  nvm_err ''
+  nvm_err 'Include its category with `--only=<categories>`, or in `$NVM_ONLY`.'
 }
 
 # Expand a version using the version cache
@@ -1148,10 +1167,19 @@ nvm_version() {
   # flags stored in an alias, like `--lts`, precede the version they apply to
   local NVM_LTS_FILTER
   NVM_LTS_FILTER=''
+  local NVM_ONLY_ALIAS
+  NVM_ONLY_ALIAS=''
   while :; do
     case "${PATTERN}" in
       '--lts '*)
         NVM_LTS_FILTER='*'
+      ;;
+      --only=*' '*)
+        NVM_ONLY_ALIAS="${PATTERN%% *}"
+        if ! NVM_ONLY_ALIAS="$(nvm_normalize_only "${NVM_ONLY_ALIAS#--only=}" "an alias's \`--only\`")"; then
+          nvm_echo 'N/A'
+          return 3
+        fi
       ;;
       --lts=*' '*)
         NVM_LTS_FILTER="${PATTERN%% *}"
@@ -1166,7 +1194,7 @@ nvm_version() {
     PATTERN="${PATTERN#* }"
   done
   # like `nvm_resolve_alias`, these flags replace those of an alias they precede
-  if [ -n "${NVM_LTS_FILTER}" ]; then
+  if [ -n "${NVM_LTS_FILTER}${NVM_ONLY_ALIAS}" ]; then
     local NVM_FLAGGED_TARGET
     if NVM_FLAGGED_TARGET="$(nvm_resolve_alias "${PATTERN}" 2>/dev/null)" && [ "_${NVM_FLAGGED_TARGET}" != '_∞' ]; then
       while :; do
@@ -1190,7 +1218,24 @@ nvm_version() {
         PATTERN="stable"
       fi
     ;;
+    _lts/*)
+      # `lts/` aliases are written from index.tab's LTS rows, so their targets are LTS
+      case ",${NVM_ONLY_ALIAS:-${NVM_ONLY_SELECTED:-${NVM_ONLY:-lts,non-lts,iojs}}}," in
+        *,non-lts,*) ;;
+        *,lts,*) NVM_ONLY_ALIAS="${NVM_ONLY_ALIAS:-${NVM_ONLY_SELECTED:-${NVM_ONLY-}}},non-lts" ;;
+      esac
+    ;;
   esac
+
+  if [ -n "${NVM_ONLY_ALIAS}" ]; then
+    if nvm_needs_lts_status "${NVM_ONLY_ALIAS}" && ! nvm_ensure_lts_status; then
+      nvm_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.'
+      nvm_echo 'N/A'
+      return 3
+    fi
+    local NVM_ONLY_SELECTED
+    NVM_ONLY_SELECTED="${NVM_ONLY_ALIAS}"
+  fi
 
   # Fast path: an exact, fully-qualified version that is installed resolves to
   # itself, unless an alias of the same name takes precedence. Short-circuiting
@@ -1297,7 +1342,11 @@ nvm_remote_versions() {
   NVM_LS_REMOTE_PRE_MERGED_OUTPUT=''
   local NVM_LS_REMOTE_POST_MERGED_OUTPUT
   NVM_LS_REMOTE_POST_MERGED_OUTPUT=''
-  if [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_NODE_PREFIX}" ]; then
+  if {
+    [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_NODE_PREFIX}" ];
+  } && {
+    nvm_only_includes alpha || nvm_only_includes lts || nvm_only_includes non-lts;
+  }; then
     local NVM_LS_REMOTE_OUTPUT
     # extra space is needed here to avoid weird behavior when `nvm_ls_remote` ends in a `*`
     NVM_LS_REMOTE_OUTPUT="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN-}") " &&:
@@ -1316,7 +1365,7 @@ v[1-9]*}" ;;
   NVM_LS_REMOTE_IOJS_EXIT_CODE=0
   local NVM_LS_REMOTE_IOJS_OUTPUT
   NVM_LS_REMOTE_IOJS_OUTPUT=''
-  if [ -z "${NVM_LTS-}" ] && {
+  if [ -z "${NVM_LTS-}" ] && nvm_only_includes iojs && {
     [ -z "${NVM_FLAVOR-}" ] || [ "${NVM_FLAVOR-}" = "${NVM_IOJS_PREFIX}" ];
   }; then
     NVM_LS_REMOTE_IOJS_OUTPUT=$(nvm_ls_remote_iojs "${PATTERN-}") &&:
@@ -2055,11 +2104,194 @@ nvm_strip_iojs_prefix() {
   esac
 }
 
+# vN.0.0-alpha.X.Y.Z
+nvm_is_alpha_version() {
+  local NVM_ALPHA_VERSION
+  NVM_ALPHA_VERSION="${1#v}"
+  case "${NVM_ALPHA_VERSION}" in
+    *-alpha.*) ;;
+    *) return 1 ;;
+  esac
+  local NVM_ALPHA_PART
+  for NVM_ALPHA_PART in "${NVM_ALPHA_VERSION%%-alpha.*}" "${NVM_ALPHA_VERSION#*-alpha.}"; do
+    case "${NVM_ALPHA_PART}" in
+      *[!0-9.]* | .* | *. | *..* | *.*.*.*) return 1 ;;
+      *.*.*) ;;
+      *) return 1 ;;
+    esac
+  done
+}
+
+# args: comma-separated version categories, where they came from (for errors)
+nvm_normalize_only() {
+  local NVM_ONLY_VALUE
+  NVM_ONLY_VALUE="${1-}"
+  local NVM_ONLY_SOURCE
+  NVM_ONLY_SOURCE="${2-}"
+  local NVM_ONLY_REST
+  NVM_ONLY_REST=",${NVM_ONLY_VALUE},"
+  local NVM_ONLY_RESULT
+  NVM_ONLY_RESULT=''
+  local NVM_ONLY_CATEGORY
+  case "${NVM_ONLY_VALUE}" in
+    '' | ,* | *, | *,,*) NVM_ONLY_REST='' ;;
+  esac
+  for NVM_ONLY_CATEGORY in alpha lts non-lts iojs; do
+    case "${NVM_ONLY_REST}" in
+      *",${NVM_ONLY_CATEGORY},"*) NVM_ONLY_RESULT="${NVM_ONLY_RESULT:+${NVM_ONLY_RESULT},}${NVM_ONLY_CATEGORY}" ;;
+    esac
+    while :; do
+      case "${NVM_ONLY_REST}" in
+        *",${NVM_ONLY_CATEGORY},"*) NVM_ONLY_REST="${NVM_ONLY_REST%%,"${NVM_ONLY_CATEGORY}",*},${NVM_ONLY_REST#*,"${NVM_ONLY_CATEGORY}",}" ;;
+        *) break ;;
+      esac
+    done
+  done
+  if [ "${NVM_ONLY_REST}" != ',' ]; then
+    nvm_err "Invalid ${NVM_ONLY_SOURCE} value \"${NVM_ONLY_VALUE}\": it must be a comma-separated list of any of: alpha, lts, non-lts, iojs"
+    return 55
+  fi
+  nvm_echo "${NVM_ONLY_RESULT}"
+}
+
+# args: how many times `--only=` was provided, its value, the LTS selection in effect (if any)
+# Prints the version categories to select from: the `--only=` value if provided, else
+# those of an enclosing `nvm` command, else `$NVM_ONLY`, else every category but alpha.
+# An LTS selection, like `--lts`, picks versions through `lts/` aliases, whose targets
+# are LTS, so it needs no recorded LTS status; it can't combine with an `--only=` that
+# excludes LTS versions.
+nvm_resolve_only() {
+  local NVM_ONLY_RESOLVED
+  if [ "${1:-0}" -gt 1 ]; then
+    nvm_err '`--only` may only be provided once.'
+    return 55
+  elif [ "${1-}" = 1 ]; then
+    NVM_ONLY_RESOLVED="$(nvm_normalize_only "${2-}" '`--only`')" || return
+  elif [ -n "${NVM_ONLY_SELECTED-}" ]; then
+    # the enclosing command has already resolved, and recorded LTS status if needed
+    nvm_echo "${NVM_ONLY_SELECTED}"
+    return
+  elif [ -n "${NVM_ONLY-}" ]; then
+    NVM_ONLY_RESOLVED="$(nvm_normalize_only "${NVM_ONLY}" '`$NVM_ONLY`')" || return
+  else
+    NVM_ONLY_RESOLVED='lts,non-lts,iojs'
+  fi
+  if [ -n "${3-}" ]; then
+    case ",${NVM_ONLY_RESOLVED}," in
+      *,lts,*) ;;
+      *)
+        if [ "${1-}" = 1 ]; then
+          nvm_err "\`--only=${2-}\` excludes LTS versions, so it cannot be combined with an LTS selection like \`--lts\`."
+          return 55
+        fi
+      ;;
+    esac
+    NVM_ONLY_RESOLVED='lts,non-lts'
+  fi
+  # commands that download index.tab themselves record LTS status as they do
+  if [ -z "${NVM_NO_LTS_STATUS-}" ] && nvm_needs_lts_status "${NVM_ONLY_RESOLVED}" && ! nvm_ensure_lts_status; then
+    nvm_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.'
+    return 3
+  fi
+  nvm_echo "${NVM_ONLY_RESOLVED}"
+}
+
+# args: a version read from .nvmrc
+# An `lts/` version is an LTS selection, like `--lts`; this updates the enclosing
+# `nvm` command's NVM_LTS_REQUEST and NVM_ONLY_SELECTED to match.
+nvm_select_lts_from_nvmrc() {
+  case "${1-}" in
+    lts/*) ;;
+    *) return 0 ;;
+  esac
+  local NVM_ONLY_LTS
+  NVM_ONLY_LTS="$(NVM_ONLY_SELECTED='' nvm_resolve_only "${NVM_ONLY_FLAG_COUNT-}" "${NVM_ONLY_FLAG-}" '*')" || return
+  NVM_ONLY_SELECTED="${NVM_ONLY_LTS}"
+  NVM_LTS_REQUEST='*'
+}
+
+# assumes the categories have been normalized by `nvm_resolve_only`
+nvm_only_includes() {
+  case ",${NVM_ONLY_SELECTED:-${NVM_ONLY:-lts,non-lts,iojs}}," in
+    *",${1-},"*) return 0 ;;
+  esac
+  return 1
+}
+
+# args: categories
+# Telling LTS from non-LTS versions apart needs their recorded LTS status.
+nvm_needs_lts_status() {
+  case ",${1-}," in
+    *,lts,*)
+      case ",${1-}," in
+        *,non-lts,*) return 1 ;;
+      esac
+    ;;
+    *,non-lts,*) ;;
+    *) return 1 ;;
+  esac
+}
+
+# Filters `nvm_ls`-style version lines on stdin down to the selected categories.
+nvm_filter_installed_versions() {
+  local NVM_NEEDS_LTS_STATUS
+  NVM_NEEDS_LTS_STATUS=0
+  if nvm_needs_lts_status "${NVM_ONLY_SELECTED:-${NVM_ONLY:-lts,non-lts,iojs}}"; then
+    NVM_NEEDS_LTS_STATUS=1
+    if [ ! -f "$(nvm_lts_status_path)" ]; then
+      nvm_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.'
+      return 3
+    fi
+  fi
+  command awk \
+    -v only=",${NVM_ONLY_SELECTED:-${NVM_ONLY:-lts,non-lts,iojs}}," \
+    -v needs_lts_status="${NVM_NEEDS_LTS_STATUS}" \
+    -v record="$(nvm_lts_status_path)" '
+    BEGIN {
+      if (needs_lts_status) {
+        while ((getline line < record) > 0) {
+          split(line, fields, " ");
+          lts[fields[1]] = fields[2];
+        }
+      }
+    }
+    {
+      if ($1 == "system" || $1 == "N/A") { print; next }
+      if ($1 ~ /^iojs-/) { category = "iojs" }
+      else if ($1 ~ /^v[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+\.[0-9]+\.[0-9]+$/) { category = "alpha" }
+      else if (!needs_lts_status) { category = index(only, ",lts,") ? "lts" : "non-lts" }
+      else { category = (($1 in lts) && lts[$1] != "-") ? "lts" : "non-lts" }
+      if (index(only, "," category ",")) { print }
+    }'
+}
+
+# args: version
+nvm_is_version_selected() {
+  case "${1-}" in
+    system) return 0 ;;
+    iojs-*)
+      nvm_only_includes iojs
+      return
+    ;;
+  esac
+  if nvm_is_alpha_version "${1-}"; then
+    nvm_only_includes alpha
+    return
+  fi
+  if ! nvm_needs_lts_status "${NVM_ONLY_SELECTED:-${NVM_ONLY:-lts,non-lts,iojs}}"; then
+    nvm_only_includes lts
+    return
+  fi
+  [ -n "$(nvm_echo "${1-}" | nvm_filter_installed_versions)" ]
+}
+
 # Sorts version lines, keyed on their first field, which may end in `.node` or `.iojs`,
 # by semver precedence: prereleases come before their release, and their numeric
 # identifiers compare as numbers, so `v24.0.0-rc.2` comes before `v24.0.0-rc.10`.
+# With an argument of `1`, prereleases other than alphas, like nightlies, collapse
+# into one line per release.
 nvm_sort_versions() {
-  command awk '{
+  command awk -v collapse="${1-}" '{
     version = $1;
     sub(/\.(node|iojs)$/, "", version);
     sub(/^(iojs-)?v/, "", version);
@@ -2079,11 +2311,16 @@ nvm_sort_versions() {
         }
         prerelease = prerelease identifier "!";
       }
+      if (collapse && version !~ /^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+\.[0-9]+\.[0-9]+$/) { prerelease = "0" }
       version = substr(version, 1, dash - 1);
     }
     split(version, parts, ".");
     printf "%d %d %d %s\t%s\n", parts[1], parts[2], parts[3], prerelease, $0;
-  }' | LC_ALL=C command sort -k 1,1n -k 2,2n -k 3,3n -k 4,4 | command cut -f 2- | command uniq
+  }' | if [ "${1-}" = 1 ]; then
+    LC_ALL=C command sort -u -k 1,1n -k 2,2n -k 3,3n -k 4,4 | command cut -f 2-
+  else
+    LC_ALL=C command sort -k 1,1n -k 2,2n -k 3,3n -k 4,4 | command cut -f 2- | command uniq
+  fi
 }
 
 nvm_ls() {
@@ -2258,6 +2495,22 @@ nvm_ls() {
     fi
   fi
 
+  # filtering is only needed when a selected category leaves out some of these versions
+  local NVM_FILTER_VERSIONS
+  NVM_FILTER_VERSIONS=true
+  if nvm_only_includes lts && nvm_only_includes non-lts; then
+    NVM_FILTER_VERSIONS=false
+    case "${VERSIONS}" in
+      *-alpha.*) nvm_only_includes alpha || NVM_FILTER_VERSIONS=true ;;
+    esac
+    case "${VERSIONS}" in
+      *iojs-*) nvm_only_includes iojs || NVM_FILTER_VERSIONS=true ;;
+    esac
+  fi
+  if [ -n "${VERSIONS}" ] && [ "${NVM_FILTER_VERSIONS}" = true ]; then
+    VERSIONS="$(nvm_echo "${VERSIONS}" | nvm_filter_installed_versions)"
+  fi
+
   if [ "${NVM_ADD_SYSTEM-}" = true ]; then
     local SYSTEM_VERSION
     SYSTEM_VERSION="$(nvm deactivate >/dev/null 2>&1 && node -v 2>/dev/null)"
@@ -2417,7 +2670,7 @@ nvm_ls_remote_index_tab() {
   local SORT_COMMAND
   SORT_COMMAND='command sort'
   case "${FLAVOR}" in
-    node) SORT_COMMAND='command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n' ;;
+    node) SORT_COMMAND='nvm_sort_versions 1' ;;
   esac
 
   local PATTERN
@@ -2484,8 +2737,17 @@ EOF
     LTS="${LTS#lts/}"
   fi
 
-  VERSIONS="$( { command awk -v lts="${LTS-}" '{
+  VERSIONS="$( { command awk -v lts="${LTS-}" -v flavor="${FLAVOR}" -v only=",${NVM_ONLY_SELECTED:-${NVM_ONLY:-lts,non-lts,iojs}}," -v pattern="${PATTERN-}" '{
         if (!$1) { next }
+        if (flavor == "iojs") { category = "iojs" }
+        else if ($1 ~ /^v[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+\.[0-9]+\.[0-9]+$/) {
+          # a release, like v27.0.0, is not one of its alphas
+          if (pattern ~ /^v[0-9]+\.[0-9]+\.[0-9]+$/ && index($1, pattern "-") == 1) { next }
+          category = "alpha"
+        }
+        else if ($10 ~ /^\-?$/) { category = "non-lts" }
+        else { category = "lts" }
+        if (!index(only, "," category ",")) { next }
         if (lts && $10 ~ /^\-?$/) { next }
         if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next }
         if ($10 !~ /^\-?$/) {
@@ -2728,7 +2990,7 @@ nvm_print_versions() {
     -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" \
     -v latest_alias="${NVM_LATEST_ALIAS}" \
     -v node_prefix="$(nvm_node_prefix)" -v iojs_prefix="$(nvm_iojs_prefix)" \
-    -v installed_versions="$(nvm_ls | nvm_grep -v '^N/A$' | tr '\n' '|')" -v current="$NVM_CURRENT" \
+    -v installed_versions="$(nvm_ls 2>/dev/null | nvm_grep -v '^N/A$' | tr '\n' '|')" -v current="$NVM_CURRENT" \
     -v installed_color="$INSTALLED_COLOR" -v system_color="$SYSTEM_COLOR" \
     -v current_color="$CURRENT_COLOR" -v default_color="$DEFAULT_COLOR" \
     -v old_lts_color="$DEFAULT_COLOR" -v has_colors="$NVM_HAS_COLORS" \
@@ -4220,22 +4482,33 @@ nvm_ls_cached() {
   NVM_ARCH="$(nvm_get_arch)"
   local SUFFIX
   SUFFIX="${NVM_OS}-${NVM_ARCH}"
+  local NVM_CACHED_PATTERN
+  NVM_CACHED_PATTERN="$(nvm_ensure_version_prefix "${PATTERN:-.*}")"
+  # a release, like v27.0.0, is not one of its alphas
+  local NVM_CACHED_RELEASE
+  NVM_CACHED_RELEASE='v-'
+  case "${NVM_CACHED_PATTERN}" in
+    *-*) ;;
+    v[0-9]*.[0-9]*.[0-9]*) NVM_CACHED_RELEASE="${NVM_CACHED_PATTERN}" ;;
+  esac
   {
     if [ -d "${NVM_CACHE_DIR}/bin" ]; then
       # shellcheck disable=SC2010
       command ls -1 "${NVM_CACHE_DIR}/bin" \
-        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*-${SUFFIX}\$" \
+        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*\\(-alpha\\.[0-9][0-9.]*\\)\\{0,1\\}-${SUFFIX}\$" \
         | command sed "s/-${SUFFIX}\$//"
     fi
     if [ -d "${NVM_CACHE_DIR}/src" ]; then
       # shellcheck disable=SC2010
       command ls -1 "${NVM_CACHE_DIR}/src" \
-        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*\$"
+        | nvm_grep "^\\(node\\|iojs\\)-v[0-9][0-9.]*\\(-alpha\\.[0-9][0-9.]*\\)\\{0,1\\}\$"
     fi
   } \
     | command sed 's/^node-//' \
-    | nvm_grep -w "$(nvm_ensure_version_prefix "${PATTERN:-.*}")" \
-    | command sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n
+    | nvm_grep -w "${NVM_CACHED_PATTERN}" \
+    | nvm_grep -v "^${NVM_CACHED_RELEASE}-" \
+    | nvm_filter_installed_versions \
+    | nvm_sort_versions
 }
 
 # args: pattern
@@ -4338,6 +4611,10 @@ nvm() {
         nvm_echo
         nvm_echo ' Any options that produce colorized output should respect the `--no-colors` option.'
         nvm_echo
+        nvm_echo ' Every version belongs to one category: alpha, lts, non-lts, or iojs. Commands that select or list versions'
+        nvm_echo ' accept `--only=<categories>`, a comma-separated list of the categories to select from. It defaults to'
+        nvm_echo ' `$NVM_ONLY` when set, and otherwise to every category except alpha: `lts,non-lts,iojs`.'
+        nvm_echo
         nvm_echo 'Usage:'
         nvm_echo '  nvm --help                                  Show this message'
         nvm_echo '    --no-colors                               Suppress colored output'
@@ -4350,6 +4627,7 @@ nvm() {
         nvm_echo '    --reinstall-packages-from=<version>       When installing, reinstall packages installed in <node|iojs|node version number>'
         nvm_echo '    --lts                                     When installing, only select from LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When installing, only select from versions for a specific LTS line'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '    --skip-default-packages                   When installing, skip the default-packages file if it exists'
         nvm_echo '    --latest-npm                              After installing, attempt to upgrade to the latest working npm on the given node version'
         nvm_echo '    --no-progress                             Disable the progress bar on any downloads'
@@ -4360,34 +4638,42 @@ nvm() {
         nvm_echo '  nvm uninstall <version>                     Uninstall a version'
         nvm_echo '  nvm uninstall --lts                         Uninstall using automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '  nvm uninstall --lts=<LTS name>              Uninstall using automatic alias for provided LTS line, if available.'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm use [current | <version>]               Modify PATH to use <version>. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm use`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
         nvm_echo '    --lts                                     Uses automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '    --lts=<LTS name>                          Uses automatic alias for provided LTS line, if available.'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '    --save                                    Writes the specified version to .nvmrc.'
         nvm_echo '  nvm exec [current | <version>] [<command>]  Run <command> on <version>. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm exec`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
         nvm_echo '    --lts                                     Uses automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '    --lts=<LTS name>                          Uses automatic alias for provided LTS line, if available.'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm run [current | <version>] [<args>]      Run `node` on <version> with <args> as arguments. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '   The following optional arguments, if provided, must appear directly after `nvm run`:'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
         nvm_echo '    --lts                                     Uses automatic LTS (long-term support) alias `lts/*`, if available.'
         nvm_echo '    --lts=<LTS name>                          Uses automatic alias for provided LTS line, if available.'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm current                                 Display the active node version (resolved via $PATH; not affected by .nvmrc).'
         nvm_echo '  nvm ls [<version>]                          List installed versions, matching a given <version> if provided'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '    --no-alias                                Suppress `nvm alias` output'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm ls-remote [<version>]                   List remote versions available for install, matching a given <version> if provided'
         nvm_echo '    --lts                                     When listing, only show LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only show versions for a specific LTS line'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm version <version>                       Resolve the given description to a single local version'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm version-remote <version>                Resolve the given description to a single remote version'
         nvm_echo '    --lts                                     When listing, only select from LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only select from versions for a specific LTS line'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm deactivate                              Undo effects of `nvm` on current shell'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
         nvm_echo '  nvm alias [<pattern>]                       Show all aliases beginning with <pattern>'
@@ -4395,12 +4681,15 @@ nvm() {
         nvm_echo '  nvm alias <name> <version>                  Set an alias named <name> pointing to <version>'
         nvm_echo '    --lts                                     Only resolve to installed LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          Only resolve to installed versions of a specific LTS line'
+        nvm_echo '    --only=<categories>                       Only resolve to installed versions in these categories (see above)'
         nvm_echo '  nvm unalias <name>                          Deletes the alias named <name>'
         nvm_echo '  nvm install-latest-npm                      Attempt to upgrade to the latest working `npm` on the current node version'
         nvm_echo '  nvm reinstall-packages <version>            Reinstall global `npm` packages contained in <version> to current version'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm unload                                  Unload `nvm` from shell'
         nvm_echo '  nvm which [current | <version>]             Display path to installed node version. Uses .nvmrc if version is omitted; otherwise errors.'
         nvm_echo '    --silent                                  Silences stdout/stderr output when a version is omitted'
+        nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm cache dir                               Display path to the cache directory for nvm'
         nvm_echo '  nvm cache clear                             Empty cache directory for nvm'
         nvm_echo '  nvm set-colors [<color codes>]              Set five text colors using format "yMeBg". Available when supported.'
@@ -4416,6 +4705,7 @@ nvm() {
         nvm_echo '  nvm install node                      Install the latest available version'
         nvm_echo '  nvm use node                          Use the latest version'
         nvm_echo '  nvm install --lts                     Install the latest LTS version'
+        nvm_echo '  nvm install --only=alpha 27           Install the latest alpha version of node 27'
         nvm_echo '  nvm use --lts                         Use the latest LTS version'
         nvm_echo
         nvm_echo '  nvm set-colors cgYmW                  Set text colors to cyan, green, bold yellow, magenta, and white'
@@ -4437,6 +4727,11 @@ nvm() {
   VERSION=''
   local ADDITIONAL_PARAMETERS
   ADDITIONAL_PARAMETERS=''
+  # the number of `--only=` arguments, and the last one's value
+  local NVM_ONLY_FLAG_COUNT
+  NVM_ONLY_FLAG_COUNT=0
+  local NVM_ONLY_FLAG
+  local NVM_ONLY_RESOLVED
 
   case $COMMAND in
     "cache")
@@ -4633,6 +4928,11 @@ nvm() {
             LTS="${1##--lts=}"
             shift
           ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+            shift
+          ;;
           --latest-npm)
             NVM_UPGRADE_NPM=1
             shift
@@ -4663,7 +4963,6 @@ nvm() {
               nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node.'
               return 6
             fi
-            REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
             shift
           ;;
           --copy-packages-from=*)
@@ -4676,7 +4975,6 @@ nvm() {
               nvm_err 'If --copy-packages-from is provided, it must point to an installed version of node.'
               return 6
             fi
-            REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
             shift
           ;;
           --reinstall-packages-from | --copy-packages-from)
@@ -4700,6 +4998,20 @@ nvm() {
           ;;
         esac
       done
+
+      # like `--reinstall-packages-from`, `--only` may also follow the version, but is needed to resolve it
+      local NVM_INSTALL_ARG
+      for NVM_INSTALL_ARG in "$@"; do
+        case "${NVM_INSTALL_ARG}" in
+          --only=*)
+            NVM_ONLY_FLAG="${NVM_INSTALL_ARG#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
+        esac
+      done
+
+      # validate early; it's resolved again once `lts/*` versions have set LTS
+      NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS=1 nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${LTS-}")" || return $?
 
       # NVM_NO_SOURCE_FALLBACK=1 makes `nvm install` behave as if `-b` were always passed:
       # a failed binary download aborts instead of silently falling back to a from-source compile.
@@ -4755,6 +5067,19 @@ nvm() {
         ;;
       esac
 
+      # the version to reinstall packages from is already installed, so an LTS filter doesn't apply to it
+      # finding the version to install downloads index.tab, which records LTS status
+      local NVM_INSTALL_NO_LTS_STATUS
+      NVM_INSTALL_NO_LTS_STATUS=1
+      if [ "${NVM_OFFLINE}" = 1 ]; then
+        NVM_INSTALL_NO_LTS_STATUS=''
+      fi
+      local NVM_ONLY_INSTALLED
+      NVM_ONLY_INSTALLED="$(NVM_NO_LTS_STATUS="${NVM_INSTALL_NO_LTS_STATUS}" nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" '')" || return $?
+      NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS="${NVM_INSTALL_NO_LTS_STATUS}" nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${LTS-}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
+
       local EXIT_CODE
 
       if [ "${NVM_OFFLINE}" = 1 ]; then
@@ -4804,6 +5129,39 @@ nvm() {
         else
           nvm_err "Version '${provided_version}' ${LTS_MSG-}not found - try \`${REMOTE_CMD}\` to browse available versions."
         fi
+        # look again in only the categories that weren't selected
+        local NVM_EXCLUDED_CATEGORIES
+        NVM_EXCLUDED_CATEGORIES=''
+        local NVM_EXCLUDED_CATEGORY
+        for NVM_EXCLUDED_CATEGORY in alpha lts non-lts iojs; do
+          nvm_only_includes "${NVM_EXCLUDED_CATEGORY}" || NVM_EXCLUDED_CATEGORIES="${NVM_EXCLUDED_CATEGORIES:+${NVM_EXCLUDED_CATEGORIES},}${NVM_EXCLUDED_CATEGORY}"
+        done
+        # every alpha is a vN.0.0, so other versions can't match one
+        if [ "${NVM_EXCLUDED_CATEGORIES}" = 'alpha' ]; then
+          case "${provided_version#v}" in
+            *[!0-9.]*) ;;
+            *.*.*)
+              case "${provided_version#v}" in
+                *.0.0) ;;
+                *) NVM_EXCLUDED_CATEGORIES='' ;;
+              esac
+            ;;
+            *.*)
+              case "${provided_version#v}" in
+                *.0) ;;
+                *) NVM_EXCLUDED_CATEGORIES='' ;;
+              esac
+            ;;
+          esac
+        fi
+        if [ "${NVM_OFFLINE}" != 1 ] && [ -z "${LTS-}" ] && [ -n "${NVM_EXCLUDED_CATEGORIES}" ]; then
+          local NVM_EXCLUDED_VERSION
+          NVM_EXCLUDED_VERSION="$(NVM_ONLY_SELECTED="${NVM_EXCLUDED_CATEGORIES}" NVM_VERSION_ONLY=true nvm_remote_version "${provided_version}" 2>/dev/null)" ||:
+          if [ "_${NVM_EXCLUDED_VERSION:-N/A}" != '_N/A' ]; then
+            nvm_err "It matches ${NVM_EXCLUDED_VERSION}, which is excluded by the selected version categories (${NVM_ONLY_SELECTED})."
+            nvm_err 'Include its category with `--only=<categories>`, or in `$NVM_ONLY`.'
+          fi
+        fi
         return 3
       fi
 
@@ -4821,7 +5179,6 @@ nvm() {
               nvm_err 'If --reinstall-packages-from is provided, it must point to an installed version of node.'
               return 6
             fi
-            REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
           ;;
           --copy-packages-from=*)
             if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ]; then
@@ -4833,7 +5190,6 @@ nvm() {
               nvm_err 'If --copy-packages-from is provided, it must point to an installed version of node.'
               return 6
             fi
-            REINSTALL_PACKAGES_FROM="$(nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
           ;;
           --reinstall-packages-from | --copy-packages-from)
             nvm_err "If ${1} is provided, it must point to an installed version of node using \`=\`."
@@ -4842,6 +5198,7 @@ nvm() {
           --skip-default-packages)
             SKIP_DEFAULT_PACKAGES=true
           ;;
+          --only=*) ;;
           *)
             ADDITIONAL_PARAMETERS="${ADDITIONAL_PARAMETERS} $1"
           ;;
@@ -4849,10 +5206,17 @@ nvm() {
         shift
       done
 
+      if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ]; then
+        REINSTALL_PACKAGES_FROM="$(NVM_ONLY_SELECTED="${NVM_ONLY_INSTALLED}" nvm_version "${PROVIDED_REINSTALL_PACKAGES_FROM}")" ||:
+      fi
+
       if [ -n "${PROVIDED_REINSTALL_PACKAGES_FROM-}" ] && [ "$(nvm_ensure_version_prefix "${PROVIDED_REINSTALL_PACKAGES_FROM}")" = "${VERSION}" ]; then
         nvm_err "You can't reinstall global packages from the same version of node you're installing."
         return 4
       elif [ "${REINSTALL_PACKAGES_FROM-}" = 'N/A' ]; then
+        if NVM_ONLY_SELECTED="${NVM_ONLY_INSTALLED}" nvm_explain_excluded_version "${PROVIDED_REINSTALL_PACKAGES_FROM}"; then
+          return 5
+        fi
         nvm_err "If --reinstall-packages-from is provided, it must point to an installed version of node."
         return 5
       fi
@@ -4879,7 +5243,7 @@ nvm() {
             nvm_install_default_packages
           fi
           if [ $EXIT_CODE -eq 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
-            nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
+            nvm reinstall-packages "--only=${NVM_ONLY_INSTALLED}" "${REINSTALL_PACKAGES_FROM}"
             EXIT_CODE=$?
           fi
         fi
@@ -4996,7 +5360,7 @@ nvm() {
             nvm_install_default_packages
           fi
           if [ $EXIT_CODE -eq 0 ] && [ -n "${REINSTALL_PACKAGES_FROM-}" ] && [ "_${REINSTALL_PACKAGES_FROM}" != "_N/A" ]; then
-            nvm reinstall-packages "${REINSTALL_PACKAGES_FROM}"
+            nvm reinstall-packages "--only=${NVM_ONLY_INSTALLED}" "${REINSTALL_PACKAGES_FROM}"
             EXIT_CODE=$?
           fi
         else
@@ -5007,7 +5371,23 @@ nvm() {
       return $EXIT_CODE
     ;;
     "uninstall")
-      if [ $# -ne 1 ]; then
+      local PATTERN
+      local NVM_UNINSTALL_ARGS
+      NVM_UNINSTALL_ARGS=0
+      while [ $# -ne 0 ]; do
+        case "${1}" in
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
+          *)
+            PATTERN="${1}"
+            NVM_UNINSTALL_ARGS=$((NVM_UNINSTALL_ARGS + 1))
+          ;;
+        esac
+        shift
+      done
+      if [ "${NVM_UNINSTALL_ARGS}" -ne 1 ]; then
         nvm_err 'Usage: nvm uninstall <version>'
         nvm_err '       nvm uninstall --lts'
         nvm_err '       nvm uninstall --lts=<LTS name>'
@@ -5015,8 +5395,17 @@ nvm() {
         return 127
       fi
 
-      local PATTERN
-      PATTERN="${1-}"
+      case "${PATTERN}" in
+        --lts | --lts=* | lts/*)
+          NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" '*')" || return $?
+        ;;
+        *)
+          NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" '')" || return $?
+        ;;
+      esac
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
+
       case "${PATTERN-}" in
         --) ;;
         --lts | 'lts/*')
@@ -5043,6 +5432,9 @@ nvm() {
       fi
 
       if ! nvm_is_version_installed "${VERSION}"; then
+        if nvm_explain_excluded_version "${PATTERN}"; then
+          return 1
+        fi
         local REQUESTED_VERSION
         REQUESTED_VERSION="${PATTERN}"
         if [ "_${VERSION}" != "_N/A" ] && [ "_${VERSION}" != "_${PATTERN}" ]; then
@@ -5198,6 +5590,10 @@ nvm() {
           ;;
           --lts) NVM_LTS='*' ;;
           --lts=*) NVM_LTS="${1##--lts=}" ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
           --save | -w)
             if [ $NVM_WRITE_TO_NVMRC -eq 1 ]; then
               nvm_err '--save and -w may only be provided once'
@@ -5215,12 +5611,23 @@ nvm() {
         shift
       done
 
+      # an `lts/` version is an LTS selection, like `--lts`
+      local NVM_LTS_REQUEST
+      NVM_LTS_REQUEST=''
+      case "${PROVIDED_VERSION-}" in
+        lts/*) NVM_LTS_REQUEST='*' ;;
+      esac
+      NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS:-${NVM_LTS_REQUEST}}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
+
       if [ -n "${NVM_LTS-}" ]; then
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
       elif [ -z "${PROVIDED_VERSION-}" ]; then
         { PROVIDED_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1
         if [ -n "${PROVIDED_VERSION}" ]; then
           IS_VERSION_FROM_NVMRC=1
+          nvm_select_lts_from_nvmrc "${PROVIDED_VERSION}" || return $?
           VERSION="$(nvm_version "${PROVIDED_VERSION}")"
         fi
         if [ -z "${VERSION}" ]; then
@@ -5234,6 +5641,11 @@ nvm() {
         VERSION="$(nvm_match_version "${PROVIDED_VERSION}")"
       fi
 
+      # a version that resolved, maybe through an alias with its own flags, to an installed one is used as is
+      if nvm_is_version_installed "${VERSION}"; then
+        NVM_USE_EXACT_INSTALLED=1
+      fi
+
       if [ -z "${VERSION}" ]; then
         nvm_err 'Usage: nvm use [<version>]'
         nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
@@ -5243,6 +5655,10 @@ nvm() {
 
       if [ $NVM_WRITE_TO_NVMRC -eq 1 ]; then
         nvm_write_nvmrc "${VERSION}"
+        # .nvmrc can't store the categories that selected this version
+        if ! NVM_ONLY_SELECTED='' nvm_is_version_selected "${VERSION}" 2>/dev/null; then
+          nvm_err "Warning: ${VERSION} is not in the default version categories (${NVM_ONLY:-lts,non-lts,iojs}), so using .nvmrc needs \`--only=\`, or \`\$NVM_ONLY\`, to include it."
+        fi
       fi
 
       if [ "_${VERSION}" = '_system' ]; then
@@ -5348,6 +5764,11 @@ nvm() {
           ;;
           --lts) NVM_LTS='*' ; shift ;;
           --lts=*) NVM_LTS="${1##--lts=}" ; shift ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+            shift
+          ;;
           *)
             if [ -n "$1" ]; then
               break
@@ -5358,14 +5779,28 @@ nvm() {
         esac
       done
 
+      # an `lts/` version is an LTS selection, like `--lts`
+      local NVM_LTS_REQUEST
+      NVM_LTS_REQUEST=''
+      case "${1-}" in
+        lts/*) NVM_LTS_REQUEST='*' ;;
+      esac
+      NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS:-${NVM_LTS_REQUEST}}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
+
       if [ $# -lt 1 ] && [ -z "${NVM_LTS-}" ]; then
         local NVM_RC_VERSION
         NVM_RC_VERSION=''
         { NVM_RC_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
         if [ -n "${NVM_RC_VERSION}" ]; then
+          nvm_select_lts_from_nvmrc "${NVM_RC_VERSION}" || return $?
           VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
         fi
         if [ "${VERSION:-N/A}" = 'N/A' ]; then
+          if [ -n "${NVM_RC_VERSION}" ] && nvm_explain_excluded_version "${NVM_RC_VERSION}"; then
+            return 127
+          fi
           nvm_err 'Usage: nvm run [<version>] [<args>]'
           nvm_err '  Provide a <version>, or run from a directory containing an .nvmrc file.'
           nvm_err '  Run `nvm --help` for full help.'
@@ -5392,6 +5827,7 @@ nvm() {
             fi
             provided_version="${NVM_RC_VERSION}"
             IS_VERSION_FROM_NVMRC=1
+            nvm_select_lts_from_nvmrc "${NVM_RC_VERSION}" || return $?
             VERSION="$(nvm_version "${NVM_RC_VERSION}")" ||:
           else
             shift
@@ -5414,6 +5850,10 @@ nvm() {
         LTS_ARG="--lts=${NVM_LTS-}"
         VERSION=''
       fi
+      if [ -n "${VERSION}" ] && [ "_${VERSION}" != '_N/A' ]; then
+        # the version is selected, maybe by an alias's own flags, so using it needs no other check
+        NVM_ONLY_SELECTED='alpha,lts,non-lts,iojs'
+      fi
       if [ "_${VERSION}" = "_N/A" ]; then
         nvm_ensure_version_installed "${provided_version}" "${IS_VERSION_FROM_NVMRC}"
       elif [ "${NVM_IOJS}" = true ]; then
@@ -5434,6 +5874,11 @@ nvm() {
           --silent) NVM_SILENT=1 ; shift ;;
           --lts) NVM_LTS='*' ; shift ;;
           --lts=*) NVM_LTS="${1##--lts=}" ; shift ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+            shift
+          ;;
           --) break ;;
           --*)
             nvm_err "Unsupported option \"$1\"."
@@ -5449,6 +5894,16 @@ nvm() {
         esac
       done
 
+      # an `lts/` version is an LTS selection, like `--lts`
+      local NVM_LTS_REQUEST
+      NVM_LTS_REQUEST=''
+      case "${1-}" in
+        lts/*) NVM_LTS_REQUEST='*' ;;
+      esac
+      NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS:-${NVM_LTS_REQUEST}}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
+
       local provided_version
       provided_version="$1"
       local VERSION_SOURCE
@@ -5461,6 +5916,7 @@ nvm() {
         VERSION="$(nvm_version "${provided_version}")" ||:
         if [ "_${VERSION}" = '_N/A' ] && ! nvm_is_valid_version "${provided_version}"; then
           { provided_version="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1 && has_checked_nvmrc=1
+          nvm_select_lts_from_nvmrc "${provided_version}" || return $?
           VERSION="$(nvm_version "${provided_version}")" ||:
           if [ -n "${provided_version}" ]; then
             VERSION_SOURCE='nvmrc'
@@ -5487,6 +5943,8 @@ nvm() {
         # shellcheck disable=SC2086
         return $EXIT_CODE
       fi
+      # the version is selected, maybe by an alias's own flags, so using it needs no other check
+      NVM_ONLY_SELECTED='alpha,lts,non-lts,iojs'
 
       if [ "${NVM_SILENT:-0}" -ne 1 ]; then
         if [ "${NVM_LTS-}" = '*' ]; then
@@ -5499,7 +5957,7 @@ nvm() {
           nvm_echo "Running node ${VERSION}$(nvm use --silent "${VERSION}" && nvm_print_npm_version)"
         fi
       fi
-      NODE_VERSION="${VERSION}" "${NVM_DIR}/nvm-exec" "$@"
+      NVM_ONLY_SELECTED="${NVM_ONLY_SELECTED}" NODE_VERSION="${VERSION}" "${NVM_DIR}/nvm-exec" "$@"
     ;;
     "ls" | "list")
       local PATTERN
@@ -5514,6 +5972,10 @@ nvm() {
           --) ;;
           --no-colors) NVM_NO_COLORS="${1}" ;;
           --no-alias) NVM_NO_ALIAS="${1}" ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
           --*)
             nvm_err "Unsupported option \"${1}\"."
             return 55
@@ -5528,6 +5990,9 @@ nvm() {
         nvm_err '`--no-alias` is not supported when a pattern is provided.'
         return 55
       fi
+      NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
       local NVM_LS_OUTPUT
       local NVM_LS_EXIT_CODE
       NVM_LS_OUTPUT=$(nvm_ls "${PATTERN-}")
@@ -5559,6 +6024,10 @@ nvm() {
           --lts=*)
             NVM_LTS="${1##--lts=}"
           ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
           --no-colors) NVM_NO_COLORS="${1}" ;;
           --*)
             nvm_err "Unsupported option \"${1}\"."
@@ -5584,6 +6053,10 @@ nvm() {
         esac
         shift
       done
+
+      NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS=1 nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS-}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
 
       local NVM_OUTPUT
       local EXIT_CODE
@@ -5616,13 +6089,27 @@ nvm() {
         case "${1}" in
           --silent) NVM_SILENT=1 ;;
           --) ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
           *) provided_version="${1-}" ;;
         esac
         shift
       done
+      # an `lts/` version is an LTS selection, like `--lts`
+      local NVM_LTS_REQUEST
+      NVM_LTS_REQUEST=''
+      case "${provided_version-}" in
+        lts/*) NVM_LTS_REQUEST='*' ;;
+      esac
+      NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS_REQUEST}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
       if [ -z "${provided_version-}" ]; then
         { provided_version="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1
         if [ -n "${provided_version}" ]; then
+          nvm_select_lts_from_nvmrc "${provided_version}" || return $?
           VERSION=$(nvm_version "${provided_version}") ||:
         fi
       elif [ "${provided_version}" != 'system' ]; then
@@ -5702,6 +6189,10 @@ nvm() {
             esac
             NVM_ALIAS_FLAGS="${1}"
           ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
           --*)
             nvm_err "Unsupported option \"${1}\"."
             return 55
@@ -5716,6 +6207,10 @@ nvm() {
         esac
         shift
       done
+      # resolving the alias's target checks for recorded LTS status, if it needs it
+      NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS=1 nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_ALIAS_FLAGS}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
 
       if [ -z "${TARGET}" ]; then
         # for some reason the empty string was explicitly passed as the target
@@ -5731,9 +6226,12 @@ nvm() {
           nvm_err 'Aliases in subdirectories are not supported.'
           return 1
         fi
+        if [ "${NVM_ONLY_FLAG_COUNT}" -gt 0 ]; then
+          NVM_ALIAS_FLAGS="--only=$(nvm_normalize_only "${NVM_ONLY_FLAG}" '`--only`')${NVM_ALIAS_FLAGS:+ ${NVM_ALIAS_FLAGS}}"
+        fi
         TARGET="${NVM_ALIAS_FLAGS:+${NVM_ALIAS_FLAGS} }${TARGET}"
         VERSION="$(nvm_version "${TARGET}")" ||:
-        if [ "${VERSION}" = 'N/A' ]; then
+        if [ "${VERSION}" = 'N/A' ] && ! nvm_explain_excluded_version "${TARGET}"; then
           nvm_err "! WARNING: Version '${TARGET}' does not exist."
         fi
         nvm_make_alias "${ALIAS}" "${TARGET}"
@@ -5812,14 +6310,30 @@ nvm() {
       nvm_install_latest_npm
     ;;
     "reinstall-packages" | "copy-packages")
-      if [ $# -ne 1 ]; then
+      local PROVIDED_VERSION
+      local NVM_REINSTALL_ARGS
+      NVM_REINSTALL_ARGS=0
+      while [ $# -ne 0 ]; do
+        case "${1}" in
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
+          *)
+            PROVIDED_VERSION="${1}"
+            NVM_REINSTALL_ARGS=$((NVM_REINSTALL_ARGS + 1))
+          ;;
+        esac
+        shift
+      done
+      if [ "${NVM_REINSTALL_ARGS}" -ne 1 ]; then
         nvm_err "Usage: nvm ${COMMAND} <version>"
         nvm_err '  Run `nvm --help` for full help.'
         return 127
       fi
-
-      local PROVIDED_VERSION
-      PROVIDED_VERSION="${1-}"
+      NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
 
       if [ "${PROVIDED_VERSION}" = "$(nvm_ls_current)" ] || [ "$(nvm_version "${PROVIDED_VERSION}" ||:)" = "$(nvm_ls_current)" ]; then
         nvm_err 'Can not reinstall packages from the current version of node.'
@@ -5834,6 +6348,9 @@ nvm() {
         VERSION="system"
       else
         VERSION="$(nvm_version "${PROVIDED_VERSION}")" ||:
+        if [ "_${VERSION}" = '_N/A' ] && nvm_explain_excluded_version "${PROVIDED_VERSION}"; then
+          return 3
+        fi
       fi
 
       local NPMLIST
@@ -5874,7 +6391,22 @@ nvm() {
       nvm_echo 'nvm cache cleared.'
     ;;
     "version")
-      nvm_version "${1}"
+      local PATTERN
+      PATTERN=''
+      while [ $# -gt 0 ]; do
+        case "${1}" in
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
+          *) PATTERN="${PATTERN:-${1}}" ;;
+        esac
+        shift
+      done
+      NVM_ONLY_RESOLVED="$(nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
+      nvm_version "${PATTERN-}"
     ;;
     "version-remote")
       local NVM_LTS
@@ -5889,6 +6421,10 @@ nvm() {
           ;;
           --lts=*)
             NVM_LTS="${1##--lts=}"
+          ;;
+          --only=*)
+            NVM_ONLY_FLAG="${1#--only=}"
+            NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
           ;;
           --*)
             nvm_err "Unsupported option \"${1}\"."
@@ -5910,6 +6446,9 @@ nvm() {
           unset PATTERN
         ;;
       esac
+      NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS=1 nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS-}")" || return $?
+      local NVM_ONLY_SELECTED
+      NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
       NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
     ;;
     "--version" | "-v")
@@ -5924,6 +6463,8 @@ nvm() {
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
         nvm_ls nvm_remote_version nvm_remote_versions nvm_sort_versions \
         nvm_lts_status_path nvm_record_lts_status nvm_ensure_lts_status nvm_filter_lts_versions \
+        nvm_is_alpha_version nvm_normalize_only nvm_resolve_only nvm_only_includes nvm_explain_excluded_version nvm_select_lts_from_nvmrc \
+        nvm_needs_lts_status nvm_filter_installed_versions nvm_is_version_selected \
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
@@ -6089,6 +6630,13 @@ nvm_auto() {
       # don't download anything while a shell starts up
       local NVM_INDEX_NO_FETCH
       NVM_INDEX_NO_FETCH=1
+      if [ -n "${NVM_ONLY-}" ] && ! nvm_normalize_only "${NVM_ONLY}" '`$NVM_ONLY`' >/dev/null; then
+        return 55
+      fi
+      if nvm_needs_lts_status "${NVM_ONLY-}" && [ ! -f "$(nvm_lts_status_path)" ]; then
+        nvm_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.'
+        return 3
+      fi
       local VERSION
       local NVM_CURRENT
       NVM_CURRENT="$(nvm_ls_current)"
@@ -6096,41 +6644,59 @@ nvm_auto() {
         VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
         if [ -n "${VERSION}" ]; then
           if [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-            nvm use --silent "${VERSION}" >/dev/null
+            # the default alias, and any flags it stores, have already selected this version
+            nvm use --silent --only=alpha,lts,non-lts,iojs "${VERSION}" >/dev/null
           else
-            case "$(nvm_resolve_alias default 2>/dev/null)" in
-              '--lts '* | --lts=*' '*)
-                if [ ! -f "$(nvm_lts_status_path)" ]; then
-                  nvm_err 'The default alias needs the LTS status of installed versions, which is not recorded yet; run `nvm ls-remote` to record it.'
-                fi
-              ;;
-            esac
+            # a default alias whose flags need recorded LTS status can't get it while a shell starts up
+            local NVM_DEFAULT_TARGET
+            NVM_DEFAULT_TARGET="$(nvm_resolve_alias default 2>/dev/null ||:)"
+            local NVM_DEFAULT_NEEDS_LTS_STATUS
+            NVM_DEFAULT_NEEDS_LTS_STATUS=0
+            local NVM_DEFAULT_ONLY
+            while :; do
+              case "${NVM_DEFAULT_TARGET}" in
+                '--lts '* | --lts=*' '*) NVM_DEFAULT_NEEDS_LTS_STATUS=1 ;;
+                --only=*' '*)
+                  NVM_DEFAULT_ONLY="${NVM_DEFAULT_TARGET%% *}"
+                  if nvm_needs_lts_status "${NVM_DEFAULT_ONLY#--only=}"; then
+                    NVM_DEFAULT_NEEDS_LTS_STATUS=1
+                  fi
+                ;;
+                *) break ;;
+              esac
+              NVM_DEFAULT_TARGET="${NVM_DEFAULT_TARGET#* }"
+            done
+            # zsh 5.1's `set -e` exits on a failing `cmd || :` in an `else`, but not on a failing condition
+            if [ "${NVM_DEFAULT_NEEDS_LTS_STATUS}" = 1 ] && [ ! -f "$(nvm_lts_status_path)" ]; then
+              nvm_err 'The default alias needs the LTS status of installed versions, which is not recorded yet; run `nvm ls-remote` to record it.'
+            elif nvm_explain_excluded_version default; then
+              :
+            fi
             return 0
           fi
         elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
           nvm use --silent >/dev/null
         fi
       else
-        nvm use --silent "${NVM_CURRENT}" >/dev/null
+        nvm use --silent --only=alpha,lts,non-lts,iojs "${NVM_CURRENT}" >/dev/null
       fi
     ;;
     install)
       local VERSION
       VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
-      local NVM_DEFAULT_LTS
-      NVM_DEFAULT_LTS=''
-      case "${VERSION}" in
-        '--lts '* | --lts=*' '*)
-          NVM_DEFAULT_LTS="${VERSION%% *}"
-          VERSION="${VERSION#* }"
-        ;;
-      esac
+      # flags stored in the alias, like `--lts`, are arguments to `nvm install`
+      set --
+      while :; do
+        case "${VERSION}" in
+          --*' '*)
+            set -- "$@" "${VERSION%% *}"
+            VERSION="${VERSION#* }"
+          ;;
+          *) break ;;
+        esac
+      done
       if [ -n "${VERSION}" ] && [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-        if [ -n "${NVM_DEFAULT_LTS}" ]; then
-          nvm install "${NVM_DEFAULT_LTS}" "${VERSION}" >/dev/null
-        else
-          nvm install "${VERSION}" >/dev/null
-        fi
+        nvm install "$@" "${VERSION}" >/dev/null
       elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
         nvm install >/dev/null
       else

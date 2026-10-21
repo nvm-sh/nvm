@@ -1,0 +1,78 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+  unset NVM_ONLY
+  unset -f nvm_download
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+unset NVM_ONLY
+
+DOWNLOADS="${TMP_DIR}/downloads"
+nvm_download () {
+  echo "$*" >> "${DOWNLOADS}"
+  return 1
+}
+downloads () {
+  if [ -f "${DOWNLOADS}" ]; then
+    wc -l < "${DOWNLOADS}" | tr -d ' '
+  else
+    echo 0
+  fi
+}
+
+for VERSION in v21.0.0 v22.11.0 v27.0.0-alpha.1.0.0; do
+  mkdir -p "${NVM_DIR}/versions/node/${VERSION}/bin" || die "fake node ${VERSION} could not be made"
+  make_echo "${NVM_DIR}/versions/node/${VERSION}/bin/node" "${VERSION}"
+done
+make_fake_iojs v3.3.1 || die 'fake iojs could not be made'
+
+# without recorded LTS status, selecting only one of lts and non-lts fails rather than guess
+try_err nvm ls --no-colors --only=lts
+[ "_${CAPTURED_EXIT_CODE}" = '_3' ] || die "nvm ls --only=lts without recorded LTS status should exit 3; got ${CAPTURED_EXIT_CODE}"
+[ "_${CAPTURED_STDERR}" = '_The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.' ] || die "got >${CAPTURED_STDERR}<"
+[ "_$(downloads)" = '_1' ] || die "missing LTS status should be downloaded once; got $(downloads)"
+
+# so do internal lookups, rather than treat every version as non-LTS
+OUTPUT="$(printf 'v21.0.0\nv22.11.0\n' | NVM_ONLY=non-lts nvm_filter_installed_versions 2>/dev/null)"
+[ -z "${OUTPUT}" ] || die "nvm_filter_installed_versions without recorded LTS status should print nothing; got >${OUTPUT}<"
+[ "_$(NVM_ONLY=non-lts nvm_version 21 2>/dev/null)" = '_N/A' ] || die 'NVM_ONLY=non-lts nvm_version 21 without recorded LTS status should be N/A'
+
+# selecting both, or neither, needs no LTS status
+[ "_$(nvm ls --no-colors --no-alias --only=lts,non-lts | nvm_grep -v system | tr -d ' *' | tr '\n' ' ')" = '_v21.0.0 v22.11.0 ' ] || die 'nvm ls --only=lts,non-lts should list both'
+[ "_$(nvm ls --no-colors --no-alias --only=alpha,iojs | nvm_grep -v system | tr -d ' *' | tr '\n' ' ')" = '_iojs-v3.3.1 v27.0.0-alpha.1.0.0 ' ] || die 'nvm ls --only=alpha,iojs should list the alpha and io.js'
+[ "_$(downloads)" = '_1' ] || die "selecting both or neither of lts and non-lts should not download; got $(downloads)"
+
+printf 'v22.11.0\t2024-10-29\tsrc\t-\t-\t-\t-\t-\t-\tJod\t-\nv21.0.0\t2023-10-17\tsrc\t-\t-\t-\t-\t-\t-\t-\t-\n' | nvm_record_lts_status || die 'could not record LTS status'
+
+INPUT="$(printf 'system\nv21.0.0\nv22.11.0\nv23.0.0\nv27.0.0-alpha.1.0.0\niojs-v3.3.1\nN/A')"
+for PAIR in 'lts:system v22.11.0 N/A ' 'non-lts:system v21.0.0 v23.0.0 N/A ' 'alpha:system v27.0.0-alpha.1.0.0 N/A ' 'iojs:system iojs-v3.3.1 N/A ' \
+  'lts,non-lts:system v21.0.0 v22.11.0 v23.0.0 N/A ' 'alpha,lts,non-lts,iojs:system v21.0.0 v22.11.0 v23.0.0 v27.0.0-alpha.1.0.0 iojs-v3.3.1 N/A '; do
+  OUTPUT="$(echo "${INPUT}" | NVM_ONLY="${PAIR%%:*}" nvm_filter_installed_versions | tr '\n' ' ')"
+  [ "_${OUTPUT}" = "_${PAIR#*:}" ] || die "NVM_ONLY=${PAIR%%:*} nvm_filter_installed_versions printed >${OUTPUT}<, expected >${PAIR#*:}<"
+done
+
+[ "_$(nvm ls --no-colors --no-alias --only=lts | nvm_grep -v system | tr -d ' *')" = '_v22.11.0' ] || die 'nvm ls --only=lts should list the recorded LTS version'
+[ "_$(nvm version --only=non-lts 21)" = '_v21.0.0' ] || die 'nvm version --only=non-lts 21 should be v21.0.0'
+[ "_$(nvm version --only=lts 21)" = '_N/A' ] || die 'nvm version --only=lts 21 should be N/A'
+[ "_$(downloads)" = '_1' ] || die "recorded LTS status should not be downloaded again; got $(downloads)"
+
+cleanup

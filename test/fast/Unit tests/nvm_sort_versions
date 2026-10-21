@@ -1,0 +1,56 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+INPUT='v27.0.0
+v27.0.0-alpha.1.10.2
+v26.12.10
+v27.0.0-alpha.1.2.0
+v26.12.2
+v27.0.0-alpha.0.0.0
+v26.12.2
+v4.0.0'
+EXPECTED='v4.0.0
+v26.12.2
+v26.12.10
+v27.0.0-alpha.0.0.0
+v27.0.0-alpha.1.2.0
+v27.0.0-alpha.1.10.2
+v27.0.0'
+OUTPUT="$(echo "${INPUT}" | nvm_sort_versions)"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm_sort_versions printed >${OUTPUT}<, expected >${EXPECTED}<"
+OUTPUT="$(echo "${INPUT}" | nvm_sort_versions 1)"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm_sort_versions 1 printed >${OUTPUT}<, expected >${EXPECTED}<"
+
+INPUT='v3.3.1.iojs
+v10.0.0.node
+v27.0.0-alpha.1.0.0.node
+v1.0.0.iojs
+v2.0.0.node'
+EXPECTED='v1.0.0.iojs
+v2.0.0.node
+v3.3.1.iojs
+v10.0.0.node
+v27.0.0-alpha.1.0.0.node'
+OUTPUT="$(echo "${INPUT}" | nvm_sort_versions)"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm_sort_versions with suffixes printed >${OUTPUT}<, expected >${EXPECTED}<"
+
+INPUT='v11.1.0-nightly20181101af6d26281f
+v11.0.0-nightly201810011be804d625
+v11.0.0-nightly20181002aaaaaaaaaa'
+OUTPUT="$(echo "${INPUT}" | nvm_sort_versions 1)"
+[ "_$(echo "${OUTPUT}" | grep -c 'v11\.0\.0-nightly')" = '_1' ] || die "nvm_sort_versions 1 should collapse same-release nightlies; got >${OUTPUT}<"
+[ "_$(echo "${OUTPUT}" | sed -n '2p')" = '_v11.1.0-nightly20181101af6d26281f' ] || die "nvm_sort_versions 1 should keep other nightlies; got >${OUTPUT}<"
+[ "_$(echo "${OUTPUT}" | wc -l | tr -d ' ')" = '_2' ] || die "nvm_sort_versions 1 printed the wrong number of lines; got >${OUTPUT}<"
+OUTPUT="$(echo "${INPUT}" | nvm_sort_versions)"
+[ "_$(echo "${OUTPUT}" | wc -l | tr -d ' ')" = '_3' ] || die "nvm_sort_versions should keep every distinct line; got >${OUTPUT}<"
+
+INPUT='v24.11.0   Krypton *
+v22.11.0   Jod'
+EXPECTED='v22.11.0   Jod
+v24.11.0   Krypton *'
+OUTPUT="$(echo "${INPUT}" | nvm_sort_versions 1)"
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm_sort_versions 1 should keep trailing fields; got >${OUTPUT}<"

@@ -30,6 +30,7 @@
   - [Manual Upgrade](#manual-upgrade)
 - [Usage](#usage)
   - [Long-term Support](#long-term-support)
+  - [Version Categories](#version-categories)
   - [Migrating Global Packages While Installing](#migrating-global-packages-while-installing)
   - [Migrating Global Packages Between Installed Versions](#migrating-global-packages-between-installed-versions)
   - [Offline Install](#offline-install)
@@ -461,6 +462,29 @@ To get the latest LTS version of node and migrate your existing installed packag
 ```sh
 nvm install --reinstall-packages-from=current 'lts/*'
 ```
+
+### Version Categories
+
+Every version of node belongs to exactly one of these categories:
+
+  - `alpha`: an Alpha prerelease, like `v27.0.0-alpha.1.0.0`, which precedes a major's first release
+  - `lts`: a version marked as LTS in the mirror's `index.tab`
+  - `non-lts`: any other version of node
+  - `iojs`: any version of io.js, from the io.js mirror
+
+By default, `nvm` selects versions from every category except `alpha`, so `nvm install node`, `nvm install 27`, and `nvm ls-remote` never pick or show an Alpha. Every command that selects or lists versions accepts `--only=` with a comma-separated list of categories to select from instead; Alphas, even an exact version, are only selected when `alpha` is included:
+
+```sh
+nvm ls-remote --only=alpha
+nvm install --only=alpha 27
+nvm use --only=alpha,lts,non-lts 27.0.0-alpha.1.0.0
+```
+
+To change the default, set `NVM_ONLY` to the same kind of list, for example in your shell profile; `--only=` overrides it. An LTS selection (`--lts`, `--lts=<name>`, or an `lts/` version) picks versions through the matching `lts/` alias, so it only picks LTS versions, and it can't be combined with an `--only=` that excludes `lts`.
+
+An alias can store `--only=` too, so `nvm alias default --only=alpha node` makes the latest installed version of node, including Alphas, the default.
+
+Telling `lts` and `non-lts` installed versions apart uses the LTS status that `nvm` records each time it downloads the list of available versions; if it has never done so, the first command that needs it downloads that list once.
 
 ### Migrating Global Packages While Installing
 
@@ -924,6 +948,8 @@ nvm exposes the following environment variables:
 - `NVM_RC_VERSION` - version from .nvmrc file if being used.
 
 Additionally, nvm modifies `PATH` when changing versions, along with `MANPATH` wherever a `manpath` command exists, and `NODE_PATH`, if present.
+
+`NVM_ONLY` can be set to a comma-separated list of the [version categories](#version-categories) that commands select from by default.
 
 The following environment variables can be set to configure `nvm install`:
 

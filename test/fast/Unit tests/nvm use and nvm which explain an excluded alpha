@@ -1,0 +1,63 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+unset NVM_ONLY
+
+ALPHA='v27.0.0-alpha.1.0.0'
+ALPHA_BIN="${NVM_DIR}/versions/node/${ALPHA}/bin"
+mkdir -p "${ALPHA_BIN}" || die 'fake alpha could not be made'
+make_echo "${ALPHA_BIN}/node" "${ALPHA}"
+make_fake_node v20.1.1 || die 'fake node v20.1.1 could not be made'
+printf 'v20.1.1\t2023-01-01\tsrc\t-\t-\t-\t-\t-\t-\tIron\t-\n' | nvm_record_lts_status || die 'could not record LTS status'
+
+HINT='Include its category with `--only=<categories>`, or in `$NVM_ONLY`.'
+for COMMAND in use which; do
+  for PAIR in "${ALPHA}:${ALPHA}" "27:27 -> ${ALPHA}"; do
+    try_err nvm "${COMMAND}" "${PAIR%%:*}"
+    [ "_${CAPTURED_EXIT_CODE}" != '_0' ] || die "nvm ${COMMAND} ${PAIR%%:*} should fail when alphas are excluded"
+    EXPECTED="N/A: version \"${PAIR#*:}\" is installed, but excluded by the selected version categories (lts,non-lts,iojs)."
+    [ "_$(echo "${CAPTURED_STDERR}" | strip_colors | head -1)" = "_${EXPECTED}" ] || die "nvm ${COMMAND} ${PAIR%%:*} printed >${CAPTURED_STDERR}<, expected >${EXPECTED}<"
+    case "${CAPTURED_STDERR}" in
+      *"${HINT}"*) ;;
+      *) die "nvm ${COMMAND} ${PAIR%%:*} did not print >${HINT}<; got >${CAPTURED_STDERR}<" ;;
+    esac
+  done
+done
+
+try_err nvm which --only=lts "${ALPHA}"
+EXPECTED="N/A: version \"${ALPHA}\" is installed, but excluded by the selected version categories (lts)."
+[ "_$(echo "${CAPTURED_STDERR}" | strip_colors | head -1)" = "_${EXPECTED}" ] || die "nvm which --only=lts ${ALPHA} printed >${CAPTURED_STDERR}<, expected >${EXPECTED}<"
+
+[ "_$(nvm which --only=alpha "${ALPHA}")" = "_${ALPHA_BIN}/node" ] || die "nvm which --only=alpha ${ALPHA} should print its node path"
+[ "_$(NVM_ONLY=alpha nvm which 27)" = "_${ALPHA_BIN}/node" ] || die 'NVM_ONLY=alpha nvm which 27 should print the alpha node path'
+
+nvm use --silent --only=alpha "${ALPHA}" || die "nvm use --only=alpha ${ALPHA} failed"
+case ":${PATH}:" in
+  *":${ALPHA_BIN}:"*) ;;
+  *) die "nvm use --only=alpha did not put ${ALPHA_BIN} on PATH; got ${PATH}" ;;
+esac
+[ "_$(nvm current)" = "_${ALPHA}" ] || die "nvm current should be ${ALPHA}; got $(nvm current)"
+nvm deactivate >/dev/null 2>&1
+
+cleanup

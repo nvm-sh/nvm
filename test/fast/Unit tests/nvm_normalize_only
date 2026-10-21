@@ -1,0 +1,23 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+for PAIR in 'alpha:alpha' 'iojs,lts:lts,iojs' 'non-lts,alpha,iojs,lts:alpha,lts,non-lts,iojs' 'lts,lts,non-lts,lts:lts,non-lts'; do
+  try nvm_normalize_only "${PAIR%%:*}" 'SOURCE'
+  [ "_${CAPTURED_EXIT_CODE}" = '_0' ] || die "nvm_normalize_only ${PAIR%%:*} exited ${CAPTURED_EXIT_CODE}"
+  [ "_${CAPTURED_STDOUT}" = "_${PAIR#*:}" ] || die "nvm_normalize_only ${PAIR%%:*} printed >${CAPTURED_STDOUT}<, expected >${PAIR#*:}<"
+done
+
+for VALUE in '' 'beta' 'lts,beta' ',lts' 'lts,' 'lts,,iojs' 'LTS' 'lts non-lts' 'nonlts' 'all'; do
+  try_err nvm_normalize_only "${VALUE}" 'SOURCE'
+  [ "_${CAPTURED_EXIT_CODE}" = '_55' ] || die "nvm_normalize_only >${VALUE}< exited ${CAPTURED_EXIT_CODE}, expected 55"
+  EXPECTED="Invalid SOURCE value \"${VALUE}\": it must be a comma-separated list of any of: alpha, lts, non-lts, iojs"
+  [ "_${CAPTURED_STDERR}" = "_${EXPECTED}" ] || die "nvm_normalize_only >${VALUE}< printed >${CAPTURED_STDERR}<, expected >${EXPECTED}<"
+  try nvm_normalize_only "${VALUE}" 'SOURCE'
+  [ -z "${CAPTURED_STDOUT}" ] || die "nvm_normalize_only >${VALUE}< printed >${CAPTURED_STDOUT}< to stdout"
+done
