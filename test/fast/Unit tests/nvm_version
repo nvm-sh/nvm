@@ -57,6 +57,9 @@ EXPECTED_OUTPUT="v1.2.3"
 [ "_$CAPTURED_STDOUT" = "_$EXPECTED_OUTPUT" ] || die '"nvm_version v1.2.3" did not return the version itself; got '"$CAPTURED_STDOUT"
 [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die '"nvm_version v1.2.3" did not exit 0; got '"$CAPTURED_EXIT_CODE"
 
+try nvm_version v1.2.3-rc.1
+[ "_$CAPTURED_STDOUT" = "_v1.2.3-rc.1" ] || die '"nvm_version v1.2.3-rc.1" did not return the version itself; got '"$CAPTURED_STDOUT"
+
 # an exact version that is not installed still falls back to "nvm_ls"
 nvm_is_version_installed() { return 1; }
 nvm_ls() { echo "pattern: $1"; }
@@ -68,7 +71,7 @@ EXPECTED_OUTPUT="pattern: v1.2.3"
 # only exact, fully-qualified versions take the fast path
 nvm_is_version_installed() { die '"nvm_version" must not call "nvm_is_version_installed" for non-exact versions'; }
 nvm_ls() { echo "pattern: $1"; }
-for PATTERN in v1.2 v1 1.2.3 v1.2.3-rc.1 v1.2.3.4 v1.2.3.; do
+for PATTERN in v1.2 v1 1.2.3 v1.2.3- v1.2.3-.x v1.2.3-a..b v1.2.3.4 v1.2.3.; do
   try nvm_version "$PATTERN"
   EXPECTED_OUTPUT="pattern: $PATTERN"
   [ "_$CAPTURED_STDOUT" = "_$EXPECTED_OUTPUT" ] || die "nvm_version $PATTERN did not fall back to nvm_ls; got $CAPTURED_STDOUT"

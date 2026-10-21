@@ -361,7 +361,17 @@ nvm_is_installed_exact_version() {
     v*) ;;
     *) return 1 ;;
   esac
-  case "${1#v}" in
+  local NVM_EXACT_VERSION
+  NVM_EXACT_VERSION="${1#v}"
+  case "${NVM_EXACT_VERSION}" in
+    *-*)
+      case "${NVM_EXACT_VERSION#*-}" in
+        '' | .* | *. | *..* | *[!0-9A-Za-z.-]*) return 1 ;;
+      esac
+      NVM_EXACT_VERSION="${NVM_EXACT_VERSION%%-*}"
+    ;;
+  esac
+  case "${NVM_EXACT_VERSION}" in
     *[!0-9.]* | .* | *. | *..* | *.*.*.*) return 1 ;;
     *.*.*) ;;
     *) return 1 ;;

@@ -46,8 +46,19 @@ for VERSION in 'v12.0.0.0' 'v12.0.0.' 'v12..0' 'v.12.0' 'v12.0'; do
 done
 
 # anything that is not an exact vX.Y.Z fails, even if it would resolve to an installed version
-for VERSION in '12.0.0' '12' 'v12' 'v12.0' 'v12.0.0-rc.1' 'node' 'stable' 'lts/*' 'iojs-v1.0.0' 'system' 'default'; do
+for VERSION in '12.0.0' '12' 'v12' 'v12.0' 'node' 'stable' 'lts/*' 'iojs-v1.0.0' 'system' 'default'; do
   ! nvm_is_installed_exact_version "$VERSION" || die "$VERSION is not an exact version and should fail"
+done
+
+# an exact, installed prerelease succeeds, but a malformed one fails, even when installed
+for VERSION in 'v12.0.0-rc.1' 'v12.0.0-' 'v12.0.0-.x' 'v12.0.0-a..b' 'v12.0.0-rc.'; do
+  mkdir -p "$NODE_PATH/$VERSION/bin"
+  touch "$NODE_PATH/$VERSION/bin/node"
+  chmod +x "$NODE_PATH/$VERSION/bin/node"
+done
+nvm_is_installed_exact_version 'v12.0.0-rc.1' || die 'v12.0.0-rc.1 is installed and should succeed'
+for VERSION in 'v12.0.0-' 'v12.0.0-.x' 'v12.0.0-a..b' 'v12.0.0-rc.'; do
+  ! nvm_is_installed_exact_version "$VERSION" || die "$VERSION is not an exact version and should fail, even when installed"
 done
 
 # an alias with the exact same name takes precedence, so the fast path must not apply
