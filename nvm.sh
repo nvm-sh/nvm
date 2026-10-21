@@ -2079,7 +2079,14 @@ nvm_ls() {
     v*) NVM_PATTERN_STARTS_WITH_V=true ;;
     *) NVM_PATTERN_STARTS_WITH_V=false ;;
   esac
-  if [ $NVM_PATTERN_STARTS_WITH_V = true ] && [ "_$(nvm_num_version_groups "${PATTERN}")" = "_3" ]; then
+  local NVM_PATTERN_IS_PRERELEASE
+  case "${PATTERN}" in
+    v*-*) NVM_PATTERN_IS_PRERELEASE=true ;;
+    *) NVM_PATTERN_IS_PRERELEASE=false ;;
+  esac
+  if [ $NVM_PATTERN_IS_PRERELEASE = true ] && nvm_is_version_installed "${PATTERN}"; then
+    VERSIONS="${PATTERN}"
+  elif [ $NVM_PATTERN_STARTS_WITH_V = true ] && [ $NVM_PATTERN_IS_PRERELEASE = false ] && [ "_$(nvm_num_version_groups "${PATTERN}")" = "_3" ]; then
     if nvm_is_version_installed "${PATTERN}"; then
       VERSIONS="${PATTERN}"
     elif nvm_is_version_installed "$(nvm_add_iojs_prefix "${PATTERN}")"; then
@@ -2147,6 +2154,12 @@ nvm_ls() {
     else
       SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's/[[\.*^$#]/\\&/g')"
     fi
+    # a partial prerelease must end at a `.`, so `v24.0.0-rc.1` does not match `v24.0.0-rc.10`
+    local NVM_PRERELEASE_PATTERN
+    NVM_PRERELEASE_PATTERN=''
+    case "${PATTERN}" in
+      *-*) NVM_PRERELEASE_PATTERN="${PATTERN}" ;;
+    esac
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
         | command sed -e "
@@ -2163,6 +2176,14 @@ nvm_ls() {
         | command sed -e 's#\(.*\)\.\([^\.]\{1,\}\)$#\2-\1#;' \
                       -e "s#^${NVM_NODE_PREFIX}-##;" \
       )"
+      if [ -n "${NVM_PRERELEASE_PATTERN}" ] && [ -n "${VERSIONS}" ]; then
+        VERSIONS="$(nvm_echo "${VERSIONS}" | command awk -v pattern="${NVM_PRERELEASE_PATTERN}" '{
+          position = index($0, pattern);
+          if (!position) { next }
+          rest = substr($0, position + length(pattern));
+          if (rest == "" || substr(rest, 1, 1) == ".") { print }
+        }')"
+      fi
     fi
   fi
 

@@ -1,0 +1,41 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+
+for VERSION in v24.0.0-rc.10 v24.0.0-rc.2 v24.0.0-rc.1; do
+  mkdir -p "${NVM_DIR}/versions/node/${VERSION}/bin" || die "fake node ${VERSION} could not be made"
+  make_echo "${NVM_DIR}/versions/node/${VERSION}/bin/node" "${VERSION}"
+done
+
+for PATTERN in v24.0.0-rc.1 24.0.0-rc.1; do
+  OUTPUT="$(nvm_ls "${PATTERN}" | tr '\n' ' ')"
+  [ "_${OUTPUT}" = '_v24.0.0-rc.1 ' ] || die "nvm_ls ${PATTERN} should not match v24.0.0-rc.10; got >${OUTPUT}<"
+  [ "_$(nvm_version "${PATTERN}")" = '_v24.0.0-rc.1' ] || die "nvm_version ${PATTERN} should be v24.0.0-rc.1; got >$(nvm_version "${PATTERN}")<"
+done
+
+OUTPUT="$(nvm_ls v24.0.0-rc | tr '\n' ' ')"
+[ "_${OUTPUT}" = '_v24.0.0-rc.1 v24.0.0-rc.2 v24.0.0-rc.10 ' ] || die "nvm_ls v24.0.0-rc should match every rc; got >${OUTPUT}<"
+
+[ "_$(nvm_ls v24.0.0-rc.3)" = '_N/A' ] || die "nvm_ls v24.0.0-rc.3 should be N/A; got >$(nvm_ls v24.0.0-rc.3)<"
+
+cleanup
