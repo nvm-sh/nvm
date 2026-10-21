@@ -1,0 +1,38 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+  unset -f nvm_npm_global_modules nvm_ls_current
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+
+make_fake_node v20.0.0 || die 'fake node v20.0.0 could not be made'
+nvm_ls_current() { echo 'v18.0.0'; }
+nvm_npm_global_modules() { echo ' //// '; }
+
+# zsh prints a local that is declared again
+OUTPUT="$(nvm reinstall-packages v20.0.0 2>&1)"
+EXPECTED='Reinstalling global packages from v20.0.0...
+No installed global packages found...
+Linking global packages from v20.0.0...
+No linked global packages found...'
+[ "_${OUTPUT}" = "_${EXPECTED}" ] || die "nvm reinstall-packages printed >${OUTPUT}<, expected >${EXPECTED}<"
+
+cleanup

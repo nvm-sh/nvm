@@ -5599,7 +5599,6 @@ nvm() {
         return 2
       fi
 
-      local VERSION
       if [ "_${PROVIDED_VERSION}" = "_system" ]; then
         if ! nvm_has_system_node && ! nvm_has_system_iojs; then
           nvm_err 'No system version of node or io.js detected.'
