@@ -815,9 +815,13 @@ nvm_tree_contains_path() {
 
 nvm_find_project_dir() {
   local path_
+  local parent_
   path_="${PWD}"
-  while [ "${path_}" != "" ] && [ "${path_}" != '.' ] && [ ! -f "${path_}/package.json" ] && [ ! -d "${path_}/node_modules" ]; do
-    path_=${path_%/*}
+  while [ "${path_}" != "" ] && [ ! -f "${path_}/package.json" ] && [ ! -d "${path_}/node_modules" ]; do
+    parent_=${path_%/*}
+    # stop when there is nowhere left to go up, e.g. `.` or a Windows drive root like `C:`
+    [ "${parent_}" != "${path_}" ] || break
+    path_="${parent_}"
   done
   nvm_echo "${path_}"
 }
@@ -825,9 +829,13 @@ nvm_find_project_dir() {
 # Traverse up in directory tree to find containing folder
 nvm_find_up() {
   local path_
+  local parent_
   path_="${PWD}"
-  while [ "${path_}" != "" ] && [ "${path_}" != '.' ] && [ ! -f "${path_}/${1-}" ]; do
-    path_=${path_%/*}
+  while [ "${path_}" != "" ] && [ ! -f "${path_}/${1-}" ]; do
+    parent_=${path_%/*}
+    # stop when there is nowhere left to go up, e.g. `.` or a Windows drive root like `C:`
+    [ "${parent_}" != "${path_}" ] || break
+    path_="${parent_}"
   done
   nvm_echo "${path_}"
 }
