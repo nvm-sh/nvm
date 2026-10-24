@@ -1,0 +1,42 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+# nvm_ls reports io.js versions with an `iojs-` prefix; nvm_prune strips it
+# to build a uniform version list, then must add it back before calling
+# `nvm uninstall`, since only the prefixed name is actually installed.
+nvm_ls() {
+  echo "       iojs-v3.3.0"
+  echo "       iojs-v3.3.1"
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  case "$1" in
+    iojs-*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+nvm_prune --force
+
+EXPECTED=" iojs-v3.3.0"
+if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then
+  die "Expected uninstalled: '${EXPECTED}', got: '${UNINSTALLED_VERSIONS}'"
+fi
+
+echo "All tests passed"

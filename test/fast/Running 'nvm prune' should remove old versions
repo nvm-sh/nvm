@@ -1,0 +1,79 @@
+#!/bin/sh
+
+# Test: Running 'nvm prune' should remove old versions
+
+die () { echo "$@" ; exit 1; }
+
+# Mocking nvm_ls output logic relies on nvm_ls calling directory listing.
+# Instead of mocking filesystem which is complex, we will override nvm_ls and nvm_ls_current.
+
+. ../../nvm.sh
+
+# Mock nvm_ls to return specific versions as if they were installed
+# nvm_prune calls `nvm_ls` with no arguments and strips everything except vX.Y.Z.
+nvm_ls() {
+  echo "       v16.20.2"
+  echo "       v18.20.5"
+  echo "       v18.20.7"
+  echo "       v20.17.0"
+  echo "->     v22.22.0"
+  echo "       v24.13.0"
+}
+
+# Mock nvm_ls_current
+nvm_ls_current() {
+  echo "v22.22.0"
+}
+
+# Mock nvm_is_version_installed
+nvm_is_version_installed() {
+  return 0
+}
+
+# Mock nvm function to intercept uninstall calls
+# nvm_prune calls `nvm uninstall`.
+UNINSTALLED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    UNINSTALLED_VERSIONS="${UNINSTALLED_VERSIONS} $2"
+    return 0
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+# Run prune (--force: these cases exercise immediate deletion, not the
+# confirmation prompt - that has its own dedicated test)
+nvm_prune --force
+
+# v16.20.2, v20.17.0, v24.13.0 are each the only version in their major: kept.
+# v18.20.5 and v18.20.7 share major 18; v18.20.7 is newer, so v18.20.5 is pruned.
+# v22.22.0 is the current version: kept.
+EXPECTED=" v18.20.5"
+if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then
+  die "Expected uninstalled: '${EXPECTED}', got: '${UNINSTALLED_VERSIONS}'"
+fi
+
+# New Test Case: Current version is NOT the latest.
+# v18.1.0 (Current), v18.2.0 (Latest), v18.0.0 (Old)
+nvm_ls() {
+  echo "       v18.0.0"
+  echo "->     v18.1.0"
+  echo "       v18.2.0"
+}
+
+nvm_ls_current() {
+  echo "v18.1.0"
+}
+
+UNINSTALLED_VERSIONS=""
+nvm_prune --force
+
+# v18.0.0 is neither the latest nor current: pruned.
+# v18.1.0 is kept because it's current; v18.2.0 is kept because it's latest.
+EXPECTED=" v18.0.0"
+
+if [ "${UNINSTALLED_VERSIONS}" != "${EXPECTED}" ]; then
+  die "TestCase 2 Failed. Expected uninstalled: '${EXPECTED}', got: '${UNINSTALLED_VERSIONS}'"
+fi
+
+echo "All tests passed"
