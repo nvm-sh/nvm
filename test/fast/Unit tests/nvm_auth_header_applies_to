@@ -1,0 +1,128 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+\. ../../../nvm.sh
+
+unset NVM_NODEJS_ORG_MIRROR NVM_IOJS_ORG_MIRROR
+
+# args: url; asserts it applies, with exit code 0 and no output
+applies() {
+  OUTPUT="$(nvm_auth_header_applies_to "${1}" 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 0 ] || die "nvm_auth_header_applies_to '${1}' (node mirror >${NVM_NODEJS_ORG_MIRROR-(unset)}<, iojs mirror >${NVM_IOJS_ORG_MIRROR-(unset)}<): expected exit code 0, got ${EXIT_CODE}"
+  [ -z "${OUTPUT}" ] || die "nvm_auth_header_applies_to '${1}': expected no output, got >${OUTPUT}<"
+}
+
+# args: url; asserts it does not apply, with exit code 1 and no output
+does_not_apply() {
+  OUTPUT="$(nvm_auth_header_applies_to "${1}" 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 1 ] || die "nvm_auth_header_applies_to '${1}' (node mirror >${NVM_NODEJS_ORG_MIRROR-(unset)}<, iojs mirror >${NVM_IOJS_ORG_MIRROR-(unset)}<): expected exit code 1, got ${EXIT_CODE}"
+  [ -z "${OUTPUT}" ] || die "nvm_auth_header_applies_to '${1}': expected no output, got >${OUTPUT}<"
+}
+
+# no argument, or an empty one, never applies
+OUTPUT="$(nvm_auth_header_applies_to 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 1 ] || die "no argument: expected exit code 1, got ${EXIT_CODE}"
+[ -z "${OUTPUT}" ] || die "no argument: expected no output, got >${OUTPUT}<"
+does_not_apply ''
+
+# neither mirror set: both defaults apply, nothing else does
+applies 'https://nodejs.org/dist/index.tab'
+applies 'https://nodejs.org/dist/v22.0.0/node-v22.0.0-linux-x64.tar.xz'
+applies 'https://iojs.org/dist/index.tab'
+does_not_apply 'https://nodejs.org/dist'
+does_not_apply 'https://nodejs.org/distx/index.tab'
+does_not_apply 'https://nodejs.org.example.com/dist/index.tab'
+does_not_apply 'https://nodejs.org/download/index.tab'
+does_not_apply 'http://nodejs.org/dist/index.tab'
+does_not_apply 'HTTPS://NODEJS.ORG/dist/index.tab'
+does_not_apply 'https://npmjs.org/install.sh'
+does_not_apply 'https://registry.npmjs.org/npm/-/npm-1.4.28.tgz'
+does_not_apply 'x https://nodejs.org/dist/index.tab'
+
+# an empty mirror variable counts as unset
+NVM_NODEJS_ORG_MIRROR=''
+NVM_IOJS_ORG_MIRROR=''
+applies 'https://nodejs.org/dist/index.tab'
+applies 'https://iojs.org/dist/index.tab'
+
+# only the node mirror set (the iojs one empty or unset): only it applies
+NVM_NODEJS_ORG_MIRROR='https://mirror.example.com/node'
+applies 'https://mirror.example.com/node/index.tab'
+does_not_apply 'https://iojs.org/dist/index.tab'
+does_not_apply 'https://nodejs.org/dist/index.tab'
+does_not_apply 'https://mirror.example.com/nodex/index.tab'
+does_not_apply 'https://mirror.example.com/iojs/index.tab'
+unset NVM_IOJS_ORG_MIRROR
+applies 'https://mirror.example.com/node/index.tab'
+does_not_apply 'https://iojs.org/dist/index.tab'
+
+# only the iojs mirror set (the node one empty or unset): only it applies
+NVM_NODEJS_ORG_MIRROR=''
+NVM_IOJS_ORG_MIRROR='https://mirror.example.com/iojs'
+applies 'https://mirror.example.com/iojs/index.tab'
+does_not_apply 'https://nodejs.org/dist/index.tab'
+does_not_apply 'https://iojs.org/dist/index.tab'
+unset NVM_NODEJS_ORG_MIRROR
+applies 'https://mirror.example.com/iojs/index.tab'
+does_not_apply 'https://nodejs.org/dist/index.tab'
+
+# both set: each applies, the defaults do not
+NVM_NODEJS_ORG_MIRROR='https://mirror.example.com/node'
+NVM_IOJS_ORG_MIRROR='http://127.0.0.1:8080/iojs'
+applies 'https://mirror.example.com/node/index.tab'
+applies 'http://127.0.0.1:8080/iojs/index.tab'
+does_not_apply 'https://nodejs.org/dist/index.tab'
+does_not_apply 'https://iojs.org/dist/index.tab'
+does_not_apply 'https://127.0.0.1:8080/iojs/index.tab'
+
+# both set, one invalid: the invalid one matches nothing (silently), the other still applies
+NVM_NODEJS_ORG_MIRROR='ftp://mirror.example.com/node'
+applies 'http://127.0.0.1:8080/iojs/index.tab'
+does_not_apply 'ftp://mirror.example.com/node/index.tab'
+does_not_apply 'https://nodejs.org/dist/index.tab'
+
+# only an invalid mirror set: nothing applies, not even the defaults
+unset NVM_IOJS_ORG_MIRROR
+for INVALID in 'ftp://mirror.example.com/node' 'https://mirror.example.com/a b' 'https://mirror.example.com/$(id)' 'https://mirror.example.com/?q=1' 'mirror.example.com/node'; do
+  NVM_NODEJS_ORG_MIRROR="${INVALID}"
+  does_not_apply "${INVALID}/index.tab"
+  does_not_apply 'https://nodejs.org/dist/index.tab'
+  does_not_apply 'https://iojs.org/dist/index.tab'
+  # an invalid mirror must not act as an empty prefix
+  does_not_apply '/index.tab'
+  does_not_apply '/'
+done
+
+# a mirror with no path: only its own host applies, not a host it prefixes
+NVM_NODEJS_ORG_MIRROR='https://mirror.example.com'
+applies 'https://mirror.example.com/v22.0.0/SHASUMS256.txt'
+does_not_apply 'https://mirror.example.com.evil.example/v22.0.0/SHASUMS256.txt'
+does_not_apply 'https://mirror.example.com:8443/v22.0.0/SHASUMS256.txt'
+does_not_apply 'https://mirror.example.com@evil.example/v22.0.0/SHASUMS256.txt'
+
+# a mirror with userinfo and a port is compared as written
+NVM_NODEJS_ORG_MIRROR='https://user:pw@mirror.example.com:8443/node'
+applies 'https://user:pw@mirror.example.com:8443/node/index.tab'
+does_not_apply 'https://mirror.example.com:8443/node/index.tab'
+
+# a mirror with a trailing slash applies to the URLs nvm builds from it
+NVM_NODEJS_ORG_MIRROR='https://mirror.example.com/node/'
+applies 'https://mirror.example.com/node//index.tab'
+does_not_apply 'https://mirror.example.com/node/index.tab'
+
+# glob characters in a mirror match only literally
+NVM_NODEJS_ORG_MIRROR='http://[::1]:8080/[n]ode'
+applies 'http://[::1]:8080/[n]ode/index.tab'
+does_not_apply 'http://[::1]:8080/node/index.tab'
+does_not_apply 'http://1:8080/[n]ode/index.tab'
+
+# the mirror variables are left as they were, and no helper variables leak
+[ "${NVM_NODEJS_ORG_MIRROR}" = 'http://[::1]:8080/[n]ode' ] || die "expected NVM_NODEJS_ORG_MIRROR to be unchanged, got >${NVM_NODEJS_ORG_MIRROR}<"
+[ -z "${NVM_IOJS_ORG_MIRROR+set}" ] || die "expected NVM_IOJS_ORG_MIRROR to stay unset, got >${NVM_IOJS_ORG_MIRROR}<"
+nvm_auth_header_applies_to 'http://[::1]:8080/[n]ode/index.tab' || die 'expected the glob mirror to apply when called in the current shell'
+[ -z "${NVM_AUTH_FLAVOR+set}" ] || die "expected NVM_AUTH_FLAVOR not to leak, got >${NVM_AUTH_FLAVOR}<"
+[ -z "${NVM_AUTH_MIRROR+set}" ] || die "expected NVM_AUTH_MIRROR not to leak, got >${NVM_AUTH_MIRROR}<"

@@ -70,10 +70,10 @@ else
   setup_chroot "${CHROOT_WITHOUT_ALPINE}"
 
   # Run tests in chroot environments
-  ARCH_WITH_ALPINE=$(sudo chroot "${CHROOT_WITH_ALPINE}" /bin/sh -c ". ./nvm.sh && nvm_get_arch")
+  ARCH_WITH_ALPINE=$(sudo chroot "${CHROOT_WITH_ALPINE}" /bin/sh -c "export NVM_DIR=/ && . ./nvm.sh && nvm_get_arch")
   [ "${ARCH_WITH_ALPINE}" = "x64-musl" ] || die "Expected x64-musl for alpine environment but got ${ARCH_WITH_ALPINE}"
 
-  ARCH_WITHOUT_ALPINE=$(sudo chroot "${CHROOT_WITHOUT_ALPINE}" /bin/sh -c ". ./nvm.sh && nvm_get_arch")
+  ARCH_WITHOUT_ALPINE=$(sudo chroot "${CHROOT_WITHOUT_ALPINE}" /bin/sh -c "export NVM_DIR=/ && . ./nvm.sh && nvm_get_arch")
   [ "${ARCH_WITHOUT_ALPINE}" != "x64-musl" ] || die "Did not expect x64-musl for non-alpine environment"
 fi
 

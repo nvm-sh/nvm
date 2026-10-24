@@ -670,6 +670,12 @@ To pass an Authorization header through to the mirror url, set `$NVM_AUTH_HEADER
 NVM_AUTH_HEADER="Bearer secret-token" nvm install node
 ```
 
+The header is only sent with requests for URLs under a mirror, never to any other host. If exactly one of `$NVM_NODEJS_ORG_MIRROR` and `$NVM_IOJS_ORG_MIRROR` is set, only that mirror receives it; if both are set, both do; if neither is, the default mirrors (`https://nodejs.org/dist` and `https://iojs.org/dist`) do.
+
+`curl` 7.58.0 and later, which nvm prefers, drops the header when the mirror redirects to another host. When only `wget` is available, nvm makes GNU Wget follow a redirect only if it stays on the same origin (scheme, host, and port), and fails on one that does not, since `wget` would send the header there too; use `curl` with a mirror that hands downloads off to another host. Other `wget`s, like BusyBox's, cannot be kept from following redirects, and send the header wherever the mirror redirects.
+
+`$NVM_AUTH_HEADER` is the recommended way to authenticate to a mirror. Credentials embedded in the mirror URL itself (`https://user:password@host/...`) also work, and nvm prints such URLs with the credentials masked as `***@`.
+
 ### Platforms without official binaries
 
 nodejs.org does not publish a binary for every platform and architecture nvm can detect. Where it does not, `nvm install` falls back by default to compiling from source, which is slow and needs a C++ toolchain (see [Important Notes](#important-notes)); set `$NVM_NO_SOURCE_FALLBACK` to `1` to make a missing binary an error instead.
@@ -735,7 +741,7 @@ Now using node v5.9.1 (npm v3.7.3)
 
 `nvm use` et. al. will traverse directory structure upwards from the current directory looking for the `.nvmrc` file. In other words, running `nvm use` et. al. in any subdirectory of a directory with an `.nvmrc` will result in that `.nvmrc` being utilized.
 
-The contents of a `.nvmrc` file **must** contain precisely one `<version>` (as described by `nvm --help`) followed by a newline. `.nvmrc` files may also have comments. The comment delimiter is `#`, and it and any text after it, as well as blank lines, and leading and trailing white space, will be ignored when parsing.
+The contents of a `.nvmrc` file **must** contain precisely one `<version>` (as described by `nvm --help`) followed by a newline. `.nvmrc` files may also have comments. The comment delimiter is `#`, and it and any text after it, as well as blank lines, and leading and trailing white space, will be ignored when parsing. Any other control character (besides a tab) makes the file invalid.
 
 Key/value pairs using `=` are also allowed and ignored, but are reserved for future use, and may cause validation errors in the future.
 
@@ -910,7 +916,7 @@ Nota bene: Avoid running nvm while the tests are running.
 
 nvm exposes the following environment variables:
 
-- `NVM_DIR` - nvm's installation directory.
+- `NVM_DIR` - nvm's installation directory. If it is not set when `nvm.sh` is sourced, bash, zsh, and ksh93 use the directory containing `nvm.sh`; other shells (like dash) cannot tell where a sourced file lives, so they use the default install location (`$XDG_CONFIG_HOME/nvm` when `XDG_CONFIG_HOME` is set, otherwise `~/.nvm`). If nvm is installed elsewhere, set `NVM_DIR` before sourcing `nvm.sh`.
 - `NVM_BIN` - where node, npm, and global packages for the active version of node are installed.
 - `NVM_INC` - node's include file directory (useful for building C/C++ addons for node).
 - `NVM_CD_FLAGS` - used to maintain compatibility with zsh.

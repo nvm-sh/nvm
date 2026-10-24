@@ -1,0 +1,57 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "${TEST_DIR-}"
+  unset -f assert_ls assert_no_match
+  unset TEST_DIR NVM_DIR PATTERN
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+# an isolated NVM_DIR with known versions, so that ambient versions
+# and aliases can not affect any assertions
+TEST_DIR="${PWD}/nvm_ls_literal_pattern_tmp"
+for VERSION in v20.0.0 v22.1.0 v24.13.0; do
+  mkdir -p "${TEST_DIR}/versions/node/${VERSION}/bin" || die "failed to create ${VERSION} dir"
+  make_echo "${TEST_DIR}/versions/node/${VERSION}/bin/node" "${VERSION}" || die "failed to create ${VERSION} node binary"
+done
+unset VERSION
+NVM_DIR="${TEST_DIR}"
+
+assert_ls() {
+  try nvm_ls "$1"
+  [ "_${CAPTURED_STDOUT}" = "_$2" ] || die "\`nvm_ls '$1'\` should output >$2<; got >${CAPTURED_STDOUT}<"
+}
+
+# a pattern (which may come from a `.nvmrc`) is literal text, not a sed regex:
+# each of these matched installed versions, failed to compile, or made sed slow
+assert_no_match() {
+  try_err nvm_ls "$1"
+  [ -z "${CAPTURED_STDERR}" ] || die "\`nvm_ls '$1'\` should not print to stderr; got >${CAPTURED_STDERR}<"
+  try nvm_ls "$1"
+  [ "_${CAPTURED_STDOUT}" = '_N/A' ] || die "\`nvm_ls '$1'\` should output N/A; got >${CAPTURED_STDOUT}<"
+  [ "_${CAPTURED_EXIT_CODE}" = '_3' ] || die "\`nvm_ls '$1'\` should exit with code 3; got ${CAPTURED_EXIT_CODE}"
+}
+
+assert_ls 24 'v24.13.0'
+assert_ls v22 'v22.1.0'
+assert_ls 24.13 'v24.13.0'
+assert_ls v20.0.0 'v20.0.0'
+
+for PATTERN in \
+  'v2[0-9]' \
+  'v2*4' \
+  '\(v24\)' \
+  'v24\|x' \
+  '\(v\{1,9\}\)\{1,9\}' \
+  '[' \
+  '\'; do
+  assert_no_match "${PATTERN}"
+done
+
+cleanup

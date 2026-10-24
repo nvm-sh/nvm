@@ -49,4 +49,13 @@ B64TOKEN="Bearer mF_9.B5f-4.1JqM~+/="
 RESULT=$(nvm_sanitize_auth_header "${B64TOKEN}")
 [ "${RESULT}" = "${B64TOKEN}" ] || die "FAIL: b64token chars were stripped. Got: '${RESULT}'"
 
+# Test 8: a `Basic` credential that `base64` wrapped at 76 columns is rejoined into one line
+WRAPPED="Basic $(printf 'YS1yYXRoZXItbG9uZy11c2VybmFtZUBleGFtcGxlLmNvbTphbi1ldmVuLWxvbmdlci1wYXNzd29y\nZCE=')"
+RESULT=$(nvm_sanitize_auth_header "${WRAPPED}")
+[ "${RESULT}" = "Basic YS1yYXRoZXItbG9uZy11c2VybmFtZUBleGFtcGxlLmNvbTphbi1ldmVuLWxvbmdlci1wYXNzd29yZCE=" ] || die "FAIL: wrapped base64 credential was not rejoined. Got: '${RESULT}'"
+
+# Test 9: CR, LF, and blank lines are all removed
+RESULT=$(nvm_sanitize_auth_header "$(printf 'Bearer a\r\nb\n\nc')")
+[ "${RESULT}" = "Bearer abc" ] || die "FAIL: line breaks survived sanitization. Got: '${RESULT}'"
+
 echo "All nvm_sanitize_auth_header tests passed"

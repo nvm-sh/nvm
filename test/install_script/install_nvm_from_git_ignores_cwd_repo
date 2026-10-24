@@ -1,0 +1,64 @@
+#!/bin/sh
+
+SAVE_NVM_DIR="$NVM_DIR"
+SAVE_NVM_SOURCE="$NVM_SOURCE"
+SAVE_NVM_INSTALL_VERSION="$NVM_INSTALL_VERSION"
+WORK="$PWD/install_nvm_from_git-cwd-repo-work.$$"
+UPSTREAM="$WORK/upstream"
+PROJECT="$WORK/project"
+MARKER="$WORK/cwd-repo-config-was-read"
+
+cleanup() {
+  NVM_DIR="$SAVE_NVM_DIR"
+  NVM_SOURCE="$SAVE_NVM_SOURCE"
+  NVM_INSTALL_VERSION="$SAVE_NVM_INSTALL_VERSION"
+  unset SAVE_NVM_DIR SAVE_NVM_SOURCE SAVE_NVM_INSTALL_VERSION
+  rm -rf "$WORK"
+  unset -f die cleanup
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+git_commit() {
+  git -c user.name=nvm -c user.email=nvm@example.invalid -c commit.gpgsign=false "$@"
+}
+
+# a local stand-in for the nvm repo, so the install needs no network
+mkdir -p "$UPSTREAM" || die 'Unable to create upstream directory'
+cp ../../nvm.sh ../../nvm-exec ../../bash_completion "$UPSTREAM"/ || die 'Unable to copy nvm files'
+git init --quiet "$UPSTREAM" || die 'Unable to init upstream'
+git --git-dir="$UPSTREAM/.git" --work-tree="$UPSTREAM" add nvm.sh nvm-exec bash_completion || die 'Unable to add upstream files'
+git_commit --git-dir="$UPSTREAM/.git" --work-tree="$UPSTREAM" commit --quiet -m 'release' || die 'Unable to commit upstream'
+git --git-dir="$UPSTREAM/.git" tag v9.9.9 || die 'Unable to tag upstream'
+EXPECTED="$(git --git-dir="$UPSTREAM/.git" rev-parse --verify 'v9.9.9^{commit}')"
+
+# an unrelated repository in the current directory, whose own config rewrites
+# the nvm source URL; it must have no effect on installing nvm
+git init --quiet "$PROJECT" || die 'Unable to init project'
+mkdir -p "$PROJECT/sub" || die 'Unable to create project subdirectory'
+git --git-dir="$PROJECT/.git" config url."ssh://example.invalid/nvm.git".insteadOf "$UPSTREAM" || die 'Unable to set insteadOf'
+git --git-dir="$PROJECT/.git" config core.sshCommand "touch '$MARKER'; false" || die 'Unable to set core.sshCommand'
+
+for CWD in "$PROJECT" "$PROJECT/sub"; do
+  rm -f "$MARKER"
+  NVM_DIR="$WORK/nvm"
+  rm -rf "$NVM_DIR"
+  OUTPUT="$(cd "$CWD" && NVM_SOURCE="$UPSTREAM" NVM_INSTALL_VERSION=v9.9.9 install_nvm_from_git 2>&1)"
+  EXIT_CODE=$?
+
+  [ ! -e "$MARKER" ] || die "install_nvm_from_git, run from '$CWD', used the git config of the repository in the current directory"
+  [ "$EXIT_CODE" = 0 ] || die "install_nvm_from_git, run from '$CWD', exited with $EXIT_CODE; output: $OUTPUT"
+  ACTUAL="$(git --git-dir="$NVM_DIR/.git" rev-parse --verify HEAD)"
+  [ "$ACTUAL" = "$EXPECTED" ] || die "install_nvm_from_git, run from '$CWD', checked out '$ACTUAL', expected '$EXPECTED'"
+done
+
+# an update of an existing install must not use the current directory's repository config either
+rm -f "$MARKER"
+OUTPUT="$(cd "$PROJECT" && NVM_SOURCE="$UPSTREAM" NVM_INSTALL_VERSION=v9.9.9 install_nvm_from_git 2>&1)"
+EXIT_CODE=$?
+[ ! -e "$MARKER" ] || die 'install_nvm_from_git, updating an existing install, used the git config of the repository in the current directory'
+[ "$EXIT_CODE" = 0 ] || die "install_nvm_from_git, updating an existing install, exited with $EXIT_CODE; output: $OUTPUT"
+
+unset -f git_commit
+cleanup

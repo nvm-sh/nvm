@@ -1,0 +1,90 @@
+#!/bin/sh
+
+WORK="$PWD/nvm_wget_is_gnu-work.$$"
+TEST_BIN="$WORK/bin"
+NO_WGET_BIN="$WORK/no-wget-bin"
+
+cleanup() {
+  unset -f die cleanup check
+  unset WGET_VERSION_OUT WGET_VERSION_ERR WGET_VERSION_EXIT
+  rm -rf "$WORK"
+  export PATH="$OLDPATH"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+OLDPATH="$PATH"
+
+mkdir -p "$TEST_BIN" "$NO_WGET_BIN"
+
+# `command wget` bypasses shell functions, so the fake must be an executable:
+# for `--version` it prints $WGET_VERSION_OUT to stdout, $WGET_VERSION_ERR to
+# stderr, and exits with $WGET_VERSION_EXIT; it fails on anything else
+{
+  echo '#!/bin/sh'
+  echo '[ "$#" -eq 1 ] && [ "$1" = --version ] || exit 99'
+  echo '[ -z "${WGET_VERSION_OUT-}" ] || printf "%s\n" "${WGET_VERSION_OUT}"'
+  echo '[ -z "${WGET_VERSION_ERR-}" ] || printf "%s\n" "${WGET_VERSION_ERR}" >&2'
+  echo 'exit "${WGET_VERSION_EXIT:-0}"'
+} > "$TEST_BIN/wget"
+chmod +x "$TEST_BIN/wget"
+
+export WGET_VERSION_OUT WGET_VERSION_ERR WGET_VERSION_EXIT
+export PATH="$TEST_BIN:$OLDPATH"
+
+# args: expected exit code, description
+check() {
+  try nvm_wget_is_gnu
+  [ "${CAPTURED_EXIT_CODE}" = "${1}" ] || die "nvm_wget_is_gnu with ${2}: expected exit code ${1}, got ${CAPTURED_EXIT_CODE}"
+  [ -z "${CAPTURED_STDOUT}" ] || die "nvm_wget_is_gnu with ${2}: expected no output, got >${CAPTURED_STDOUT}<"
+  try_err nvm_wget_is_gnu
+  [ -z "${CAPTURED_STDERR}" ] || die "nvm_wget_is_gnu with ${2}: expected no error output, got >${CAPTURED_STDERR}<"
+}
+
+# GNU Wget
+WGET_VERSION_OUT='GNU Wget 1.21.2 built on linux-gnu.
+
+-cares +digest -gpgme +https +ipv6 +iri +large-file -metalink +nls
++ntlm +opie +psl +ssl/openssl'
+WGET_VERSION_ERR=''
+WGET_VERSION_EXIT=0
+check 0 'GNU Wget 1.21.2'
+
+WGET_VERSION_OUT='GNU Wget 1.14 built on linux-gnu.'
+check 0 'GNU Wget 1.14'
+
+# GNU Wget2 is a different program, and says so
+WGET_VERSION_OUT='GNU Wget2 2.1.0 - multithreaded metalink/file/website downloader'
+check 1 'GNU Wget2'
+
+# BusyBox wget rejects `--version`, on stderr, which is not shown
+WGET_VERSION_OUT=''
+WGET_VERSION_ERR="wget: unrecognized option '--version'
+BusyBox v1.36.1 (2023-06-02 00:42:02 UTC) multi-call binary."
+WGET_VERSION_EXIT=1
+check 1 'BusyBox wget'
+
+# "GNU Wget" on stderr does not count
+WGET_VERSION_ERR='GNU Wget 1.21.2 built on linux-gnu.'
+WGET_VERSION_EXIT=0
+check 1 '"GNU Wget" only on stderr'
+
+# "GNU Wget" must start a line
+WGET_VERSION_ERR=''
+WGET_VERSION_OUT='not GNU Wget 1.21.2'
+check 1 '"GNU Wget" not at the start of a line'
+
+# no output at all
+WGET_VERSION_OUT=''
+check 1 'no version output'
+
+# no wget at all
+ln -s "$(command -v grep)" "$NO_WGET_BIN/grep"
+export PATH="$NO_WGET_BIN"
+check 1 'no wget on the PATH'
+export PATH="$TEST_BIN:$OLDPATH"
+
+cleanup

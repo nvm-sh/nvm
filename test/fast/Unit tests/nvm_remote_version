@@ -70,6 +70,31 @@ try nvm_remote_version node
   || die "nvm_remote_version node did not return contents of nvm_ls_remote node; got $CAPTURED_STDOUT"
 [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version node did not exit with 0, got $CAPTURED_EXIT_CODE"
 
+# io.js versions do not sort after newer node versions, even when node's list does not include v4.0.0
+nvm_ls_remote() {
+  case "${1-}" in
+    20 | v20.0.0) echo "v20.0.0" ;;
+    0.12) echo "v0.12.18" ;;
+    *) echo "N/A"; return 3 ;;
+  esac
+}
+nvm_ls_remote_iojs() {
+  echo "iojs-v3.3.1"
+}
+for PATTERN in 20 v20.0.0; do
+  try nvm_remote_version "${PATTERN}"
+  [ "_$CAPTURED_STDOUT" = "_v20.0.0" ] || die "nvm_remote_version ${PATTERN} should return v20.0.0, got $CAPTURED_STDOUT"
+  [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version ${PATTERN} should exit with code 0, got $CAPTURED_EXIT_CODE"
+done
+
+# io.js only released v1 through v3, so it is not consulted for any other major
+try nvm_remote_version 0.12
+[ "_$CAPTURED_STDOUT" = "_v0.12.18" ] || die "nvm_remote_version 0.12 should return v0.12.18, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 0.12 should exit with code 0, got $CAPTURED_EXIT_CODE"
+try nvm_remote_version 99
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nvm_remote_version 99 should return N/A, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nvm_remote_version 99 should exit with code 3, got $CAPTURED_EXIT_CODE"
+
 # Test LTS name rejection (Issue #3474)
 # When nvm_remote_versions returns a line with LTS name in description,
 # nvm_remote_version should reject it if the pattern doesn't match the version number
@@ -87,5 +112,60 @@ nvm_remote_versions() {
 try nvm_remote_version 4
 [ "_$CAPTURED_STDOUT" = "_v4.9.1" ] || die "nvm_remote_version 4 should return v4.9.1, got $CAPTURED_STDOUT"
 [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 4 should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+# A version-like LTS field must not let a request match a different major line
+nvm_remote_versions() {
+  echo "v10.20.0 v20 *"
+}
+try nvm_remote_version 20
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nvm_remote_version 20 should not match v10.20.0, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nvm_remote_version 20 should exit with code 3, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version 10
+[ "_$CAPTURED_STDOUT" = "_v10.20.0 v20 *" ] || die "nvm_remote_version 10 should match v10.20.0, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 10 should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version 10.20
+[ "_$CAPTURED_STDOUT" = "_v10.20.0 v20 *" ] || die "nvm_remote_version 10.20 should match v10.20.0, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 10.20 should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+nvm_remote_versions() {
+  echo "v10.0.0 v1 *"
+}
+try nvm_remote_version 1
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die "nvm_remote_version 1 should not match v10.0.0, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "nvm_remote_version 1 should exit with code 3, got $CAPTURED_EXIT_CODE"
+
+nvm_remote_versions() {
+  echo "iojs-v3.3.1"
+}
+try nvm_remote_version iojs-3
+[ "_$CAPTURED_STDOUT" = "_iojs-v3.3.1" ] || die "nvm_remote_version iojs-3 should match iojs-v3.3.1, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version iojs-3 should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+nvm_remote_versions() {
+  echo "v8.17.0 Carbon"
+}
+try nvm_remote_version 'v[68]'
+[ "_$CAPTURED_STDOUT" = "_v8.17.0 Carbon" ] || die "nvm_remote_version v[68] should match v8.17.0, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version v[68] should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+try nvm_remote_version 8.
+[ "_$CAPTURED_STDOUT" = "_v8.17.0 Carbon" ] || die "nvm_remote_version 8. should match v8.17.0, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 8. should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+nvm_remote_versions() {
+  echo "v4.9.1"
+}
+try nvm_remote_version '4.*'
+[ "_$CAPTURED_STDOUT" = "_v4.9.1" ] || die "nvm_remote_version 4.* should match v4.9.1, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version 4.* should exit with code 0, got $CAPTURED_EXIT_CODE"
+
+nvm_remote_versions() {
+  echo "v20.0.0-rc.1"
+}
+try nvm_remote_version v20.0.0-rc.1
+[ "_$CAPTURED_STDOUT" = "_v20.0.0-rc.1" ] || die "nvm_remote_version v20.0.0-rc.1 should match itself, got $CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_remote_version v20.0.0-rc.1 should exit with code 0, got $CAPTURED_EXIT_CODE"
 
 cleanup

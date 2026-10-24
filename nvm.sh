@@ -10,9 +10,6 @@
 # shellcheck disable=SC2039,SC2016,SC2001,SC3043
 { # this ensures the entire script is downloaded #
 
-# shellcheck disable=SC3028
-NVM_SCRIPT_SOURCE="${_:-}"
-
 nvm_is_zsh() {
   [ -n "${ZSH_VERSION-}" ]
 }
@@ -138,7 +135,7 @@ nvm_get_latest() {
     if nvm_curl_use_compression; then
       CURL_COMPRESSED_FLAG="--compressed"
     fi
-    NVM_LATEST_URL="$(command curl ${CURL_COMPRESSED_FLAG:-} -q -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
+    NVM_LATEST_URL="$(command curl -q ${CURL_COMPRESSED_FLAG:-} -w "%{url_effective}\\n" -L -s -S https://latest.nvm.sh -o /dev/null)"
   elif nvm_has_executable "wget"; then
     NVM_LATEST_URL="$(command wget -q https://latest.nvm.sh --server-response -O /dev/null 2>&1 | command awk '/^  Location: /{DEST=$2} END{ print DEST }')"
   else
@@ -159,17 +156,36 @@ nvm_download() {
   local sanitized_header
   sanitized_header=''
   if [ -n "${NVM_AUTH_HEADER:-}" ]; then
-    sanitized_header="$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")"
+    local NVM_DOWNLOAD_AUTH
+    NVM_DOWNLOAD_AUTH=''
+    local NVM_DOWNLOAD_ARG
+    for NVM_DOWNLOAD_ARG in "$@"; do
+      case "${NVM_DOWNLOAD_ARG}" in
+        http://* | https://*)
+          if nvm_auth_header_applies_to "${NVM_DOWNLOAD_ARG}"; then
+            NVM_DOWNLOAD_AUTH=1
+          else
+            NVM_DOWNLOAD_AUTH=''
+            break
+          fi
+        ;;
+      esac
+    done
+    if [ -n "${NVM_DOWNLOAD_AUTH}" ]; then
+      sanitized_header="$(nvm_sanitize_auth_header "${NVM_AUTH_HEADER}")"
+    fi
   fi
 
   local NVM_DOWNLOADER
   NVM_DOWNLOADER=''
   if nvm_has_executable "curl"; then
     NVM_DOWNLOADER='curl'
-    set -- -q --fail "$@"
+    set -- --fail "$@"
     if nvm_curl_use_compression; then
       set -- --compressed "$@"
     fi
+    # curl only skips reading `.curlrc` when `-q` is its very first argument
+    set -- -q "$@"
   elif nvm_has_executable "wget"; then
     NVM_DOWNLOADER='wget'
     # Emulate curl with wget
@@ -203,11 +219,120 @@ nvm_download() {
     return 0
   fi
 
-  if [ -n "${NVM_AUTH_HEADER:-}" ]; then
+  if [ -n "${sanitized_header}" ]; then
+    if [ "${NVM_DOWNLOADER}" = 'wget' ] && nvm_wget_is_gnu; then
+      nvm_wget_same_origin "${sanitized_header}" "$@"
+      return $?
+    fi
     set -- "$@" --header "Authorization: ${sanitized_header}"
   fi
 
   command "${NVM_DOWNLOADER}" "$@"
+}
+
+# BusyBox wget rejects `--version`; GNU Wget2 reports itself as "GNU Wget2"
+nvm_wget_is_gnu() {
+  command wget --version 2>/dev/null | nvm_grep -q '^GNU Wget '
+}
+
+# args: url; prints its `scheme://authority`
+nvm_url_origin() {
+  local NVM_URL_REST
+  NVM_URL_REST="${1#*://}"
+  nvm_echo "${1%%://*}://${NVM_URL_REST%%/*}"
+}
+
+# args: sanitized Authorization header value, wget arguments
+# `curl -L` (7.58.0 and later) does not send a custom Authorization header to a
+# redirect target on another host, but wget sends `--header` along to every
+# one. So GNU Wget is stopped at every redirect, which is then followed only if
+# it stays on the same origin (scheme, host, and port). Other wgets, like
+# BusyBox's, cannot be stopped from following redirects.
+nvm_wget_same_origin() {
+  local NVM_WGET_HEADER
+  NVM_WGET_HEADER="Authorization: ${1-}"
+  shift
+  local NVM_WGET_URL
+  NVM_WGET_URL=''
+  local NVM_WGET_ARG
+  for NVM_WGET_ARG in "$@"; do
+    case "${NVM_WGET_ARG}" in
+      http://* | https://*) NVM_WGET_URL="${NVM_WGET_ARG}" ;;
+    esac
+  done
+  local NVM_WGET_REQUESTED_URL
+  NVM_WGET_REQUESTED_URL="${NVM_WGET_URL}"
+  local NVM_WGET_EXIT_CODE
+  local NVM_WGET_LOCATION
+  local NVM_WGET_ARG_COUNT
+  local NVM_WGET_REDIRECTS
+  NVM_WGET_REDIRECTS=0
+  while :; do
+    command wget --max-redirect=0 "$@" --header "${NVM_WGET_HEADER}"
+    NVM_WGET_EXIT_CODE=$?
+    # wget exits with 8 for an HTTP error status, including a redirect it did not follow
+    if [ "${NVM_WGET_EXIT_CODE}" != 8 ] || [ -z "${NVM_WGET_URL}" ]; then
+      return "${NVM_WGET_EXIT_CODE}"
+    fi
+    NVM_WGET_LOCATION="$(command wget --max-redirect=0 -q -S -O /dev/null "${NVM_WGET_URL}" --header "${NVM_WGET_HEADER}" 2>&1 \
+      | command awk 'tolower($1) == "location:" { print $2; exit }' | command tr -d '\r')"
+    case "${NVM_WGET_LOCATION}" in
+      '') return "${NVM_WGET_EXIT_CODE}" ;;
+      http://* | https://*) ;;
+      //*) NVM_WGET_LOCATION="${NVM_WGET_URL%%//*}${NVM_WGET_LOCATION}" ;;
+      /*) NVM_WGET_LOCATION="$(nvm_url_origin "${NVM_WGET_URL}")${NVM_WGET_LOCATION}" ;;
+      *) NVM_WGET_LOCATION="${NVM_WGET_URL%/*}/${NVM_WGET_LOCATION}" ;;
+    esac
+    if [ "$(nvm_url_origin "${NVM_WGET_LOCATION}")" != "$(nvm_url_origin "${NVM_WGET_URL}")" ]; then
+      nvm_err "${NVM_WGET_REQUESTED_URL} redirects to another origin; wget would send \$NVM_AUTH_HEADER there too, so it is not followed. Install curl to download from this mirror."
+      return "${NVM_WGET_EXIT_CODE}"
+    fi
+    NVM_WGET_REDIRECTS=$((NVM_WGET_REDIRECTS + 1))
+    if [ "${NVM_WGET_REDIRECTS}" -gt 20 ]; then
+      nvm_err "${NVM_WGET_REQUESTED_URL}: too many redirects"
+      return "${NVM_WGET_EXIT_CODE}"
+    fi
+    NVM_WGET_ARG_COUNT=$#
+    for NVM_WGET_ARG in "$@"; do
+      if [ "${NVM_WGET_ARG}" = "${NVM_WGET_URL}" ]; then
+        set -- "$@" "${NVM_WGET_LOCATION}"
+      else
+        set -- "$@" "${NVM_WGET_ARG}"
+      fi
+    done
+    shift "${NVM_WGET_ARG_COUNT}"
+    NVM_WGET_URL="${NVM_WGET_LOCATION}"
+  done
+}
+
+# args: url
+# Whether `$NVM_AUTH_HEADER` applies to a request for the given URL: only URLs
+# under a mirror qualify, never any other host (eg, npmjs.org). When exactly one
+# of `$NVM_NODEJS_ORG_MIRROR` and `$NVM_IOJS_ORG_MIRROR` is set, the header is
+# that mirror's credential, so the other flavor's default host does not get it.
+nvm_auth_header_applies_to() {
+  local NVM_AUTH_FLAVOR
+  local NVM_AUTH_MIRROR
+  for NVM_AUTH_FLAVOR in node iojs; do
+    case "${NVM_AUTH_FLAVOR}" in
+      node)
+        if [ -z "${NVM_NODEJS_ORG_MIRROR-}" ] && [ -n "${NVM_IOJS_ORG_MIRROR-}" ]; then
+          continue
+        fi
+      ;;
+      iojs)
+        if [ -z "${NVM_IOJS_ORG_MIRROR-}" ] && [ -n "${NVM_NODEJS_ORG_MIRROR-}" ]; then
+          continue
+        fi
+      ;;
+    esac
+    # an invalid mirror matches nothing; the download itself reports it
+    NVM_AUTH_MIRROR="$(nvm_get_mirror "${NVM_AUTH_FLAVOR}" std 2>/dev/null)" || continue
+    case "${1-}" in
+      "${NVM_AUTH_MIRROR}"/*) return 0 ;;
+    esac
+  done
+  return 1
 }
 
 nvm_sanitize_auth_header() {
@@ -217,8 +342,10 @@ nvm_sanitize_auth_header() {
     # `Basic <base64>` and `Bearer <token>` survive intact.
     # '~' is also allowed, completing RFC 7235 `token68` (and thus RFC 6750
     # `b64token`), so opaque Bearer tokens containing it are not corrupted.
-    # Note: '-' must be at the end of the bracket expression to be treated as a literal.
-    nvm_echo "$1" | command sed 's/[^a-zA-Z0-9 :_.+/=~-]//g'
+    # Note: '-' must be at the end of the set to be treated as a literal.
+    # `tr`, not `sed`: sed is line-based and would keep newlines, eg from a
+    # `base64` credential that was wrapped at 76 columns.
+    nvm_echo "$1" | command tr -cd 'a-zA-Z0-9 :_.+/=~-'
 }
 
 nvm_has_system_node() {
@@ -271,7 +398,9 @@ nvm_is_version_installed() {
   if [ "_$(nvm_get_os)" = '_win' ]; then
     NVM_NODE_BINARY='node.exe'
   fi
-  if [ -x "$(nvm_version_path "$1" 2>/dev/null)/bin/${NVM_NODE_BINARY}" ]; then
+  local VERSION_PATH
+  VERSION_PATH="$(nvm_version_path "$1" 2>/dev/null)" || return 1
+  if [ -x "${VERSION_PATH}/bin/${NVM_NODE_BINARY}" ]; then
     return 0
   fi
   return 1
@@ -583,12 +712,40 @@ fi
 
 # Auto detect the NVM_DIR when not set
 if [ -z "${NVM_DIR-}" ]; then
+  NVM_SCRIPT_SOURCE=''
   # shellcheck disable=SC2128
   if [ -n "${BASH_SOURCE-}" ]; then
     NVM_SCRIPT_SOURCE="${BASH_SOURCE}"
+  elif nvm_is_zsh; then
+    # `%x` names the file being sourced even when `$0` does not, eg under `emulate sh`
+    eval 'NVM_SCRIPT_SOURCE="${(%):-%x}"'
+  elif [ -n "${KSH_VERSION-}" ] && (eval ': "${.sh.file}"') 2>/dev/null; then
+    # only ksh93 has `.sh.file`; other shells abort on the syntax, so it is probed in a subshell first
+    eval 'NVM_SCRIPT_SOURCE="${.sh.file}"'
   fi
-  # shellcheck disable=SC2086
-  NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE:-$0}")" >/dev/null && \pwd)"
+  if [ -n "${NVM_SCRIPT_SOURCE}" ] && [ -f "${NVM_SCRIPT_SOURCE}" ]; then
+    # shellcheck disable=SC2086
+    NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "$(dirname "${NVM_SCRIPT_SOURCE}")" >/dev/null && \pwd)"
+  else
+    # other shells (eg, dash) cannot tell where a sourced file lives (`$0` names the shell or the calling script),
+    # and a file sourced from a pipe (eg, `/dev/fd/63`) has no directory, so use the default install location, as `install.sh` does
+    if [ -n "${XDG_CONFIG_HOME-}" ]; then
+      NVM_DIR="${XDG_CONFIG_HOME}/nvm"
+    else
+      NVM_DIR="${HOME-}/.nvm"
+    fi
+    if [ -f "${NVM_DIR}/nvm.sh" ]; then
+      # shellcheck disable=SC2086
+      NVM_DIR="$(nvm_cd ${NVM_CD_FLAGS} "${NVM_DIR}" >/dev/null && \pwd)"
+    else
+      NVM_DIR=''
+    fi
+  fi
+  if [ -z "${NVM_DIR}" ]; then
+    unset NVM_DIR NVM_SCRIPT_SOURCE 2>/dev/null
+    nvm_err 'nvm: unable to detect $NVM_DIR; set it to the directory containing nvm.sh before sourcing it'
+    return 1
+  fi
   export NVM_DIR
 else
   # https://unix.stackexchange.com/a/198289
@@ -682,9 +839,10 @@ all non-commented content (anything after # is a comment) must be either:
 
 additionally, a single bare nvm-recognized version-ish must be present (after stripping comments)."
 
+  # show control characters (other than tabs and newlines) as `?`, so the parsed content is printed as plain text
   local warn_text
   warn_text="non-commented content parsed:
-${1}"
+$(nvm_echo "${1}" | command tr '\001-\010\013-\037\177' '??????????????????????????????')"
 
   nvm_err "$(nvm_wrap_with_color_code 'r' "${error_text}")
 
@@ -699,6 +857,12 @@ nvm_process_nvmrc_content() {
   lines=$(nvm_echo "${NVMRC_CONTENT}" | command sed 's/#.*//' | command sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | nvm_grep -v '^$')
 
   if [ -z "$lines" ]; then
+    nvm_nvmrc_invalid_msg "${lines}"
+    return 1
+  fi
+
+  # control characters, other than tabs, are not valid in any line
+  if [ -n "$(nvm_echo "${lines}" | command tr -d '\t\n' | command tr -cd '[:cntrl:]')" ]; then
     nvm_nvmrc_invalid_msg "${lines}"
     return 1
   fi
@@ -1021,7 +1185,8 @@ nvm_remote_version() {
   if [ -n "${PATTERN}" ] && [ "_${VERSION}" != "_N/A" ] && ! nvm_validate_implicit_alias "${PATTERN}" 2>/dev/null; then
     local VERSION_NUM
     VERSION_NUM="$(nvm_echo "${VERSION}" | command awk '{print $1}')"
-    if ! nvm_echo "${VERSION_NUM}" | nvm_grep -q "${PATTERN}"; then
+    # the `v` prefix and the trailing non-digit keep `20` from matching `v10.20.0` or `v200.0.0`
+    if ! nvm_echo "${VERSION_NUM} " | nvm_grep -q "$(nvm_ensure_version_prefix "${PATTERN%.}")[^0-9]"; then
       VERSION='N/A'
     fi
   fi
@@ -1062,6 +1227,10 @@ nvm_remote_versions() {
       NVM_FLAVOR="${NVM_NODE_PREFIX}"
       unset PATTERN
     ;;
+    [04-9]* | [1-9][0-9]* | v[04-9]* | v[1-9][0-9]*)
+      # io.js only released v1 through v3, so it has no versions matching any other major
+      NVM_FLAVOR="${NVM_NODE_PREFIX}"
+    ;;
   esac
 
   if nvm_validate_implicit_alias "${PATTERN-}" 2>/dev/null; then
@@ -1080,8 +1249,13 @@ nvm_remote_versions() {
     # extra space is needed here to avoid weird behavior when `nvm_ls_remote` ends in a `*`
     NVM_LS_REMOTE_OUTPUT="$(NVM_LTS="${NVM_LTS-}" nvm_ls_remote "${PATTERN-}") " &&:
     NVM_LS_REMOTE_EXIT_CODE=$?
-    # split output into two
-    NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%v4\.0\.0*}"
+    # split output into two: node v0.x sorts before io.js, and node v4+ after it.
+    # the list is sorted, so cut at the first line whose major is nonzero.
+    case "${NVM_LS_REMOTE_OUTPUT}" in
+      v[1-9]*) NVM_LS_REMOTE_PRE_MERGED_OUTPUT='' ;;
+      *) NVM_LS_REMOTE_PRE_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT%%
+v[1-9]*}" ;;
+    esac
     NVM_LS_REMOTE_POST_MERGED_OUTPUT="${NVM_LS_REMOTE_OUTPUT#"$NVM_LS_REMOTE_PRE_MERGED_OUTPUT"}"
   fi
 
@@ -1096,7 +1270,7 @@ nvm_remote_versions() {
     NVM_LS_REMOTE_IOJS_EXIT_CODE=$?
   fi
 
-  # the `sed` removes both blank lines, and only-whitespace lines (see "weird behavior" ~19 lines up)
+  # the `sed` removes both blank lines, and only-whitespace lines (see "weird behavior" ~24 lines up)
   VERSIONS="$(nvm_echo "${NVM_LS_REMOTE_PRE_MERGED_OUTPUT}
 ${NVM_LS_REMOTE_IOJS_OUTPUT}
 ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^ *$/d')"
@@ -1105,7 +1279,7 @@ ${NVM_LS_REMOTE_POST_MERGED_OUTPUT}" | nvm_grep -v "N/A" | command sed '/^ *$/d'
     nvm_echo 'N/A'
     return 3
   fi
-  # the `sed` is to remove trailing whitespaces (see "weird behavior" ~25 lines up)
+  # the `sed` is to remove trailing whitespaces (see "weird behavior" ~33 lines up)
   nvm_echo "${VERSIONS}" | command sed 's/ *$//g'
   # shellcheck disable=SC2317
   if [ "${NVM_LS_REMOTE_EXIT_CODE}" != '0' ]; then
@@ -1940,7 +2114,7 @@ nvm_ls() {
       PATTERN='v'
       SEARCH_PATTERN='.*'
     else
-      SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's#\.#\\\.#g; s|#|\\#|g')"
+      SEARCH_PATTERN="$(nvm_echo "${PATTERN}" | command sed 's/[[\.*^$#]/\\&/g')"
     fi
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
       VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
@@ -2967,8 +3141,8 @@ nvm_install_binary() {
     PROGRESS_BAR="--progress-bar"
   fi
   nvm_echo "Downloading and installing ${NODE_OR_IOJS-} ${VERSION}..."
-  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}" | command tail -1)"
-  if [ -f "${TARBALL}" ]; then
+  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" binary "${TYPE-}" "${VERSION}")" || TARBALL=''
+  if nvm_is_cached_artifact "${TARBALL}"; then
     TMPDIR="$(dirname "${TARBALL}")/files"
   fi
 
@@ -3161,16 +3335,17 @@ nvm_download_artifact() {
     nvm_err "Removing the broken local cache..."
     command rm -rf "${TARBALL}"
   fi
-  nvm_err "Downloading ${TARBALL_URL}..."
-  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" || {
+  nvm_err "Downloading $(nvm_sanitize_url "${TARBALL_URL}")..."
+  # stdout is reserved for the tarball path, so nothing the downloader prints may reach it
+  nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${TARBALL}" >&2 || {
     command rm -rf "${TARBALL}" "${tmpdir}"
-    nvm_err "download from ${TARBALL_URL} failed"
+    nvm_err "download from $(nvm_sanitize_url "${TARBALL_URL}") failed"
     return 4
   }
 
   if nvm_grep '404 Not Found' "${TARBALL}" >/dev/null; then
     command rm -rf "${TARBALL}" "${tmpdir}"
-    nvm_err "HTTP 404 at URL ${TARBALL_URL}"
+    nvm_err "HTTP 404 at URL $(nvm_sanitize_url "${TARBALL_URL}")"
     return 5
   fi
 
@@ -3180,6 +3355,14 @@ nvm_download_artifact() {
   }
 
   nvm_echo "${TARBALL}"
+}
+
+# a tarball path from nvm_download_artifact is only usable if it is an existing file in nvm's cache
+nvm_is_cached_artifact() {
+  case "${1-}" in
+    "$(nvm_cache_dir)"/*) [ -f "${1}" ] ;;
+    *) return 1 ;;
+  esac
 }
 
 # args: nvm_os, version, tarball, tmpdir
@@ -3244,10 +3427,11 @@ nvm_get_make_jobs() {
       NVM_CPU_CORES="$(sysctl -n hw.ncpu)"
     ;;
     "_sunos")
-      NVM_CPU_CORES="$(psrinfo | wc -l)"
+      # some `wc`s pad the count with whitespace
+      NVM_CPU_CORES="$(psrinfo | wc -l | command tr -d '[:space:]')"
     ;;
     "_aix")
-      NVM_CPU_CORES="$(pmcycles -m | wc -l)"
+      NVM_CPU_CORES="$(pmcycles -m | wc -l | command tr -d '[:space:]')"
     ;;
     *)
       # `_NPROCESSORS_ONLN` is how glibc, FreeBSD, macOS, and Cygwin spell it;
@@ -3368,8 +3552,8 @@ nvm_install_source() {
 
   nvm_is_zsh && setopt local_options shwordsplit
 
-  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}" | command tail -1)" && \
-  [ -f "${TARBALL}" ] && \
+  TARBALL="$(PROGRESS_BAR="${PROGRESS_BAR}" nvm_download_artifact "${FLAVOR}" source "${TYPE}" "${VERSION}")" && \
+  nvm_is_cached_artifact "${TARBALL}" && \
   TMPDIR="$(dirname "${TARBALL}")/files" && \
   if ! (
     # shellcheck disable=SC2086
@@ -3680,6 +3864,12 @@ nvm_sanitize_path() {
   nvm_echo "${SANITIZED_PATH}"
 }
 
+# Replace the `user:password@` part of any URL with `***@`, for printing.
+# Like curl and wget, everything up to the last `@` before the path is userinfo.
+nvm_sanitize_url() {
+  nvm_echo "${1-}" | command sed -e 's#://[^/[:space:]]*@#://***@#g'
+}
+
 nvm_is_natural_num() {
   if [ -z "$1" ]; then
     return 4
@@ -3687,6 +3877,7 @@ nvm_is_natural_num() {
   case "$1" in
     0) return 1 ;;
     -*) return 3 ;; # some BSDs return false positives for double-negated args
+    *[!0-9]*) return 2 ;; # `-eq` also accepts signs and whitespace, and in ksh, any arithmetic expression
     *)
       [ "$1" -eq "$1" ] 2>/dev/null # returns 2 if it doesn't match
     ;;
@@ -4075,8 +4266,8 @@ nvm() {
       nvm_err "\${PATH}: $(nvm_sanitize_path "${PATH}")"
       nvm_err "\$PREFIX: '$(nvm_sanitize_path "${PREFIX-}")'"
       nvm_err "\${NPM_CONFIG_PREFIX}: '$(nvm_sanitize_path "${NPM_CONFIG_PREFIX-}")'"
-      nvm_err "\$NVM_NODEJS_ORG_MIRROR: '${NVM_NODEJS_ORG_MIRROR-}'"
-      nvm_err "\$NVM_IOJS_ORG_MIRROR: '${NVM_IOJS_ORG_MIRROR-}'"
+      nvm_err "\$NVM_NODEJS_ORG_MIRROR: '$(nvm_sanitize_url "${NVM_NODEJS_ORG_MIRROR-}")'"
+      nvm_err "\$NVM_IOJS_ORG_MIRROR: '$(nvm_sanitize_url "${NVM_IOJS_ORG_MIRROR-}")'"
       nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
       nvm_err "uname -a: '$(command uname -a | command awk '{$2=""; print}' | command xargs)'"
       nvm_err "checksum binary: '$(nvm_get_checksum_binary 2>/dev/null)'"
@@ -4544,8 +4735,9 @@ nvm() {
         fi
 
         if [ $EXIT_CODE -ne 0 ] && [ $nosource -ne 1 ]; then
-          if [ -z "${NVM_MAKE_JOBS-}" ]; then
-            nvm_get_make_jobs
+          # `-j` was validated when parsed, but an inherited value was not
+          if ! nvm_is_natural_num "${NVM_MAKE_JOBS-}"; then
+            nvm_get_make_jobs "${NVM_MAKE_JOBS-}"
           fi
 
           if [ "_${NVM_OS}" = "_win" ]; then
@@ -4675,7 +4867,7 @@ nvm() {
       nvm_echo "${NVM_SUCCESS_MSG}"
 
       # rm any aliases that point to uninstalled version.
-      for ALIAS in $(nvm_grep -l "${VERSION}" "$(nvm_alias_path)"/* 2>/dev/null); do
+      for ALIAS in $(nvm_grep -l -e "${VERSION}" "$(nvm_alias_path)"/* 2>/dev/null); do
         nvm unalias "$(command basename "${ALIAS}")"
       done
     ;;
@@ -4753,7 +4945,12 @@ nvm() {
             NVM_SILENT_ARG='--silent'
           ;;
           --delete-prefix) NVM_DELETE_PREFIX=1 ;;
-          --) ;;
+          --)
+            if [ -n "${2-}" ]; then
+              PROVIDED_VERSION="$2"
+            fi
+            break
+          ;;
           --lts) NVM_LTS='*' ;;
           --lts=*) NVM_LTS="${1##--lts=}" ;;
           --save | -w)
@@ -5428,7 +5625,7 @@ nvm() {
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
         nvm_ls nvm_remote_version nvm_remote_versions \
         nvm_install_binary nvm_install_source nvm_clang_version \
-        nvm_get_mirror nvm_get_download_slug nvm_download_artifact \
+        nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
         nvm_print_versions nvm_compute_checksum \
         nvm_get_checksum_binary \
@@ -5456,10 +5653,11 @@ nvm() {
         nvm_install_lock_name nvm_acquire_install_lock nvm_release_install_lock \
         nvm_list_aliases nvm_make_alias nvm_print_alias_file nvm_print_alias_path \
         nvm_print_default_alias nvm_print_formatted_alias nvm_resolve_local_alias \
-        nvm_replace_literal nvm_sanitize_path nvm_has_colors nvm_has_italics nvm_process_parameters \
+        nvm_replace_literal nvm_sanitize_path nvm_sanitize_url nvm_has_colors nvm_has_italics nvm_process_parameters \
         nvm_node_version_has_solaris_binary nvm_iojs_version_has_solaris_binary \
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
-        nvm_npmrc_bad_news_bears nvm_sanitize_auth_header \
+        nvm_npmrc_bad_news_bears nvm_sanitize_auth_header nvm_auth_header_applies_to \
+        nvm_wget_is_gnu nvm_url_origin nvm_wget_same_origin \
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code \
         nvm_print_color_legend \
         nvm_echo_with_colors nvm_err_with_colors \

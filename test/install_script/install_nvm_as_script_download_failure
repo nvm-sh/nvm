@@ -1,0 +1,71 @@
+#!/bin/sh
+
+cleanup () {
+  NVM_DIR="$SAVE_NVM_DIR"
+  if [ -n "${TEST_DIR-}" ]; then
+    rm -rf "${TEST_DIR}"
+  fi
+  unset SAVE_NVM_DIR TEST_DIR OUTPUT EXIT_CODE FILE
+  unset -f die cleanup nvm_download install_nvm_as_script
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+SAVE_NVM_DIR="$NVM_DIR"
+
+NVM_ENV=testing \. ../../install.sh
+
+type install_nvm_as_script > /dev/null 2>&1 || die 'install_nvm_as_script is not available'
+
+TEST_DIR="$(mktemp -d)"
+NVM_DIR="${TEST_DIR}/nvm"
+mkdir -p "${NVM_DIR}"
+echo 'working nvm.sh' > "${NVM_DIR}/nvm.sh"
+
+# like curl, write part of the file and then fail, as when the connection drops part-way through nvm.sh
+nvm_download() {
+  case "${2}" in
+    */nvm.sh)
+      echo 'partial' > "${4}"
+      return 56
+    ;;
+  esac
+  echo "${2}" > "${4}"
+}
+
+## install_nvm_as_script: a failed download fails, and leaves the existing install untouched
+OUTPUT="$(install_nvm_as_script 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" != '0' ] || die "install_nvm_as_script should fail when a download fails, got ${EXIT_CODE}"
+echo "${OUTPUT}" | grep -q "Failed to download" || die "install_nvm_as_script should print the download error, got: ${OUTPUT}"
+[ "$(cat "${NVM_DIR}/nvm.sh")" = 'working nvm.sh' ] || die "a failed download replaced the working nvm.sh with: $(cat "${NVM_DIR}/nvm.sh")"
+[ ! -e "${NVM_DIR}/nvm-exec" ] || die 'nvm-exec was installed although the nvm.sh download failed'
+[ ! -e "${NVM_DIR}/bash_completion" ] || die 'bash_completion was installed although the nvm.sh download failed'
+for FILE in nvm.sh nvm-exec bash_completion; do
+  [ ! -e "${NVM_DIR}/${FILE}.download" ] || die "a failed download left '${FILE}.download' behind"
+done
+
+## install_nvm_as_script: when every download succeeds, all three files are installed
+nvm_download() {
+  echo "${2}" > "${4}"
+}
+OUTPUT="$(install_nvm_as_script 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '0' ] || die "install_nvm_as_script should succeed when every download succeeds, got ${EXIT_CODE}: ${OUTPUT}"
+[ "$(cat "${NVM_DIR}/nvm.sh")" = "$(nvm_source script)" ] || die "nvm.sh was not updated, got: $(cat "${NVM_DIR}/nvm.sh")"
+[ "$(cat "${NVM_DIR}/nvm-exec")" = "$(nvm_source script-nvm-exec)" ] || die "nvm-exec was not installed, got: $(cat "${NVM_DIR}/nvm-exec")"
+[ "$(cat "${NVM_DIR}/bash_completion")" = "$(nvm_source script-nvm-bash-completion)" ] || die "bash_completion was not installed, got: $(cat "${NVM_DIR}/bash_completion")"
+[ -x "${NVM_DIR}/nvm-exec" ] || die 'nvm-exec was not marked executable'
+for FILE in nvm.sh nvm-exec bash_completion; do
+  [ ! -e "${NVM_DIR}/${FILE}.download" ] || die "a successful download left '${FILE}.download' behind"
+done
+
+## nvm_do_install: a failed script install exits non-zero, before touching the profile or sourcing nvm.sh
+install_nvm_as_script() {
+  return 2
+}
+OUTPUT="$(METHOD=script PROFILE=/dev/null nvm_do_install 2>&1)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = '2' ] || die "nvm_do_install should exit 2 when install_nvm_as_script fails, got ${EXIT_CODE}: ${OUTPUT}"
+! echo "${OUTPUT}" | grep -q 'Close and reopen your terminal' || die "nvm_do_install reported success although install_nvm_as_script failed: ${OUTPUT}"
+
+cleanup

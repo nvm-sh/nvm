@@ -1,0 +1,66 @@
+#!/bin/sh
+
+\. ../common.sh
+
+cleanup() {
+  [ -n "${TMP_DIR-}" ] && rm -rf "${TMP_DIR}"
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ROOT="$(cd ../.. && pwd)"
+TMP_DIR="$(mktemp -d)"
+[ -n "${TMP_DIR}" ] || die 'could not create a temporary directory'
+
+# a working directory laid out like an nvm directory, with a `default` alias and that version installed
+mkdir -p "${TMP_DIR}/cwd/alias" "${TMP_DIR}/cwd/versions/node/v9.9.9/bin" || die 'could not create the working directory'
+echo 'v9.9.9' > "${TMP_DIR}/cwd/alias/default" || die 'could not create the default alias'
+make_echo "${TMP_DIR}/cwd/versions/node/v9.9.9/bin/node" 'v9.9.9'
+
+# a HOME whose default install location is this checkout, and one with no install at all
+mkdir "${TMP_DIR}/home" "${TMP_DIR}/empty-home" "${TMP_DIR}/xdg" || die 'could not create home directories'
+ln -s "${NVM_ROOT}" "${TMP_DIR}/home/.nvm" || die 'could not link ~/.nvm'
+ln -s "${NVM_ROOT}" "${TMP_DIR}/xdg/nvm" || die 'could not link the XDG nvm directory'
+
+# sources nvm.sh from the working directory, with NVM_DIR unset, and prints the detected NVM_DIR and node
+source_from_cwd() {
+  (
+    cd "${TMP_DIR}/cwd" || exit 1
+    unset NVM_DIR XDG_CONFIG_HOME
+    HOME="${1}"
+    export HOME
+    if [ -n "${2-}" ]; then
+      XDG_CONFIG_HOME="${2}"
+      export XDG_CONFIG_HOME
+    fi
+    set --
+    \. "${NVM_ROOT}/nvm.sh" >/dev/null 2>&1 || exit $?
+    echo "${NVM_DIR-}"
+    command -v node || :
+  )
+}
+
+try source_from_cwd "${TMP_DIR}/home"
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "sourcing nvm.sh without NVM_DIR failed with ${CAPTURED_EXIT_CODE}"
+DETECTED="$(echo "${CAPTURED_STDOUT}" | sed -n 1p)"
+NODE_PATH_FOUND="$(echo "${CAPTURED_STDOUT}" | sed -n 2p)"
+case "${NODE_PATH_FOUND}" in
+  "${TMP_DIR}/cwd"/*) die "sourcing nvm.sh without NVM_DIR put the working directory's node on PATH: ${NODE_PATH_FOUND}" ;;
+esac
+case "${DETECTED}" in
+  "${NVM_ROOT}" | "${TMP_DIR}/home/.nvm") ;;
+  *) die "sourcing nvm.sh without NVM_DIR detected >${DETECTED}<; expected >${NVM_ROOT}< or >${TMP_DIR}/home/.nvm<" ;;
+esac
+
+# shells that cannot locate a sourced file use the default install location, or refuse when there is none
+if [ "${DETECTED}" = "${TMP_DIR}/home/.nvm" ]; then
+  try source_from_cwd "${TMP_DIR}/empty-home" "${TMP_DIR}/xdg"
+  [ "${CAPTURED_EXIT_CODE}" = 0 ] || die "sourcing nvm.sh with XDG_CONFIG_HOME failed with ${CAPTURED_EXIT_CODE}"
+  DETECTED="$(echo "${CAPTURED_STDOUT}" | sed -n 1p)"
+  [ "${DETECTED}" = "${TMP_DIR}/xdg/nvm" ] || die "sourcing nvm.sh with XDG_CONFIG_HOME detected >${DETECTED}<; expected >${TMP_DIR}/xdg/nvm<"
+
+  try source_from_cwd "${TMP_DIR}/empty-home"
+  [ "${CAPTURED_EXIT_CODE}" != 0 ] || die "sourcing nvm.sh with no default install location succeeded, with NVM_DIR >${CAPTURED_STDOUT}<"
+  [ -z "${CAPTURED_STDOUT}" ] || die "sourcing nvm.sh with no default install location printed >${CAPTURED_STDOUT}<"
+fi
+
+cleanup

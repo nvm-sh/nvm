@@ -1,0 +1,59 @@
+#!/bin/sh
+
+WORK="${PWD}/nvm-tarball-from-cache-work.$$"
+EXTRACT_LOG="${WORK}/extract.log"
+
+cleanup() {
+  command rm -rf "${WORK}"
+  NVM_DIR="${OLD_NVM_DIR}"
+  unset -f cleanup die nvm_download_artifact nvm_extract_tarball run_in_project
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+OLD_NVM_DIR="${NVM_DIR}"
+NVM_DIR="${WORK}/nvm"
+CACHED_TARBALL="$(nvm_cache_dir)/bin/node-v8.0.0-linux-x64/node-v8.0.0-linux-x64.tar.xz"
+
+command mkdir -p "${WORK}/project" "$(dirname "${CACHED_TARBALL}")"
+echo tarball > "${CACHED_TARBALL}"
+# a file in the current directory named like a line a downloader might print
+echo not-a-cached-tarball > "${WORK}/project/404"
+
+nvm_extract_tarball() {
+  echo "$3" >> "${EXTRACT_LOG}"
+  return 1
+}
+
+run_in_project() {
+  command rm -f "${EXTRACT_LOG}"
+  (
+    cd "${WORK}/project" || exit 1
+    "$@" < /dev/null > /dev/null 2>&1
+  )
+  [ -f "${EXTRACT_LOG}" ] && command cat "${EXTRACT_LOG}"
+  :
+}
+
+# a failed download's last stdout line must not be taken as the tarball
+nvm_download_artifact() { echo 404; return 4; }
+
+[ -z "$(run_in_project nvm_install_binary node std 8.0.0 1)" ] || die 'nvm_install_binary extracted the output of a failed download'
+[ -z "$(run_in_project nvm_install_source node std 8.0.0)" ] || die 'nvm_install_source extracted the output of a failed download'
+
+# nor may any path outside nvm's cache
+nvm_download_artifact() { echo 404; }
+
+[ -z "$(run_in_project nvm_install_binary node std 8.0.0 1)" ] || die 'nvm_install_binary extracted a tarball outside the cache'
+[ -z "$(run_in_project nvm_install_source node std 8.0.0)" ] || die 'nvm_install_source extracted a tarball outside the cache'
+
+# a tarball in nvm's cache is still extracted
+nvm_download_artifact() { nvm_echo "${CACHED_TARBALL}"; }
+
+[ "$(run_in_project nvm_install_binary node std 8.0.0 1)" = "${CACHED_TARBALL}" ] || die 'nvm_install_binary did not extract the cached tarball'
+echo tarball > "${CACHED_TARBALL}"
+[ "$(run_in_project nvm_install_source node std 8.0.0)" = "${CACHED_TARBALL}" ] || die 'nvm_install_source did not extract the cached tarball'
+
+cleanup

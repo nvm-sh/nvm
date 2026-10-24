@@ -12,6 +12,12 @@ die () { echo "$@" ; exit 1; }
 ! nvm_is_natural_num --1 || 'double negative number is not false'
 ! nvm_is_natural_num 1.2 || 'decimal number is not false'
 ! nvm_is_natural_num 0 || die 'zero is not false'
+! nvm_is_natural_num +3 || die 'explicitly positive number is not false'
+! nvm_is_natural_num ' 3' || die 'leading whitespace is not false'
+! nvm_is_natural_num '3 ' || die 'trailing whitespace is not false'
+! nvm_is_natural_num install || die 'a word is not false'
+! nvm_is_natural_num V=1 || die 'an assignment is not false'
+! nvm_is_natural_num 1+1 || die 'an expression is not false'
 
 nvm_is_natural_num 1 || die '1 is not true'
 nvm_is_natural_num 2 || die '2 is not true'

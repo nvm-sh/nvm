@@ -29,7 +29,7 @@ done
 if [ "${httpbin_pulled}" = 1 ] && SHELL=bash docker run -d --name httpbin -p 80:80 kennethreitz/httpbin; then
   sleep 1 # wait for httpbin to start
   # nvm_download should pass when calling with auth header
-  NVM_AUTH_HEADER="Bearer test-token" nvm_download "http://127.0.0.1/bearer" > /dev/null || die 'nvm_download with auth header should send correctly'
+  NVM_NODEJS_ORG_MIRROR="http://127.0.0.1" NVM_AUTH_HEADER="Bearer test-token" nvm_download "http://127.0.0.1/bearer" > /dev/null || die 'nvm_download with auth header should send correctly'
   # nvm_download should fail when calling without auth header
   nvm_download "http://127.0.0.1/bearer" > /dev/null && die 'nvm_download with no auth header should not send the header and should fail'
 else
