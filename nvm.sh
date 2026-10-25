@@ -4268,7 +4268,14 @@ nvm() {
       nvm_err "\${NPM_CONFIG_PREFIX}: '$(nvm_sanitize_path "${NPM_CONFIG_PREFIX-}")'"
       nvm_err "\$NVM_NODEJS_ORG_MIRROR: '$(nvm_sanitize_url "${NVM_NODEJS_ORG_MIRROR-}")'"
       nvm_err "\$NVM_IOJS_ORG_MIRROR: '$(nvm_sanitize_url "${NVM_IOJS_ORG_MIRROR-}")'"
-      nvm_err "shell version: '$(${SHELL} --version | command head -n 1)'"
+      local NVM_SHELL_VERSION
+      # busybox's shells have no `--version`, and start an interactive shell instead
+      if command ls -l "$(command -v "${SHELL}" 2>/dev/null)" 2>/dev/null | nvm_grep -q busybox; then
+        NVM_SHELL_VERSION="$(${SHELL} --help 2>&1 </dev/null | command head -n 1)"
+      else
+        NVM_SHELL_VERSION="$(${SHELL} --version </dev/null | command head -n 1)"
+      fi
+      nvm_err "shell version: '${NVM_SHELL_VERSION}'"
       nvm_err "uname -a: '$(command uname -a | command awk '{$2=""; print}' | command xargs)'"
       nvm_err "checksum binary: '$(nvm_get_checksum_binary 2>/dev/null)'"
       if [ "$(nvm_get_os)" = "darwin" ] && nvm_has sw_vers; then

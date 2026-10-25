@@ -1,0 +1,58 @@
+#!/bin/sh
+
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+
+# like busybox's `sh`, which starts an interactive shell for `--version`
+cat > "${TMP_DIR}/busybox" <<'FAKE'
+#!/bin/sh
+if [ "$1" = '--help' ]; then
+  echo 'BusyBox v9.9.9 (fake) multi-call binary.'
+elif read -r LINE; then
+  echo 'interactive shell read stdin'
+fi
+FAKE
+chmod +x "${TMP_DIR}/busybox" || die 'could not make the fake busybox'
+ln -s "${TMP_DIR}/busybox" "${TMP_DIR}/sh" || die 'could not link the fake busybox sh'
+
+cat > "${TMP_DIR}/fakesh" <<'FAKE'
+#!/bin/sh
+if read -r LINE; then
+  echo 'fake shell read stdin'
+else
+  echo 'fake shell 1.0'
+fi
+FAKE
+chmod +x "${TMP_DIR}/fakesh" || die 'could not make the fake shell'
+
+OUTPUT="$(SHELL="${TMP_DIR}/sh" nvm debug 2>&1 <<STDIN
+a line a shell must not read
+STDIN
+)"
+case "${OUTPUT}" in
+  *"shell version: 'BusyBox v9.9.9 (fake) multi-call binary.'"*) ;;
+  *) die "nvm debug should get a busybox shell's version from --help; got >${OUTPUT}<" ;;
+esac
+
+OUTPUT="$(SHELL="${TMP_DIR}/fakesh" nvm debug 2>&1 <<STDIN
+a line a shell must not read
+STDIN
+)"
+case "${OUTPUT}" in
+  *"shell version: 'fake shell 1.0'"*) ;;
+  *) die "nvm debug should not let the shell read stdin for its version; got >${OUTPUT}<" ;;
+esac
+
+cleanup
