@@ -13,6 +13,8 @@ jobs:
     # Native runners per arch (no QEMU): arm64 uses the ubuntu-24.04-arm image.
     name: 'fast ${{ matrix.arch }} (alpine ${{ matrix.alpine }}, ${{ matrix.shell }})'
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    # a passing run takes a few minutes; a hang otherwise runs to GitHub's 6-hour limit
+    timeout-minutes: 15
 
     strategy:
       fail-fast: false
@@ -124,6 +126,8 @@ jobs:
     # v20.20.1/v22.21.1/v24.9.0 (built on modern Alpine), so arm64 pins modern Alpine.
     name: 'musl-binary ${{ matrix.arch }} (alpine ${{ matrix.alpine }}, node ${{ matrix.node }})'
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    # a passing run takes under a minute
+    timeout-minutes: 10
 
     strategy:
       fail-fast: false
