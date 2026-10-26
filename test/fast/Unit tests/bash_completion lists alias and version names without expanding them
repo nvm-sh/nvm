@@ -44,15 +44,16 @@ complete_nvm() {
         ' bash "${NVM_SH}" "${BASH_COMPLETION}" "$@"
       ;;
       zsh)
-        # bashcompinit runs `complete -F` functions from its `compgen`, under `emulate -L sh`
-        NVM_DIR="${TEST_DIR}/nvm" zsh -f -c '
+        # bashcompinit runs `complete -F` functions from its `compgen`, under `emulate -L sh`;
+        # without ZSH_DISABLE_COMPFIX, `compinit` asks about insecure completion directories, and waits
+        ZSH_DISABLE_COMPFIX=true NVM_DIR="${TEST_DIR}/nvm" zsh -f -c '
           \. "${1}" --no-use
           \. "${2}"
           shift 2
           COMP_WORDS=("${@}")
           COMP_CWORD=$(($# - 1))
           compgen -F __nvm -- "${@[-1]}"
-        ' zsh "${NVM_SH}" "${BASH_COMPLETION}" "$@"
+        ' zsh "${NVM_SH}" "${BASH_COMPLETION}" "$@" < /dev/null
       ;;
     esac
   ) | LC_ALL=C sort
