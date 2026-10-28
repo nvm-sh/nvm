@@ -1,0 +1,58 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f install_nvm_from_git install_nvm_as_script nvm_detect_profile nvm_has
+  unset -f nvm_check_global_modules nvm_install_node
+  unset -f setup cleanup die assert_nvm_dir_line
+  unset NVM_ENV METHOD PROFILE
+  rm -rf "${TMPDIR_FOR_TEST-}" 2>/dev/null
+}
+
+setup() {
+  NVM_ENV=testing \. ../../install.sh
+
+  # Mock installation functions to do nothing
+  install_nvm_from_git() { :; }
+  install_nvm_as_script() { :; }
+  nvm_check_global_modules() { :; }
+  nvm_install_node() { :; }
+
+  # Mock nvm_has to return true for git
+  nvm_has() {
+    case "$1" in
+      git) return 0 ;;
+      xcode-select) return 1 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  # no profile found, so the lines to add are printed
+  nvm_detect_profile() {
+    echo ""
+  }
+}
+
+TMPDIR_FOR_TEST="$(mktemp -d)"
+TEST_HOME="${TMPDIR_FOR_TEST}/home"
+mkdir -p "${TEST_HOME}/.nvm" "${TEST_HOME}2/nvm"
+
+# `nvm_do_install` unsets every `nvm_` function when it finishes, so each run sources the installer and mocks afresh.
+assert_nvm_dir_line() {
+  setup
+  OUTPUT="$(HOME="$1" PROFILE='' METHOD='' NVM_DIR="$2" nvm_do_install 2>/dev/null)"
+  EXPECTED="export NVM_DIR=\"$3\""
+  echo "${OUTPUT}" | command grep -qxF "${EXPECTED}" || die "HOME=$1 NVM_DIR=$2: expected line >${EXPECTED}<; got >${OUTPUT}<"
+}
+
+# inside $HOME: written relative to $HOME
+assert_nvm_dir_line "${TEST_HOME}" "${TEST_HOME}/.nvm" '$HOME/.nvm'
+
+# a sibling directory whose name starts with $HOME is not inside $HOME
+assert_nvm_dir_line "${TEST_HOME}" "${TEST_HOME}2/nvm" "${TEST_HOME}2/nvm"
+
+# with HOME=/, every absolute path starts with $HOME
+assert_nvm_dir_line '/' "${TEST_HOME}2/nvm" "${TEST_HOME}2/nvm"
+
+cleanup

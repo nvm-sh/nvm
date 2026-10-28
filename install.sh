@@ -495,7 +495,10 @@ nvm_do_install() {
   local NVM_PROFILE
   NVM_PROFILE="$(nvm_detect_profile)"
   local PROFILE_INSTALL_DIR
-  PROFILE_INSTALL_DIR="$(nvm_install_dir | command sed "s:^$HOME:\$HOME:")"
+  PROFILE_INSTALL_DIR="$(nvm_install_dir)"
+  case "${PROFILE_INSTALL_DIR}/" in
+    "${HOME}"/*) PROFILE_INSTALL_DIR="\$HOME${PROFILE_INSTALL_DIR#"${HOME}"}" ;;
+  esac
 
   SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\\n"
 
