@@ -1,0 +1,73 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  [ -z "${TEST_DIR-}" ] || rm -rf "${TEST_DIR}"
+}
+
+\. ../../../nvm.sh
+\. ../../common.sh
+
+TEST_DIR="$(mktemp -d)" || die 'unable to create temporary cache'
+NVM_DIR="${TEST_DIR}"
+CACHE_DIR="$(nvm_cache_dir)"
+SUFFIX="$(nvm_get_os)-$(nvm_get_arch)"
+mkdir -p "${NVM_DIR}/alias" "${NVM_DIR}/versions/node"
+
+for VERSION in v2.1.1 v20.1.1 v20.1.10 v20.10.0 v20.111.1; do
+  mkdir -p "${CACHE_DIR}/bin/node-${VERSION}-${SUFFIX}"
+  mkdir -p "${CACHE_DIR}/src/node-${VERSION}"
+done
+for VERSION in v2.1.1 v2.1.10 v2.10.0; do
+  mkdir -p "${CACHE_DIR}/bin/iojs-${VERSION}-${SUFFIX}"
+  mkdir -p "${CACHE_DIR}/src/iojs-${VERSION}"
+done
+
+assert_cached() {
+  try nvm_ls_cached "$1"
+  [ "${CAPTURED_EXIT_CODE}" = 0 ] || die "nvm_ls_cached '$1' failed: ${CAPTURED_EXIT_CODE}"
+  [ "${CAPTURED_STDOUT}" = "$2" ] || die "nvm_ls_cached '$1': expected >$2<, got >${CAPTURED_STDOUT}<"
+}
+
+# A major or minor prefix must end at a version component boundary.
+assert_cached '20' 'v20.1.1
+v20.1.10
+v20.10.0
+v20.111.1'
+assert_cached '20.1' 'v20.1.1
+v20.1.10'
+assert_cached '20.1.' 'v20.1.1
+v20.1.10'
+assert_cached '2' 'iojs-v2.1.1
+v2.1.1
+iojs-v2.1.10
+iojs-v2.10.0'
+
+# A complete version must not select a longer patch or treat dots as wildcards.
+assert_cached '20.1.1' 'v20.1.1'
+assert_cached 'v20.1.1' 'v20.1.1'
+assert_cached '20.1.2' ''
+assert_cached 'iojs-2.1' 'iojs-v2.1.1
+iojs-v2.1.10'
+assert_cached 'iojs-v2.1.1' 'iojs-v2.1.1'
+
+# Preserve the unfiltered and io.js-only forms.
+ALL_VERSIONS="$(nvm_ls_cached)"
+assert_cached 'v' "${ALL_VERSIONS}"
+assert_cached 'iojs-' 'iojs-v2.1.1
+iojs-v2.1.10
+iojs-v2.10.0'
+assert_cached 'iojs-v' 'iojs-v2.1.1
+iojs-v2.1.10
+iojs-v2.10.0'
+
+# The offline installer uses this resolver when no installed version matches.
+try nvm_offline_version '20.1'
+[ "${CAPTURED_STDOUT}" = 'v20.1.10' ] && [ "${CAPTURED_EXIT_CODE}" = 0 ] \
+  || die "nvm_offline_version '20.1' should resolve v20.1.10, got ${CAPTURED_STDOUT} (${CAPTURED_EXIT_CODE})"
+try nvm_offline_version '20.1.1'
+[ "${CAPTURED_STDOUT}" = 'v20.1.1' ] && [ "${CAPTURED_EXIT_CODE}" = 0 ] \
+  || die "nvm_offline_version '20.1.1' should resolve v20.1.1, got ${CAPTURED_STDOUT} (${CAPTURED_EXIT_CODE})"
+
+cleanup

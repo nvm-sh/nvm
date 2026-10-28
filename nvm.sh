@@ -4483,7 +4483,13 @@ nvm_ls_cached() {
   local SUFFIX
   SUFFIX="${NVM_OS}-${NVM_ARCH}"
   local NVM_CACHED_PATTERN
-  NVM_CACHED_PATTERN="$(nvm_ensure_version_prefix "${PATTERN:-.*}")"
+  NVM_CACHED_PATTERN="$(nvm_ensure_version_prefix "${PATTERN%.}")"
+  # match dots literally, so that `20.1.1` does not also match `v20.111.1`
+  case "${NVM_CACHED_PATTERN}" in
+    '' | v) NVM_CACHED_PATTERN='.*' ;;
+    iojs- | iojs-v) NVM_CACHED_PATTERN='iojs-v.*' ;;
+    *) NVM_CACHED_PATTERN="$(nvm_echo "${NVM_CACHED_PATTERN}" | command sed 's/[][\.*^$]/\\&/g')" ;;
+  esac
   # a release, like v27.0.0, is not one of its alphas
   local NVM_CACHED_RELEASE
   NVM_CACHED_RELEASE='v-'
