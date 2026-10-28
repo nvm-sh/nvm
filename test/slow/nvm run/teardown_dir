@@ -5,7 +5,8 @@
 nvm deactivate
 nvm uninstall v0.10.7
 nvm uninstall --lts=argon
-nvm uninstall --lts
+nvm uninstall v18.20.8
+mv "${NVM_DIR}/.nvm_run_lts_alias_bak" "$(nvm_alias_path)/lts/*"
 
 rm .nvmrc
 

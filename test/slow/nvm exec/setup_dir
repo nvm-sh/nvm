@@ -3,7 +3,11 @@
 \. ../../../nvm.sh
 nvm install 0.10.7
 nvm install 1.0.0
-nvm install --lts
+nvm install 18.20.8
+
+# pin `lts/*` to an end-of-life LTS line, so that a new LTS release can't change what `--lts` selects
+cp "$(nvm_alias_path)/lts/*" "${NVM_DIR}/.nvm_exec_lts_alias_bak"
+nvm_make_alias 'lts/*' lts/hydrogen
 
 if [ -f ".nvmrc" ]; then
   mv .nvmrc .nvmrc.bak

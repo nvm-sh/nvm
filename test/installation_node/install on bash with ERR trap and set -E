@@ -36,7 +36,8 @@ ERR_TRAP_EXPECTED="$(trap -p ERR)"
 # Adding ` || die 'install failed'` implicitly disables error handling and
 # prevents ERR trap execution, so for the purposes of this test, `nvm install`
 # can't be part of another command or statement
-nvm install node
+VERSION=9 # an end-of-life major, so that a new node release can't change what this installs
+nvm install "${VERSION}"
 
 case "$-" in
 *E*)
