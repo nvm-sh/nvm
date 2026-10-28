@@ -1,0 +1,45 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f nvm_download nvm_record_lts_status
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# these mocks must not be recorded as the LTS status of $NVM_DIR's versions
+nvm_record_lts_status() { :; }
+
+nvm_download() {
+  command printf '%s\n' \
+    'version	date	files	npm	v8	uv	zlib	openssl	modules	lts	security' \
+    'v2041.0.0	2026-01-01	linux-x64	10.0.0	1	1	1	1	115	-	-' \
+    'v20.111.1	2026-01-01	linux-x64	10.0.0	1	1	1	1	115	-	-' \
+    'v20.10.0	2026-01-01	linux-x64	10.0.0	1	1	1	1	115	-	-' \
+    'v20.1.1	2026-01-01	linux-x64	10.0.0	1	1	1	1	115	-	-' \
+    'v20.1.0	2026-01-01	linux-x64	10.0.0	1	1	1	1	115	-	-'
+}
+
+\. ../../common.sh
+
+# Dots in the pattern are literal, so they must not match other digits.
+OUTPUT="$(nvm_ls_remote 20.1)"
+EXPECTED_OUTPUT='v20.1.0
+v20.1.1'
+[ "_${OUTPUT}" = "_${EXPECTED_OUTPUT}" ] || die "nvm_ls_remote 20.1: expected >${EXPECTED_OUTPUT}<, got >${OUTPUT}<"
+
+OUTPUT="$(nvm_ls_remote 20.1.1)"
+[ "_${OUTPUT}" = '_v20.1.1' ] || die "nvm_ls_remote 20.1.1: expected >v20.1.1<, got >${OUTPUT}<"
+
+try nvm_ls_remote 20.1.2
+[ "_${CAPTURED_STDOUT}" = '_N/A' ] || die "nvm_ls_remote 20.1.2: expected >N/A<, got >${CAPTURED_STDOUT}<"
+
+OUTPUT="$(nvm_remote_version 20.1.1)"
+[ "_${OUTPUT}" = '_v20.1.1' ] || die "nvm_remote_version 20.1.1: expected >v20.1.1<, got >${OUTPUT}<"
+
+try nvm_remote_version 20.1.2
+[ "_${CAPTURED_STDOUT}" = '_N/A' ] || die "nvm_remote_version 20.1.2: expected >N/A<, got >${CAPTURED_STDOUT}<"
+
+cleanup

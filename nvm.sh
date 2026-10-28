@@ -1283,8 +1283,11 @@ nvm_remote_version() {
   if [ -n "${PATTERN}" ] && [ "_${VERSION}" != "_N/A" ] && ! nvm_validate_implicit_alias "${PATTERN}" 2>/dev/null; then
     local VERSION_NUM
     VERSION_NUM="$(nvm_echo "${VERSION}" | command awk '{print $1}')"
-    # the `v` prefix and the trailing non-digit keep `20` from matching `v10.20.0` or `v200.0.0`
-    if ! nvm_echo "${VERSION_NUM} " | nvm_grep -q "$(nvm_ensure_version_prefix "${PATTERN%.}")[^0-9]"; then
+    # the `v` prefix and the trailing non-digit keep `20` from matching `v10.20.0` or `v200.0.0`,
+    # and escaping the dots between version components keeps `20.1.1` from matching `v20.111.1`
+    local VERSION_RE
+    VERSION_RE="$(nvm_ensure_version_prefix "${PATTERN%.}" | command sed 's/\.\([0-9]\)/\\.\1/g')"
+    if ! nvm_echo "${VERSION_NUM} " | nvm_grep -q "${VERSION_RE}[^0-9]"; then
       VERSION='N/A'
     fi
   fi
@@ -2681,12 +2684,16 @@ nvm_ls_remote_index_tab() {
   fi
 
   local VERSIONS
+  local PATTERN_RE
   if [ -n "${PATTERN}" ] && [ "${PATTERN}" != '*' ]; then
     if [ "${FLAVOR}" = 'iojs' ]; then
       PATTERN="$(nvm_ensure_version_prefix "$(nvm_strip_iojs_prefix "${PATTERN}")")"
     else
       PATTERN="$(nvm_ensure_version_prefix "${PATTERN}")"
     fi
+    # match the dots between version components literally, so that `20.1.1` does not also
+    # match `v20.111.1`; other regex syntax in the pattern (like `v[68]` or `.*`) is kept
+    PATTERN_RE="$(nvm_echo "${PATTERN}" | command sed 's/\.\([0-9]\)/\\.\1/g')"
   else
     unset PATTERN
   fi
@@ -2761,7 +2768,7 @@ EOF
         }
         prev=$10;
       }' \
-    | nvm_grep -w "${PATTERN:-.*}" \
+    | nvm_grep -w "${PATTERN_RE:-.*}" \
     | $SORT_COMMAND; } << EOF
 $VERSION_LIST
 EOF
