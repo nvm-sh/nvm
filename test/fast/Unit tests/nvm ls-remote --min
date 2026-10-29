@@ -1,0 +1,183 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "${TEST_NVM_DIR-}"
+  unset -f nvm_download nvm_record_lts_status nvm_get_remote_aliases nvm_has_colors versions install_below_min
+  unset TEST_NVM_DIR OUTPUT EXIT_CODE NVM_MIN NVM_MIN_ARG NVM_MIN_COMMAND
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+unset NVM_MIN NVM_ONLY
+
+TEST_NVM_DIR="$(mktemp -d)" || die 'could not create a temporary NVM_DIR'
+NVM_DIR="${TEST_NVM_DIR}"
+
+nvm_has_colors() { return 1; }
+nvm_record_lts_status() { :; }
+nvm_get_remote_aliases() { :; }
+
+nvm_download() {
+  case "$*" in
+    *"$(nvm_get_mirror node std)/index.tab"*)
+      printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity\n'
+      printf '%s\t2026-01-01\tsrc\t-\t-\t-\t-\t-\t-\t%s\t-\n' \
+        v27.0.0-alpha.1.0.0 - \
+        v26.1.0 - \
+        v24.2.0 Krypton \
+        v22.12.0 Jod \
+        v20.18.1 Iron \
+        v20.0.0 - \
+        v18.20.5 Hydrogen \
+        v0.12.18 - \
+        v0.10.48 -
+    ;;
+    *"$(nvm_get_mirror iojs std)/index.tab"*)
+      printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\n'
+      printf '%s\t2015-01-01\tsrc\t-\t-\t-\t-\t-\t-\n' v3.3.1 v2.5.0 v1.8.4
+    ;;
+    *) return 42 ;;
+  esac
+}
+
+# prints only the version column, on one line
+versions() {
+  nvm ls-remote --no-colors "$@" 2>/dev/null | command awk '{ printf "%s ", $1 }'
+}
+
+[ "$(versions)" = 'v0.10.48 v0.12.18 iojs-v1.8.4 iojs-v2.5.0 iojs-v3.3.1 v18.20.5 v20.0.0 v20.18.1 v22.12.0 v24.2.0 v26.1.0 ' ] \
+  || die "without a minimum, expected every non-alpha version; got >$(versions)<"
+
+[ "$(versions --min=20)" = 'v20.0.0 v20.18.1 v22.12.0 v24.2.0 v26.1.0 ' ] \
+  || die "--min=20: got >$(versions --min=20)<"
+[ "$(versions --min=v20.1)" = 'v20.18.1 v22.12.0 v24.2.0 v26.1.0 ' ] \
+  || die "--min=v20.1: got >$(versions --min=v20.1)<"
+[ "$(versions --min=20.18.1)" = 'v20.18.1 v22.12.0 v24.2.0 v26.1.0 ' ] \
+  || die "--min=20.18.1: got >$(versions --min=20.18.1)<"
+
+# io.js majors are compared like node majors
+[ "$(versions --min=2)" = 'iojs-v2.5.0 iojs-v3.3.1 v18.20.5 v20.0.0 v20.18.1 v22.12.0 v24.2.0 v26.1.0 ' ] \
+  || die "--min=2: got >$(versions --min=2)<"
+
+# combined with --only and --lts
+[ "$(versions --only=lts --min=20)" = 'v20.18.1 v22.12.0 v24.2.0 ' ] \
+  || die "--only=lts --min=20: got >$(versions --only=lts --min=20)<"
+[ "$(versions --min=20 --only=non-lts)" = 'v20.0.0 v26.1.0 ' ] \
+  || die "--min=20 --only=non-lts: got >$(versions --min=20 --only=non-lts)<"
+[ "$(versions --only=iojs --min=3)" = 'iojs-v3.3.1 ' ] \
+  || die "--only=iojs --min=3: got >$(versions --only=iojs --min=3)<"
+[ "$(versions --only=alpha,lts --min=24)" = 'v24.2.0 v27.0.0-alpha.1.0.0 ' ] \
+  || die "--only=alpha,lts --min=24: got >$(versions --only=alpha,lts --min=24)<"
+[ "$(versions --lts --min=22)" = 'v22.12.0 v24.2.0 ' ] \
+  || die "--lts --min=22: got >$(versions --lts --min=22)<"
+
+# a partial minimum includes the prereleases of its first release; a full one is above them
+[ "$(versions --only=alpha --min=27)" = 'v27.0.0-alpha.1.0.0 ' ] \
+  || die "--only=alpha --min=27: got >$(versions --only=alpha --min=27)<"
+OUTPUT="$(nvm ls-remote --no-colors --only=alpha --min=27.0.0)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] && [ "$(nvm_echo "${OUTPUT}" | command tr -d ' ')" = 'N/A' ] \
+  || die "--only=alpha --min=27.0.0 should print N/A and exit 3; got >${OUTPUT}<, exit ${EXIT_CODE}"
+
+# nothing at or above the minimum, or nothing matching the pattern, is N/A
+OUTPUT="$(nvm ls-remote --no-colors --min=99)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] && [ "$(nvm_echo "${OUTPUT}" | command tr -d ' ')" = 'N/A' ] \
+  || die "--min=99 should print N/A and exit 3; got >${OUTPUT}<, exit ${EXIT_CODE}"
+OUTPUT="$(nvm ls-remote --no-colors --only=lts --min=25)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] && [ "$(nvm_echo "${OUTPUT}" | command tr -d ' ')" = 'N/A' ] \
+  || die "--only=lts --min=25 should print N/A and exit 3; got >${OUTPUT}<, exit ${EXIT_CODE}"
+OUTPUT="$(nvm ls-remote --no-colors --min=18 99)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] && [ "$(nvm_echo "${OUTPUT}" | command tr -d ' ')" = 'N/A' ] \
+  || die "a pattern with no match should print N/A and exit 3 with --min; got >${OUTPUT}<, exit ${EXIT_CODE}"
+
+# NVM_MIN is the default, and --min= overrides it
+NVM_MIN=22
+[ "$(versions)" = 'v22.12.0 v24.2.0 v26.1.0 ' ] \
+  || die "NVM_MIN=22: got >$(versions)<"
+[ "$(versions --min=26)" = 'v26.1.0 ' ] \
+  || die "NVM_MIN=22 --min=26: got >$(versions --min=26)<"
+nvm ls-remote --no-colors >/dev/null 2>"${TEST_NVM_DIR}/stderr"
+OUTPUT="$(cat "${TEST_NVM_DIR}/stderr")"
+[ "_${OUTPUT}" = '_8 versions below 22 are hidden by `$NVM_MIN`.' ] \
+  || die "NVM_MIN=22 notice: got >${OUTPUT}<"
+OUTPUT="$(nvm version-remote 20)"
+[ "_${OUTPUT}" = '_N/A' ] || die "NVM_MIN=22 version-remote 20: got >${OUTPUT}<"
+[ "$(nvm version-remote --min=20 20)" = 'v20.18.1' ] \
+  || die "NVM_MIN=22 version-remote --min=20 20: got >$(nvm version-remote --min=20 20)<"
+
+# a notice on stderr says how many versions are hidden, and by what
+nvm ls-remote --no-colors --min=20 >/dev/null 2>"${TEST_NVM_DIR}/stderr"
+OUTPUT="$(cat "${TEST_NVM_DIR}/stderr")"
+[ "_${OUTPUT}" = '_6 versions below 20 are hidden by `--min=20`.' ] \
+  || die "--min=20 notice: got >${OUTPUT}<"
+nvm ls-remote --no-colors --only=lts --min=20 >/dev/null 2>"${TEST_NVM_DIR}/stderr"
+OUTPUT="$(cat "${TEST_NVM_DIR}/stderr")"
+[ "_${OUTPUT}" = '_1 version below 20 is hidden by `--min=20`.' ] \
+  || die "--only=lts --min=20 notice: got >${OUTPUT}<"
+nvm ls-remote --no-colors --min=0 >/dev/null 2>"${TEST_NVM_DIR}/stderr"
+OUTPUT="$(cat "${TEST_NVM_DIR}/stderr")"
+[ -z "${OUTPUT}" ] || die "--min=0 hides nothing, so should print no notice; got >${OUTPUT}<"
+
+# version-remote and install select only from versions at or above the minimum
+[ "$(nvm version-remote --min=20 20)" = 'v20.18.1' ] \
+  || die "version-remote --min=20 20: got >$(nvm version-remote --min=20 20)<"
+OUTPUT="$(nvm version-remote --min=22 20)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] && [ "_${OUTPUT}" = '_N/A' ] \
+  || die "version-remote --min=22 20 should print N/A and exit 3; got >${OUTPUT}<, exit ${EXIT_CODE}"
+OUTPUT="$(nvm version-remote --lts=iron --min=22)"
+EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] && [ "_${OUTPUT}" = '_N/A' ] \
+  || die "version-remote --lts=iron --min=22 should print N/A and exit 3; got >${OUTPUT}<, exit ${EXIT_CODE}"
+install_below_min() {
+  OUTPUT="$(nvm install "$@" 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 3 ] || die "install $* should exit 3; got ${EXIT_CODE}: >${OUTPUT}<"
+  case "${OUTPUT}" in
+    *'It matches v20.18.1, which is below the minimum version 22 from `--min=22`.'*) ;;
+    *) die "install $* should explain the minimum; got >${OUTPUT}<" ;;
+  esac
+}
+install_below_min --min=22 20
+install_below_min 20 --min=22
+
+# NVM_MIN only applies to commands that select remote versions
+mkdir -p "${NVM_DIR}/versions/node/v18.20.5/bin" || die 'could not create an installed version'
+OUTPUT="$(nvm ls --no-colors --no-alias | command awk '{ printf "%s ", $1 }')"
+case "${OUTPUT}" in
+  *v18.20.5*) ;;
+  *) die "NVM_MIN should not hide installed versions from nvm ls; got >${OUTPUT}<" ;;
+esac
+[ "${NVM_MIN}" = 22 ] || die "nvm ls changed NVM_MIN to >${NVM_MIN}<"
+
+# the minimum must be a version, given with `=`
+for NVM_MIN_ARG in --min --min= --min=lts/iron --min=node --min=18.x --min=v18.1.0.0; do
+  OUTPUT="$(nvm ls-remote --no-colors "${NVM_MIN_ARG}" 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 55 ] || die "ls-remote ${NVM_MIN_ARG} should exit 55; got ${EXIT_CODE}: >${OUTPUT}<"
+  OUTPUT="$(nvm version-remote "${NVM_MIN_ARG}" 20 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 55 ] || die "version-remote ${NVM_MIN_ARG} should exit 55; got ${EXIT_CODE}: >${OUTPUT}<"
+  OUTPUT="$(nvm install "${NVM_MIN_ARG}" 20 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 55 ] || die "install ${NVM_MIN_ARG} 20 should exit 55; got ${EXIT_CODE}: >${OUTPUT}<"
+  OUTPUT="$(nvm install 20 "${NVM_MIN_ARG}" 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 55 ] || die "install 20 ${NVM_MIN_ARG} should exit 55; got ${EXIT_CODE}: >${OUTPUT}<"
+done
+unset NVM_MIN_ARG
+NVM_MIN=node
+for NVM_MIN_COMMAND in ls-remote version-remote install; do
+  OUTPUT="$(nvm "${NVM_MIN_COMMAND}" 2>&1)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = 55 ] || die "NVM_MIN=node ${NVM_MIN_COMMAND} should exit 55; got ${EXIT_CODE}: >${OUTPUT}<"
+done
+unset NVM_MIN_COMMAND
+
+cleanup

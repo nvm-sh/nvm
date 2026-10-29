@@ -3089,6 +3089,46 @@ nvm_get_remote_aliases() {
   done
 }
 
+# fails, naming where it came from ($2), unless the minimum version ($1) is like `18`, `v18.1`, or `18.1.0`
+nvm_validate_min_version() {
+  if ! nvm_echo "${1-}" | nvm_grep -qE '^v?[0-9]+(\.[0-9]+){0,2}$'; then
+    nvm_err "\`${2-}\` must be a version, like \`18\`, \`v18.1\`, or \`18.1.0\`; got \"${1-}\"."
+    return 55
+  fi
+}
+
+nvm_is_below_min_version() {
+  [ -z "$(nvm_filter_min_versions "${2-}" "${1-}")" ]
+}
+
+# prints the rows of `nvm_remote_versions` output ($2) whose version is at or above $1; other rows, like `N/A`, are kept
+nvm_filter_min_versions() {
+  nvm_echo "${2-}" | command awk -v min="${1-}" '
+# a[1..3] are major, minor, and patch; a[4] is 0 for a prerelease, which is below its release
+function parse(v, a, release, parts) {
+  sub(/^(iojs-)?v/, "", v);
+  release = index(v, "-") ? 0 : 1;
+  sub(/-.*/, "", v);
+  parts = split(v, a, ".");
+  a[4] = release;
+  return parts;
+}
+function below(v, m, a, b, i) {
+  parse(v, a);
+  # a partial minimum, like `27`, includes the prereleases of `27.0.0`
+  if (parse(m, b) < 3) {
+    b[4] = 0;
+  }
+  for (i = 1; i <= 4; i++) {
+    if (a[i] + 0 != b[i] + 0) {
+      return a[i] + 0 < b[i] + 0;
+    }
+  }
+  return 0;
+}
+$1 !~ /^(iojs-)?v[0-9]/ || !below($1, min)'
+}
+
 nvm_print_versions() {
   local NVM_CURRENT
   NVM_CURRENT=$(nvm_ls_current)
@@ -4852,6 +4892,7 @@ nvm() {
         nvm_echo '    --reinstall-packages-from=<version>       When installing, reinstall packages installed in <node|iojs|node version number>'
         nvm_echo '    --lts                                     When installing, only select from LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When installing, only select from versions for a specific LTS line'
+        nvm_echo '    --min=<version>                           When installing, only select from versions at or above <version>. Defaults to $NVM_MIN'
         nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '    --skip-default-packages                   When installing, skip the default-packages file if it exists'
         nvm_echo '    --latest-npm                              After installing, attempt to upgrade to the latest working npm on the given node version'
@@ -4891,6 +4932,7 @@ nvm() {
         nvm_echo '  nvm ls-remote [<version>]                   List remote versions available for install, matching a given <version> if provided'
         nvm_echo '    --lts                                     When listing, only show LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only show versions for a specific LTS line'
+        nvm_echo '    --min=<version>                           When listing, only show versions at or above <version>. Defaults to $NVM_MIN'
         nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm version <version>                       Resolve the given description to a single local version'
@@ -4898,6 +4940,7 @@ nvm() {
         nvm_echo '  nvm version-remote <version>                Resolve the given description to a single remote version'
         nvm_echo '    --lts                                     When listing, only select from LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only select from versions for a specific LTS line'
+        nvm_echo '    --min=<version>                           Only select from versions at or above <version>. Defaults to $NVM_MIN'
         nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '  nvm deactivate                              Undo effects of `nvm` on current shell'
         nvm_echo '    --silent                                  Silences stdout/stderr output'
@@ -5109,6 +5152,10 @@ nvm() {
       REINSTALL_PACKAGES_FROM=''
       local SKIP_DEFAULT_PACKAGES
       SKIP_DEFAULT_PACKAGES=''
+      local NVM_MIN_VERSION
+      NVM_MIN_VERSION="${NVM_MIN-}"
+      local NVM_MIN_SOURCE
+      NVM_MIN_SOURCE='$NVM_MIN'
 
       while [ $# -ne 0 ]; do
         case "$1" in
@@ -5157,6 +5204,15 @@ nvm() {
             NVM_ONLY_FLAG="${1#--only}"
             NVM_ONLY_FLAG="${NVM_ONLY_FLAG#=}"
             NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+            shift
+          ;;
+          --min)
+            nvm_err '`--min` requires a version, as `--min=<version>`.'
+            return 55
+          ;;
+          --min=*)
+            NVM_MIN_VERSION="${1#--min=}"
+            NVM_MIN_SOURCE='--min='
             shift
           ;;
           --latest-npm)
@@ -5225,7 +5281,7 @@ nvm() {
         esac
       done
 
-      # like `--reinstall-packages-from`, `--only` may also follow the version, but is needed to resolve it
+      # like `--reinstall-packages-from`, `--only` and `--min=` may also follow the version, but are needed to resolve it
       local NVM_INSTALL_ARG
       for NVM_INSTALL_ARG in "$@"; do
         case "${NVM_INSTALL_ARG}" in
@@ -5233,6 +5289,14 @@ nvm() {
             NVM_ONLY_FLAG="${NVM_INSTALL_ARG#--only}"
             NVM_ONLY_FLAG="${NVM_ONLY_FLAG#=}"
             NVM_ONLY_FLAG_COUNT=$((NVM_ONLY_FLAG_COUNT + 1))
+          ;;
+          --min)
+            nvm_err '`--min` requires a version, as `--min=<version>`.'
+            return 55
+          ;;
+          --min=*)
+            NVM_MIN_VERSION="${NVM_INSTALL_ARG#--min=}"
+            NVM_MIN_SOURCE='--min='
           ;;
           ---*)
             nvm_err 'arguments with `---` are not supported - this is likely a typo'
@@ -5245,6 +5309,10 @@ nvm() {
           ;;
         esac
       done
+
+      if [ -n "${NVM_MIN_VERSION}" ] || [ "${NVM_MIN_SOURCE}" = '--min=' ]; then
+        nvm_validate_min_version "${NVM_MIN_VERSION}" "${NVM_MIN_SOURCE}" || return $?
+      fi
 
       # validate early; it's resolved again once `lts/*` versions have set LTS
       NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS=1 nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${LTS-}")" || return $?
@@ -5339,6 +5407,15 @@ nvm() {
         EXIT_CODE="$?"
       fi
 
+      # the newest match is below the minimum only when every match is
+      local NVM_BELOW_MIN_VERSION
+      NVM_BELOW_MIN_VERSION=''
+      if [ $EXIT_CODE -eq 0 ] && [ "${VERSION}" != 'N/A' ] && [ -n "${NVM_MIN_VERSION}" ] && nvm_is_below_min_version "${VERSION}" "${NVM_MIN_VERSION}"; then
+        NVM_BELOW_MIN_VERSION="${VERSION}"
+        VERSION='N/A'
+        EXIT_CODE=3
+      fi
+
       if [ "${VERSION}" = 'N/A' ] || [ $EXIT_CODE -ne 0 ]; then
         local LTS_MSG
         LTS_MSG=''
@@ -5364,6 +5441,13 @@ nvm() {
           nvm_err "Version '${provided_version}' ${LTS_MSG-}not found locally or in cache - try \`${REMOTE_CMD}\` to browse available versions."
         else
           nvm_err "Version '${provided_version}' ${LTS_MSG-}not found - try \`${REMOTE_CMD}\` to browse available versions."
+        fi
+        if [ -n "${NVM_BELOW_MIN_VERSION}" ]; then
+          if [ "${NVM_MIN_SOURCE}" = '--min=' ]; then
+            NVM_MIN_SOURCE="--min=${NVM_MIN_VERSION}"
+          fi
+          nvm_err "It matches ${NVM_BELOW_MIN_VERSION}, which is below the minimum version ${NVM_MIN_VERSION} from \`${NVM_MIN_SOURCE}\`."
+          return 3
         fi
         # look again in only the categories that weren't selected
         local NVM_EXCLUDED_CATEGORIES
@@ -5461,7 +5545,7 @@ nvm() {
             fi
             NVM_WRITE_TO_NVMRC=1
           ;;
-          --only | --only=*) ;;
+          --only | --only=* | --min=*) ;;
           *)
             ADDITIONAL_PARAMETERS="${ADDITIONAL_PARAMETERS} $1"
           ;;
@@ -6307,6 +6391,10 @@ nvm() {
       PATTERN=''
       local NVM_NO_COLORS
       NVM_NO_COLORS=''
+      local NVM_MIN_VERSION
+      NVM_MIN_VERSION="${NVM_MIN-}"
+      local NVM_MIN_SOURCE
+      NVM_MIN_SOURCE='$NVM_MIN'
 
       while [ $# -gt 0 ]; do
         case "${1-}" in
@@ -6316,6 +6404,14 @@ nvm() {
           ;;
           --lts=*)
             NVM_LTS="${1##--lts=}"
+          ;;
+          --min)
+            nvm_err '`--min` requires a version, as `--min=<version>`.'
+            return 55
+          ;;
+          --min=*)
+            NVM_MIN_VERSION="${1#--min=}"
+            NVM_MIN_SOURCE='--min='
           ;;
           --only | --only=*)
             NVM_ONLY_FLAG="${1#--only}"
@@ -6348,6 +6444,10 @@ nvm() {
         shift
       done
 
+      if [ -n "${NVM_MIN_VERSION}" ] || [ "${NVM_MIN_SOURCE}" = '--min=' ]; then
+        nvm_validate_min_version "${NVM_MIN_VERSION}" "${NVM_MIN_SOURCE}" || return $?
+      fi
+
       NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS=1 nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS-}")" || return $?
       local NVM_ONLY_SELECTED
       NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
@@ -6356,6 +6456,23 @@ nvm() {
       local EXIT_CODE
       NVM_OUTPUT="$(NVM_LTS="${NVM_LTS-}" nvm_remote_versions "${PATTERN-}" &&:)"
       EXIT_CODE=$?
+      if [ -n "${NVM_MIN_VERSION}" ] && [ -n "${NVM_OUTPUT}" ]; then
+        local NVM_MIN_HIDDEN
+        NVM_MIN_HIDDEN="$(nvm_echo "${NVM_OUTPUT}" | command awk '/^(iojs-)?v[0-9]/ { n++ } END { print n + 0 }')"
+        NVM_OUTPUT="$(nvm_filter_min_versions "${NVM_MIN_VERSION}" "${NVM_OUTPUT}")"
+        NVM_MIN_HIDDEN=$((NVM_MIN_HIDDEN - $(nvm_echo "${NVM_OUTPUT}" | command awk '/^(iojs-)?v[0-9]/ { n++ } END { print n + 0 }')))
+        if [ "${NVM_MIN_HIDDEN}" -gt 0 ]; then
+          # on stderr, so the list stays parseable
+          if [ "${NVM_MIN_SOURCE}" = '--min=' ]; then
+            NVM_MIN_SOURCE="--min=${NVM_MIN_VERSION}"
+          fi
+          if [ "${NVM_MIN_HIDDEN}" -eq 1 ]; then
+            nvm_err "1 version below ${NVM_MIN_VERSION} is hidden by \`${NVM_MIN_SOURCE}\`."
+          else
+            nvm_err "${NVM_MIN_HIDDEN} versions below ${NVM_MIN_VERSION} are hidden by \`${NVM_MIN_SOURCE}\`."
+          fi
+        fi
+      fi
       if [ -n "${NVM_OUTPUT}" ]; then
         local NVM_REMOTE_LATEST_ALIAS
         NVM_REMOTE_LATEST_ALIAS=''
@@ -6711,6 +6828,10 @@ nvm() {
       NVM_LTS=''
       local PATTERN
       PATTERN=''
+      local NVM_MIN_VERSION
+      NVM_MIN_VERSION="${NVM_MIN-}"
+      local NVM_MIN_SOURCE
+      NVM_MIN_SOURCE='$NVM_MIN'
       while [ $# -gt 0 ]; do
         case "${1-}" in
           --) ;;
@@ -6719,6 +6840,14 @@ nvm() {
           ;;
           --lts=*)
             NVM_LTS="${1##--lts=}"
+          ;;
+          --min)
+            nvm_err '`--min` requires a version, as `--min=<version>`.'
+            return 55
+          ;;
+          --min=*)
+            NVM_MIN_VERSION="${1#--min=}"
+            NVM_MIN_SOURCE='--min='
           ;;
           --only | --only=*)
             NVM_ONLY_FLAG="${1#--only}"
@@ -6745,10 +6874,25 @@ nvm() {
           unset PATTERN
         ;;
       esac
+      if [ -n "${NVM_MIN_VERSION}" ] || [ "${NVM_MIN_SOURCE}" = '--min=' ]; then
+        nvm_validate_min_version "${NVM_MIN_VERSION}" "${NVM_MIN_SOURCE}" || return $?
+      fi
       NVM_ONLY_RESOLVED="$(NVM_NO_LTS_STATUS=1 nvm_resolve_only "${NVM_ONLY_FLAG_COUNT}" "${NVM_ONLY_FLAG-}" "${NVM_LTS-}")" || return $?
       local NVM_ONLY_SELECTED
       NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
-      NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}"
+      local NVM_REMOTE_VERSION
+      local NVM_REMOTE_VERSION_EXIT_CODE
+      NVM_REMOTE_VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${NVM_LTS-}" nvm_remote_version "${PATTERN:-node}")"
+      NVM_REMOTE_VERSION_EXIT_CODE=$?
+      # the newest match is below the minimum only when every match is
+      if [ "${NVM_REMOTE_VERSION_EXIT_CODE}" -eq 0 ] && [ -n "${NVM_MIN_VERSION}" ] && nvm_is_below_min_version "${NVM_REMOTE_VERSION}" "${NVM_MIN_VERSION}"; then
+        NVM_REMOTE_VERSION='N/A'
+        NVM_REMOTE_VERSION_EXIT_CODE=3
+      fi
+      if [ -n "${NVM_REMOTE_VERSION}" ]; then
+        nvm_echo "${NVM_REMOTE_VERSION}"
+      fi
+      return "${NVM_REMOTE_VERSION_EXIT_CODE}"
     ;;
     "--version" | "-v")
       nvm_echo '0.41.0'
@@ -6767,7 +6911,7 @@ nvm() {
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
         nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
-        nvm_print_versions nvm_compute_checksum \
+        nvm_print_versions nvm_validate_min_version nvm_is_below_min_version nvm_filter_min_versions nvm_compute_checksum \
         nvm_get_checksum_binary \
         nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \
         nvm_version nvm_rc_version nvm_match_version \

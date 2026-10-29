@@ -404,6 +404,13 @@ You can list available versions using `ls-remote`:
 nvm ls-remote
 ```
 
+To hide versions below a given version, use `--min=`, or set `NVM_MIN` to the same kind of version, for example in your shell profile; `--min=` overrides it. `nvm install` and `nvm version-remote` accept it too, and fail rather than select a version below it:
+
+```sh
+nvm ls-remote --min=20
+nvm ls-remote --only=lts --min=v18.2
+```
+
 When no version or `--lts` filter is given, the list also marks the version the `node` alias would install, and every version that one of your own aliases would resolve to. Each kind of annotation always starts in the same column, so the output can be sliced with `cut -c` or similar tools:
 
 ```
