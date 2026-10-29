@@ -70,3 +70,16 @@ NEW_PATH=`nvm_change_path "$MAC_OS_NESTED_SESSION_PATH" "/bin" "$NVM_DIR/version
 NEW_PATH=`nvm_change_path "$MAC_OS_NESTED_SESSION_PATH" "/bin" "$NVM_DIR/v0.1.2"`
 
 [ "$NEW_PATH" = "$NVM_DIR/v0.1.2/bin:/usr/bin:/usr/local/bin:$NVM_DIR/versions/node/v4.5.0/bin" ] || die "Not correctly changed: $NEW_PATH "
+
+# an nvm path that was already prepended ahead of the system paths is replaced,
+# rather than piling up another entry on every change
+# https://github.com/nvm-sh/nvm/issues/3561
+PREPENDED_NESTED_SESSION_PATH=$NVM_DIR/versions/node/v7.1.0/bin:/usr/bin:/usr/local/bin:$NVM_DIR/versions/node/v4.5.0/bin
+
+NEW_PATH=`nvm_change_path "$PREPENDED_NESTED_SESSION_PATH" "/bin" "$NVM_DIR/versions/node/v8.0.0"`
+
+[ "$NEW_PATH" = "$NVM_DIR/versions/node/v8.0.0/bin:/usr/bin:/usr/local/bin:$NVM_DIR/versions/node/v4.5.0/bin" ] || die "Not correctly changed: $NEW_PATH "
+
+NEW_PATH=`nvm_change_path "$PREPENDED_NESTED_SESSION_PATH" "/bin" "$NVM_DIR/v0.1.2"`
+
+[ "$NEW_PATH" = "$NVM_DIR/v0.1.2/bin:/usr/bin:/usr/local/bin:$NVM_DIR/versions/node/v4.5.0/bin" ] || die "Not correctly changed: $NEW_PATH "

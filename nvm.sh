@@ -1555,11 +1555,12 @@ nvm_change_path() {
     && ! nvm_echo "${1-}" | nvm_grep -Eq "${NVM_DIR_RE}/versions/[^/]*/[^/]*${2-}"; then
     nvm_echo "${3-}${2-}:${1-}"
   # if the initial path contains BOTH an nvm path (checked for above) and
-  # that nvm path is preceded by a system binary path, just prepend the
-  # supplementary path instead of replacing it.
+  # the first nvm path is preceded by a system binary path, just prepend the
+  # supplementary path instead of replacing it. Only what precedes the first
+  # nvm path counts, so that a shadowed nvm path further on does not make
+  # every change prepend yet another entry.
   # https://github.com/nvm-sh/nvm/issues/1652#issuecomment-342571223
-  elif nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR_RE}/[^/]*${2-}" \
-    || nvm_echo "${1-}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:.*${NVM_DIR_RE}/versions/[^/]*/[^/]*${2-}"; then
+  elif nvm_echo "${1%%"${NVM_DIR}"/*}" | nvm_grep -Eq "(^|:)(/usr(/local)?)?${2-}:"; then
     nvm_echo "${3-}${2-}:${1-}"
   # use sed to replace the existing nvm path with the supplementary path. This
   # preserves the order of the path.
