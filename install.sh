@@ -48,6 +48,11 @@ nvm_latest_version() {
   nvm_echo "v0.40.8"
 }
 
+nvm_profile_has_line() {
+  # a commented-out line sources nothing, so it must not count as already present
+  command sed 's/^[[:space:]]*#.*//' "$1" | nvm_grep -q "$2"
+}
+
 nvm_profile_is_bash_or_zsh() {
   local TEST_PROFILE
   TEST_PROFILE="${1-}"
@@ -521,14 +526,14 @@ nvm_do_install() {
     if nvm_profile_is_bash_or_zsh "${NVM_PROFILE-}"; then
       BASH_OR_ZSH=true
     fi
-    if ! command grep -qc '/nvm.sh' "$NVM_PROFILE"; then
+    if ! nvm_profile_has_line "${NVM_PROFILE}" '/nvm.sh'; then
       nvm_echo "=> Appending nvm source string to $NVM_PROFILE"
       command printf '%b' "${SOURCE_STR}" >> "$NVM_PROFILE"
     else
       nvm_echo "=> nvm source string already in ${NVM_PROFILE}"
     fi
     # shellcheck disable=SC2016
-    if ${BASH_OR_ZSH} && ! command grep -qc '$NVM_DIR/bash_completion' "$NVM_PROFILE"; then
+    if ${BASH_OR_ZSH} && ! nvm_profile_has_line "${NVM_PROFILE}" '$NVM_DIR/bash_completion'; then
       nvm_echo "=> Appending bash_completion source string to $NVM_PROFILE"
       if [ -n "$(command tail -c 1 "$NVM_PROFILE")" ]; then
         nvm_echo >> "$NVM_PROFILE"
@@ -568,7 +573,7 @@ nvm_reset() {
   unset -f nvm_has nvm_has_executable nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
     install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_is_wsl nvm_check_global_modules \
-    nvm_do_install nvm_reset nvm_default_install_dir nvm_grep
+    nvm_do_install nvm_reset nvm_default_install_dir nvm_grep nvm_profile_has_line
 }
 
 [ "_$NVM_ENV" = "_testing" ] || nvm_do_install
