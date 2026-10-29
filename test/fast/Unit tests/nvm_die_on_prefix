@@ -97,6 +97,14 @@ Run `unset NPM_CONFIG_PREFIX` to unset it.'
 [ "_$CAPTURED_STDERR" = "_$EXPECTED_OUTPUT" ] || die "'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT'; got '$CAPTURED_STDERR'"
 [ "_$CAPTURED_EXIT_CODE" = "_4" ] || die "'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not exit with 4; got '$CAPTURED_EXIT_CODE'"
 
+# on Windows, a prefix that does not exist can not be resolved, but it is still not inside `$NVM_DIR`
+(
+  nvm_get_os() { nvm_echo win; }
+  NPM_CONFIG_PREFIX=bar try_err nvm_die_on_prefix 0 foo "$(nvm_version_dir new)"
+  [ "_$CAPTURED_STDERR" = "_$EXPECTED_OUTPUT" ] || die "on Windows, 'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not error with '$EXPECTED_OUTPUT'; got '$CAPTURED_STDERR'"
+  [ "_$CAPTURED_EXIT_CODE" = "_4" ] || die "on Windows, 'NPM_CONFIG_PREFIX=bar nvm_die_on_prefix 0 foo' did not exit with 4; got '$CAPTURED_EXIT_CODE'"
+) || die 'nvm_die_on_prefix must not skip an unresolvable NPM_CONFIG_PREFIX on Windows'
+
 npm_CONFIG_PREFIX=bar try_err nvm_die_on_prefix 0 foo "$(nvm_version_dir new)"
 unset npm_CONFIG_PREFIX
 EXPECTED_OUTPUT='nvm is not compatible with the "npm_CONFIG_PREFIX" environment variable: currently set to "bar"
