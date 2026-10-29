@@ -54,4 +54,13 @@ VERSION=v20.0.0
 [ $? = 127 ] || die 'nvm use without a version or an .nvmrc should fail, rather than use an outer VERSION'
 unset VERSION
 
+# with nothing installed, `nvm ls stable` has no version to resolve to, so an outer STABLE must not supply one
+NVM_DIR="${TMP_DIR}/empty"
+mkdir -p "${NVM_DIR}"
+OUTPUT="$(nvm ls stable | tr -d ' \n')"
+STABLE=v20.0.0
+OUTPUT_WITH_STABLE="$(nvm ls stable | tr -d ' \n')"
+[ "_${OUTPUT_WITH_STABLE}" = "_${OUTPUT}" ] || die "nvm ls stable should ignore an outer STABLE; got >${OUTPUT_WITH_STABLE}< instead of >${OUTPUT}<"
+unset STABLE
+
 cleanup
