@@ -14,3 +14,4 @@ rm -rf ../../../v0.20.3
 rm -rf ../../../versions
 rm -f ../../../alias/stable
 rm -f ../../../alias/unstable
+rm -rf ../../../symlink-target
