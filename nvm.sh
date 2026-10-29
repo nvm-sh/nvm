@@ -4182,8 +4182,10 @@ nvm_die_on_prefix() {
     NVM_OS="$(nvm_get_os)"
     local NVM_CONFIG_VALUE
     eval "NVM_CONFIG_VALUE=\"\$${NVM_NPM_CONFIG_x_PREFIX_ENV}\""
-    if [ -n "${NVM_CONFIG_VALUE-}" ] && [ "_${NVM_OS}" = "_win" ]; then
-      NVM_CONFIG_VALUE="$(nvm_cd "$NVM_CONFIG_VALUE" 2>/dev/null && pwd)"
+    local NVM_CONFIG_DIR
+    # a prefix that does not exist yet can not be resolved, so it is checked as-is
+    if [ -n "${NVM_CONFIG_VALUE-}" ] && [ "_${NVM_OS}" = "_win" ] && NVM_CONFIG_DIR="$(nvm_cd "$NVM_CONFIG_VALUE" 2>/dev/null && pwd)"; then
+      NVM_CONFIG_VALUE="${NVM_CONFIG_DIR}"
     fi
     if [ -n "${NVM_CONFIG_VALUE-}" ] && ! nvm_tree_contains_path "${NVM_DIR}" "${NVM_CONFIG_VALUE}"; then
       nvm deactivate >/dev/null 2>&1
