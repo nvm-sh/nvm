@@ -23,3 +23,9 @@ TEST_PATH=":/a/b/bin::/c/d/bin:"
 STRIPPED_PATH=`nvm_strip_path "$TEST_PATH" "/bin"`
 
 [ "$STRIPPED_PATH" = "$TEST_PATH" ] || die "Stripping does not preserve colons: $STRIPPED_PATH "
+
+for NVM_DIR in '/tmp/nvm\test' '/tmp/nvm\new' '/tmp/nvm\\dir'; do
+  TEST_PATH="$NVM_DIR/v0.10.5/bin:/usr/bin:$NVM_DIR/versions/node/v22.0.0/bin:$NVM_DIR/versions/io.js/v1.0.0/bin:$NVM_DIR-other/v22.0.0/bin:/usr/local/bin"
+  STRIPPED_PATH=$(nvm_strip_path "$TEST_PATH" '/bin')
+  [ "$STRIPPED_PATH" = "/usr/bin:$NVM_DIR-other/v22.0.0/bin:/usr/local/bin" ] || die "Not correctly stripped with literal backslashes: $STRIPPED_PATH"
+done
