@@ -6,19 +6,29 @@ die () { echo "$@" ; exit 1; }
 \. ../../../nvm.sh
 \. ../../common.sh
 
-make_fake_node v0.12.34 || die 'fake v0.12.34 could not be made'
-
 # Enable no unset variable
 set -u
 
+# Nothing is installed, so there is no stable version to resolve to
+output=$(nvm ls 2>&1 1>/dev/null || true)
+test -z "${output}" || die "1: expected empty; got >${output}"
+
+make_fake_node v0.11.16 || die 'fake v0.11.16 could not be made'
+
+# Only an unstable version is installed, so `stable` still has nothing to resolve to
+output=$(nvm ls 2>&1 1>/dev/null || true)
+test -z "${output}" || die "2: expected empty; got >${output}"
+
+make_fake_node v0.12.34 || die 'fake v0.12.34 could not be made'
+
 # Try an alias that does not exist
 output=$(nvm ls 99 2>&1 1>/dev/null || true)
-test -z "${output}" || die "1: expected empty; got >${output}"
+test -z "${output}" || die "3: expected empty; got >${output}"
 
 # Try a version that does not exist
 output=$(nvm ls 0.12.00 2>&1 1>/dev/null || true)
-test -z "${output}" || die "2: expected empty; got >${output}"
+test -z "${output}" || die "4: expected empty; got >${output}"
 
 # Try a version that does exist
 output=$(nvm ls 0.12.34 2>&1 1>/dev/null || true)
-test -z "${output}" || die "3: expected empty; got >${output}"
+test -z "${output}" || die "5: expected empty; got >${output}"
