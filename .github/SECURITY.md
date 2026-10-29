@@ -28,8 +28,8 @@ We meet 78% of the “gold” criteria. The gaps are as follows:
 
 ## Threat Model
 
-See [THREAT_MODEL.md](.github/THREAT_MODEL.md).
+See [THREAT_MODEL.md](THREAT_MODEL.md).
 
 ## Incident Response Plan
 
-Please see our [Incident Response Plan](.github/INCIDENT_RESPONSE_PLAN.md).
+Please see our [Incident Response Plan](INCIDENT_RESPONSE_PLAN.md).
