@@ -2477,7 +2477,12 @@ nvm_ls() {
       *-*) NVM_PRERELEASE_PATTERN="${PATTERN}" ;;
     esac
     if [ -n "${NVM_DIRS_TO_SEARCH1}${NVM_DIRS_TO_SEARCH2}${NVM_DIRS_TO_SEARCH3}" ]; then
-      VERSIONS="$(command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
+      # Use subshell to isolate nullglob changes (prevents them from persisting)
+      # See: https://github.com/nvm-sh/nvm/issues/3727
+      VERSIONS="$(
+        # shellcheck disable=SC3044
+        [ -n "${BASH_VERSION-}" ] && shopt -s nullglob
+        command find "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" 2>/dev/null \
         | command sed -e "
             s#${NVM_VERSION_DIR_IOJS}/#versions/${NVM_IOJS_PREFIX}/#;
             s#^${NVM_DIR}/##;
