@@ -2995,7 +2995,7 @@ nvm_print_versions() {
 
   NVM_NAMED_ALIASES="${NVM_NAMED_ALIASES}" \
   command awk \
-    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" \
+    -v remote_versions="$(printf '%s' "${1-}" | tr '\n' '|')" -v min="${NVM_MIN:-v0}" \
     -v latest_alias="${NVM_LATEST_ALIAS}" \
     -v node_prefix="$(nvm_node_prefix)" -v iojs_prefix="$(nvm_iojs_prefix)" \
     -v installed_versions="$(nvm_ls 2>/dev/null | nvm_grep -v '^N/A$' | tr '\n' '|')" -v current="$NVM_CURRENT" \
@@ -3007,6 +3007,8 @@ function alen(arr, i, len) { len=0; for(i in arr) len++; return len; }
 function paint(color, text) { return (has_colors && color) ? ("\033[" color text "\033[0m") : text; }
 function spaces(count, result) { result = ""; while (count-- > 0) result = result " "; return result; }
 function italicize(text) { return has_italics ? ("\033[3m" text "\033[23m") : text; }
+function v2a(v, a) { sub(/^(iojs-)?v/, "", v); split(v, a, "."); }
+function vcmp(v1,v2,a1,a2,i,d) { v2a(v1,a1); v2a(v2,a2); for(i=1;i<4;i++) { d = a1[i] - a2[i]; if(d!=0) return d; } return 0; }
 BEGIN {
   named_alias_list = ENVIRON["NVM_NAMED_ALIASES"];
   # wide enough for the longest version, like a nightly, plus the arrow before the current version
@@ -3089,8 +3091,9 @@ BEGIN {
     }
   }
 
-  for (n = 1; n <= rows; n++) {
-    split(lines[n], fields, "[[:blank:]]+");
+  filter_on = (vcmp("v0.0.0", min) != 0);
+  for (m = n = 0; m < rows;) {
+    split(lines[++m], fields, "[[:blank:]]+");
     cols = alen(fields);
     version = fields[1];
     is_installed = 0;
@@ -3102,6 +3105,11 @@ BEGIN {
       }
     }
 
+    if (filter_on && vcmp(version, min) < 0) {
+      continue;
+    }
+
+    filter_on = 0;
     fmt_version = fmt_column;
     if (version == current) {
       fmt_version = fmt_current;
@@ -3111,8 +3119,7 @@ BEGIN {
       fmt_version = fmt_installed;
     }
 
-    padding[n] = (!has_colors && is_installed) ? "" : "  ";
-
+    padding[++n] = (!has_colors && is_installed) ? "" : "  ";
     output[n] = sprintf(fmt_version, version);
     version_width[n] = output[n] padding[n];
     gsub(/\033\[[0-9;]*m/, "", version_width[n]);
@@ -3152,24 +3159,24 @@ BEGIN {
   }
 
   # each kind of annotation starts in the same column on every row, so the output stays `cut`-able
-  for (n = 1; n <= rows; n++) {
+  for (i = 1; i <= n; i++) {
     last = 0;
     for (c = 1; c <= 3; c++) {
-      if (text[n, c] != "") {
+      if (text[i, c] != "") {
         last = c;
       }
     }
-    formatted = output[n];
+    formatted = output[i];
     if (last) {
-      formatted = formatted padding[n];
+      formatted = formatted padding[i];
       if (width[2] || width[3]) {
-        formatted = formatted spaces(max_version_width - version_width[n]);
+        formatted = formatted spaces(max_version_width - version_width[i]);
       }
       gap = "";
       for (c = 1; c <= last; c++) {
         if (width[c]) {
-          formatted = formatted gap cell[n, c];
-          gap = spaces(width[c] - length(text[n, c])) "  ";
+          formatted = formatted gap cell[i, c];
+          gap = spaces(width[c] - length(text[i, c])) "  ";
         }
       }
     }
@@ -4680,6 +4687,7 @@ nvm() {
         nvm_echo '  nvm ls-remote [<version>]                   List remote versions available for install, matching a given <version> if provided'
         nvm_echo '    --lts                                     When listing, only show LTS (long-term support) versions'
         nvm_echo '    --lts=<LTS name>                          When listing, only show versions for a specific LTS line'
+        nvm_echo '    --min=<version>                           When listing, only show versions greater than or equal to <version>, including minor/patch updates for installed versions'
         nvm_echo '    --only=<categories>                       Only select from these version categories (see above)'
         nvm_echo '    --no-colors                               Suppress colored output'
         nvm_echo '  nvm version <version>                       Resolve the given description to a single local version'
@@ -6011,7 +6019,7 @@ nvm() {
       local NVM_LS_EXIT_CODE
       NVM_LS_OUTPUT=$(nvm_ls "${PATTERN-}")
       NVM_LS_EXIT_CODE=$?
-      NVM_NO_COLORS="${NVM_NO_COLORS-}" nvm_print_versions "${NVM_LS_OUTPUT}"
+      NVM_NO_COLORS="${NVM_NO_COLORS-}" NVM_MIN='' nvm_print_versions "${NVM_LS_OUTPUT}"
       if [ -z "${NVM_NO_ALIAS-}" ] && [ -z "${PATTERN-}" ]; then
         if [ -n "${NVM_NO_COLORS-}" ]; then
           nvm alias --no-colors
@@ -6028,6 +6036,10 @@ nvm() {
       PATTERN=''
       local NVM_NO_COLORS
       NVM_NO_COLORS=''
+      local NVM_MIN_ENV
+      NVM_MIN_ENV="${NVM_MIN-}"
+      local NVM_MIN
+      NVM_MIN="${NVM_MIN_ENV-}"
 
       while [ $# -gt 0 ]; do
         case "${1-}" in
@@ -6037,6 +6049,9 @@ nvm() {
           ;;
           --lts=*)
             NVM_LTS="${1##--lts=}"
+          ;;
+          --min=*)
+            NVM_MIN="${1##--min=}"
           ;;
           --only=*)
             NVM_ONLY_FLAG="${1#--only=}"
