@@ -1118,6 +1118,11 @@ nvm_ensure_version_installed() {
   LOCAL_VERSION="$(nvm_version "${PROVIDED_VERSION}")"
   EXIT_CODE="$?"
   local NVM_VERSION_DIR
+
+  if [ "_$PROVIDED_VERSION" = "_N/A" ] && [ ! -d "$NVM_RC_VERSION" ] ; then
+    PROVIDED_VERSION="$(nvm_ensure_version_prefix "$NVM_RC_VERSION")"
+  fi
+
   if [ "${EXIT_CODE}" != "0" ] || ! nvm_is_version_installed "${LOCAL_VERSION}"; then
     if nvm_explain_excluded_version "${PROVIDED_VERSION}"; then
       return 1
