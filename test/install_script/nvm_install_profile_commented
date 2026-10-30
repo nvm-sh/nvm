@@ -1,0 +1,93 @@
+#!/bin/sh
+
+NVM_TEST_DIR=''
+NVM_PROFILE_PATH=''
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  if [ -n "${NVM_TEST_DIR}" ] && [ -d "${NVM_TEST_DIR}" ]; then
+    rm -rf "${NVM_TEST_DIR}"
+  fi
+  unset -f install_nvm_from_git install_nvm_as_script nvm_detect_profile nvm_has
+  unset -f setup cleanup die make_profile run_install
+  unset NVM_ENV METHOD PROFILE NVM_DIR NVM_TEST_DIR NVM_PROFILE_PATH
+}
+
+setup() {
+  NVM_ENV=testing \. ../../install.sh
+
+  # Mock installation functions to do nothing
+  install_nvm_from_git() { :; }
+  install_nvm_as_script() { :; }
+
+  # Mock nvm_has to return true for git (to take the git path)
+  nvm_has() {
+    case "$1" in
+      git) return 0 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  # Mock nvm_detect_profile to point at the profile under test
+  nvm_detect_profile() {
+    nvm_echo "${NVM_PROFILE_PATH}"
+  }
+}
+
+make_profile() {
+  printf '%s\n' "$@" > "${NVM_PROFILE_PATH}"
+}
+
+run_install() {
+  PROFILE='' METHOD='' NVM_DIR="${NVM_TEST_DIR}/nvm" nvm_do_install 2>&1
+}
+
+setup
+
+NVM_TEST_DIR="$(mktemp -d)" || die 'unable to make the test dir'
+mkdir -p "${NVM_TEST_DIR}/nvm" || die 'unable to make the install dir'
+touch "${NVM_TEST_DIR}/nvm/nvm.sh" || die 'unable to make an empty nvm.sh'
+NVM_PROFILE_PATH="${NVM_TEST_DIR}/.bashrc"
+
+#
+# Test: a commented-out nvm.sh line does not load nvm, so the source string is still appended
+#
+
+make_profile 'export NVM_DIR="$HOME/.nvm"' '# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm' '  # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'
+OUTPUT="$(run_install)"
+case "${OUTPUT}" in
+  *"Appending nvm source string"*) ;;
+  *) die "a commented-out nvm.sh line should not count as the source string; got: ${OUTPUT}" ;;
+esac
+grep -q '^\[ -s "$NVM_DIR/nvm.sh"' "${NVM_PROFILE_PATH}" || die "the source string was not appended to the profile: $(cat "${NVM_PROFILE_PATH}")"
+
+#
+# Test: the same for a commented-out bash_completion line in a bash profile
+#
+
+make_profile '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm' '# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion'
+OUTPUT="$(run_install)"
+case "${OUTPUT}" in
+  *"nvm source string already in"*) ;;
+  *) die "an active nvm.sh line should still count as the source string; got: ${OUTPUT}" ;;
+esac
+case "${OUTPUT}" in
+  *"Appending bash_completion source string"*) ;;
+  *) die "a commented-out bash_completion line should not count; got: ${OUTPUT}" ;;
+esac
+
+#
+# Test: with both lines active, the profile is left alone
+#
+
+make_profile 'export NVM_DIR="$HOME/.nvm"' '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm' '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion'
+BEFORE="$(cat "${NVM_PROFILE_PATH}")"
+OUTPUT="$(run_install)"
+case "${OUTPUT}" in
+  *"nvm source string already in"*"bash_completion source string already in"*) ;;
+  *) die "an active profile should not be touched; got: ${OUTPUT}" ;;
+esac
+[ "_$(cat "${NVM_PROFILE_PATH}")" = "_${BEFORE}" ] || die "the profile was changed: $(cat "${NVM_PROFILE_PATH}")"
+
+cleanup
