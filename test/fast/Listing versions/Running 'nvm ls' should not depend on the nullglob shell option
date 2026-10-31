@@ -1,0 +1,39 @@
+#!/bin/sh
+
+cleanup() {
+  [ -n "${NVM_DIR-}" ] && [ -d "${NVM_DIR}" ] && rm -rf "${NVM_DIR}"
+  unset -f die cleanup
+  unset NVM_DIR
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+\. ../../common.sh
+
+NVM_DIR="$(mktemp -d)"
+[ -n "${NVM_DIR}" ] || die 'unable to create temp NVM_DIR'
+
+# A directory holding only hidden entries holds no versions, so it must be
+# treated as empty: otherwise, with nullglob unset, `find` is handed the
+# literal `*` pattern and errors out (#3727).
+mkdir -p "$(nvm_version_dir new)"
+touch "$(nvm_version_dir new)/.hidden"
+
+try_err nvm ls
+[ -z "${CAPTURED_STDERR-}" ] || die "nvm ls should not write to stderr: ${CAPTURED_STDERR-}"
+
+# Hidden entries must not hide installed versions.
+make_fake_node v0.0.1
+
+try_err nvm ls
+[ -z "${CAPTURED_STDERR-}" ] || die "nvm ls should not write to stderr: ${CAPTURED_STDERR-}"
+
+try nvm_ls
+case "${CAPTURED_STDOUT-}" in
+  *v0.0.1*) ;;
+  *) die "expected v0.0.1 in >${CAPTURED_STDOUT-}<" ;;
+esac
+
+cleanup
