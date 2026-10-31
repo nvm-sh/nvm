@@ -1,0 +1,27 @@
+#!/bin/sh
+
+: nvm.sh
+\. ../../../nvm.sh
+\. ../../common.sh
+
+die () { echo "$@" ; exit 1; }
+
+make_fake_node v0.0.1 || die 'unable to make a fake node'
+
+# a version that lives outside of NVM_DIR and is linked in, which is how some
+# users keep their versions on a separate volume
+REAL_DIR="$(cd ../../.. && pwd)/symlink-target"
+rm -rf "${REAL_DIR}"
+mkdir -p "${REAL_DIR}/v0.0.2/bin" || die 'unable to make the link target dir'
+make_echo "${REAL_DIR}/v0.0.2/bin/node" v0.0.2 || die 'unable to make fake node bin'
+rm -f "$(nvm_version_path v0.0.2)"
+ln -s "${REAL_DIR}/v0.0.2" "$(nvm_version_path v0.0.2)" || die 'unable to symlink the version dir'
+
+nvm ls | grep v0.0.1 >/dev/null || die "v0.0.1 not found in: $(nvm ls)"
+nvm ls | grep v0.0.2 >/dev/null || die "the symlinked v0.0.2 not found in: $(nvm ls)"
+nvm ls 0.0 | grep v0.0.2 >/dev/null || die "the symlinked v0.0.2 not found with a pattern in: $(nvm ls 0.0)"
+nvm ls 0.0.2 | grep v0.0.2 >/dev/null || die "the symlinked v0.0.2 not found with an exact version in: $(nvm ls 0.0.2)"
+
+# leave no trace, so the tests that compare `nvm ls` output verbatim are unaffected
+rm -f "$(nvm_version_path v0.0.2)"
+rm -rf "${REAL_DIR}"
