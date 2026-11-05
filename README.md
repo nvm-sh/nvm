@@ -862,6 +862,8 @@ Put this into your `$HOME/.zshrc` to call `nvm use` automatically whenever you e
 autoload -U add-zsh-hook
 
 load-nvmrc() {
+  # skip during tab completion, which can run `cd` in a subshell
+  (( $+compstate )) && return
   local nvmrc_path
   nvmrc_path="$(nvm_find_nvmrc)"
 
