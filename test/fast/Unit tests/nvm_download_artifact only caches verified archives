@@ -4,7 +4,7 @@ WORK="${TMPDIR:-/tmp}/nvm_download_artifact_cache.$$"
 
 cleanup () {
   command rm -rf "${WORK}"
-  unset -f cleanup die download_offline nvm_get_mirror nvm_binary_available nvm_get_download_slug nvm_get_artifact_compression nvm_cache_dir nvm_get_checksum nvm_version_greater_than_or_equal_to nvm_download nvm_compare_checksum
+  unset -f cleanup die download_offline nvm_get_mirror nvm_binary_available nvm_get_download_slug nvm_get_artifact_compression nvm_cache_dir nvm_get_checksum nvm_version_greater_than_or_equal_to nvm_download nvm_compute_checksum nvm_compare_checksum
 }
 die () { echo "$@" ; cleanup ; exit 1; }
 
@@ -56,6 +56,22 @@ try nvm_download_artifact node binary std v20.0.0
 try download_offline
 [ "${CAPTURED_EXIT_CODE}" = '4' ] || die "empty checksum: expected --offline to find no cached archive (exit code 4), got ${CAPTURED_EXIT_CODE}"
 nvm_get_checksum() { nvm_echo 'fake_checksum'; }
+
+# a download whose checksum cannot be computed has not been verified, so it must not be accepted either
+# (this still uses the real `nvm_compare_checksum`, so it runs before that is mocked)
+nvm_compute_checksum() { nvm_echo ''; }
+try nvm_download_artifact node binary std v20.0.0
+[ "${CAPTURED_EXIT_CODE}" = '6' ] || die "unverifiable checksum: expected exit code 6, got ${CAPTURED_EXIT_CODE}"
+[ ! -e "${TEST_CACHE_DIR}" ] || die "unverifiable checksum: expected ${TEST_CACHE_DIR} to be removed"
+try download_offline
+[ "${CAPTURED_EXIT_CODE}" = '4' ] || die "unverifiable checksum: expected --offline to find no cached archive (exit code 4), got ${CAPTURED_EXIT_CODE}"
+
+# nor may a cached archive whose checksum cannot be computed be used
+command mkdir -p "${TEST_CACHE_DIR}"
+nvm_echo 'cached' > "${TEST_TARBALL}"
+try nvm_download_artifact node binary std v20.0.0
+[ "${CAPTURED_EXIT_CODE}" = '6' ] || die "unverifiable cached archive: expected exit code 6, got ${CAPTURED_EXIT_CODE}"
+[ ! -e "${TEST_CACHE_DIR}" ] || die "unverifiable cached archive: expected ${TEST_CACHE_DIR} to be removed"
 
 # a download that fails its checksum must not be left in the cache either
 nvm_compare_checksum() { return 1; }

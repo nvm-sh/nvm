@@ -540,7 +540,7 @@ nvm install --offline 14.7.0
 
 This resolves versions using only locally installed versions and cached downloads. It will not attempt to download anything. This is useful in air-gapped environments, on planes, or when you want to avoid network latency.
 
-A download is only added to the cache (`$NVM_DIR/.cache`) once its checksum has been verified (unless no checksum tool is available, in which case `nvm` warns that it is continuing without verification). `--offline` does not verify cached archives again, so anything placed in the cache by other means is trusted as-is.
+A download is only added to the cache (`$NVM_DIR/.cache`) once its checksum has been verified. `--offline` does not verify cached archives again, so anything placed in the cache by other means is trusted as-is.
 
 You can combine `--offline` with `--lts` to install the latest cached LTS version (as long as LTS aliases have been populated by a prior `nvm ls-remote --lts`):
 
