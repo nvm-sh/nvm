@@ -54,3 +54,30 @@ try_err nvm_install_latest_npm
 
 EXPECTED="Unable to obtain npm version."
 [ "${CAPTURED_STDERR}" = "${EXPECTED}" ] || die "When node is system and npm is unavailable, expected >${EXPECTED}<; got >${CAPTURED_STDERR}"
+
+nvm_ls_current() {
+  node --version
+}
+node() {
+  echo "${TEST_NODE_VERSION}"
+}
+npm() {
+  case "${1-}" in
+    --version) echo '10.9.0' ;;
+    *) echo "npm $*" ;;
+  esac
+}
+for TEST_NODE_VERSION in v21.7.3 v22.8.0; do
+  OUTPUT="$(nvm_install_latest_npm | grep 'install -g')"
+  [ "${OUTPUT}" = 'npm install -g npm@10' ] || die "on node ${TEST_NODE_VERSION}, expected npm@10; got >${OUTPUT}<"
+done
+
+for TEST_NODE_VERSION in v20.17.0 v22.9.0 v22.22.1 v23.0.0 v24.14.1 v25.0.0; do
+  OUTPUT="$(nvm_install_latest_npm | grep 'install -g')"
+  [ "${OUTPUT}" = 'npm install -g npm@11' ] || die "on node ${TEST_NODE_VERSION}, expected npm@11; got >${OUTPUT}<"
+done
+
+for TEST_NODE_VERSION in v22.22.2 v24.15.0 v26.0.0; do
+  OUTPUT="$(nvm_install_latest_npm | grep 'install -g')"
+  [ "${OUTPUT}" = 'npm install -g npm' ] || die "on node ${TEST_NODE_VERSION}, expected the latest npm; got >${OUTPUT}<"
+done
