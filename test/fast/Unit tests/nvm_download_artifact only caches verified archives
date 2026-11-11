@@ -4,7 +4,7 @@ WORK="${TMPDIR:-/tmp}/nvm_download_artifact_cache.$$"
 
 cleanup () {
   command rm -rf "${WORK}"
-  unset -f cleanup die download_offline nvm_get_mirror nvm_binary_available nvm_get_download_slug nvm_get_artifact_compression nvm_cache_dir nvm_get_checksum nvm_version_greater_than_or_equal_to nvm_download nvm_compute_checksum nvm_compare_checksum
+  unset -f cleanup die download_offline nvm_get_mirror nvm_binary_available nvm_get_download_slug nvm_get_artifact_compression nvm_cache_dir nvm_get_checksum nvm_version_greater_than_or_equal_to nvm_download nvm_compute_checksum nvm_compare_checksum nvm_get_checksum_binary
 }
 die () { echo "$@" ; cleanup ; exit 1; }
 
@@ -91,5 +91,12 @@ try nvm_download_artifact node binary std v20.0.0
 [ "$(command cat "${TEST_TARBALL}")" = 'downloaded' ] || die "verified download: expected the cached archive to hold only the new download, got >$(command cat "${TEST_TARBALL}")<"
 [ ! -e "${TEST_TARBALL}.unverified" ] || die 'verified download: expected no unverified download to remain in the cache'
 [ ! -e "${WORK}/downloaded-to-final-name" ] || die 'an unverified download was written to the final cache name, where an interrupted download would be left for --offline'
+
+# without any checksum tool, nothing is downloaded and the verified cache is left alone
+nvm_get_checksum_binary() { return 1; }
+try nvm_download_artifact node binary std v20.0.0
+[ "${CAPTURED_EXIT_CODE}" = '6' ] || die "no checksum tool: expected exit code 6, got ${CAPTURED_EXIT_CODE}"
+[ "$(command cat "${TEST_TARBALL}")" = 'downloaded' ] || die "no checksum tool: expected the cached archive to be left alone, got >$(command cat "${TEST_TARBALL}")<"
+[ ! -e "${TEST_TARBALL}.unverified" ] || die 'no checksum tool: expected nothing to be downloaded'
 
 cleanup

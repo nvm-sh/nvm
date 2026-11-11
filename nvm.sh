@@ -3916,6 +3916,12 @@ nvm_download_artifact() {
     return 4
   fi
 
+  # nothing can be verified without a checksum tool, so fail before touching the cache or downloading
+  if ! nvm_get_checksum_binary >/dev/null; then
+    nvm_err 'Install one of them so that nvm can verify downloads.'
+    return 6
+  fi
+
   local CHECKSUM
   CHECKSUM="$(nvm_get_checksum "${FLAVOR}" "${TYPE}" "${VERSION}" "${SLUG}" "${COMPRESSION}")"
 
@@ -3941,7 +3947,7 @@ nvm_download_artifact() {
     fi
     nvm_compare_checksum "${TARBALL}" "${CHECKSUM}"
     nvm_err "Checksum check failed!"
-    nvm_err "Removing the broken local cache..."
+    nvm_err "Removing the unverified local cache..."
     command rm -rf "${TARBALL}"
   fi
   # `--offline` uses the cached archive without a checksum, so only a verified archive may ever sit at ${TARBALL}
