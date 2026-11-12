@@ -1,0 +1,41 @@
+#!/bin/sh
+
+setup () {
+  HOME="."
+  NVM_ENV=testing \. ../../install.sh
+  touch ".bashrc"
+  touch ".zshrc"
+  touch ".profile"
+}
+
+cleanup () {
+  unset HOME
+  unset NVM_ENV
+  unset NVM_DETECT_PROFILE
+  unset BASH_VERSION
+  unset ZSH_VERSION
+  unset -f setup cleanup die
+  rm -f ".bashrc" ".bash_profile" ".zshrc" ".profile" "test_profile" > "/dev/null" 2>&1
+}
+
+die () { echo "$@" '$NVM_DETECT_PROFILE:' "$NVM_DETECT_PROFILE"; cleanup; exit 1; }
+
+setup
+
+# check if nvm_path already exists in bashrc
+NVM_DETECT_PROFILE="$(BASH_VERSION="1"; unset PROFILE; nvm_detect_profile)"
+echo "export NVM_DIR="$HOME/.nvm"" > $HOME/.bashrc
+OUTPUT = "$(nvm_do_install)"
+EXPECTED_OUTPUT='nvm source string already in ${NVM_PROFILE}'
+if [ "${OUTPUT#*$EXPECTED_OUTPUT}" = "${OUTPUT}" ]; then
+  die "Path already exists in the profile, so should have returned >${EXPECTED_OUTPUT}<. Instead it returned >${OUTPUT}<"
+fi
+
+# .zshrc should be detected for zsh
+NVM_DETECT_PROFILE="$(ZSH_VERSION="1"; unset PROFILE; unset BASH_VERSION; nvm_detect_profile)"
+echo "export NVM_DIR="$HOME/.nvm"" > $HOME/.zshrc
+OUTPUT = "$(nvm_do_install)"
+EXPECTED_OUTPUT='nvm source string already in ${NVM_PROFILE}'
+if [ "${OUTPUT#*$EXPECTED_OUTPUT}" = "${OUTPUT}" ]; then
+  die "Path already exists in the profile, so should have returned >${EXPECTED_OUTPUT}<. Instead it returned >${OUTPUT}<"
+fi
