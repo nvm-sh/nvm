@@ -1,0 +1,44 @@
+#!/bin/sh
+
+die() { echo "$@"; cleanup; exit 1; }
+
+cleanup() {
+  rm -rf "${NVM_TEST_DIR-}"
+}
+
+command -v zsh >/dev/null 2>&1 || exit 0
+
+NVM_ENV=testing . ../../install.sh
+
+install_nvm_from_git() { :; }
+install_nvm_as_script() { :; }
+nvm_check_global_modules() { :; }
+nvm_install_node() { :; }
+nvm_has() {
+  [ "$1" = git ]
+}
+
+NVM_TEST_DIR="$(mktemp -d)" || die 'unable to make the test dir'
+mkdir -p "${NVM_TEST_DIR}/nvm" || die 'unable to make the install dir'
+printf '%s\n' 'export NVM_TEST_LOADED=1' > "${NVM_TEST_DIR}/nvm/nvm.sh"
+printf '%s\n' 'export NVM_COMPLETION_LOADED=1' > "${NVM_TEST_DIR}/nvm/bash_completion"
+touch "${NVM_TEST_DIR}/.zshrc"
+
+nvm_install_dir() { nvm_echo "${NVM_TEST_DIR}/nvm"; }
+nvm_detect_profile() { nvm_echo "${NVM_TEST_DIR}/.zshrc"; }
+
+OUTPUT="$(PROFILE='' METHOD='' NVM_DIR="${NVM_TEST_DIR}/nvm" nvm_do_install 2>&1)" || die 'installer failed'
+SNIPPET="$(printf '%s\n' "${OUTPUT}" | sed -n '/^=> Close and reopen/,$p' | sed '1d')"
+[ -n "${SNIPPET}" ] || die 'installer did not print shell commands'
+
+unset NVM_TEST_LOADED NVM_COMPLETION_LOADED
+if ! {
+  printf '%s\n' 'setopt extendedglob'
+  printf '%s\n' "${SNIPPET}"
+  printf '%s\n' '[ "$NVM_TEST_LOADED" = 1 ] && [ "$NVM_COMPLETION_LOADED" = 1 ]'
+  printf '%s\n' 'exit $?'
+} | zsh -f -i > "${NVM_TEST_DIR}/zsh-output" 2>&1; then
+  die "printed commands failed when pasted into interactive zsh: $(cat "${NVM_TEST_DIR}/zsh-output")"
+fi
+
+cleanup
