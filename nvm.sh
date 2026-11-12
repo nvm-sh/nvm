@@ -2950,9 +2950,12 @@ nvm_ls_remote_index_tab() {
     return 3
   }
   # the mirror's index.tab is untrusted: skip the header, and any row whose version
-  # is malformed, before it is printed, stored as an LTS alias, or matched against a pattern
+  # is malformed or whose LTS codename carries control characters (which would reach
+  # the terminal as escape sequences), before it is printed, stored as an LTS alias,
+  # or matched against a pattern. The control characters are an octal range because
+  # mawk 1.3.3 has no `[[:cntrl:]]`.
   VERSION_LIST="$(nvm_echo "${VERSION_LIST}" \
-    | command awk -v prefix="${PREFIX}" 'NR > 1 && $1 ~ /^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$/ { print prefix $0 }' \
+    | command awk -v prefix="${PREFIX}" 'NR > 1 && $1 ~ /^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$/ && $10 !~ /[\001-\037\177]/ { print prefix $0 }' \
   )"
   local LTS_ALIAS
   local LTS_VERSION
@@ -3133,7 +3136,8 @@ nvm_compare_checksum() {
     nvm_err 'Refusing to continue *without checksum verification*'
     return 1
   elif [ "${COMPUTED_SUM}" != "${CHECKSUM}" ] && [ "${COMPUTED_SUM}" != "\\${CHECKSUM}" ]; then
-    nvm_err "Checksums do not match: '${COMPUTED_SUM}' found, '${CHECKSUM}' expected."
+    # the expected checksum comes from the mirror, so show its control characters as `?`
+    nvm_err "Checksums do not match: '${COMPUTED_SUM}' found, '$(command printf '%s' "${CHECKSUM}" | command tr -c '[:print:]' '?')' expected."
     return 1
   fi
   nvm_err 'Checksums matched!'
