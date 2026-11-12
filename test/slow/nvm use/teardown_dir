@@ -20,3 +20,9 @@ if [ -d "${NVM_DIR}/.nvm_use_lts_alias_bak" ]; then
   mv "${NVM_DIR}/.nvm_use_lts_alias_bak/*" "${NVM_DIR}/alias/lts/"
   rmdir "${NVM_DIR}/.nvm_use_lts_alias_bak"
 fi
+
+rm .nvmrc
+
+if [ -f ".nvmrc.bak" ]; then
+  mv .nvmrc.bak .nvmrc
+fi

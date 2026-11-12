@@ -19,5 +19,9 @@ for VERSION in "1.0.0" "1.0.1"; do
   nvm install "iojs-v$VERSION"
 done
 
+if [ -f ".nvmrc" ]; then
+  mv .nvmrc .nvmrc.bak
+fi
+
 nvm_make_alias lts/testing 0.10.1
 nvm_make_alias 'lts/*' lts/testing
