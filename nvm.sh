@@ -835,37 +835,37 @@ unset NVM_SCRIPT_SOURCE 2>/dev/null
 # Walks parent paths without subshells, comparing names literally before checking
 # filesystem identity to account for case-insensitive paths and directory symlinks.
 nvm_tree_contains_path() {
-  local tree
-  tree="${1-}"
-  local node_path
-  node_path="${2-}"
+  local NVM_TREE
+  NVM_TREE="${1-}"
+  local NVM_TREE_NODE_PATH
+  NVM_TREE_NODE_PATH="${2-}"
 
-  if [ "@${tree}@" = "@@" ] || [ "@${node_path}@" = "@@" ]; then
+  if [ "@${NVM_TREE}@" = "@@" ] || [ "@${NVM_TREE_NODE_PATH}@" = "@@" ]; then
     nvm_err "both the tree and the node path are required"
     return 2
   fi
 
-  local clean_tree
-  clean_tree="${tree}"
+  local NVM_CLEAN_TREE
+  NVM_CLEAN_TREE="${NVM_TREE}"
 
   # Strip trailing slashes in shell memory (e.g., "dir//" -> "dir")
-  while [ "${clean_tree}" != "${clean_tree%/}" ]; do
-    clean_tree="${clean_tree%/}"
+  while [ "${NVM_CLEAN_TREE}" != "${NVM_CLEAN_TREE%/}" ]; do
+    NVM_CLEAN_TREE="${NVM_CLEAN_TREE%/}"
   done
-  if [ -z "${clean_tree}" ]; then
-    clean_tree='/'
+  if [ -z "${NVM_CLEAN_TREE}" ]; then
+    NVM_CLEAN_TREE='/'
   fi
 
   # Keep literal matching for paths that do not exist, including glob characters.
-  local pathdir
-  pathdir="${node_path}"
-  while [ "${pathdir}" != '' ] && [ "${pathdir}" != '.' ] && [ "${pathdir}" != '/' ] &&
-      [ "${pathdir}" != "${clean_tree}" ] && ! [ "${pathdir}" -ef "${clean_tree}" ]; do
-    case "${pathdir}" in
+  local NVM_PATHDIR
+  NVM_PATHDIR="${NVM_TREE_NODE_PATH}"
+  while [ "${NVM_PATHDIR}" != '' ] && [ "${NVM_PATHDIR}" != '.' ] && [ "${NVM_PATHDIR}" != '/' ] &&
+      [ "${NVM_PATHDIR}" != "${NVM_CLEAN_TREE}" ] && ! [ "${NVM_PATHDIR}" -ef "${NVM_CLEAN_TREE}" ]; do
+    case "${NVM_PATHDIR}" in
       */*)
-        pathdir="${pathdir%/*}"
-        if [ -z "${pathdir}" ]; then
-          pathdir='/'
+        NVM_PATHDIR="${NVM_PATHDIR%/*}"
+        if [ -z "${NVM_PATHDIR}" ]; then
+          NVM_PATHDIR='/'
         fi
         ;;
       *)
@@ -873,7 +873,7 @@ nvm_tree_contains_path() {
         ;;
     esac
   done
-  [ "${pathdir}" = "${clean_tree}" ] || [ "${pathdir}" -ef "${clean_tree}" ]
+  [ "${NVM_PATHDIR}" = "${NVM_CLEAN_TREE}" ] || [ "${NVM_PATHDIR}" -ef "${NVM_CLEAN_TREE}" ]
 }
 
 nvm_find_project_dir() {
@@ -1030,29 +1030,29 @@ nvm_is_version_or_alias() {
 }
 
 nvm_process_nvmrc() {
-  local NVMRC_PATH
-  NVMRC_PATH="$1"
+  local NVM_NVMRC_PATH
+  NVM_NVMRC_PATH="$1"
 
-  if [ ! -L "${NVMRC_PATH}" ]; then
-    nvm_process_nvmrc_content "$(command cat "${NVMRC_PATH}")"
+  if [ ! -L "${NVM_NVMRC_PATH}" ]; then
+    nvm_process_nvmrc_content "$(command cat "${NVM_NVMRC_PATH}")"
     return
   fi
 
   # a symlink can point at any file, so never print its content,
   # and only accept a version or an existing alias, which would be printed later
-  local NVMRC_VERSION
-  if ! NVMRC_VERSION="$(nvm_process_nvmrc_content "$(command cat "${NVMRC_PATH}")" 2>/dev/null)" \
-    || ! nvm_is_version_or_alias "${NVMRC_VERSION}"; then
-    nvm_err "invalid .nvmrc! '${NVMRC_PATH}' is a symbolic link, so it must contain a version or an alias name; its content is not shown."
+  local NVM_NVMRC_VERSION
+  if ! NVM_NVMRC_VERSION="$(nvm_process_nvmrc_content "$(command cat "${NVM_NVMRC_PATH}")" 2>/dev/null)" \
+    || ! nvm_is_version_or_alias "${NVM_NVMRC_VERSION}"; then
+    nvm_err "invalid .nvmrc! '${NVM_NVMRC_PATH}' is a symbolic link, so it must contain a version or an alias name; its content is not shown."
     return 1
   fi
-  nvm_echo "${NVMRC_VERSION}"
+  nvm_echo "${NVM_NVMRC_VERSION}"
 }
 
 nvm_rc_version() {
-  local NVMRC_PATH
-  NVMRC_PATH="$(nvm_find_nvmrc)"
-  if [ ! -e "${NVMRC_PATH}" ]; then
+  local NVM_NVMRC_PATH
+  NVM_NVMRC_PATH="$(nvm_find_nvmrc)"
+  if [ ! -e "${NVM_NVMRC_PATH}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
       nvm_err "No version provided and no .nvmrc file found"
     fi
@@ -1060,18 +1060,18 @@ nvm_rc_version() {
   fi
 
   local NVM_RC_VERSION
-  if ! NVM_RC_VERSION="$(nvm_process_nvmrc "${NVMRC_PATH}")"; then
+  if ! NVM_RC_VERSION="$(nvm_process_nvmrc "${NVM_NVMRC_PATH}")"; then
     return 1
   fi
 
   if [ -z "${NVM_RC_VERSION}" ]; then
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-      nvm_err "Warning: empty .nvmrc file found at \"${NVMRC_PATH}\""
+      nvm_err "Warning: empty .nvmrc file found at \"${NVM_NVMRC_PATH}\""
     fi
     return 2
   fi
   if [ "${NVM_SILENT:-0}" -ne 1 ]; then
-    nvm_echo "Found '${NVMRC_PATH}' with version <${NVM_RC_VERSION}>"
+    nvm_echo "Found '${NVM_NVMRC_PATH}' with version <${NVM_RC_VERSION}>"
   fi
   nvm_echo "${NVM_RC_VERSION}" >&3
 }
@@ -6889,15 +6889,15 @@ nvm_auto() {
         nvm_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.'
         return 3
       fi
-      local VERSION
+      local NVM_AUTO_VERSION
       local NVM_CURRENT
       NVM_CURRENT="$(nvm_ls_current)"
       if [ "_${NVM_CURRENT}" = '_none' ] || [ "_${NVM_CURRENT}" = '_system' ]; then
-        VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
-        if [ -n "${VERSION}" ]; then
-          if [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
+        NVM_AUTO_VERSION="$(nvm_resolve_local_alias default 2>/dev/null || nvm_echo)"
+        if [ -n "${NVM_AUTO_VERSION}" ]; then
+          if [ "_${NVM_AUTO_VERSION}" != '_N/A' ] && nvm_is_valid_version "${NVM_AUTO_VERSION}"; then
             # the default alias, and any flags it stores, have already selected this version
-            nvm use --silent --only=alpha,lts,non-lts,iojs "${VERSION}" >/dev/null
+            nvm use --silent --only=alpha,lts,non-lts,iojs "${NVM_AUTO_VERSION}" >/dev/null
           else
             # a default alias whose flags need recorded LTS status can't get it while a shell starts up
             local NVM_DEFAULT_TARGET
@@ -6934,21 +6934,21 @@ nvm_auto() {
       fi
     ;;
     install)
-      local VERSION
-      VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
+      local NVM_AUTO_VERSION
+      NVM_AUTO_VERSION="$(nvm_alias default 2>/dev/null || nvm_echo)"
       # flags stored in the alias, like `--lts`, are arguments to `nvm install`
       set --
       while :; do
-        case "${VERSION}" in
+        case "${NVM_AUTO_VERSION}" in
           --*' '*)
-            set -- "$@" "${VERSION%% *}"
-            VERSION="${VERSION#* }"
+            set -- "$@" "${NVM_AUTO_VERSION%% *}"
+            NVM_AUTO_VERSION="${NVM_AUTO_VERSION#* }"
           ;;
           *) break ;;
         esac
       done
-      if [ -n "${VERSION}" ] && [ "_${VERSION}" != '_N/A' ] && nvm_is_valid_version "${VERSION}"; then
-        nvm install "$@" "${VERSION}" >/dev/null
+      if [ -n "${NVM_AUTO_VERSION}" ] && [ "_${NVM_AUTO_VERSION}" != '_N/A' ] && nvm_is_valid_version "${NVM_AUTO_VERSION}"; then
+        nvm install "$@" "${NVM_AUTO_VERSION}" >/dev/null
       elif nvm_rc_version 3>/dev/null >/dev/null 2>&1; then
         nvm install >/dev/null
       else
