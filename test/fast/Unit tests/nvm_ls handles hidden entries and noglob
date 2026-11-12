@@ -1,0 +1,23 @@
+#!/bin/sh
+
+die() { echo "$*" >&2; cleanup; exit 1; }
+cleanup() { rm -rf "${TEST_DIR}"; }
+
+\. ../../../nvm.sh --no-use
+\. ../../common.sh
+
+TEST_DIR="${PWD}/nvm_ls_hidden_noglob_tmp"
+NVM_DIR="${TEST_DIR}"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/versions/node/.hidden" "${NVM_DIR}/versions/node/v24.13.0/bin" || die 'could not create fixture'
+make_echo "${NVM_DIR}/versions/node/v24.13.0/bin/node" 'v24.13.0' || die 'could not create fake node'
+
+set -f
+try nvm_ls 24
+[ "_${CAPTURED_STDOUT}" = '_v24.13.0' ] || die "unexpected output with noglob: ${CAPTURED_STDOUT}"
+case "$-" in *f*) ;; *) die 'nvm_ls changed noglob';; esac
+set +f
+rm -rf "${NVM_DIR}/versions/node/v24.13.0"
+try nvm_ls 24
+[ "_${CAPTURED_STDERR}" = '_' ] || die "unexpected error for hidden-only directory: ${CAPTURED_STDERR}"
+cleanup

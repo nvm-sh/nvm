@@ -70,4 +70,12 @@ EXPECTED_OUTPUT=''
 [ "_$OUTPUT" = "_$EXPECTED_OUTPUT" ] || die "expected 'nvm_ensure_version_installed system' with iojs installed to give $EXPECTED_OUTPUT, got $OUTPUT"
 [ "_$EXIT_CODE" = "_0" ] || die "expected 'nvm_ensure_version_installed system' with iojs installed to exit with 0, got $EXIT_CODE"
 
+# An unresolved installed-version check must not overwrite a caller's VERSION.
+VERSION='caller-value'
+nvm_resolve_alias() { nvm_echo 'v123.4.5'; }
+nvm_ensure_version_installed nonexistent >/dev/null 2>&1 && die 'expected missing version failure'
+[ "${VERSION}" = 'caller-value' ] || die "VERSION leaked: ${VERSION}"
+unset -f nvm_resolve_alias
+unset VERSION
+
 cleanup
