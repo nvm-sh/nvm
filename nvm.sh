@@ -2072,7 +2072,18 @@ nvm_ls_current() {
     nvm_add_iojs_prefix "$(iojs --version 2>/dev/null)"
   elif nvm_tree_contains_path "${NVM_DIR}" "${NVM_LS_CURRENT_NODE_PATH}"; then
     local VERSION
-    VERSION="$(node --version 2>/dev/null)"
+    local NVM_LS_CURRENT_NODE_EXE
+    case "${NVM_LS_CURRENT_NODE_PATH}" in
+      *.exe) NVM_LS_CURRENT_NODE_EXE="${NVM_LS_CURRENT_NODE_PATH}" ;;
+      *) NVM_LS_CURRENT_NODE_EXE="${NVM_LS_CURRENT_NODE_PATH}.exe" ;;
+    esac
+    # Git Bash can discard node's output in command substitutions; the explicit
+    # executable returns it. Use the usual command when no .exe is present.
+    if [ -x "${NVM_LS_CURRENT_NODE_EXE}" ] && [ "$(nvm_get_os)" = 'win' ]; then
+      VERSION="$("${NVM_LS_CURRENT_NODE_EXE}" --version 2>/dev/null)"
+    else
+      VERSION="$(node --version 2>/dev/null)"
+    fi
     if [ "${VERSION}" = "v0.6.21-pre" ]; then
       nvm_echo 'v0.6.21'
     else
