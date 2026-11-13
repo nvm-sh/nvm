@@ -30,6 +30,8 @@ nvm_detect_profile() { nvm_echo "${NVM_TEST_DIR}/.zshrc"; }
 OUTPUT="$(PROFILE='' METHOD='' NVM_DIR="${NVM_TEST_DIR}/nvm" nvm_do_install 2>&1)" || die 'installer failed'
 SNIPPET="$(printf '%s\n' "${OUTPUT}" | sed -n '/^=> Close and reopen/,$p' | sed '1d')"
 [ -n "${SNIPPET}" ] || die 'installer did not print shell commands'
+grep -Fq '  # This loads nvm' "${NVM_TEST_DIR}/.zshrc" || die 'profile lost the nvm comment'
+grep -Fq '  # This loads nvm bash_completion' "${NVM_TEST_DIR}/.zshrc" || die 'profile lost the completion comment'
 
 unset NVM_TEST_LOADED NVM_COMPLETION_LOADED
 if ! {

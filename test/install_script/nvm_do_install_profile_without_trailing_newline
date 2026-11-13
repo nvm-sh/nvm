@@ -34,7 +34,7 @@ setup
 TMPDIR_FOR_TEST="$(mktemp -d)"
 TEST_PROFILE="${TMPDIR_FOR_TEST}/.bashrc"
 EXPECTED_PROFILE="${TMPDIR_FOR_TEST}/expected"
-COMPLETION_LINE='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"'
+COMPLETION_LINE='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion'
 
 # runs the installer against $TEST_PROFILE, and compares the whole file, byte for byte, with $EXPECTED_PROFILE.
 # `nvm_do_install` unsets every `nvm_` function when it finishes, so each run sources the installer and mocks afresh.

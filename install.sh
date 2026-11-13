@@ -508,10 +508,10 @@ nvm_do_install() {
     esac
   fi
 
-  SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"\\n"
+  SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\\n"
 
   # shellcheck disable=SC2016
-  COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"\n'
+  COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion\n'
   BASH_OR_ZSH=false
 
   if [ "${PROFILE-}" = '/dev/null' ] ; then
@@ -565,9 +565,9 @@ nvm_do_install() {
   nvm_reset
 
   nvm_echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
-  command printf '%b' "${SOURCE_STR}"
+  command printf '%b' "${SOURCE_STR}" | command sed 's/  # This loads nvm$//'
   if ${BASH_OR_ZSH} ; then
-    command printf "${COMPLETION_STR}"
+    command printf "${COMPLETION_STR}" | command sed 's/  # This loads nvm bash_completion$//'
   fi
 }
 
