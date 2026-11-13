@@ -7,6 +7,7 @@ cleanup() { rm -rf "$TEST_DIR"; unset -f return_zero; alias node='node' ; unalia
 die () { echo "$@" ; cleanup ; exit 1; }
 
 : nvm.sh
+export NVM_DIR="$(cd ../../.. && pwd)"
 \. ../../../nvm.sh
 
 return_zero () { return 0; }
@@ -36,5 +37,15 @@ chmod a+x "$TEST_DIR/node"
 
 alias node='node --harmony'
 [ "$(PATH="$TEST_DIR" nvm_ls_current)" = "VERSION FOO!" ] || die 'when activated and node aliased, did not return nvm node version'
+
+# Git Bash can execute node but lose its output inside command substitution.
+# Invoking node.exe explicitly returns the version in that environment.
+nvm_get_os() { nvm_echo win; }
+[ "$(PATH="$TEST_DIR" nvm_ls_current)" = 'VERSION FOO!' ] || die 'on Windows without node.exe, nvm_ls_current did not use node'
+printf '%s\n' '#!/bin/sh' > "$TEST_DIR/node"
+printf '%s\n' '#!/bin/sh' 'echo v18.13.0' > "$TEST_DIR/node.exe"
+chmod a+x "$TEST_DIR/node.exe"
+[ "$(PATH="$TEST_DIR" nvm_ls_current)" = 'v18.13.0' ] || die 'on Git Bash, nvm_ls_current did not read node.exe version'
+[ "$(PATH="$TEST_DIR" nvm current)" = 'v18.13.0' ] || die 'on Git Bash, nvm current did not report the selected node version'
 
 cleanup
