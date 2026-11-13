@@ -288,6 +288,8 @@ If you're running a system without prepackaged binary available, which means you
   - [nodist](https://github.com/marcelklehr/nodist)
   - [nvs](https://github.com/jasongin/nvs)
 
+**Note:** When using Cygwin, install the `curl` package through [Cygwin's setup program](https://cygwin.com/install.html). Run `command -v curl` in your Cygwin terminal and ensure it points to Cygwin's `curl` (for example, `/usr/bin/curl`), rather than a Windows executable. A Windows version of `curl` may fail to write downloads to Cygwin paths (see [#2515](https://github.com/nvm-sh/nvm/issues/2515)).
+
 **Note:** `nvm` does not support [Fish] either (see [#303](https://github.com/nvm-sh/nvm/issues/303)). Alternatives exist, which are neither supported nor developed by us:
 
   - [bass](https://github.com/edc/bass) allows you to use utilities written for Bash in fish shell
