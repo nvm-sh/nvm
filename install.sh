@@ -565,9 +565,9 @@ nvm_do_install() {
   nvm_reset
 
   nvm_echo "=> Close and reopen your terminal to start using nvm or run the following to use it now:"
-  command printf '%b' "${SOURCE_STR}"
+  command printf '%b' "${SOURCE_STR}" | command sed 's/  # This loads nvm$//'
   if ${BASH_OR_ZSH} ; then
-    command printf "${COMPLETION_STR}"
+    command printf "${COMPLETION_STR}" | command sed 's/  # This loads nvm bash_completion$//'
   fi
 }
 
