@@ -1,0 +1,60 @@
+#!/bin/sh
+# Mocks are called indirectly by the sourced nvm functions.
+# shellcheck disable=SC2329
+
+die () { echo "$@"; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh --no-use
+\. ../../common.sh
+
+nvm_record_lts_status() { :; }
+export NVM_NODEJS_ORG_MIRROR='https://nodejs.org/dist'
+export NVM_IOJS_ORG_MIRROR='https://iojs.org/dist'
+
+# A failed request may have already written part of index.tab to stdout.
+# Neither an empty response nor a partial one should look like a successful list.
+for FLAVOR in node iojs; do
+  for PARTIAL in no yes; do
+    nvm_download() {
+      if [ "${PARTIAL}" = yes ]; then
+        cat "${PWD}/mocks/nodejs.org-dist-index.tab"
+      fi
+      return 60
+    }
+
+    try nvm_ls_remote_index_tab "${FLAVOR}" std ''
+    [ "${CAPTURED_EXIT_CODE}" = 3 ] || die "${FLAVOR}: failed download should return 3"
+    [ "${CAPTURED_STDOUT}" = 'N/A' ] || die "${FLAVOR}: failed download must not print partial versions"
+
+    MIRROR="$(nvm_get_mirror "${FLAVOR}" std)"
+    try_err nvm_ls_remote_index_tab "${FLAVOR}" std ''
+    [ "${CAPTURED_STDERR}" = "Failed to download version list from ${MIRROR}/index.tab" ] \
+      || die "${FLAVOR}: missing download error: ${CAPTURED_STDERR}"
+  done
+done
+
+# A working mirror should still provide its versions when the other one fails,
+# but the failure must remain visible on stderr.
+nvm_download() {
+  case "$*" in
+    *https://nodejs.org/dist/index.tab*) return 60 ;;
+    *) cat "${PWD}/mocks/iojs.org-dist-index.tab" ;;
+  esac
+}
+try nvm_remote_versions
+[ "${CAPTURED_EXIT_CODE}" = 3 ] || die 'partial list should preserve the failure status'
+[ "${CAPTURED_STDOUT}" = "$(cat "${PWD}/mocks/nvm_ls_remote_iojs.txt")" ] \
+  || die 'the working io.js mirror should still provide its versions'
+try_err nvm_remote_versions
+[ "${CAPTURED_STDERR}" = 'Failed to download version list from https://nodejs.org/dist/index.tab' ] \
+  || die 'partial list should report the failed mirror'
+
+# Custom mirrors may contain credentials; the new diagnostic must redact them.
+export NVM_NODEJS_ORG_MIRROR='https://user:password@example.com/dist'
+nvm_download() { return 60; }
+try_err nvm_ls_remote
+[ "${CAPTURED_STDERR}" = 'Failed to download version list from https://***@example.com/dist/index.tab' ] \
+  || die 'the download error should redact mirror credentials'
+
+unset -f nvm_download nvm_record_lts_status

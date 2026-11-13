@@ -2822,9 +2822,14 @@ nvm_ls_remote_index_tab() {
 
   nvm_is_zsh && setopt local_options shwordsplit
   local VERSION_LIST
+  VERSION_LIST="$(nvm_download -L -s "${MIRROR}/index.tab" -o -)" || {
+    nvm_err "Failed to download version list from $(nvm_sanitize_url "${MIRROR}/index.tab")"
+    nvm_echo 'N/A'
+    return 3
+  }
   # the mirror's index.tab is untrusted: skip the header, and any row whose version
   # is malformed, before it is printed, stored as an LTS alias, or matched against a pattern
-  VERSION_LIST="$(nvm_download -L -s "${MIRROR}/index.tab" -o - \
+  VERSION_LIST="$(nvm_echo "${VERSION_LIST}" \
     | command awk -v prefix="${PREFIX}" 'NR > 1 && $1 ~ /^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$/ { print prefix $0 }' \
   )"
   local LTS_ALIAS
