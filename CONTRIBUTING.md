@@ -67,7 +67,7 @@ Before sending the pull request, make sure your code is running on the latest av
 
 ```
 git fetch upstream
-git rebase upstream/main
+git rebase upstream/master
 ```
 
 Verify your changes
