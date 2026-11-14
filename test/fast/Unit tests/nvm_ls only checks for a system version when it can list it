@@ -1,0 +1,54 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "${TEST_DIR-}"
+  unset -f nvm_has_system_node nvm_has_system_iojs node
+  unset TEST_DIR NVM_DIR SYSTEM_CHECKS OUTPUT
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+# an isolated NVM_DIR with known versions
+TEST_DIR="${PWD}/nvm_ls_system_check_tmp"
+for VERSION in v20.0.0 v24.13.0; do
+  mkdir -p "${TEST_DIR}/versions/node/${VERSION}/bin" || die "failed to create ${VERSION} dir"
+  make_echo "${TEST_DIR}/versions/node/${VERSION}/bin/node" "${VERSION}" || die "failed to create ${VERSION} node binary"
+done
+unset VERSION
+NVM_DIR="${TEST_DIR}"
+
+# each check runs `nvm deactivate` in a subshell, so count them
+SYSTEM_CHECKS=0
+nvm_has_system_node() { SYSTEM_CHECKS=$((SYSTEM_CHECKS + 1)); return 0; }
+nvm_has_system_iojs() { SYSTEM_CHECKS=$((SYSTEM_CHECKS + 1)); return 1; }
+node() { echo 'v18.0.0'; }
+
+# a partial version never lists the system version, so it should not check for one
+nvm_ls 24 > "${TEST_DIR}/output" || die '`nvm_ls 24` failed'
+OUTPUT="$(cat "${TEST_DIR}/output")"
+[ "_${OUTPUT}" = '_v24.13.0' ] || die "\`nvm_ls 24\` should output >v24.13.0<; got >${OUTPUT}<"
+[ "${SYSTEM_CHECKS}" = 0 ] || die "\`nvm_ls 24\` should not check for a system version; checked ${SYSTEM_CHECKS} times"
+
+nvm_ls iojs-v3 > "${TEST_DIR}/output"
+[ "${SYSTEM_CHECKS}" = 0 ] || die "\`nvm_ls iojs-v3\` should not check for a system version; checked ${SYSTEM_CHECKS} times"
+
+# these patterns still list it
+nvm_ls > "${TEST_DIR}/output" || die '`nvm_ls` failed'
+OUTPUT="$(cat "${TEST_DIR}/output")"
+[ "_${OUTPUT}" = "_v20.0.0
+v24.13.0
+system v18.0.0" ] || die "\`nvm_ls\` should list the system version; got >${OUTPUT}<"
+[ "${SYSTEM_CHECKS}" != 0 ] || die '`nvm_ls` should check for a system version'
+
+SYSTEM_CHECKS=0
+nvm_ls system > "${TEST_DIR}/output" || die '`nvm_ls system` failed'
+OUTPUT="$(cat "${TEST_DIR}/output")"
+[ "_${OUTPUT}" = '_system v18.0.0' ] || die "\`nvm_ls system\` should output >system v18.0.0<; got >${OUTPUT}<"
+[ "${SYSTEM_CHECKS}" != 0 ] || die '`nvm_ls system` should check for a system version'
+
+cleanup

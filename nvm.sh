@@ -2543,9 +2543,14 @@ nvm_ls() {
     if nvm_is_iojs_version "${PATTERN}"; then
       NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_IOJS}"
       PATTERN="$(nvm_strip_iojs_prefix "${PATTERN}")"
-      if nvm_has_system_iojs; then
-        NVM_ADD_SYSTEM=true
-      fi
+      # only these patterns list the system version, at the end of this function
+      case "${PATTERN}" in
+        '' | v | system)
+          if nvm_has_system_iojs; then
+            NVM_ADD_SYSTEM=true
+          fi
+        ;;
+      esac
     elif [ "${PATTERN}" = "${NVM_NODE_PREFIX}-" ]; then
       NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_OLD}"
       NVM_DIRS_TO_SEARCH2="${NVM_VERSION_DIR_NEW}"
@@ -2557,9 +2562,14 @@ nvm_ls() {
       NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_OLD}"
       NVM_DIRS_TO_SEARCH2="${NVM_VERSION_DIR_NEW}"
       NVM_DIRS_TO_SEARCH3="${NVM_VERSION_DIR_IOJS}"
-      if nvm_has_system_iojs || nvm_has_system_node; then
-        NVM_ADD_SYSTEM=true
-      fi
+      # only these patterns list the system version, at the end of this function
+      case "${PATTERN}" in
+        '' | v | system)
+          if nvm_has_system_iojs || nvm_has_system_node; then
+            NVM_ADD_SYSTEM=true
+          fi
+        ;;
+      esac
     fi
 
     if ! [ -d "${NVM_DIRS_TO_SEARCH1}" ] || ! (command ls -1q "${NVM_DIRS_TO_SEARCH1}" | nvm_grep -q .); then
