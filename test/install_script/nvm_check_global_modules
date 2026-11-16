@@ -4,13 +4,13 @@ cleanup () {
   rm -rf "$npm_config_prefix/lib" >/dev/null 2>&1
   unset npm_config_prefix
 
-  rm -f npm
+  [ -z "${FAKE_NPM_DIR-}" ] || rm -rf "${FAKE_NPM_DIR}"
   [ -z "${WINDOWS_NPM_DIR-}" ] || rm -rf "${WINDOWS_NPM_DIR}"
   PATH="$ORIGINAL_PATH"
   NVM_DIR="$ORIGINAL_NVM_DIR"
 
   unset -f setup cleanup die
-  unset message ORIGINAL_PATH ORIGINAL_NVM_DIR WINDOWS_NPM_DIR
+  unset message ORIGINAL_PATH ORIGINAL_NVM_DIR FAKE_NPM_DIR WINDOWS_NPM_DIR
 }
 die () { echo "$@" ; cleanup ; exit 1; }
 
@@ -55,9 +55,10 @@ message=$(nvm_check_global_modules)
 [ -z "$message" ] || die "nvm_check_global_modules should have not printed a notice when npm had only itself installed as a global module; got:\n${message}"
 
 # Faking the absence of npm
-PATH=".:$PATH"
-touch npm
-chmod +x npm
+FAKE_NPM_DIR="$(mktemp -d)"
+touch "${FAKE_NPM_DIR}/npm"
+chmod +x "${FAKE_NPM_DIR}/npm"
+PATH="${FAKE_NPM_DIR}:$PATH"
 
 message=$(nvm_check_global_modules)
 [ -z "$message" ] || die "nvm_check_global_modules should have not printed a notice when npm was unavailable; got:\n${message}"
@@ -82,6 +83,21 @@ message=$(nvm_check_global_modules)
 nvm_is_wsl() { return 1; }
 message=$(nvm_check_global_modules)
 [ -n "$message" ] || die 'nvm_check_global_modules should still warn about a Windows npm outside WSL, where it is the system node'
+
+# npm must not apply the npmrc of the project that `$PWD` is in
+cat <<'SH' >"${FAKE_NPM_DIR}/npm"
+#!/bin/sh
+case "$1" in
+  --version) echo '10.0.0' ;;
+  list) printf '%s\n' 'npm@10.0.0' "└── cwd@[$(pwd)]" ;;
+esac
+SH
+PATH="${FAKE_NPM_DIR}:${ORIGINAL_PATH}"
+message=$(nvm_check_global_modules)
+case "$message" in
+  *"cwd@[/]"*) ;;
+  *) die "nvm_check_global_modules should run npm from \`/\`; got:\n${message}" ;;
+esac
 
 
 cleanup

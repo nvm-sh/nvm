@@ -403,14 +403,15 @@ nvm_check_global_modules() {
     */*) nvm_is_wsl && [ -f "${NPM_COMMAND%/*}/npm.cmd" ] && return 0 ;;
   esac
 
+  # run npm from `/`, so it does not apply the npmrc of the (untrusted) project that `$PWD` is in
   local NPM_VERSION
-  NPM_VERSION="$(npm --version)"
+  NPM_VERSION="$(command cd / && npm --version)"
   NPM_VERSION="${NPM_VERSION:--1}"
   [ "${NPM_VERSION%%[!-0-9]*}" -gt 0 ] || return 0
 
   local NPM_GLOBAL_MODULES
   NPM_GLOBAL_MODULES="$(
-    npm list -g --depth=0 |
+    (command cd / && npm list -g --depth=0) |
     command sed -e '/ npm@/d' -e '/ (empty)$/d'
   )"
 
