@@ -4026,35 +4026,44 @@ nvm_download_artifact() {
     nvm_err "Removing the unverified local cache..."
     command rm -rf "${TARBALL}"
   fi
-  # `--offline` uses the cached archive without a checksum, so only a verified archive may ever sit at ${TARBALL}
+  # `--offline` uses the cached archive without a checksum, so only a verified archive may ever sit at ${TARBALL}.
+  # Each download gets a path no other process knows: a downloader left running by another install
+  # can open its output late (curl does on the first body byte), and would then rewrite the verified file.
+  nvm_is_zsh && setopt local_options nonomatch
+  command rm -rf "${TARBALL}.unverified"*
+  local UNVERIFIED_DIR
+  UNVERIFIED_DIR="$(command mktemp -d "${TARBALL}.unverified.XXXXXX")" || {
+    nvm_err "creating a temporary directory in $(nvm_sanitize_path "${tmpdir}") failed"
+    return 3
+  }
   local UNVERIFIED_TARBALL
-  UNVERIFIED_TARBALL="${TARBALL}.unverified"
-  command rm -f "${UNVERIFIED_TARBALL}"
+  UNVERIFIED_TARBALL="${UNVERIFIED_DIR}/${SLUG}.${COMPRESSION}"
 
   nvm_err "Downloading $(nvm_sanitize_url "${TARBALL_URL}")..."
   # stdout is reserved for the tarball path, so nothing the downloader prints may reach it
   nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${UNVERIFIED_TARBALL}" >&2 || {
-    command rm -rf "${UNVERIFIED_TARBALL}" "${tmpdir}"
+    command rm -rf "${UNVERIFIED_DIR}" "${tmpdir}"
     nvm_err "download from $(nvm_sanitize_url "${TARBALL_URL}") failed"
     return 4
   }
 
   if nvm_grep '404 Not Found' "${UNVERIFIED_TARBALL}" >/dev/null; then
-    command rm -rf "${UNVERIFIED_TARBALL}" "${tmpdir}"
+    command rm -rf "${UNVERIFIED_DIR}" "${tmpdir}"
     nvm_err "HTTP 404 at URL $(nvm_sanitize_url "${TARBALL_URL}")"
     return 5
   fi
 
   nvm_compare_checksum "${UNVERIFIED_TARBALL}" "${CHECKSUM}" || {
-    command rm -rf "${UNVERIFIED_TARBALL}" "${tmpdir}"
+    command rm -rf "${UNVERIFIED_DIR}" "${tmpdir}"
     return 6
   }
 
   command mv -f "${UNVERIFIED_TARBALL}" "${TARBALL}" || {
-    command rm -rf "${UNVERIFIED_TARBALL}" "${tmpdir}"
+    command rm -rf "${UNVERIFIED_DIR}" "${tmpdir}"
     nvm_err "moving the downloaded archive into the cache at $(nvm_sanitize_path "${TARBALL}") failed"
     return 7
   }
+  command rm -rf "${UNVERIFIED_DIR}"
 
   nvm_echo "${TARBALL}"
 }

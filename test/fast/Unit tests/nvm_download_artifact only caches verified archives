@@ -85,11 +85,13 @@ try download_offline
 nvm_compare_checksum() { return 0; }
 command mkdir -p "${TEST_CACHE_DIR}"
 nvm_echo 'partial' > "${TEST_TARBALL}.unverified"
+command mkdir -p "${TEST_TARBALL}.unverified.abc123"
+nvm_echo 'partial' > "${TEST_TARBALL}.unverified.abc123/${TEST_SLUG}.tar.gz"
 try nvm_download_artifact node binary std v20.0.0
 [ "${CAPTURED_EXIT_CODE}" = '0' ] || die "verified download: expected exit code 0, got ${CAPTURED_EXIT_CODE}"
 [ "${CAPTURED_STDOUT}" = "${TEST_TARBALL}" ] || die "verified download: expected >${TEST_TARBALL}<, got >${CAPTURED_STDOUT}<"
 [ "$(command cat "${TEST_TARBALL}")" = 'downloaded' ] || die "verified download: expected the cached archive to hold only the new download, got >$(command cat "${TEST_TARBALL}")<"
-[ ! -e "${TEST_TARBALL}.unverified" ] || die 'verified download: expected no unverified download to remain in the cache'
+[ "$(command ls "${TEST_CACHE_DIR}")" = "$(nvm_echo 'files'; nvm_echo "${TEST_SLUG}.tar.gz")" ] || die "verified download: expected no unverified download to remain in the cache, got >$(command ls "${TEST_CACHE_DIR}")<"
 [ ! -e "${WORK}/downloaded-to-final-name" ] || die 'an unverified download was written to the final cache name, where an interrupted download would be left for --offline'
 
 # without any checksum tool, nothing is downloaded and the verified cache is left alone
@@ -97,6 +99,38 @@ nvm_get_checksum_binary() { return 1; }
 try nvm_download_artifact node binary std v20.0.0
 [ "${CAPTURED_EXIT_CODE}" = '6' ] || die "no checksum tool: expected exit code 6, got ${CAPTURED_EXIT_CODE}"
 [ "$(command cat "${TEST_TARBALL}")" = 'downloaded' ] || die "no checksum tool: expected the cached archive to be left alone, got >$(command cat "${TEST_TARBALL}")<"
-[ ! -e "${TEST_TARBALL}.unverified" ] || die 'no checksum tool: expected nothing to be downloaded'
+[ "$(command ls "${TEST_CACHE_DIR}")" = "$(nvm_echo 'files'; nvm_echo "${TEST_SLUG}.tar.gz")" ] || die "no checksum tool: expected nothing to be downloaded, got >$(command ls "${TEST_CACHE_DIR}")<"
+nvm_get_checksum_binary() { nvm_echo 'sha256sum'; }
+
+# a downloader left running by an earlier install, which opens its output only once a later install is downloading
+# (as curl does when the response body is late), must not be able to write to the archive that the later install verified
+command rm -rf "${WORK}/.cache"
+nvm_compare_checksum() { [ "$(command cat "$1")" = 'published' ]; }
+nvm_download() {
+  while [ "$#" -gt 1 ] && [ "$1" != '-o' ]; do
+    shift
+  done
+  if [ ! -e "${WORK}/first-download" ]; then
+    nvm_echo "$2" > "${WORK}/first-download"
+    nvm_download_artifact node binary std v20.0.0 > "${WORK}/second-install" 2>/dev/null
+    nvm_echo "$?" >> "${WORK}/second-install"
+    if [ -e "${WORK}/late-open" ]; then
+      nvm_echo 'tampered' >&9
+      exec 9>&-
+    fi
+    command cat "${TEST_TARBALL}" > "${WORK}/cached-after-late-write"
+  else
+    # a failed `exec` redirection would end the shell; where the path is gone, curl would fail to open it
+    if [ -d "$(command dirname "$(command cat "${WORK}/first-download")")" ]; then
+      exec 9> "$(command cat "${WORK}/first-download")"
+      command touch "${WORK}/late-open"
+    fi
+    nvm_echo 'published' > "$2"
+  fi
+}
+try nvm_download_artifact node binary std v20.0.0
+[ "$(command cat "${WORK}/second-install")" = "$(nvm_echo "${TEST_TARBALL}"; nvm_echo 0)" ] || die "late write: expected the second install to cache its download, got >$(command cat "${WORK}/second-install")<"
+[ "$(command cat "${WORK}/cached-after-late-write")" = 'published' ] || die "late write: expected the verified archive in the cache to stay as it was, got >$(command cat "${WORK}/cached-after-late-write")<"
+[ "${CAPTURED_EXIT_CODE}" = '6' ] || die "late write: expected the first install to reject its own download (exit code 6), got ${CAPTURED_EXIT_CODE}"
 
 cleanup
