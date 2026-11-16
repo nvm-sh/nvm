@@ -1,0 +1,64 @@
+#!/bin/sh
+
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+mkdir -p "${TMP_DIR}/project" "${TMP_DIR}/bin" || die 'could not make the test dirs'
+echo '{}' > "${TMP_DIR}/project/package.json"
+echo 'registry=http://127.0.0.1:9/' > "${TMP_DIR}/project/.npmrc"
+
+# a real executable, since `xargs` cannot run a shell function
+NPM_CALLS="${TMP_DIR}/npm-calls"
+cat > "${TMP_DIR}/bin/npm" <<FAKE
+#!/bin/sh
+echo "\$(pwd): \$*" >> '${NPM_CALLS}'
+echo '6.0.0'
+FAKE
+chmod +x "${TMP_DIR}/bin/npm" || die 'could not make the fake npm'
+PATH="${TMP_DIR}/bin:${PATH}"
+
+check_calls () {
+  CALLS="$(cat "${NPM_CALLS}")"
+  [ "_${CALLS}" = "_$2" ] || die "$1 should run npm from \`/\`: expected >$2<; got >${CALLS}<"
+  rm -f "${NPM_CALLS}"
+}
+
+cd "${TMP_DIR}/project" || die 'could not cd to the project'
+PROJECT_PWD="$(pwd)"
+
+if nvm_is_zsh; then
+  # eg, a hook that runs `nvm use` on every directory change
+  eval 'chpwd() { echo "chpwd: $(pwd)" >> "${NPM_CALLS}"; }'
+fi
+
+nvm_npm config get registry >/dev/null
+check_calls nvm_npm '/: config get registry'
+
+[ "_$(pwd)" = "_${PROJECT_PWD}" ] || die "nvm_npm should not change the caller's directory; got >$(pwd)<"
+
+OUTPUT="$(nvm_print_npm_version)"
+[ "_${OUTPUT}" = '_ (npm v6.0.0)' ] || die "nvm_print_npm_version should print the npm version; got >${OUTPUT}<"
+check_calls nvm_print_npm_version '/: --version'
+
+nvm_get_default_packages() { echo 'a b'; }
+nvm_install_default_packages >/dev/null
+check_calls nvm_install_default_packages '/: install -g --quiet a b'
+
+nvm_ls_current() { echo 'v8.0.0'; }
+nvm_install_latest_npm >/dev/null
+check_calls nvm_install_latest_npm '/: --version
+/: install -g npm@6
+/: --version'
+
+cleanup

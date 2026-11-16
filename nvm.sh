@@ -593,7 +593,7 @@ nvm_npm() {
 nvm_print_npm_version() {
   if nvm_has "npm"; then
     local NPM_VERSION
-    NPM_VERSION="$(npm --version 2>/dev/null)"
+    NPM_VERSION="$(nvm_npm --version 2>/dev/null)"
     if [ -n "${NPM_VERSION}" ]; then
       command printf " (npm v${NPM_VERSION})"
     fi
@@ -605,7 +605,7 @@ nvm_install_latest_npm() {
   local NODE_VERSION
   NODE_VERSION="$(nvm_strip_iojs_prefix "$(nvm_ls_current)")"
   local NPM_VERSION
-  NPM_VERSION="$(npm --version 2>/dev/null)"
+  NPM_VERSION="$(nvm_npm --version 2>/dev/null)"
 
   if [ "${NODE_VERSION}" = 'system' ]; then
     NODE_VERSION="$(node --version)"
@@ -623,7 +623,7 @@ nvm_install_latest_npm() {
   fi
 
   local NVM_NPM_CMD
-  NVM_NPM_CMD='npm'
+  NVM_NPM_CMD='nvm_npm'
   if [ "${NVM_DEBUG-}" = 1 ]; then
     nvm_echo "Detected node version ${NODE_VERSION}, npm version v${NPM_VERSION}"
     NVM_NPM_CMD='nvm_echo npm'
@@ -868,7 +868,7 @@ nvm_install_latest_npm() {
       $NVM_NPM_CMD install -g npm
     fi
   fi
-  nvm_echo "* npm upgraded to: v$(npm --version 2>/dev/null)"
+  nvm_echo "* npm upgraded to: v$(nvm_npm --version 2>/dev/null)"
 }
 
 # Make zsh glob matching behave same as bash
@@ -4461,7 +4461,7 @@ nvm_npm_global_modules() {
   local NPMLIST
   local VERSION
   VERSION="$1"
-  NPMLIST=$(nvm use "${VERSION}" >/dev/null && npm list -g --depth=0 2>/dev/null | command sed -e '1d' -e '/UNMET PEER DEPENDENCY/d')
+  NPMLIST=$(nvm use "${VERSION}" >/dev/null && nvm_npm list -g --depth=0 2>/dev/null | command sed -e '1d' -e '/UNMET PEER DEPENDENCY/d')
 
   local INSTALLS
   INSTALLS=$(nvm_echo "${NPMLIST}" | command sed -e '/ -> / d' -e '/\(empty\)/ d' -e 's/^.* \(.*@[^ ]*\).*/\1/' -e '/^npm@[^ ]*.*$/ d' -e '/^corepack@[^ ]*.*$/ d' | command xargs)
@@ -6919,7 +6919,7 @@ nvm() {
 
       nvm_echo "Reinstalling global packages from ${VERSION}..."
       if [ -n "${INSTALLS}" ]; then
-        nvm_echo "${INSTALLS}" | command xargs npm install -g --quiet
+        nvm_echo "${INSTALLS}" | (nvm_cd_root && command xargs npm install -g --quiet)
       else
         nvm_echo "No installed global packages found..."
       fi
@@ -6934,7 +6934,7 @@ nvm() {
             if [ -n "${LINK}" ]; then
               case "${LINK}" in
                 '/'*) (nvm_cd "${LINK}" && npm link) ;;
-                *) (nvm_cd "$(npm root -g)/../${LINK}" && npm link)
+                *) (nvm_cd "$(nvm_npm root -g)/../${LINK}" && npm link)
               esac
             fi
           done
@@ -7148,7 +7148,7 @@ nvm_install_default_packages() {
   nvm_echo "Installing default global packages from ${NVM_DIR}/default-packages..."
   nvm_echo "npm install -g --quiet ${DEFAULT_PACKAGES}"
 
-  if ! nvm_echo "${DEFAULT_PACKAGES}" | command xargs npm install -g --quiet; then
+  if ! nvm_echo "${DEFAULT_PACKAGES}" | (nvm_cd_root && command xargs npm install -g --quiet); then
     nvm_err "Failed installing default packages. Please check if your default-packages file or a package in it has problems!"
     return 1
   fi
