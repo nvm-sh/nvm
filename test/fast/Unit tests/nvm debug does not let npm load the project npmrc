@@ -1,0 +1,39 @@
+#!/bin/sh
+
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+mkdir -p "${TMP_DIR}/project" || die 'could not make the project dir'
+echo '{}' > "${TMP_DIR}/project/package.json"
+echo "logs-dir=${TMP_DIR}/logs" > "${TMP_DIR}/project/.npmrc"
+
+NPM_CALLS="${TMP_DIR}/npm-calls"
+npm() {
+  echo "$(pwd): $*" >> "${NPM_CALLS}"
+  echo "npm $*"
+}
+
+OUTPUT="$(cd "${TMP_DIR}/project" && nvm debug 2>&1)"
+
+EXPECTED_CALLS="/: config get prefix
+/: root -g"
+CALLS="$(cat "${NPM_CALLS}")"
+[ "_${CALLS}" = "_${EXPECTED_CALLS}" ] || die "nvm debug should run npm outside the project: expected >${EXPECTED_CALLS}<; got >${CALLS}<"
+
+case "${OUTPUT}" in
+  *"npm config get prefix: npm config get prefix"*"npm root -g: npm root -g"*) ;;
+  *) die "nvm debug should print npm's prefix and global root; got >${OUTPUT}<" ;;
+esac
+
+cleanup

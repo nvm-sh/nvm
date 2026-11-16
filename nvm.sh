@@ -574,6 +574,22 @@ nvm_validate_install() {
   return 0
 }
 
+# npm applies the npmrc of the project that `$PWD` is in, which is untrusted:
+# eg, its `logs-dir` picks where npm writes its debug log.
+# run npm from `/` instead, since `--global` alone does not avoid it on npm v7 - v8.2.
+nvm_cd_root() {
+  # `-q` skips zsh's `chpwd` hooks; `$NVM_CD_FLAGS` is not used, since a zsh parent exports it to other shells
+  if nvm_is_zsh; then
+    nvm_cd -q /
+  else
+    nvm_cd /
+  fi
+}
+
+nvm_npm() {
+  (nvm_cd_root && npm "$@")
+}
+
 nvm_print_npm_version() {
   if nvm_has "npm"; then
     local NPM_VERSION
@@ -5234,9 +5250,14 @@ nvm() {
       unset TEST_TOOLS ADD_TEST_TOOLS
 
       local NVM_DEBUG_OUTPUT
-      for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm' 'npm config get prefix' 'npm root -g'; do
+      for NVM_DEBUG_COMMAND in 'nvm current' 'which node' 'which iojs' 'which npm'; do
         NVM_DEBUG_OUTPUT="$(${NVM_DEBUG_COMMAND} 2>&1)"
         nvm_err "${NVM_DEBUG_COMMAND}: $(nvm_sanitize_path "${NVM_DEBUG_OUTPUT}")"
+      done
+      for NVM_DEBUG_COMMAND in 'config get prefix' 'root -g'; do
+        # shellcheck disable=SC2086
+        NVM_DEBUG_OUTPUT="$(nvm_npm ${NVM_DEBUG_COMMAND} 2>&1)"
+        nvm_err "npm ${NVM_DEBUG_COMMAND}: $(nvm_sanitize_path "${NVM_DEBUG_OUTPUT}")"
       done
       return 42
     ;;
@@ -7052,7 +7073,7 @@ nvm() {
         nvm_download nvm_get_latest nvm_has nvm_has_executable nvm_install_default_packages nvm_get_default_packages \
         nvm_curl_use_compression nvm_curl_version \
         nvm_auto nvm_supports_xz \
-        nvm_echo nvm_err nvm_grep nvm_cd \
+        nvm_echo nvm_err nvm_grep nvm_cd nvm_cd_root nvm_npm \
         nvm_die_on_prefix nvm_get_make_jobs nvm_get_minor_version \
         nvm_has_solaris_binary nvm_is_merged_node_version \
         nvm_is_natural_num nvm_is_installed_exact_version nvm_is_version_installed nvm_validate_install \
