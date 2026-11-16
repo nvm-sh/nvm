@@ -1041,21 +1041,39 @@ nvm_is_version_or_alias() {
 nvm_process_nvmrc() {
   local NVMRC_PATH
   NVMRC_PATH="$1"
+  local NVMRC_FIND_PATH
+  case "${NVMRC_PATH}" in
+    /*) NVMRC_FIND_PATH="${NVMRC_PATH}" ;;
+    *) NVMRC_FIND_PATH="./${NVMRC_PATH}" ;;
+  esac
 
-  if [ ! -L "${NVMRC_PATH}" ]; then
-    nvm_process_nvmrc_content "$(command cat "${NVMRC_PATH}")"
-    return
-  fi
-
-  # a symlink can point at any file, so never print its content,
-  # and only accept a version or an existing alias, which would be printed later
+  # a symlink can point at any file, so only a version or an existing alias is accepted from it, and its content is never shown.
+  # A symlink can be swapped in after any check, so read from one open, then check that what was read is the path's only link.
+  local NVMRC_CONTENT
   local NVMRC_VERSION
-  if ! NVMRC_VERSION="$(nvm_process_nvmrc_content "$(command cat "${NVMRC_PATH}")" 2>/dev/null)" \
-    || ! nvm_is_version_or_alias "${NVMRC_VERSION}"; then
+  local NVMRC_INODE
+  {
+    NVMRC_CONTENT="$(command cat)"
+    if NVMRC_VERSION="$(nvm_process_nvmrc_content "${NVMRC_CONTENT}" 2>/dev/null)" \
+      && nvm_is_version_or_alias "${NVMRC_VERSION}"; then
+      nvm_echo "${NVMRC_VERSION}"
+      return 0
+    fi
+    NVMRC_INODE="$(command ls -dLi /dev/stdin)"
+  } < "${NVMRC_PATH}" || return
+
+  NVMRC_INODE="${NVMRC_INODE#"${NVMRC_INODE%%[! ]*}"}"
+  NVMRC_INODE="${NVMRC_INODE%%[!0123456789]*}"
+  if [ -L "${NVMRC_PATH}" ]; then
     nvm_err "invalid .nvmrc! '${NVMRC_PATH}' is a symbolic link, so it must contain a version or an alias name; its content is not shown."
     return 1
   fi
-  nvm_echo "${NVMRC_VERSION}"
+  if [ -z "${NVMRC_INODE}" ] \
+    || [ -z "$(command find "${NVMRC_FIND_PATH}" -prune -type f -links 1 -inum "${NVMRC_INODE}")" ]; then
+    nvm_err "invalid .nvmrc! '${NVMRC_PATH}' has another link, or was replaced while being read, so it must contain a version or an alias name; its content is not shown."
+    return 1
+  fi
+  nvm_process_nvmrc_content "${NVMRC_CONTENT}"
 }
 
 nvm_rc_version() {

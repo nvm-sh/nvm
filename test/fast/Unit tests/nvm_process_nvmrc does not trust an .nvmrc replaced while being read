@@ -1,0 +1,78 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  rm -rf "${TEST_DIR-}"
+  unset TEST_DIR SWAP_FROM SWAP_TO SWAP_DONE
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+TEST_DIR="${PWD}/nvm_process_nvmrc_swap_tmp"
+mkdir -p "${TEST_DIR}/home" "${TEST_DIR}/project" "${TEST_DIR}/bin" || die 'failed to create test dirs'
+printf 'https://user:SECRET@github.com\n' > "${TEST_DIR}/home/.git-credentials"
+NVMRC="${TEST_DIR}/project/.nvmrc"
+
+# `cat` is the first command `nvm_process_nvmrc` runs:
+# the mock swaps `.nvmrc` once, as another user who can write the directory could, then records its arguments
+export SWAP_FROM SWAP_TO SWAP_DONE
+SWAP_TO="${NVMRC}"
+SWAP_DONE="${TEST_DIR}/swapped"
+{
+  echo '#!/bin/sh'
+  printf '%s\n' '[ -e "${SWAP_DONE}" ] || { : > "${SWAP_DONE}"; command mv -f "${SWAP_FROM}" "${SWAP_TO}"; }'
+} > "${TEST_DIR}/bin/cat"
+for COMMAND in cat grep sed awk tr find ls; do
+  {
+    [ "${COMMAND}" = cat ] || echo '#!/bin/sh'
+    printf '%s\n' 'printf "%s\n" "$*" >> "${0%/*}/../arguments"'
+    echo 'PATH="${PATH#*:}"'
+    echo 'exec "${0##*/}" "$@"'
+  } >> "${TEST_DIR}/bin/${COMMAND}"
+  chmod +x "${TEST_DIR}/bin/${COMMAND}"
+done
+
+check() {
+  : > "${TEST_DIR}/arguments"
+  rm -f "${SWAP_DONE}"
+  CAPTURED_EXIT_CODE=0
+  CAPTURED_STDOUT="$(set +x; PATH="${TEST_DIR}/bin:${PATH}" nvm_process_nvmrc "${NVMRC}" 2> "${TEST_DIR}/stderr")" || CAPTURED_EXIT_CODE=$?
+  CAPTURED_STDERR="$(command cat "${TEST_DIR}/stderr")"
+  [ -e "${SWAP_DONE}" ] || die "$1: expected the mocked \`cat\` to swap the file"
+  case "${CAPTURED_STDOUT}${CAPTURED_STDERR}" in
+    *SECRET*) die "$1: expected the content to not be shown; got \`${CAPTURED_STDOUT}${CAPTURED_STDERR}\`" ;;
+  esac
+  ! nvm_grep -q SECRET "${TEST_DIR}/arguments" || die "$1: expected the content to not be in a command's arguments; got \`$(nvm_grep SECRET "${TEST_DIR}/arguments")\`"
+}
+
+# a regular file, swapped for a symlink before it is read
+rm -f "${NVMRC}"
+printf 'v20.0.0\n' > "${NVMRC}"
+SWAP_FROM="${TEST_DIR}/project/link"
+ln -s ../home/.git-credentials "${SWAP_FROM}" || die 'failed to create the symlink'
+check 'a regular file swapped for a symlink'
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected the regular file's version; got exit code ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDOUT}" = v20.0.0 ] || die "expected the regular file's version; got \`${CAPTURED_STDOUT}\`"
+
+# a symlink, swapped for a regular file before it is checked
+rm -f "${NVMRC}"
+ln -s ../home/.git-credentials "${NVMRC}" || die 'failed to create the symlink'
+SWAP_FROM="${TEST_DIR}/project/regular"
+printf 'v20.0.0\n' > "${SWAP_FROM}"
+check 'a symlink swapped for a regular file'
+[ "${CAPTURED_EXIT_CODE}" != 0 ] || die "expected a symlink swapped for a regular file to be invalid; got exit code ${CAPTURED_EXIT_CODE}"
+
+# a hard link to another file is treated like a symlink
+rm -f "${NVMRC}"
+ln "${TEST_DIR}/home/.git-credentials" "${NVMRC}" || die 'failed to create the hard link'
+try_err nvm_process_nvmrc "${NVMRC}"
+[ "${CAPTURED_EXIT_CODE}" != 0 ] || die "expected a hard link to be invalid; got exit code ${CAPTURED_EXIT_CODE}"
+case "${CAPTURED_STDERR}" in
+  *SECRET*) die "expected a hard link's content to not be shown; got \`${CAPTURED_STDERR}\`" ;;
+esac
+
+cleanup
