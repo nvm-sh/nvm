@@ -1,0 +1,155 @@
+#!/bin/sh
+
+cleanup() {
+  if [ -n "${TEST_DIR-}" ] && [ -d "${TEST_DIR}" ]; then
+    rm -rf "${TEST_DIR}"
+  fi
+}
+
+die() { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TEST_DIR=''
+TEST_DIR="$(mktemp -d)" && [ -n "${TEST_DIR}" ] && [ -d "${TEST_DIR}" ] || { TEST_DIR=''; die 'unable to create a temporary directory'; }
+TEST_DIR="$(cd "${TEST_DIR}" && pwd -P)" && [ -n "${TEST_DIR}" ] || { TEST_DIR=''; die 'unable to resolve the temporary directory'; }
+OUTSIDE="${TEST_DIR}/outside"
+OUTSIDE_DIR="${TEST_DIR}/outside-dir"
+[ "${#OUTSIDE}" -lt 90 ] || die "temporary path too long for a ustar name field: ${OUTSIDE}"
+mkdir "${OUTSIDE_DIR}"
+
+# args: value, width; writes the value NUL-padded to width
+field() {
+  printf '%s' "$1"
+  dd if=/dev/zero bs=1 count="$(( $2 - ${#1} ))" 2>/dev/null
+}
+
+# `tar -c` strips a leading `/` and refuses some of these shapes,
+# so write the member bytes directly.
+# args: member name, typeflag, linkname, content; appends to ${TEST_DIR}/archive
+member() {
+  {
+    field "$1" 100
+    field 0000755 8
+    field 0000000 8
+    field 0000000 8
+    field "$(printf '%011o' "${#4}")" 12
+    field 00000000000 12
+    printf '        '
+    printf '%s' "$2"
+    field "$3" 100
+    printf 'ustar'
+    printf '\000'
+    printf '00'
+    field '' 247
+  } > "${TEST_DIR}/header"
+  printf '%06o\000 ' "$(od -An -v -tu1 "${TEST_DIR}/header" | awk '{ for (i = 1; i <= NF; i++) s += $i } END { print s }')" \
+    | dd of="${TEST_DIR}/header" bs=1 seek=148 conv=notrunc 2>/dev/null
+  cat "${TEST_DIR}/header" >> "${TEST_DIR}/archive"
+  if [ -n "$4" ]; then
+    field "$4" 512 >> "${TEST_DIR}/archive"
+  fi
+}
+
+# args: output .tar.gz
+finish() {
+  dd if=/dev/zero bs=512 count=2 2>/dev/null >> "${TEST_DIR}/archive"
+  gzip -n < "${TEST_DIR}/archive" > "$1"
+  rm -f "${TEST_DIR}/archive"
+}
+
+nlinks() { ls -ld "$1" | awk '{ print $2 }'; }
+
+# args: name; extracts ${TEST_DIR}/name.tar.gz into ${TEST_DIR}/name, as callers do, stderr to ${TEST_DIR}/stderr
+extract() {
+  mkdir -p "${TEST_DIR}/$1"
+  nvm_extract_tarball linux v0.10.0 "${TEST_DIR}/$1.tar.gz" "${TEST_DIR}/$1" 2>"${TEST_DIR}/stderr"
+}
+
+# args: name, expected stderr message
+expect_refused() {
+  extract "$1" && die "$1: extraction succeeded"
+  case "$(cat "${TEST_DIR}/stderr")" in
+    *"$2"*) ;;
+    *) die "$1: unexpected output >$(cat "${TEST_DIR}/stderr")<" ;;
+  esac
+  [ ! -e "${TEST_DIR}/$1.extract" ] || die "$1: staging directory left behind"
+}
+
+printf 'ORIGINAL\n' > "${OUTSIDE}"
+
+# a member that `--strip-components 1` would turn into an absolute path
+member 'n/' 5 '' ''
+member "n/${OUTSIDE}" 0 '' 'INJECTED'
+finish "${TEST_DIR}/member.tar.gz"
+extract member || die 'member: extraction failed'
+[ "$(cat "${OUTSIDE}")" = 'ORIGINAL' ] || die 'member: wrote outside its target'
+[ "$(cat "${TEST_DIR}/member${OUTSIDE}")" = 'INJECTED' ] || die 'member: not extracted inside its target'
+[ ! -e "${TEST_DIR}/member.extract" ] || die 'member: staging directory left behind'
+
+# a regular file written through a symlink to an outside directory
+member 'n/' 5 '' ''
+member 'n/l' 2 "${OUTSIDE_DIR}" ''
+member 'n/l/written' 0 '' 'INJECTED'
+finish "${TEST_DIR}/through-symlink.tar.gz"
+extract through-symlink
+[ ! -e "${OUTSIDE_DIR}/written" ] || die 'through-symlink: wrote outside its target'
+
+# hard links whose target is, or becomes, outside the target directory
+member 'n/' 5 '' ''
+member 'n/linked' 1 "n/${OUTSIDE}" ''
+finish "${TEST_DIR}/hardlink-stripped.tar.gz"
+
+member 'n/' 5 '' ''
+member 'n/linked' 1 "${OUTSIDE}" ''
+finish "${TEST_DIR}/hardlink-absolute.tar.gz"
+
+member 'n/' 5 '' ''
+member 'n/linked' 1 'n/../../outside' ''
+finish "${TEST_DIR}/hardlink-dotdot.tar.gz"
+
+member 'n/' 5 '' ''
+member 'n/l' 2 "${TEST_DIR}" ''
+member 'n/linked' 1 'n/l/outside' ''
+finish "${TEST_DIR}/hardlink-through-symlink.tar.gz"
+
+for name in hardlink-stripped hardlink-absolute hardlink-dotdot hardlink-through-symlink; do
+  extract "${name}" && die "${name}: extraction succeeded"
+  [ "$(nlinks "${OUTSIDE}")" = 1 ] || die "${name}: linked a file outside its target"
+  [ ! -e "${TEST_DIR}/${name}.extract" ] || die "${name}: staging directory left behind"
+done
+
+# a hard link inside the archive
+member 'n/' 5 '' ''
+member 'n/a' 0 '' 'a'
+member 'n/b' 1 'n/a' ''
+finish "${TEST_DIR}/hardlink-internal.tar.gz"
+expect_refused hardlink-internal 'hardlink-internal.tar.gz must not contain hard links'
+
+# a legitimate archive: top-level directory renamed into place, dotfiles kept,
+# even when the environment asks `ls` to decorate its output
+mkdir -p "${TEST_DIR}/src/node-v0.10.0-linux-x64/bin" "${TEST_DIR}/legit/stale"
+printf 'node\n' > "${TEST_DIR}/src/node-v0.10.0-linux-x64/bin/node"
+printf 'hidden\n' > "${TEST_DIR}/src/node-v0.10.0-linux-x64/.hidden"
+(cd "${TEST_DIR}/src" && tar -czf "${TEST_DIR}/legit.tar.gz" node-v0.10.0-linux-x64) || die 'unable to create legit archive'
+CLICOLOR=1 CLICOLOR_FORCE=1 QUOTING_STYLE=shell-always LS_COLORS='di=01;34' extract legit || die "legit: extraction failed: $(cat "${TEST_DIR}/stderr")"
+[ "$(cat "${TEST_DIR}/legit/bin/node")" = 'node' ] || die 'legit: bin/node missing'
+[ "$(cat "${TEST_DIR}/legit/.hidden")" = 'hidden' ] || die 'legit: dotfile missing'
+[ ! -e "${TEST_DIR}/legit/stale" ] || die 'legit: stale target contents kept'
+[ ! -e "${TEST_DIR}/legit.extract" ] || die 'legit: staging directory left behind'
+
+# more than one top-level entry
+mkdir -p "${TEST_DIR}/src/other"
+(cd "${TEST_DIR}/src" && tar -czf "${TEST_DIR}/two.tar.gz" node-v0.10.0-linux-x64 other) || die 'unable to create two-entry archive'
+expect_refused two 'two.tar.gz must contain exactly one top-level directory'
+
+# a top-level symlink to a directory
+mkdir -p "${TEST_DIR}/link-src"
+ln -s "${TEST_DIR}/src/node-v0.10.0-linux-x64" "${TEST_DIR}/link-src/node-v0.10.0-linux-x64"
+(cd "${TEST_DIR}/link-src" && tar -czf "${TEST_DIR}/symlink.tar.gz" node-v0.10.0-linux-x64) || die 'unable to create symlink archive'
+expect_refused symlink 'symlink.tar.gz must contain exactly one top-level directory'
+
+cleanup
+unset -f die cleanup field member finish nlinks extract expect_refused
+unset TEST_DIR OUTSIDE OUTSIDE_DIR name

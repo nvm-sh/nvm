@@ -4022,15 +4022,52 @@ nvm_extract_tarball() {
     tar='gtar'
   fi
 
+  # Do not let tar rewrite member names (`--strip-components`, `-s`): many tars
+  # check for absolute paths before rewriting, so `top//abs/path` would be
+  # written to `/abs/path`. Extract as-is, then rename the top-level directory.
+  local STAGING
+  STAGING="${TMPDIR%/}.extract"
+  command rm -rf "${STAGING}" && command mkdir -p "${STAGING}" || return 1
+
   if [ "${NVM_OS}" = 'openbsd' ]; then
     if [ "${tar_compression_flag}" = 'J' ]; then
-      command xzcat "${TARBALL}" | "${tar}" -xf - -C "${TMPDIR}" -s '/[^\/]*\///' || return 1
+      command xzcat "${TARBALL}" | "${tar}" -xf - -C "${STAGING}"
     else
-      command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" -s '/[^\/]*\///' || return 1
+      command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${STAGING}"
     fi
   else
-    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${TMPDIR}" --strip-components 1 --no-same-owner || return 1
+    command "${tar}" -x${tar_compression_flag}f "${TARBALL}" -C "${STAGING}" --no-same-owner
+  fi || {
+    command rm -rf "${STAGING}"
+    return 1
+  }
+
+  # Some tars (eg, busybox) do not contain hard link targets, so a link could
+  # share an outside file's inode. node.js and io.js archives have no hard links.
+  local LINKED
+  if ! LINKED="$(command find "${STAGING}" ! -type d -links +1)" || [ -n "${LINKED}" ]; then
+    nvm_err "${TARBALL} must not contain hard links or unreadable directories"
+    command rm -rf "${STAGING}"
+    return 1
   fi
+
+  local TOP_LEVEL
+  TOP_LEVEL="$(command find "${STAGING}/." ! -name . -prune)"
+  TOP_LEVEL="${TOP_LEVEL#"${STAGING}/./"}"
+  case "${TOP_LEVEL}" in
+    '' | */*) TOP_LEVEL='' ;;
+  esac
+  if [ -z "${TOP_LEVEL}" ] || [ ! -d "${STAGING}/${TOP_LEVEL}" ] || [ -L "${STAGING}/${TOP_LEVEL}" ]; then
+    nvm_err "${TARBALL} must contain exactly one top-level directory"
+    command rm -rf "${STAGING}"
+    return 1
+  fi
+
+  if ! command rm -rf "${TMPDIR}" || ! command mv "${STAGING}/${TOP_LEVEL}" "${TMPDIR}"; then
+    command rm -rf "${STAGING}"
+    return 1
+  fi
+  command rm -rf "${STAGING}"
 }
 
 nvm_get_make_jobs() {
