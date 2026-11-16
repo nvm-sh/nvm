@@ -712,7 +712,7 @@ The header is only sent with requests for URLs under a mirror, never to any othe
 
 nvm gives the header to `curl` and to GNU Wget in a config file (for GNU Wget, a private temporary file that also holds a copy of your `~/.wgetrc`), not as a command-line argument, which other users of the same machine could read. Other `wget`s, like BusyBox's, read no config file, so on a machine shared with other users, install `curl` before using `$NVM_AUTH_HEADER`.
 
-`$NVM_AUTH_HEADER` is the recommended way to authenticate to a mirror. Credentials embedded in the mirror URL itself (`https://user:password@host/...`) also work, and nvm prints such URLs with the credentials masked as `***@`.
+`$NVM_AUTH_HEADER` is the recommended way to authenticate to a mirror. Credentials embedded in the mirror URL itself (`https://user:password@host/...`) also work, and nvm prints such URLs with the credentials masked as `***@`. Like the header, such a URL is given to `curl` in a config and to GNU Wget on its standard input, not as a command-line argument; other `wget`s, like BusyBox's, only take a URL as an argument, so on a machine shared with other users, install `curl` before putting credentials in a mirror URL.
 
 ### Platforms without official binaries
 

@@ -226,12 +226,34 @@ nvm_download() {
   fi
 
   # every local user can read a process's arguments (`ps`, /proc/<pid>/cmdline),
-  # so the credential goes to the downloader in a config file, not an argument
-  if [ -n "${sanitized_header}" ]; then
-    if [ "${NVM_DOWNLOADER}" = 'curl' ]; then
-      nvm_echo "header = \"Authorization: ${sanitized_header}\"" | command curl "$@" --config -
+  # so a credential, in the header or in a URL, goes to the downloader on stdin
+  if [ "${NVM_DOWNLOADER}" = 'curl' ]; then
+    local NVM_DOWNLOAD_CURL_CONFIG
+    NVM_DOWNLOAD_CURL_CONFIG=''
+    if [ -n "${sanitized_header}" ]; then
+      NVM_DOWNLOAD_CURL_CONFIG="header = \"Authorization: ${sanitized_header}\""
+    fi
+    local NVM_DOWNLOAD_CURL_COUNT
+    NVM_DOWNLOAD_CURL_COUNT=$#
+    local NVM_DOWNLOAD_CURL_ARG
+    for NVM_DOWNLOAD_CURL_ARG in "$@"; do
+      if nvm_url_has_credentials "${NVM_DOWNLOAD_CURL_ARG}"; then
+        NVM_DOWNLOAD_CURL_CONFIG="${NVM_DOWNLOAD_CURL_CONFIG:+${NVM_DOWNLOAD_CURL_CONFIG}
+}url = \"$(nvm_echo "${NVM_DOWNLOAD_CURL_ARG}" | command sed 's/[\\"]/\\&/g')\""
+      else
+        set -- "$@" "${NVM_DOWNLOAD_CURL_ARG}"
+      fi
+    done
+    shift "${NVM_DOWNLOAD_CURL_COUNT}"
+    if [ -n "${NVM_DOWNLOAD_CURL_CONFIG}" ]; then
+      nvm_echo "${NVM_DOWNLOAD_CURL_CONFIG}" | command curl "$@" --config -
       return $?
     fi
+    command curl "$@"
+    return $?
+  fi
+
+  if [ -n "${sanitized_header}" ]; then
     if nvm_wget_is_gnu; then
       nvm_wget_with_auth_header "${sanitized_header}" "$@"
       return $?
@@ -240,7 +262,60 @@ nvm_download() {
     set -- "$@" --header "Authorization: ${sanitized_header}"
   fi
 
-  command "${NVM_DOWNLOADER}" "$@"
+  local NVM_DOWNLOAD_WGET_URL
+  for NVM_DOWNLOAD_WGET_URL in "$@"; do
+    if nvm_url_has_credentials "${NVM_DOWNLOAD_WGET_URL}"; then
+      # other wgets, like BusyBox's, only take a URL as an argument
+      if nvm_wget_is_gnu; then
+        nvm_wget_with_url_credentials "$@"
+        return $?
+      fi
+      break
+    fi
+  done
+
+  command wget "$@"
+}
+
+# args: downloader argument
+# Whether it is an http(s) URL with userinfo (`user:password@`) in its authority
+# that fits on one line of a config file; no valid URL has whitespace or control characters.
+nvm_url_has_credentials() {
+  case "${1-}" in
+    *[[:space:][:cntrl:]]*) return 1 ;;
+    http://* | https://*) ;;
+    *) return 1 ;;
+  esac
+  local NVM_URL_AUTHORITY
+  NVM_URL_AUTHORITY="${1#*://}"
+  case "${NVM_URL_AUTHORITY%%/*}" in
+    *@*) return 0 ;;
+  esac
+  return 1
+}
+
+# args: GNU Wget arguments
+# URLs with credentials are read from stdin (`--input-file=-`) instead of being arguments.
+nvm_wget_with_url_credentials() {
+  local NVM_WGET_STDIN_URLS
+  NVM_WGET_STDIN_URLS=''
+  local NVM_WGET_STDIN_COUNT
+  NVM_WGET_STDIN_COUNT=$#
+  local NVM_WGET_STDIN_ARG
+  for NVM_WGET_STDIN_ARG in "$@"; do
+    if nvm_url_has_credentials "${NVM_WGET_STDIN_ARG}"; then
+      NVM_WGET_STDIN_URLS="${NVM_WGET_STDIN_URLS:+${NVM_WGET_STDIN_URLS}
+}${NVM_WGET_STDIN_ARG}"
+    else
+      set -- "$@" "${NVM_WGET_STDIN_ARG}"
+    fi
+  done
+  shift "${NVM_WGET_STDIN_COUNT}"
+  if [ -n "${NVM_WGET_STDIN_URLS}" ]; then
+    nvm_echo "${NVM_WGET_STDIN_URLS}" | command wget "$@" --input-file=-
+    return $?
+  fi
+  command wget "$@"
 }
 
 # BusyBox wget rejects `--version`; GNU Wget2 reports itself as "GNU Wget2"
@@ -305,13 +380,13 @@ nvm_wget_same_origin() {
   local NVM_WGET_REDIRECTS
   NVM_WGET_REDIRECTS=0
   while :; do
-    command wget --max-redirect=0 "$@"
+    nvm_wget_with_url_credentials --max-redirect=0 "$@"
     NVM_WGET_EXIT_CODE=$?
     # wget exits with 8 for an HTTP error status, including a redirect it did not follow
     if [ "${NVM_WGET_EXIT_CODE}" != 8 ] || [ -z "${NVM_WGET_URL}" ]; then
       return "${NVM_WGET_EXIT_CODE}"
     fi
-    NVM_WGET_LOCATION="$(command wget --max-redirect=0 -q -S -O /dev/null "${NVM_WGET_URL}" 2>&1 \
+    NVM_WGET_LOCATION="$(nvm_wget_with_url_credentials --max-redirect=0 -q -S -O /dev/null "${NVM_WGET_URL}" 2>&1 \
       | command awk 'tolower($1) == "location:" { print $2; exit }' | command tr -d '\r')"
     case "${NVM_WGET_LOCATION}" in
       '') return "${NVM_WGET_EXIT_CODE}" ;;
@@ -6989,6 +7064,7 @@ nvm() {
         nvm_curl_libz_support nvm_command_info nvm_is_zsh nvm_stdout_is_terminal \
         nvm_npmrc_bad_news_bears nvm_sanitize_auth_header nvm_auth_header_applies_to \
         nvm_wget_is_gnu nvm_url_origin nvm_wget_same_origin nvm_wget_with_auth_header \
+        nvm_url_has_credentials nvm_wget_with_url_credentials \
         nvm_get_colors nvm_set_colors nvm_print_color_code nvm_wrap_with_color_code \
         nvm_print_color_legend \
         nvm_echo_with_colors nvm_err_with_colors \
