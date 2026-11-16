@@ -24,7 +24,13 @@ nvm_echo() {
     # shellcheck disable=SC3044
     builtin printf %s\\n "$*" 2>/dev/null
   else
-    command printf %s\\n "$*" 2>/dev/null
+    case "${KSH_VERSION-}" in
+      # pdksh and mksh have no `printf` builtin; `/usr/bin/printf` would put the text in its arguments
+      *'PD KSH'* | *'MIRBSD KSH'* | *'LEGACY KSH'*)
+        print -r -- "$*" 2>/dev/null
+      ;;
+      *) command printf %s\\n "$*" 2>/dev/null ;;
+    esac
   fi
 }
 
