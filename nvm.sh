@@ -984,11 +984,14 @@ nvm_process_nvmrc_content() {
         return 1
       fi
 
-      # Check for duplicate keys
-      if nvm_echo "${keys}" | nvm_grep -q -E "(^| )${key}( |$)"; then
-        nvm_nvmrc_invalid_msg "${lines}"
-        return 1
-      fi
+      # Check for duplicate keys, in the shell: a symlinked `.nvmrc` can hold any file's content,
+      # and every local user can read a process's arguments
+      case "${keys} " in
+        *" ${key} "*)
+          nvm_nvmrc_invalid_msg "${lines}"
+          return 1
+        ;;
+      esac
       keys="${keys} ${key}"
       values="${values} ${value}"
     else
@@ -1523,9 +1526,7 @@ nvm_is_valid_version() {
             *.*.*) ;;
             *) return 1 ;;
           esac
-          # a prerelease's `-` makes it unreachable for the pure-shell checks
-          # below, so do the full check now.
-          nvm_version_greater_than_or_equal_to "${VERSION}" 0 || return 1
+          # the core is checked below, in the shell, so it never reaches `awk`'s arguments
         ;;
         *.)
           NVM_VERSION_CORE="${NVM_VERSION_CORE%.}"

@@ -35,6 +35,44 @@ for TARGET in .npmrc .git-credentials; do
   [ -z "${CAPTURED_STDOUT}" ] || die "expected no version from a symlink to ${TARGET}; got \`${CAPTURED_STDOUT}\`"
 done
 
+# every local user can read a command's arguments, so the content is not passed in them either
+MOCK_BIN="${TEST_DIR}/bin"
+mkdir -p "${MOCK_BIN}" || die 'failed to create the mock bin dir'
+for COMMAND in grep sed awk tr; do
+  {
+    echo '#!/bin/sh'
+    printf '%s\n' 'printf "%s\n" "$*" >> "${0%/*}/../arguments"'
+    echo 'PATH="${PATH#*:}"'
+    echo 'exec "${0##*/}" "$@"'
+  } > "${MOCK_BIN}/${COMMAND}"
+  chmod +x "${MOCK_BIN}/${COMMAND}"
+done
+printf 'SECRET=\n' > "${TEST_DIR}/home/wg.key"
+printf 'a=b\nSECRET=c\nSECRET=d\n' > "${TEST_DIR}/home/.env"
+printf 'a.b.c-SECRET\n' > "${TEST_DIR}/home/token"
+printf '1.2.3.4-SECRET\n' > "${TEST_DIR}/home/token2"
+
+for TARGET in wg.key .env token token2; do
+  rm -f "${NVMRC}"
+  ln -s "../home/${TARGET}" "${NVMRC}" || die 'failed to create the symlink'
+
+  : > "${TEST_DIR}/arguments"
+  CAPTURED_STDERR="$(set +x; PATH="${MOCK_BIN}:${PATH}" nvm_process_nvmrc "${NVMRC}" 2>&1 >/dev/null)" \
+    && die "expected a symlink to ${TARGET} to be invalid"
+  [ "${CAPTURED_STDERR}" = "invalid .nvmrc! '${NVMRC}' is a symbolic link, so it must contain a version or an alias name; its content is not shown." ] || die "expected the symlink error for ${TARGET}; got \`${CAPTURED_STDERR}\`"
+  [ -s "${TEST_DIR}/arguments" ] || die 'expected the mocked commands to record their arguments'
+  ! nvm_grep -q SECRET "${TEST_DIR}/arguments" || die "expected a symlink to ${TARGET} to not put its content in a command's arguments; got \`$(nvm_grep SECRET "${TEST_DIR}/arguments")\`"
+done
+
+# nor when the content is valid
+printf 'SECRET=\n20\n' > "${TEST_DIR}/home/accepted"
+rm -f "${NVMRC}"
+ln -s ../home/accepted "${NVMRC}" || die 'failed to create the symlink'
+: > "${TEST_DIR}/arguments"
+CAPTURED_STDOUT="$(set +x; PATH="${MOCK_BIN}:${PATH}" nvm_process_nvmrc "${NVMRC}" 2>/dev/null)" || die 'expected a symlink to a valid version file to be valid'
+[ "${CAPTURED_STDOUT}" = '20' ] || die "expected \`20\` from a symlink to a valid version file; got \`${CAPTURED_STDOUT}\`"
+! nvm_grep -q SECRET "${TEST_DIR}/arguments" || die "expected a symlink to a valid version file to not put its content in a command's arguments; got \`$(nvm_grep SECRET "${TEST_DIR}/arguments")\`"
+
 nvm alias nvmrc_symlink_alias v0.0.1 > /dev/null 2>&1 || die 'failed to create an alias'
 
 # a deliberate symlink to another version file, in or above the project, still works
