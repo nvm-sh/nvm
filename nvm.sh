@@ -4643,12 +4643,25 @@ nvm_write_nvmrc() {
     fi
     return 3
   fi
-  echo "${VERSION_STRING}" | tee "$PWD"/.nvmrc > /dev/null || {
+  # a symlink can be swapped in after that check, so never open "$PWD"/.nvmrc: rename a private file into "$PWD"/,
+  # which replaces a symlink instead of following it. A rename would also replace a read-only .nvmrc, hence that check.
+  local NVMRC_TMPDIR
+  NVMRC_TMPDIR=''
+  if { [ ! -e "$PWD"/.nvmrc ] || { [ -f "$PWD"/.nvmrc ] && [ -w "$PWD"/.nvmrc ]; }; } \
+    && NVMRC_TMPDIR="$(command mktemp -d "${NVM_DIR}/.nvmrc.XXXXXX" 2>/dev/null || command mktemp -d "${TMPDIR:-/tmp}/nvm-nvmrc.XXXXXX" 2>/dev/null)" \
+    && nvm_echo "${VERSION_STRING}" > "${NVMRC_TMPDIR}/.nvmrc" \
+    && command mv -f "${NVMRC_TMPDIR}/.nvmrc" "$PWD"/ 2>/dev/null; then
+    command rmdir "${NVMRC_TMPDIR}"
+  else
+    if [ -n "${NVMRC_TMPDIR}" ]; then
+      command rm -f "${NVMRC_TMPDIR}/.nvmrc"
+      command rmdir "${NVMRC_TMPDIR}"
+    fi
     if [ "${NVM_SILENT:-0}" -ne 1 ]; then
       nvm_err "Warning: Unable to write version number ($VERSION_STRING) to .nvmrc"
     fi
     return 3
-  }
+  fi
   if [ "${NVM_SILENT:-0}" -ne 1 ]; then
     nvm_echo "Wrote version number ($VERSION_STRING) to .nvmrc"
   fi

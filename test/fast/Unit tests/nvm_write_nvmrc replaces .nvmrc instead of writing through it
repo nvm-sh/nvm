@@ -1,0 +1,86 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  cd "${ORIG_PWD}" || :
+  PATH="${REAL_PATH:-${PATH}}"
+  nvm deactivate > /dev/null 2>&1
+  rm -rf "${TEST_DIR-}" "${NVM_DIR}/${TEST_VERSION}"
+  unset TEST_DIR TEST_VERSION ORIG_PWD REAL_PATH SWAP_TARGET
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+ORIG_PWD="${PWD}"
+TEST_VERSION='v0.2.4'
+make_fake_node "${TEST_VERSION}" || die 'failed to create a fake node'
+
+TEST_DIR="${PWD}/nvm_write_nvmrc_replace_tmp"
+mkdir -p "${TEST_DIR}/project" "${TEST_DIR}/bin" "${TEST_DIR}/dir" || die 'failed to create test dirs'
+
+# stand-ins for `tee` and `mv` that turn .nvmrc into a symlink just before the real command runs,
+# as another user who can write the directory could
+for CMD in tee mv; do
+  printf '%s\n' '#!/bin/sh' \
+    'rm -rf "${PWD}/.nvmrc" && ln -s "${SWAP_TARGET}" "${PWD}/.nvmrc" || exit 99' \
+    'PATH="${REAL_PATH}"' \
+    "exec ${CMD} \"\$@\"" > "${TEST_DIR}/bin/${CMD}"
+  chmod +x "${TEST_DIR}/bin/${CMD}"
+done
+
+cd "${TEST_DIR}/project" || die 'failed to enter the project dir'
+export REAL_PATH="${PATH}"
+
+# 1. a symlink to a file, swapped in after the check, does not get written through
+echo 'KEEPME' > "${TEST_DIR}/target"
+export SWAP_TARGET="${TEST_DIR}/target"
+echo 'v0.0.1' > .nvmrc
+PATH="${TEST_DIR}/bin:${REAL_PATH}" nvm_write_nvmrc "${TEST_VERSION}" > /dev/null 2>&1
+PATH="${REAL_PATH}"
+[ "$(cat "${TEST_DIR}/target")" = 'KEEPME' ] || die "expected a symlink swapped in after the check to not be written through; target is now \`$(cat "${TEST_DIR}/target")\`"
+
+# 2. nor does a symlink to a directory get the file moved into it
+rm -rf .nvmrc
+export SWAP_TARGET="${TEST_DIR}/dir"
+echo 'v0.0.1' > .nvmrc
+PATH="${TEST_DIR}/bin:${REAL_PATH}" nvm_write_nvmrc "${TEST_VERSION}" > /dev/null 2>&1
+PATH="${REAL_PATH}"
+[ -z "$(ls -A "${TEST_DIR}/dir")" ] || die "expected nothing to be written into a symlinked directory; found \`$(ls -A "${TEST_DIR}/dir")\`"
+[ "$(cat "${TEST_DIR}/target")" = 'KEEPME' ] || die 'expected the target to still be unchanged'
+
+# 3. a hard link to .nvmrc keeps its content
+rm -rf .nvmrc
+echo 'KEEPME' > "${TEST_DIR}/hardlinked"
+ln "${TEST_DIR}/hardlinked" .nvmrc || die 'failed to create the hard link'
+try_err nvm_write_nvmrc "${TEST_VERSION}"
+[ "${CAPTURED_EXIT_CODE}" = 0 ] || die "expected exit code 0; got ${CAPTURED_EXIT_CODE}: ${CAPTURED_STDERR}"
+[ "$(cat .nvmrc)" = "${TEST_VERSION}" ] || die "expected .nvmrc to contain ${TEST_VERSION}; got \`$(cat .nvmrc)\`"
+[ "$(cat "${TEST_DIR}/hardlinked")" = 'KEEPME' ] || die "expected a hard link to .nvmrc to be left alone; got \`$(cat "${TEST_DIR}/hardlinked")\`"
+
+# 4. a new .nvmrc gets its mode from the umask
+rm -f .nvmrc
+(
+  umask 027
+  nvm_write_nvmrc "${TEST_VERSION}" > /dev/null 2>&1
+) || die 'expected writing a new .nvmrc to succeed'
+MODE="$(ls -l .nvmrc | cut -c1-10)"
+[ "${MODE}" = '-rw-r-----' ] || die "expected .nvmrc to have mode -rw-r----- under umask 027; got ${MODE}"
+
+# 5. a directory named .nvmrc is an error, and nothing is moved into it
+rm -f .nvmrc
+mkdir .nvmrc
+try_err nvm_write_nvmrc "${TEST_VERSION}"
+[ "${CAPTURED_EXIT_CODE}" = 3 ] || die "expected exit code 3 for a directory .nvmrc; got ${CAPTURED_EXIT_CODE}"
+[ "${CAPTURED_STDERR}" = "Warning: Unable to write version number (${TEST_VERSION}) to .nvmrc" ] || die "expected the unable-to-write warning; got \`${CAPTURED_STDERR}\`"
+[ -z "$(ls -A .nvmrc)" ] || die "expected nothing to be moved into a directory .nvmrc; found \`$(ls -A .nvmrc)\`"
+rmdir .nvmrc
+
+# 6. no temporary directories are left behind
+LEFTOVER="$(ls -A "${NVM_DIR}" | grep '^\.nvmrc\.')"
+[ -z "${LEFTOVER}" ] || die "expected no temporary directories left in \$NVM_DIR; found \`${LEFTOVER}\`"
+
+cleanup
