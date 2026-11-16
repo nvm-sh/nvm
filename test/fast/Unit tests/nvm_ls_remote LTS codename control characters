@@ -20,10 +20,14 @@ BEL="$(printf '\007')"
 
 # a malicious/compromised mirror: the LTS codename field ($10) carries terminal
 # escape sequences (an OSC window-title write and an SGR color change);
-# a valid codename (Iron) is included to prove real rows are still listed
+# a valid codename (Iron) is included to prove real rows are still listed;
+# so are a UTF-8 C1 CSI and a right-to-left override, which are not ASCII control characters
 nvm_download() {
   printf 'version\tdate\tfiles\tnpm\tv8\tuv\tzlib\topenssl\tmodules\tlts\tsecurity\n'
+  printf 'v23.0.0\t2026-01-01\tlinux-x64\t-\t-\t-\t-\t-\t-\t-\t-\n'
   printf 'v22.0.0\t2026-01-01\tlinux-x64\t-\t-\t-\t-\t-\t-\tJod\033]0;PWNED\007\033[31m\t-\n'
+  printf 'v21.0.0\t2026-01-01\tlinux-x64\t-\t-\t-\t-\t-\t-\tJod\302\23331m\t-\n'
+  printf 'v20.1.0\t2026-01-01\tlinux-x64\t-\t-\t-\t-\t-\t-\tIron\342\200\256\t-\n'
   printf 'v20.0.0\t2026-01-01\tlinux-x64\t-\t-\t-\t-\t-\t-\tIron\t-\n'
 }
 
@@ -32,8 +36,9 @@ case "${OUTPUT}" in
   *"${ESC}"* | *"${BEL}"*) die "nvm_ls_remote printed control characters from the mirror's LTS codename: $(printf '%s' "${OUTPUT}" | od -c | head -5)" ;;
 esac
 case "${OUTPUT}" in
-  *'v20.0.0'*'Iron'*) ;;
-  *) die "nvm_ls_remote did not list the valid row: ${OUTPUT}" ;;
+  *'v21.0.0'* | *'v20.1.0'*) die "nvm_ls_remote listed a row with a malformed LTS codename: ${OUTPUT}" ;;
+  *'v20.0.0'*'Iron'*'v23.0.0'*) ;;
+  *) die "nvm_ls_remote did not list the valid rows: ${OUTPUT}" ;;
 esac
 if [ -f "$NVM_DIR/.lts-status" ] && nvm_grep -q "${ESC}" "$NVM_DIR/.lts-status"; then
   die 'control characters from the mirror were recorded in .lts-status'
