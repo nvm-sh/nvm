@@ -866,8 +866,13 @@ load-nvmrc() {
   nvmrc_path="$(nvm_find_nvmrc)"
 
   if [ -n "$nvmrc_path" ]; then
+    local nvmrc_version
+    # Let nvm parse `.nvmrc`, so that comments are ignored and the content of an invalid
+    # or symlinked `.nvmrc` is not passed along to other commands
+    nvmrc_version="$(nvm_process_nvmrc "${nvmrc_path}")" || return
+
     local nvmrc_node_version
-    nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+    nvmrc_node_version=$(nvm version "${nvmrc_version}")
 
     if [ "$nvmrc_node_version" = "N/A" ]; then
       nvm install
@@ -906,9 +911,15 @@ function load_nvm --on-variable="PWD"
   set -l node_version (nvm version)
   set -l nvmrc_path (nvm_find_nvmrc)
   if test -n "$nvmrc_path"
-    set -l nvmrc_node_version (nvm version (cat $nvmrc_path))
+    # Let nvm parse `.nvmrc`, so that comments are ignored and the content of an invalid
+    # or symlinked `.nvmrc` is not passed along to other commands.
+    # bass runs its arguments as bash code, so pass the path and version in the environment.
+    set -lx NVMRC_PATH $nvmrc_path
+    set -lx NVMRC_VERSION (bass source ~/.nvm/nvm.sh --no-use ';' nvm_process_nvmrc '"$NVMRC_PATH"')
+    or return
+    set -l nvmrc_node_version (nvm version '"$NVMRC_VERSION"')
     if test "$nvmrc_node_version" = "N/A"
-      nvm install (cat $nvmrc_path)
+      nvm install '"$NVMRC_VERSION"'
     else if test "$nvmrc_node_version" != "$node_version"
       nvm use $nvmrc_node_version
     end
