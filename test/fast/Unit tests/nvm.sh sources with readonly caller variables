@@ -1,0 +1,85 @@
+#!/bin/sh
+
+# Regression test for https://github.com/nvm-sh/nvm/issues/3584
+#
+# A caller (very often a CI build script) may have readonly variables. When
+# nvm.sh declared or assigned to a variable of the same name, bash rejected
+# `local NAME` and dash aborted the script outright, so sourcing nvm.sh failed
+# and the build broke. Every internal variable that nvm.sh touches while being
+# sourced must therefore live in the NVM_ namespace.
+#
+# `readonly` cannot be undone, so each name is checked in a fresh interpreter.
+# The list below is every unprefixed local name nvm.sh has historically used;
+# keeping the full list makes the test catch reintroductions of old names.
+
+die () { echo "$@" ; exit 1; }
+
+NVM_SH_PATH="$(pwd)/../../../nvm.sh"
+[ -r "${NVM_SH_PATH}" ] || die "cannot find nvm.sh at ${NVM_SH_PATH}"
+
+# The shell urchin is running this test in.
+if [ -n "${BASH_VERSION-}" ]; then
+  NVM_TEST_SHELL=bash
+elif [ -n "${ZSH_VERSION-}" ]; then
+  NVM_TEST_SHELL=zsh
+elif [ -n "${KSH_VERSION-}" ]; then
+  NVM_TEST_SHELL=mksh
+else
+  NVM_TEST_SHELL=sh
+fi
+command -v "${NVM_TEST_SHELL}" >/dev/null 2>&1 || die "shell ${NVM_TEST_SHELL} is not available"
+
+NVM_TEST_DIR="$(mktemp -d)" || die 'could not create a temporary directory'
+cleanup () {
+  [ -n "${NVM_TEST_DIR}" ] && rm -rf "${NVM_TEST_DIR}"
+  unset NVM_SH_PATH NVM_TEST_SHELL NVM_TEST_DIR
+}
+
+set -- \
+  ADDITIONAL_PARAMETERS ALIAS ALIAS_FLAGS ALIAS_FORMAT ALIAS_NAME ALIAS_OUTPUT \
+  ALIAS_PATH ALIAS_TARGET ALIAS_TEMP ALIAS_TEMP_FLAGS ANNOUNCED ARROW \
+  CACHE_DIR CHECKSUM CODE COLOR COLORS COMMAND \
+  COMPRESSION COMPUTED_SUM CURL_COMPRESSED_FLAG CURRENT_COLOR DEFAULT_COLOR DEFAULT_IFS \
+  DEFAULT_PACKAGES DEST DEST_FORMAT DIR EXIT_CODE FILE \
+  FLAVOR HOST_ARCH IMPLICIT INFO INSTALLED_COLOR INSTALLS \
+  IOJS_VERSION IS_VERSION_FROM_NVMRC KIND LAST_TWO LINKS LOCAL_VERSION \
+  LOCK LOCK_ROOT LONG_BIT LTS LTS_ALIAS LTS_AND_SYSTEM_COLOR \
+  LTS_ARG LTS_COLOR LTS_MSG LTS_VERSION MACOS_VERSION MAKE_CXX \
+  MAKE_SHELL_OVERRIDE MINOR MIRROR N NEWLINE NEWPATH \
+  NEW_DIR_SED NODE_OR_IOJS NODE_VERSION NOT_INSTALLED_COLOR NPMLIST NPM_VERSION \
+  NUM_GROUPS NUM_VERSION_GROUPS NVMRC_CONTENT NVMRC_PATH NVMRC_PATTERN NVMRC_VERSION \
+  OFFLINE_PATTERN OS_VERSION OUTPUT PATTERN PATTERN_RE PREFIXED_VERSION \
+  PROGRESS_BAR PROVIDED_REINSTALL_PACKAGES_FROM PROVIDED_VERSION REINSTALL_PACKAGES_FROM REMOTE_CMD REQUESTED_VERSION \
+  RESULT SANITIZED_PATH SEARCH_PATTERN SEEN_ALIASES SHASUMS_URL SKIP_DEFAULT_PACKAGES \
+  SLUG SLUG_BINARY SLUG_SOURCE SORT_COMMAND STABLE STALE \
+  STRIPPED_IOJS_VERSION SUFFIX SYSTEM_COLOR SYSTEM_VERSION SYS_COLOR TARBALL \
+  TARBALL_URL TARGET TEST_TOOLS TEXT TIMEOUT TYPE \
+  UNSTABLE UNVERIFIED_TARBALL VERSION VERSIONS VERSION_FORMAT VERSION_LIST \
+  VERSION_NUM VERSION_PATH VERSION_RE VERSION_SOURCE VERSION_STRING WAITED \
+  clean_tree dir error_text has_checked_nvmrc i keys \
+  lines make nobinary node_path noprogress nosource \
+  parent_ path_ pathdir provided_version sanitized_header tar \
+  tar_compression_flag tmpdir tree unpaired_line values version_not_provided \
+  warn_text
+
+for NVM_NAME in "$@"; do
+  NVM_OUTPUT="$(cd "${NVM_TEST_DIR}" && env -i \
+    PATH="${PATH}" HOME="${HOME}" NVM_DIR="${NVM_TEST_DIR}/nvm" \
+    "${NVM_TEST_SHELL}" -c "
+      readonly ${NVM_NAME}=__nvm_readonly_probe__
+      . '${NVM_SH_PATH}'
+      command printf '__SOURCE__%s__END__' \"\$?\"
+    " 2>&1)"
+
+  NVM_SOURCE_RC="$(printf '%s' "${NVM_OUTPUT}" | sed -n 's/.*__SOURCE__\([0-9]*\)__END__.*/\1/p')"
+  NVM_NOISE="$(printf '%s' "${NVM_OUTPUT}" \
+    | sed 's/__SOURCE__[0-9]*__END__//' \
+    | tr -d '[:space:]')"
+
+  [ "${NVM_SOURCE_RC}" = 0 ] || \
+    die "sourcing nvm.sh with a readonly ${NVM_NAME} failed in ${NVM_TEST_SHELL}: ${NVM_OUTPUT}"
+  [ -z "${NVM_NOISE}" ] || \
+    die "sourcing nvm.sh with a readonly ${NVM_NAME} printed unexpected output in ${NVM_TEST_SHELL}: ${NVM_OUTPUT}"
+done
+
+cleanup

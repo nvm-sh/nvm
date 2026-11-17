@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# Companion to "nvm.sh sources with readonly caller variables".
+#
+# Besides refusing to source at all, the old unprefixed variables had a second
+# effect in POSIX shells (where `local` is not portable): nvm.sh overwrote a
+# variable belonging to the caller. Check that the variables involved in the
+# startup path keep the caller's value, and that the functions that were fixed
+# still behave correctly.
+
+die () { echo "$@" ; exit 1; }
+
+NVM_SH_PATH="$(pwd)/../../../nvm.sh"
+[ -r "${NVM_SH_PATH}" ] || die "cannot find nvm.sh at ${NVM_SH_PATH}"
+
+if [ -n "${BASH_VERSION-}" ]; then
+  NVM_TEST_SHELL=bash
+elif [ -n "${ZSH_VERSION-}" ]; then
+  NVM_TEST_SHELL=zsh
+elif [ -n "${KSH_VERSION-}" ]; then
+  NVM_TEST_SHELL=mksh
+else
+  NVM_TEST_SHELL=sh
+fi
+command -v "${NVM_TEST_SHELL}" >/dev/null 2>&1 || die "shell ${NVM_TEST_SHELL} is not available"
+
+NVM_TEST_DIR="$(mktemp -d)" || die 'could not create a temporary directory'
+cleanup () {
+  [ -n "${NVM_TEST_DIR}" ] && rm -rf "${NVM_TEST_DIR}"
+  unset NVM_SH_PATH NVM_TEST_SHELL NVM_TEST_DIR
+}
+
+# Variables that nvm.sh used to assign while being sourced.
+for NVM_NAME in \
+  VERSION NVMRC_PATH NVMRC_VERSION \
+  tree node_path clean_tree pathdir; do
+  NVM_GOT="$(cd "${NVM_TEST_DIR}" && env -i \
+    PATH="${PATH}" HOME="${HOME}" NVM_DIR="${NVM_TEST_DIR}/nvm" \
+    "${NVM_TEST_SHELL}" -c "
+      ${NVM_NAME}=caller_value
+      . '${NVM_SH_PATH}'
+      command printf '%s' \"\${${NVM_NAME}}\"
+    " 2>&1)"
+
+  [ "${NVM_GOT}" = caller_value ] || \
+    die "sourcing nvm.sh overwrote caller's ${NVM_NAME} in ${NVM_TEST_SHELL}: got >${NVM_GOT}<"
+done
+
+# The renamed functions must still do their job with those names readonly.
+NVM_GOT="$(cd "${NVM_TEST_DIR}" && env -i \
+  PATH="${PATH}" HOME="${HOME}" NVM_DIR="${NVM_TEST_DIR}/nvm" \
+  "${NVM_TEST_SHELL}" -c "
+    readonly tree=caller_value
+    readonly node_path=caller_value
+    readonly clean_tree=caller_value
+    readonly pathdir=caller_value
+    readonly NVMRC_PATH=caller_value
+    readonly VERSION=caller_value
+    . '${NVM_SH_PATH}'
+    nvm_tree_contains_path /nvm-tree /nvm-tree/child >/dev/null 2>&1
+    command printf '__TREE__%s__END__' \"\$?\"
+  " 2>&1)"
+
+case "${NVM_GOT}" in
+  *readonly*|*'read only'*)
+    die "nvm.sh still touches a readonly caller variable: ${NVM_GOT}" ;;
+esac
+[ "_$(printf '%s' "${NVM_GOT}" | sed -n 's/.*__TREE__\([0-9]*\)__END__.*/\1/p')" = '_0' ] || \
+  die "nvm_tree_contains_path stopped working with readonly caller variables: ${NVM_GOT}"
+
+cleanup
