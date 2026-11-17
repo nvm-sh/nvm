@@ -2538,38 +2538,22 @@ nvm_ls() {
     NVM_DIRS_TO_SEARCH2=''
     local NVM_DIRS_TO_SEARCH3
     NVM_DIRS_TO_SEARCH3=''
-    local NVM_ADD_SYSTEM
-    NVM_ADD_SYSTEM=false
+    local NVM_SYSTEM_CHECK
+    NVM_SYSTEM_CHECK=''
     if nvm_is_iojs_version "${PATTERN}"; then
       NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_IOJS}"
       PATTERN="$(nvm_strip_iojs_prefix "${PATTERN}")"
-      # only these patterns list the system version, at the end of this function
-      case "${PATTERN}" in
-        '' | v | system)
-          if nvm_has_system_iojs; then
-            NVM_ADD_SYSTEM=true
-          fi
-        ;;
-      esac
+      NVM_SYSTEM_CHECK='iojs'
     elif [ "${PATTERN}" = "${NVM_NODE_PREFIX}-" ]; then
       NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_OLD}"
       NVM_DIRS_TO_SEARCH2="${NVM_VERSION_DIR_NEW}"
       PATTERN=''
-      if nvm_has_system_node; then
-        NVM_ADD_SYSTEM=true
-      fi
+      NVM_SYSTEM_CHECK='node'
     else
       NVM_DIRS_TO_SEARCH1="${NVM_VERSION_DIR_OLD}"
       NVM_DIRS_TO_SEARCH2="${NVM_VERSION_DIR_NEW}"
       NVM_DIRS_TO_SEARCH3="${NVM_VERSION_DIR_IOJS}"
-      # only these patterns list the system version, at the end of this function
-      case "${PATTERN}" in
-        '' | v | system)
-          if nvm_has_system_iojs || nvm_has_system_node; then
-            NVM_ADD_SYSTEM=true
-          fi
-        ;;
-      esac
+      NVM_SYSTEM_CHECK='any'
     fi
 
     if ! [ -d "${NVM_DIRS_TO_SEARCH1}" ] || ! (command ls -1q "${NVM_DIRS_TO_SEARCH1}" | nvm_grep -q .); then
@@ -2643,7 +2627,19 @@ nvm_ls() {
     VERSIONS="$(nvm_echo "${VERSIONS}" | nvm_filter_installed_versions)"
   fi
 
-  if [ "${NVM_ADD_SYSTEM-}" = true ]; then
+  # each check runs `nvm deactivate` in a subshell, so only check for the patterns that list the system version
+  local NVM_ADD_SYSTEM
+  NVM_ADD_SYSTEM=false
+  case "${PATTERN}" in
+    '' | v | system)
+      case "${NVM_SYSTEM_CHECK-}" in
+        iojs) if nvm_has_system_iojs; then NVM_ADD_SYSTEM=true; fi ;;
+        node) if nvm_has_system_node; then NVM_ADD_SYSTEM=true; fi ;;
+        any) if nvm_has_system_iojs || nvm_has_system_node; then NVM_ADD_SYSTEM=true; fi ;;
+      esac
+    ;;
+  esac
+  if [ "${NVM_ADD_SYSTEM}" = true ]; then
     local SYSTEM_VERSION
     SYSTEM_VERSION="$(nvm deactivate >/dev/null 2>&1 && node -v 2>/dev/null)"
     case "${PATTERN}" in
