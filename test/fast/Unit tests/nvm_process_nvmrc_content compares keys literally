@@ -1,0 +1,30 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+\. ../../common.sh
+
+# keys that only match each other as a regex are distinct
+for CONTENT in "$(printf '22\nnode-dist=x\nnode.dist=y')" "$(printf '22\nabc=x\na.c=y')" "$(printf '22\nab=x\na+b=y')"; do
+  try nvm_process_nvmrc_content "${CONTENT}"
+  [ "${CAPTURED_EXIT_CODE}" = '0' ] || die "distinct keys were rejected as duplicates in >${CONTENT}<; got exit code ${CAPTURED_EXIT_CODE}"
+  [ "${CAPTURED_STDOUT}" = '22' ] || die "expected the version 22 from >${CONTENT}<; got >${CAPTURED_STDOUT}<"
+done
+
+# keys with regex metacharacters are not passed to grep
+try_err nvm_process_nvmrc_content "$(printf '22\na(=x\nb[=y')"
+[ "${CAPTURED_EXIT_CODE}" = '0' ] || die "keys with regex metacharacters were rejected; got exit code ${CAPTURED_EXIT_CODE}"
+[ -z "${CAPTURED_STDERR}" ] || die "expected no errors for keys with regex metacharacters; got >${CAPTURED_STDERR}<"
+
+# duplicates are still rejected, including keys with regex metacharacters
+for CONTENT in "$(printf '22\na=1\na=2')" "$(printf '22\na.c=1\na.c=2')" "$(printf '22\n[x=1\n[x=2')"; do
+  try_err nvm_process_nvmrc_content "${CONTENT}"
+  [ "${CAPTURED_EXIT_CODE}" = '1' ] || die "duplicate keys were accepted in >${CONTENT}<; got exit code ${CAPTURED_EXIT_CODE}"
+  case "${CAPTURED_STDERR}" in
+    'invalid .nvmrc!'*) ;;
+    *) die "expected the invalid .nvmrc message for >${CONTENT}<; got >${CAPTURED_STDERR}<" ;;
+  esac
+done
