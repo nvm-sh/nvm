@@ -1082,14 +1082,19 @@ nvm_process_nvmrc_content() {
       fi
 
       # Check for duplicate keys, in the shell: a symlinked `.nvmrc` can hold any file's content,
-      # and every local user can read a process's arguments
-      case "${keys} " in
-        *" ${key} "*)
+      # and every local user can read a process's arguments.
+      # Keys are newline-separated, since a key can contain a space but not a newline.
+      case "${keys}
+" in
+        *"
+${key}
+"*)
           nvm_nvmrc_invalid_msg "${lines}"
           return 1
         ;;
       esac
-      keys="${keys} ${key}"
+      keys="${keys}
+${key}"
       values="${values} ${value}"
     else
       if [ -n "${unpaired_line}" ]; then

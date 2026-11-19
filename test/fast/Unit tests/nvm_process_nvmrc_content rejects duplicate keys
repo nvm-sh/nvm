@@ -25,7 +25,7 @@ ${KEY} = 3"
 done
 
 # keys are compared as they are written, not as patterns
-for KEY in b ab A a. '*' '.*' '?' 'a|b' '[a]'; do
+for KEY in b ab A a. '*' '.*' '?' 'a|b' '[a]' 'a b' 'b a' 'b  a'; do
   for CONTENT in "20
 a=1
 ${KEY}=2" "20
