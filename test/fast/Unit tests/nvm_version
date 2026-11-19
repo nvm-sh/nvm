@@ -78,3 +78,65 @@ for PATTERN in v1.2 v1 1.2.3 v1.2.3- v1.2.3-.x v1.2.3-a..b v1.2.3.4 v1.2.3.; do
   [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "nvm_version $PATTERN did not exit 0; got $CAPTURED_EXIT_CODE"
 done
 unset -f nvm_is_version_installed
+
+# `node`/`stable` is the newest installed version, from one listing, once that is 1.0 or later
+nvm_ls() {
+  case "$1" in
+    node) printf 'v0.12.18\nv20.0.0\nv22.1.0\n' ;;
+    *) die "\"nvm_version node\" must list the installed versions only once; got \"nvm_ls $1\"" ;;
+  esac
+}
+for PATTERN in node node- stable; do
+  try nvm_version "$PATTERN"
+  [ "_$CAPTURED_STDOUT" = "_v22.1.0" ] || die "\"nvm_version $PATTERN\" did not return the newest installed version; got $CAPTURED_STDOUT"
+  [ "_$CAPTURED_EXIT_CODE" = "_0" ] || die "\"nvm_version $PATTERN\" did not exit 0; got $CAPTURED_EXIT_CODE"
+done
+
+# a system node, which `nvm_ls` lists last, is not the newest installed version
+nvm_ls() {
+  case "$1" in
+    node) printf 'v20.0.0\nv22.1.0\nsystem v19.0.0\n' ;;
+    *) die "\"nvm_version node\" with a system node must list the installed versions only once; got \"nvm_ls $1\"" ;;
+  esac
+}
+try nvm_version node
+[ "_$CAPTURED_STDOUT" = "_v22.1.0" ] || die '"nvm_version node" with a system node did not skip it; got '"$CAPTURED_STDOUT"
+
+# with only 0.x versions installed, `stable` is the newest even minor, so it falls back to `nvm_ls stable`
+nvm_ls() {
+  case "$1" in
+    node) printf 'v0.10.48\nv0.11.16\n' ;;
+    *) echo "pattern: $1" ;;
+  esac
+}
+try nvm_version node
+[ "_$CAPTURED_STDOUT" = "_pattern: stable" ] || die '"nvm_version node" with only 0.x versions did not fall back to "nvm_ls stable"; got '"$CAPTURED_STDOUT"
+
+# nothing installed falls back too, so the result and exit code are unchanged
+nvm_ls() {
+  case "$1" in
+    node) echo 'N/A'; return 3 ;;
+    *) echo 'N/A'; return 3 ;;
+  esac
+}
+try nvm_version node
+[ "_$CAPTURED_STDOUT" = "_N/A" ] || die '"nvm_version node" with nothing installed did not return N/A; got '"$CAPTURED_STDOUT"
+[ "_$CAPTURED_EXIT_CODE" = "_3" ] || die '"nvm_version node" with nothing installed did not exit 3; got '"$CAPTURED_EXIT_CODE"
+
+# an alias named `stable` takes precedence over the newest installed version
+nvm_ls() {
+  case "$1" in
+    node) printf 'v20.0.0\nv22.1.0\n' ;;
+    *) echo "pattern: $1" ;;
+  esac
+}
+OLD_NVM_DIR="${NVM_DIR}"
+NVM_DIR="$(mktemp -d)"
+mkdir -p "${NVM_DIR}/alias"
+echo v20.0.0 > "${NVM_DIR}/alias/stable"
+try nvm_version node
+rm -rf "${NVM_DIR}"
+NVM_DIR="${OLD_NVM_DIR}"
+[ "_$CAPTURED_STDOUT" = "_pattern: stable" ] || die '"nvm_version node" did not let an alias named "stable" take precedence; got '"$CAPTURED_STDOUT"
+
+unset -f nvm_ls
