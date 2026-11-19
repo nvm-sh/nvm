@@ -1,0 +1,38 @@
+#!/bin/sh
+
+cleanup() {
+  rm -rf "${TEST_DIR}"
+}
+
+die() {
+  echo "$@"
+  cleanup
+  exit 1
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TEST_DIR="$(mktemp -d)"
+
+# glob characters and a space in the path are matched literally
+DIR="${TEST_DIR}/a [b] *"
+
+! nvm_dir_has_entries "${DIR}" || die 'a missing directory has no entries'
+
+mkdir "${DIR}"
+! nvm_dir_has_entries "${DIR}" || die 'an empty directory has no entries'
+
+touch "${DIR}/.hidden"
+! nvm_dir_has_entries "${DIR}" || die 'a directory with only dotfiles has no entries, as with `ls`'
+
+ln -s "${TEST_DIR}/nonexistent" "${DIR}/broken"
+nvm_dir_has_entries "${DIR}" || die 'a broken symlink is an entry'
+rm "${DIR}/broken"
+
+mkdir "${DIR}/v1.0.0"
+nvm_dir_has_entries "${DIR}" || die 'a directory with a subdirectory has entries'
+
+! nvm_dir_has_entries "${TEST_DIR}/a [b] " || die 'the directory name is not a pattern'
+
+cleanup

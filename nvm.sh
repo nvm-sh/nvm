@@ -2694,13 +2694,13 @@ nvm_ls() {
       NVM_SYSTEM_CHECK='any'
     fi
 
-    if ! [ -d "${NVM_DIRS_TO_SEARCH1}" ] || ! (command ls -1q "${NVM_DIRS_TO_SEARCH1}" | nvm_grep -q .); then
+    if ! nvm_dir_has_entries "${NVM_DIRS_TO_SEARCH1}"; then
       NVM_DIRS_TO_SEARCH1=''
     fi
-    if ! [ -d "${NVM_DIRS_TO_SEARCH2}" ] || ! (command ls -1q "${NVM_DIRS_TO_SEARCH2}" | nvm_grep -q .); then
+    if ! nvm_dir_has_entries "${NVM_DIRS_TO_SEARCH2}"; then
       NVM_DIRS_TO_SEARCH2="${NVM_DIRS_TO_SEARCH1}"
     fi
-    if ! [ -d "${NVM_DIRS_TO_SEARCH3}" ] || ! (command ls -1q "${NVM_DIRS_TO_SEARCH3}" | nvm_grep -q .); then
+    if ! nvm_dir_has_entries "${NVM_DIRS_TO_SEARCH3}"; then
       NVM_DIRS_TO_SEARCH3="${NVM_DIRS_TO_SEARCH2}"
     fi
 
@@ -4799,6 +4799,18 @@ nvm_write_nvmrc() {
   if [ "${NVM_SILENT:-0}" -ne 1 ]; then
     nvm_echo "Wrote version number ($VERSION_STRING) to .nvmrc"
   fi
+}
+
+# Whether a directory has an entry that `ls` would list, without forking
+nvm_dir_has_entries() {
+  nvm_is_zsh && setopt local_options nonomatch
+  local NVM_DIR_ENTRY
+  for NVM_DIR_ENTRY in "${1-}"/*; do
+    if [ -e "${NVM_DIR_ENTRY}" ] || [ -L "${NVM_DIR_ENTRY}" ]; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 # Check version dir permissions
@@ -7087,7 +7099,7 @@ nvm() {
         nvm_needs_lts_status nvm_filter_installed_versions nvm_is_version_selected \
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
-        nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
+        nvm_install_npm_if_needed nvm_use_if_needed nvm_dir_has_entries nvm_check_file_permissions \
         nvm_print_versions nvm_validate_min_version nvm_is_below_min_version nvm_filter_min_versions nvm_compute_checksum \
         nvm_get_checksum_binary \
         nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \
