@@ -1482,7 +1482,7 @@ nvm_version() {
   # versions three times. With only 0.x versions installed, `stable` is the
   # newest even minor, so those fall through, as does an alias named `stable`,
   # which takes precedence. `system` is skipped, since `nvm_ls` lists it last.
-  if [ -z "${NVM_LTS_FILTER}" ] && [ "_${PATTERN}" = '_stable' ] && [ ! -e "$(nvm_alias_path)/stable" ]; then
+  if [ "_${PATTERN}" = '_stable' ] && [ ! -e "${NVM_DIR}/alias/stable" ]; then
     local NVM_NEWEST_INSTALLED
     NVM_NEWEST_INSTALLED="$(nvm_ls "${NVM_NODE_PREFIX}" | nvm_grep -e '^v' | command tail -1)"
     case "${NVM_NEWEST_INSTALLED}" in
