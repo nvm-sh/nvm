@@ -1,0 +1,66 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../nvm.sh
+
+\. ../common.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias/lts" || die 'could not create alias dir'
+# `nvm exec` runs `$NVM_DIR/nvm-exec`, which sources the `nvm.sh` beside it
+ln -s "${PWD}/../../nvm.sh" "${PWD}/../../nvm-exec" "${NVM_DIR}/" || die 'could not link nvm.sh and nvm-exec'
+
+for VERSION in v20.19.0 v22.11.0 v24.11.0; do
+  make_fake_node "${VERSION}" || die "fake node ${VERSION} could not be made"
+done
+row () {
+  printf '%s\t2024-01-01\tsrc\t-\t-\t-\t-\t-\t-\t%s\t-\n' "$1" "$2"
+}
+{ row v26.12.1 -; row v24.11.0 Krypton; row v24.0.0 -; row v22.11.0 Jod; row v20.19.0 Iron; } | nvm_record_lts_status || die 'could not record LTS status'
+nvm_make_alias lts/iron v20.19.0 >/dev/null 2>&1 || die 'could not alias lts/iron'
+nvm_make_alias lts/jod v22.11.0 >/dev/null 2>&1 || die 'could not alias lts/jod'
+nvm_make_alias lts/krypton v24.11.0 >/dev/null 2>&1 || die 'could not alias lts/krypton'
+nvm_make_alias 'lts/*' lts/krypton >/dev/null 2>&1 || die 'could not alias lts/*'
+
+# "o" is in Iron, Jod and Krypton; Krypton is the newest
+nvm use --delete-prefix --lts=o >/dev/null 2>&1 || die '`nvm use --lts=o` failed'
+[ "_$(nvm current)" = '_v24.11.0' ] || die "\`nvm use --lts=o\` should use the newest codename containing it, krypton; got >$(nvm current)<"
+nvm use --delete-prefix --lts=ir >/dev/null 2>&1 || die '`nvm use --lts=ir` failed'
+[ "_$(nvm current)" = '_v20.19.0' ] || die "\`nvm use --lts=ir\` should use iron; got >$(nvm current)<"
+nvm use --delete-prefix --lts=jod >/dev/null 2>&1 || die '`nvm use --lts=jod` failed'
+[ "_$(nvm current)" = '_v22.11.0' ] || die "\`nvm use --lts=jod\` should use jod; got >$(nvm current)<"
+
+# not a regex
+try_err nvm use --delete-prefix --lts=.
+[ "_${CAPTURED_EXIT_CODE}" != '_0' ] || die '`nvm use --lts=.` should fail'
+
+OUTPUT="$(nvm exec --lts=ir node 2>/dev/null)" || die '`nvm exec --lts=ir node` failed'
+[ "_$(nvm_echo "${OUTPUT}" | command tail -1)" = '_v20.19.0' ] || die "\`nvm exec --lts=ir node\` should run iron; got >${OUTPUT}<"
+case "${OUTPUT}" in
+  'Running node LTS "iron" -> v20.19.0'*) ;;
+  *) die "\`nvm exec --lts=ir\` should name the codename it picked; got >${OUTPUT}<" ;;
+esac
+
+OUTPUT="$(nvm run --silent --lts=kr 2>/dev/null)" || die '`nvm run --lts=kr` failed'
+[ "_$(nvm_echo "${OUTPUT}" | command tail -1)" = '_v24.11.0' ] || die "\`nvm run --lts=kr\` should run krypton; got >${OUTPUT}<"
+
+nvm uninstall --lts=ir >/dev/null 2>&1 || die '`nvm uninstall --lts=ir` failed'
+! nvm_is_version_installed v20.19.0 || die '`nvm uninstall --lts=ir` should uninstall iron'
+nvm_is_version_installed v22.11.0 || die '`nvm uninstall --lts=ir` should keep jod'
+
+cleanup

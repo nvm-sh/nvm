@@ -1,0 +1,57 @@
+#!/bin/sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+TMP_DIR=''
+
+cleanup () {
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+  NVM_DIR="${ORIG_NVM_DIR}"
+  export NVM_DIR
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TMP_DIR="$(mktemp -d)"
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}" || die 'could not create NVM_DIR'
+
+[ "_$(nvm_resolve_lts_name on)" = '_on' ] || die "without recorded LTS status, the name should be kept; got >$(nvm_resolve_lts_name on)<"
+
+row () {
+  printf '%s\t2024-01-01\tsrc\t-\t-\t-\t-\t-\t-\t%s\t-\n' "$1" "$2"
+}
+# not newest first, so the newest codename has to come from the versions
+{ row v20.19.0 Iron; row v26.12.1 -; row v24.11.0 Krypton; row v4.9.1 Argon; row v24.0.0 -; row v22.11.0 Jod; row v8.17.0 Carbon; } | nvm_record_lts_status || die 'could not record LTS status'
+
+check () {
+  ACTUAL="$(nvm_resolve_lts_name "$1")"
+  [ "_${ACTUAL}" = "_$2" ] || die "\`nvm_resolve_lts_name '$1'\` should print >$2<; got >${ACTUAL}<"
+}
+
+# the newest codename containing the name
+check on krypton
+check o krypton
+check ar carbon
+check arg argon
+check ir iron
+check iron iron
+check j jod
+# not a regex, and not a codename yet, so kept as given
+check . .
+check 'i.on' 'i.on'
+check '(' '('
+check nosuch nosuch
+# names nvm resolves some other way
+check '*' '*'
+check -1 -1
+check '' ''
+# LTS names are lowercase; an uppercase one is kept, for `nvm_normalize_lts` to reject
+check Iron Iron
+
+cleanup

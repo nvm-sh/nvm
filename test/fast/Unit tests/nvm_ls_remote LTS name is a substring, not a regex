@@ -1,0 +1,35 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+# these mocks must not be recorded as the LTS status of $NVM_DIR's versions
+nvm_record_lts_status() { :; }
+
+nvm_download() {
+  cat "$PWD/mocks/nodejs.org-dist-index.tab"
+}
+
+\. ../../common.sh
+
+# no codename contains these characters literally, though most match them as a regex
+for NVM_LTS in . 'i.on' 'ar.*' '(' '^i' 'n$'; do
+  try nvm_ls_remote
+  [ "_$CAPTURED_STDOUT" = "_N/A" ] || die "\`NVM_LTS='${NVM_LTS}' nvm_ls_remote\` should output N/A; got >$CAPTURED_STDOUT<"
+  [ "_$CAPTURED_EXIT_CODE" = "_3" ] || die "\`NVM_LTS='${NVM_LTS}' nvm_ls_remote\` should exit 3; got $CAPTURED_EXIT_CODE"
+done
+unset NVM_LTS
+
+# a name matches every codename that contains it
+OUTPUT="$(NVM_LTS=on nvm_ls_remote)"
+CODENAMES="$(nvm_echo "$OUTPUT" | command awk '{ print $2 }' | command sort -u | command tr '\n' ' ')"
+[ "_$CODENAMES" = "_Argon Boron Carbon Iron " ] || die "\`NVM_LTS=on nvm_ls_remote\` should list the Argon, Boron, Carbon and Iron lines; got >$CODENAMES<"
+
+for NVM_LTS in iron ir; do
+  OUTPUT="$(nvm_ls_remote)"
+  [ -n "$OUTPUT" ] || die "\`NVM_LTS=${NVM_LTS} nvm_ls_remote\` output nothing"
+  OTHER_LINES="$(nvm_echo "$OUTPUT" | command awk '$2 != "Iron"')"
+  [ -z "$OTHER_LINES" ] || die "\`NVM_LTS=${NVM_LTS} nvm_ls_remote\` listed versions outside the Iron line: >$OTHER_LINES<"
+done

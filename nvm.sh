@@ -2888,8 +2888,8 @@ nvm_ensure_lts_status() {
   [ -f "$(nvm_lts_status_path)" ]
 }
 
-# args: an LTS codename, or `*` for any
-# Keeps the version lines on stdin whose recorded LTS status matches.
+# args: an LTS name, or `*` for any
+# Keeps the version lines on stdin whose recorded LTS codename contains the name.
 nvm_filter_lts_versions() {
   if ! nvm_ensure_lts_status; then
     nvm_err 'The LTS status of installed versions is not recorded yet; run `nvm ls-remote` to record it.'
@@ -2903,7 +2903,50 @@ nvm_filter_lts_versions() {
         status[fields[1]] = fields[2];
       }
     }
-    ($1 in status) && status[$1] != "-" && (lts == "*" || status[$1] == lts) { print }
+    ($1 in status) && status[$1] != "-" && (lts == "*" || (lts != "" && index(status[$1], lts))) { print }
+  '
+}
+
+# args: an LTS name
+# Prints the newest recorded LTS codename that contains the name, like `--lts=<name>`
+# matches remotely, or the name itself when none does or LTS status isn't recorded.
+nvm_resolve_lts_name() {
+  local NVM_LTS_NAME
+  NVM_LTS_NAME="${1-}"
+  case "${NVM_LTS_NAME}" in
+    '' | '*' | -[123456789]*)
+      nvm_echo "${NVM_LTS_NAME}"
+      return 0
+    ;;
+  esac
+  if [ ! -f "$(nvm_lts_status_path)" ]; then
+    nvm_echo "${NVM_LTS_NAME}"
+    return 0
+  fi
+  NVM_LTS_STATUS_PATH="$(nvm_lts_status_path)" NVM_LTS_NAME="${NVM_LTS_NAME}" command awk '
+    function newer(a, b,   x, y, i) {
+      split(substr(a, 2), x, ".");
+      split(substr(b, 2), y, ".");
+      for (i = 1; i <= 3; i++) {
+        if (x[i] + 0 != y[i] + 0) { return x[i] + 0 > y[i] + 0 }
+      }
+      return 0
+    }
+    BEGIN {
+      record = ENVIRON["NVM_LTS_STATUS_PATH"];
+      name = ENVIRON["NVM_LTS_NAME"];
+      codename = name;
+      newest = "";
+      while ((getline line < record) > 0) {
+        split(line, fields, " ");
+        if (fields[2] == "-" || !index(fields[2], name)) { continue }
+        if (newest == "" || newer(fields[1], newest)) {
+          newest = fields[1];
+          codename = fields[2];
+        }
+      }
+      print codename
+    }
   '
 }
 
@@ -3033,7 +3076,7 @@ EOF
         else { category = "lts" }
         if (!index(only, "," category ",")) { next }
         if (lts && $10 ~ /^\-?$/) { next }
-        if (lts && lts != "*" && tolower($10) !~ tolower(lts)) { next }
+        if (lts && lts != "*" && !index(tolower($10), tolower(lts))) { next }
         if ($10 !~ /^\-?$/) {
           if ($10 && $10 != prev) {
             print $1, $10, "*"
@@ -5577,7 +5620,7 @@ nvm() {
           if [ "${LTS}" = '*' ]; then
             OFFLINE_PATTERN="$(nvm_resolve_alias 'lts/*' 2>/dev/null || nvm_echo)"
           else
-            OFFLINE_PATTERN="$(nvm_resolve_alias "lts/${LTS}" 2>/dev/null || nvm_echo)"
+            OFFLINE_PATTERN="$(nvm_resolve_alias "lts/$(nvm_resolve_lts_name "${LTS}")" 2>/dev/null || nvm_echo)"
           fi
           if [ -z "${OFFLINE_PATTERN}" ]; then
             nvm_err "LTS alias '${LTS}' not found locally. Run \`nvm ls-remote --lts\` first to populate LTS aliases."
@@ -5757,6 +5800,11 @@ nvm() {
         FLAVOR="$(nvm_iojs_prefix)"
       else
         FLAVOR="$(nvm_node_prefix)"
+      fi
+
+      # the default and `--alias=` point at the LTS alias of the codename the name selected
+      if [ -n "${LTS-}" ]; then
+        LTS="$(nvm_resolve_lts_name "${LTS}")"
       fi
 
       EXIT_CODE=0
@@ -5972,7 +6020,7 @@ nvm() {
           VERSION="$(nvm_match_version "lts/${PATTERN##lts/}")"
         ;;
         --lts=*)
-          VERSION="$(nvm_match_version "lts/${PATTERN##--lts=}")"
+          VERSION="$(nvm_match_version "lts/$(nvm_resolve_lts_name "${PATTERN##--lts=}")")"
         ;;
         *)
           VERSION="$(nvm_version "${PATTERN}")"
@@ -6180,6 +6228,7 @@ nvm() {
       NVM_ONLY_SELECTED="${NVM_ONLY_RESOLVED}"
 
       if [ -n "${NVM_LTS-}" ]; then
+        NVM_LTS="$(nvm_resolve_lts_name "${NVM_LTS}")"
         VERSION="$(nvm_match_version "lts/${NVM_LTS:-*}")"
       elif [ -z "${PROVIDED_VERSION-}" ]; then
         { PROVIDED_VERSION="$(NVM_SILENT="${NVM_SILENT:-0}" nvm_rc_version 3>&1 1>&4)"; } 4>&1
@@ -6469,6 +6518,7 @@ nvm() {
       local VERSION_SOURCE
       VERSION_SOURCE=''
       if [ "${NVM_LTS-}" != '' ]; then
+        NVM_LTS="$(nvm_resolve_lts_name "${NVM_LTS}")"
         provided_version="lts/${NVM_LTS:-*}"
         VERSION="${provided_version}"
         VERSION_SOURCE='lts'
@@ -7089,7 +7139,7 @@ nvm() {
         nvm_is_iojs_version nvm_is_alias nvm_has_non_aliased \
         nvm_ls_remote nvm_ls_remote_iojs nvm_ls_remote_index_tab nvm_get_remote_aliases \
         nvm_ls nvm_remote_version nvm_remote_versions nvm_sort_versions \
-        nvm_lts_status_path nvm_record_lts_status nvm_ensure_lts_status nvm_filter_lts_versions \
+        nvm_lts_status_path nvm_record_lts_status nvm_ensure_lts_status nvm_filter_lts_versions nvm_resolve_lts_name \
         nvm_is_alpha_version nvm_normalize_only nvm_resolve_only nvm_only_includes nvm_explain_excluded_version nvm_select_lts_from_nvmrc \
         nvm_needs_lts_status nvm_filter_installed_versions nvm_is_version_selected \
         nvm_install_binary nvm_install_source nvm_clang_version \

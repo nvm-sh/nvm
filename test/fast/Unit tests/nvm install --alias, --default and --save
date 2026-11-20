@@ -72,6 +72,32 @@ nvm install -s --lts --default "${version}" > /dev/null 2>&1 || die "\`nvm insta
 OUTPUT="$(nvm_alias default)"
 [ "${OUTPUT}" = "${version}" ] || die "expected the default alias to be ${version} for \`--lts ${version}\`, got >${OUTPUT}<"
 
+# `--lts=<name>` aliases the newest codename containing the name
+reset
+printf 'v22.0.0 jod\n%s iron\nv18.0.0 hydrogen\n' "${version}" > "$(nvm_lts_status_path)"
+nvm install -s --lts=ir --default > /dev/null 2>&1 || die '`nvm install -s --lts=ir --default` failed'
+OUTPUT="$(nvm_alias default)"
+[ "${OUTPUT}" = 'lts/iron' ] || die "expected the default alias to be lts/iron after \`--lts=ir\`, got >${OUTPUT}<"
+
+# again, now that the version is installed
+nvm alias default v18.0.0 > /dev/null 2>&1
+nvm install -s --lts=ir --default > /dev/null 2>&1 || die '`nvm install -s --lts=ir --default` failed for an installed version'
+OUTPUT="$(nvm_alias default)"
+[ "${OUTPUT}" = 'lts/iron' ] || die "expected the default alias to be lts/iron for an installed version, got >${OUTPUT}<"
+nvm install -s --lts=ir --alias=foo > /dev/null 2>&1 || die '`nvm install -s --lts=ir --alias=foo` failed for an installed version'
+OUTPUT="$(nvm_alias foo)"
+[ "${OUTPUT}" = 'lts/iron' ] || die "expected the foo alias to be lts/iron for an installed version, got >${OUTPUT}<"
+
+reset
+nvm install -s --lts=ir --alias=foo > /dev/null 2>&1 || die '`nvm install -s --lts=ir --alias=foo` failed'
+OUTPUT="$(nvm_alias foo)"
+[ "${OUTPUT}" = 'lts/iron' ] || die "expected the foo alias to be lts/iron after \`--lts=ir\`, got >${OUTPUT}<"
+
+# offline, `--lts=<name>` finds the installed version of that codename
+nvm_echo "${version}" > "$(nvm_alias_path)/lts/iron"
+OUTPUT="$(nvm_remote_version() { return 3; }; nvm install --offline --lts=ir 2>&1)" || die "\`nvm install --offline --lts=ir\` failed: >${OUTPUT}<"
+rm -f "$(nvm_lts_status_path)"
+
 reset
 nvm install --save "${version}" > /dev/null 2>&1 || die "\`nvm install --save ${version}\` failed"
 OUTPUT="$(cat .nvmrc 2> /dev/null)"

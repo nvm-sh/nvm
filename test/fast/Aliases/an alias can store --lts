@@ -47,6 +47,14 @@ nvm alias work --lts=jod 22 >/dev/null 2>&1 || die 'nvm alias work --lts=jod 22 
 nvm alias other --lts=iron 22 >/dev/null 2>&1
 [ "_$(nvm version other)" = '_N/A' ] || die "no installed v22 is iron; got >$(nvm version other)<"
 
+# an LTS name matches every codename containing it, but not as a regex
+nvm alias some --lts=o node >/dev/null 2>&1 || die 'nvm alias some --lts=o node failed'
+[ "_$(nvm version some)" = '_v24.11.0' ] || die "some should be the latest installed version whose codename contains o; got >$(nvm version some)<"
+nvm alias some --lts=ir node >/dev/null 2>&1 || die 'nvm alias some --lts=ir node failed'
+[ "_$(nvm version some)" = '_v20.19.0' ] || die "some should be the latest installed version whose codename contains ir; got >$(nvm version some)<"
+nvm alias some --lts=. node >/dev/null 2>&1 || die 'nvm alias some --lts=. node failed'
+[ "_$(nvm version some)" = '_N/A' ] || die "no codename contains a literal .; got >$(nvm version some)<"
+
 OUTPUT="$(nvm unalias work)"
 [ "_${OUTPUT}" = '_Deleted alias work - restore it with `nvm alias "work" --lts=jod "22"`' ] || die "the restore hint should keep --lts=jod as its own argument; got >${OUTPUT}<"
 
