@@ -172,11 +172,33 @@ install_nvm_from_git() {
   fi
 
   local fetch_error
+  local NVM_REMOTE_NAME
+  NVM_REMOTE_NAME='origin'
   if [ -d "$INSTALL_DIR/.git" ]; then
     # Updating repo
     nvm_echo "=> nvm is already installed in $INSTALL_DIR, trying to update using git"
     command printf '\r=> '
     fetch_error="Failed to update nvm with $NVM_VERSION, run 'git fetch' in $INSTALL_DIR yourself."
+    local NVM_REMOTE
+    local NVM_GIT_SOURCE
+    NVM_GIT_SOURCE="$(nvm_source git)"
+    NVM_REMOTE_NAME=''
+    for NVM_REMOTE in $(command git --git-dir="${INSTALL_DIR}/.git" remote); do
+      if [ "$(command git --git-dir="${INSTALL_DIR}/.git" config --get "remote.${NVM_REMOTE}.url")" = "${NVM_GIT_SOURCE}" ]; then
+        NVM_REMOTE_NAME="${NVM_REMOTE}"
+        break
+      fi
+    done
+    if [ -z "${NVM_REMOTE_NAME}" ]; then
+      NVM_REMOTE_NAME='nvm-origin'
+      local NVM_REMOTE_SUFFIX
+      NVM_REMOTE_SUFFIX=0
+      while command git --git-dir="${INSTALL_DIR}/.git" config --get "remote.${NVM_REMOTE_NAME}.url" >/dev/null; do
+        NVM_REMOTE_SUFFIX=$((NVM_REMOTE_SUFFIX + 1))
+        NVM_REMOTE_NAME="nvm-origin-${NVM_REMOTE_SUFFIX}"
+      done
+      command git --git-dir="${INSTALL_DIR}/.git" remote add "${NVM_REMOTE_NAME}" "${NVM_GIT_SOURCE}" || return 2
+    fi
   else
     fetch_error="Failed to fetch origin with $NVM_VERSION. Please report this!"
     nvm_echo "=> Downloading nvm from git to '$INSTALL_DIR'"
@@ -205,10 +227,10 @@ install_nvm_from_git() {
     fi
   fi
   # Try to fetch tag
-  if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin tag "$NVM_VERSION" --depth=1 2>/dev/null; then
+  if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch "${NVM_REMOTE_NAME}" tag "$NVM_VERSION" --depth=1 2>/dev/null; then
     :
   # Fetch given version
-  elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch origin "$NVM_VERSION" --depth=1; then
+  elif ! command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch "${NVM_REMOTE_NAME}" "$NVM_VERSION" --depth=1; then
     nvm_echo >&2 "$fetch_error"
     exit 1
   fi

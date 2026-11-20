@@ -1345,8 +1345,9 @@ nvm_ensure_version_installed() {
     if nvm_explain_excluded_version "${PROVIDED_VERSION}"; then
       return 1
     fi
-    if VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"; then
-      nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${VERSION}\" is not yet installed."
+    local NVM_RESOLVED_VERSION
+    if NVM_RESOLVED_VERSION="$(nvm_resolve_alias "${PROVIDED_VERSION}")"; then
+      nvm_err "N/A: version \"${PROVIDED_VERSION} -> ${NVM_RESOLVED_VERSION}\" is not yet installed."
     else
       local PREFIXED_VERSION
       PREFIXED_VERSION="$(nvm_ensure_version_prefix "${PROVIDED_VERSION}")"
@@ -2667,9 +2668,6 @@ nvm_ls() {
       ;;
     esac
 
-    nvm_is_zsh && setopt local_options shwordsplit
-    nvm_is_zsh && setopt local_options nomarkdirs
-
     local NVM_DIRS_TO_SEARCH1
     NVM_DIRS_TO_SEARCH1=''
     local NVM_DIRS_TO_SEARCH2
@@ -2694,14 +2692,14 @@ nvm_ls() {
       NVM_SYSTEM_CHECK='any'
     fi
 
-    if ! nvm_dir_has_entries "${NVM_DIRS_TO_SEARCH1}"; then
+    if [ ! -d "${NVM_DIRS_TO_SEARCH1}" ]; then
       NVM_DIRS_TO_SEARCH1=''
     fi
-    if ! nvm_dir_has_entries "${NVM_DIRS_TO_SEARCH2}"; then
-      NVM_DIRS_TO_SEARCH2="${NVM_DIRS_TO_SEARCH1}"
+    if [ ! -d "${NVM_DIRS_TO_SEARCH2}" ]; then
+      NVM_DIRS_TO_SEARCH2=''
     fi
-    if ! nvm_dir_has_entries "${NVM_DIRS_TO_SEARCH3}"; then
-      NVM_DIRS_TO_SEARCH3="${NVM_DIRS_TO_SEARCH2}"
+    if [ ! -d "${NVM_DIRS_TO_SEARCH3}" ]; then
+      NVM_DIRS_TO_SEARCH3=''
     fi
 
     local SEARCH_PATTERN
@@ -2723,8 +2721,17 @@ nvm_ls() {
       NVM_DIR_SED="$(nvm_echo "${NVM_DIR}" | command sed 's/[][\.*^$#]/\\&/g')"
       local NVM_VERSION_DIR_IOJS_SED
       NVM_VERSION_DIR_IOJS_SED="$(nvm_echo "${NVM_VERSION_DIR_IOJS}" | command sed 's/[][\.*^$#]/\\&/g')"
-      VERSIONS="$(command find -L "${NVM_DIRS_TO_SEARCH1}"/* "${NVM_DIRS_TO_SEARCH2}"/* "${NVM_DIRS_TO_SEARCH3}"/* -name . -o -type d -prune -o -path "${PATTERN}*" \
+      local NVM_FIND_DIR
+      set --
+      for NVM_FIND_DIR in "${NVM_DIRS_TO_SEARCH1}" "${NVM_DIRS_TO_SEARCH2}" "${NVM_DIRS_TO_SEARCH3}"; do
+        if [ -n "${NVM_FIND_DIR}" ]; then
+          set -- "$@" "${NVM_FIND_DIR}/."
+        fi
+      done
+      # each directory's non-hidden subdirectories, without globs, which `set -f` disables
+      VERSIONS="$(command find -L "$@" ! -name . -prune ! -name '.*' -type d \
         | command sed -e "
+            s#/\\./\\([^/]*\\)\$#/\\1#;
             s#${NVM_VERSION_DIR_IOJS_SED}/#versions/${NVM_IOJS_PREFIX}/#;
             s#^${NVM_DIR_SED}/##;
             \\#^[^v]# d;
@@ -4799,18 +4806,6 @@ nvm_write_nvmrc() {
   if [ "${NVM_SILENT:-0}" -ne 1 ]; then
     nvm_echo "Wrote version number ($VERSION_STRING) to .nvmrc"
   fi
-}
-
-# Whether a directory has an entry that `ls` would list, without forking
-nvm_dir_has_entries() {
-  nvm_is_zsh && setopt local_options nonomatch
-  local NVM_DIR_ENTRY
-  for NVM_DIR_ENTRY in "${1-}"/*; do
-    if [ -e "${NVM_DIR_ENTRY}" ] || [ -L "${NVM_DIR_ENTRY}" ]; then
-      return 0
-    fi
-  done
-  return 1
 }
 
 # Check version dir permissions
@@ -7099,7 +7094,7 @@ nvm() {
         nvm_needs_lts_status nvm_filter_installed_versions nvm_is_version_selected \
         nvm_install_binary nvm_install_source nvm_clang_version \
         nvm_get_mirror nvm_get_download_slug nvm_download_artifact nvm_is_cached_artifact \
-        nvm_install_npm_if_needed nvm_use_if_needed nvm_dir_has_entries nvm_check_file_permissions \
+        nvm_install_npm_if_needed nvm_use_if_needed nvm_check_file_permissions \
         nvm_print_versions nvm_validate_min_version nvm_is_below_min_version nvm_filter_min_versions nvm_compute_checksum \
         nvm_get_checksum_binary \
         nvm_get_checksum_alg nvm_get_checksum nvm_compare_checksum \

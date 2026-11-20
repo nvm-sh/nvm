@@ -1,0 +1,33 @@
+#!/bin/sh
+
+NVM_ENV=testing \. ../../install.sh
+
+die() { echo "$*" >&2; exit 1; }
+TEST_ROOT="$(mktemp -d)" || die 'could not create test directory'
+trap 'rm -rf "${TEST_ROOT}"' EXIT HUP INT TERM
+SOURCE="${TEST_ROOT}/source"
+git init -q "${SOURCE}" || die 'could not initialize source'
+git -C "${SOURCE}" -c user.name=test -c user.email=test@example.invalid commit --allow-empty -qm fixture || die 'could not commit fixture'
+git -C "${SOURCE}" tag v0.0.1 || die 'could not tag fixture'
+nvm_source() { printf '%s\n' "${SOURCE}"; }
+NVM_INSTALL_VERSION=v0.0.1
+export NVM_INSTALL_VERSION
+
+NVM_DIR="${TEST_ROOT}/fresh"
+export NVM_DIR
+install_nvm_from_git || die 'fresh install failed'
+[ "$(git -C "${NVM_DIR}" remote get-url origin)" = "${SOURCE}" ] || die 'fresh install did not retain origin'
+
+NVM_DIR="${TEST_ROOT}/existing"
+export NVM_DIR
+git init -q "${NVM_DIR}" || die 'could not initialize existing install'
+git -C "${NVM_DIR}" remote add fork "${TEST_ROOT}/wrong" || die 'could not add fork'
+git -C "${NVM_DIR}" remote add origin "${SOURCE}" || die 'could not add origin'
+install_nvm_from_git || die 'existing install did not select matching origin'
+[ "$(git -C "${NVM_DIR}" remote get-url fork)" = "${TEST_ROOT}/wrong" ] || die 'fork remote changed'
+
+git -C "${NVM_DIR}" remote set-url origin "${TEST_ROOT}/wrong-origin" || die 'could not change origin'
+git -C "${NVM_DIR}" remote add nvm-origin "${TEST_ROOT}/occupied" || die 'could not occupy alternate name'
+install_nvm_from_git || die 'existing install did not add a matching remote'
+[ "$(git -C "${NVM_DIR}" remote get-url nvm-origin-1)" = "${SOURCE}" ] || die 'new remote missing'
+[ "$(git -C "${NVM_DIR}" remote get-url origin)" = "${TEST_ROOT}/wrong-origin" ] || die 'origin remote changed'
