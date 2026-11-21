@@ -1300,7 +1300,8 @@ nvm_version_dir() {
 }
 
 nvm_alias_path() {
-  nvm_echo "$(nvm_version_dir old)/alias"
+  # same as `$(nvm_version_dir old)/alias`, without a subshell
+  nvm_echo "${NVM_DIR}/alias"
 }
 
 nvm_version_path() {
@@ -1718,10 +1719,12 @@ nvm_normalize_lts() {
     *)
       case "${LTS}" in
         lts/*)
-          if [ "${LTS}" != "$(echo "${LTS}" | command tr '[:upper:]' '[:lower:]')" ]; then
-            nvm_err 'LTS names must be lowercase'
-            return 3
-          fi
+          case "${LTS}" in
+            *[[:upper:]]*)
+              nvm_err 'LTS names must be lowercase'
+              return 3
+            ;;
+          esac
         ;;
       esac
       nvm_echo "${LTS}"
@@ -2170,7 +2173,11 @@ nvm_alias() {
     nvm_err 'An alias is required.'
     return 1
   fi
-  ALIAS="$(nvm_normalize_lts "${ALIAS}")" || return $?
+  # only `lts/-N` is rewritten; anything else is just validated, without a subshell
+  case "${ALIAS}" in
+    lts/-*) ALIAS="$(nvm_normalize_lts "${ALIAS}")" || return $? ;;
+    *) nvm_normalize_lts "${ALIAS}" >/dev/null || return $? ;;
+  esac
 
   if [ -z "${ALIAS}" ]; then
     return 2
