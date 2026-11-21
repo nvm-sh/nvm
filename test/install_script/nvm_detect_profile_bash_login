@@ -1,0 +1,39 @@
+#!/bin/sh
+
+cleanup () {
+  rm -rf "${HOME}"
+  HOME="${ORIGINAL_HOME}"
+  unset -f setup cleanup die
+  unset ORIGINAL_HOME NVM_ENV NVM_DETECT_PROFILE SHELL ZDOTDIR
+}
+
+die () { echo "$@" '$NVM_DETECT_PROFILE:' "$NVM_DETECT_PROFILE"; cleanup; exit 1; }
+
+setup () {
+  ORIGINAL_HOME="${HOME}"
+  HOME="$(mktemp -d)"
+  NVM_ENV=testing \. ../../install.sh
+  # the shell running these tests is not the one being simulated
+  nvm_invoking_login_shell() { return 1; }
+  unset ZDOTDIR
+  touch "${HOME}/.bash_profile" "${HOME}/.bash_login" "${HOME}/.profile" "${HOME}/.zprofile"
+}
+
+setup
+
+# bash reads .bash_login only when there is no .bash_profile
+NVM_DETECT_PROFILE="$(SHELL="/bin/bash" PROFILE='' nvm_detect_profile)"
+[ "$NVM_DETECT_PROFILE" = "${HOME}/.bash_profile" ] || die "nvm_detect_profile should prefer .bash_profile over .bash_login for bash"
+
+NVM_DETECT_PROFILE="$(SHELL='' PROFILE='' nvm_detect_profile)"
+[ "$NVM_DETECT_PROFILE" = "${HOME}/.profile" ] || die "nvm_detect_profile should still prefer .profile when \$SHELL is not set"
+
+rm "${HOME}/.bash_profile"
+NVM_DETECT_PROFILE="$(SHELL="/bin/bash" PROFILE='' nvm_detect_profile)"
+[ "$NVM_DETECT_PROFILE" = "${HOME}/.bash_login" ] || die "nvm_detect_profile should pick .bash_login for bash when there is no .bashrc or .bash_profile"
+
+rm "${HOME}/.profile"
+NVM_DETECT_PROFILE="$(SHELL='' PROFILE='' nvm_detect_profile)"
+[ "$NVM_DETECT_PROFILE" = "${HOME}/.bash_login" ] || die "nvm_detect_profile should prefer .bash_login over .zprofile when \$SHELL is not set"
+
+cleanup

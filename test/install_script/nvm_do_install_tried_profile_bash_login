@@ -1,0 +1,44 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+cleanup() {
+  unset -f install_nvm_from_git install_nvm_as_script nvm_detect_profile nvm_has
+  unset -f nvm_check_global_modules nvm_install_node
+  unset -f setup cleanup die
+  unset NVM_ENV METHOD PROFILE
+}
+
+setup() {
+  NVM_ENV=testing \. ../../install.sh
+
+  # Mock installation functions to do nothing
+  install_nvm_from_git() { :; }
+  install_nvm_as_script() { :; }
+  nvm_check_global_modules() { :; }
+  nvm_install_node() { :; }
+
+  # Mock nvm_has to return true for git
+  nvm_has() {
+    case "$1" in
+      git) return 0 ;;
+      xcode-select) return 1 ;;
+      *) return 1 ;;
+    esac
+  }
+
+  # Mock nvm_detect_profile to return empty (profile not found)
+  nvm_detect_profile() {
+    echo ""
+  }
+}
+
+setup
+
+OUTPUT="$(PROFILE='' METHOD='' NVM_DIR="$(mktemp -d)" nvm_do_install 2>&1)"
+
+if ! echo "${OUTPUT}" | grep -q 'Profile not found\. Tried .*~/\.bash_login'; then
+  die "Expected the 'Profile not found' message to mention ~/.bash_login, got: ${OUTPUT}"
+fi
+
+cleanup

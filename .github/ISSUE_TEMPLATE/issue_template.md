@@ -39,7 +39,7 @@ assignees: ''
 #### What did you expect to happen?
 
 #### Is there anything in any of your profile files that modifies the `PATH`?
-<!--  (e.g. `.bashrc`, `.bash_profile`, `.zshrc`, etc) -->
+<!--  (e.g. `.bashrc`, `.bash_profile`, `.bash_login`, `.zshrc`, etc) -->
 
 <!-- Please remove the following section if it does not apply to you -->
 #### If you are having installation issues, or getting "N/A", what does `curl -I --compressed -v https://nodejs.org/dist/` print out?

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+nvm_profile_is_bash_or_zsh "/home/nvm/.bash_login" || die '/home/nvm/.bash_login is bash profile'
+if nvm_profile_is_bash_or_zsh "/home/nvm/.bash_logout"; then die '/home/nvm/.bash_logout is not bash nor zsh profile'; fi
