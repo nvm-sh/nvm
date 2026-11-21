@@ -14,7 +14,7 @@ cleanup() {
 \. ../../common.sh
 
 nvm_remote_version() {
-  echo "NVM_VERSION_ONLY:${NVM_VERSION_ONLY-},NVM_LTS:${NVM_LTS-},PATTERN:${PATTERN-}"
+  echo "NVM_VERSION_ONLY:${NVM_VERSION_ONLY-},NVM_LTS:${NVM_LTS-},PATTERN:${NVM_PATTERN-}"
 }
 
 OUTPUT="$(nvm version-remote foo)"
