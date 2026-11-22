@@ -1,0 +1,35 @@
+#!/bin/sh
+
+die () { echo "$@" ; cleanup ; exit 1; }
+cleanup () {
+  rm -rf "${NVM_DIR}"
+  NVM_DIR="${ORIG_NVM_DIR}"
+}
+
+: nvm.sh
+\. ../../../nvm.sh
+
+ORIG_NVM_DIR="${NVM_DIR}"
+NVM_DIR="$(mktemp -d)"
+FILE="${NVM_DIR}/default-packages"
+mkdir "${NVM_DIR}/bin"
+
+printf 'rimraf \nobject-inspect@1.0.2\t\r\n  stevemao/left-pad\n\t# commented-package\n  \n' > "${FILE}"
+EXPECTED_PKGS='rimraf object-inspect@1.0.2 stevemao/left-pad'
+
+# nvm runs `command awk`, so a PATH entry named `awk` selects the implementation
+for AWK_IMPL in awk mawk gawk; do
+  AWK_PATH="$(command -v "${AWK_IMPL}")" || continue
+  ln -sf "${AWK_PATH}" "${NVM_DIR}/bin/awk"
+
+  DEFAULT_PKGS="$(PATH="${NVM_DIR}/bin:${PATH}" nvm_get_default_packages)"
+  [ "${DEFAULT_PKGS}" = "${EXPECTED_PKGS}" ] || die "${AWK_IMPL}: expected >${EXPECTED_PKGS}<; got >${DEFAULT_PKGS}<"
+done
+
+# blanks around a line with two values do not hide the second value
+printf 'rimraf\n  object-inspect @ 1.0.2  \n' > "${FILE}"
+ERROR="$(nvm_get_default_packages 2>&1 >/dev/null)" && die 'expected a line with two values to be rejected'
+EXPECTED_ERROR="Only one package per line is allowed in \`${FILE}\`. Please remove any lines with multiple space-separated values."
+[ "${ERROR}" = "${EXPECTED_ERROR}" ] || die "expected >${EXPECTED_ERROR}<; got >${ERROR}<"
+
+cleanup

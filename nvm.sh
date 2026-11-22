@@ -7219,6 +7219,7 @@ nvm_get_default_packages() {
   if [ -f "${NVM_DEFAULT_PACKAGE_FILE}" ]; then
     command awk '
       { sub(/\r$/, "") }                            # Strip CRLF line endings
+      { sub(/^[ \t]+/, ""); sub(/[ \t]+$/, "") }    # Strip leading and trailing blanks
       /^[ \t]*#/ { next }                           # Skip lines that begin with #
       /^[ \t]*$/ { next }                           # Skip empty lines
       /[ \t]/ && !/^[ \t]*#/ {
