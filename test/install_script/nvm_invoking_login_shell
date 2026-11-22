@@ -1,0 +1,49 @@
+#!/bin/sh
+
+cleanup () {
+  unset -f die cleanup
+  unset NVM_PS_OUTPUT PATH_ORIG
+  if [ -n "${MOCK_BIN-}" ]; then
+    rm -rf "${MOCK_BIN}"
+  fi
+  unset MOCK_BIN
+}
+die () { echo "$@" ; cleanup ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+MOCK_BIN="$(mktemp -d)"
+[ -n "${MOCK_BIN}" ] && [ -d "${MOCK_BIN}" ] || die 'unable to create a mock bin dir'
+cat > "${MOCK_BIN}/ps" <<'MOCK'
+#!/bin/sh
+[ "$1 $2 $3" = "-o comm= -p" ] || exit 2
+[ -n "${NVM_PS_OUTPUT+set}" ] || exit 1
+printf '%s\n' "${NVM_PS_OUTPUT}"
+MOCK
+chmod +x "${MOCK_BIN}/ps"
+
+check () {
+  OUTPUT="$(NVM_PS_OUTPUT="$1" PATH="${MOCK_BIN}:${PATH}" nvm_invoking_login_shell)"
+  EXIT_CODE=$?
+  [ "${EXIT_CODE}" = "$2" ] || die "expected exit code $2 for >$1<; got ${EXIT_CODE}"
+  [ "${OUTPUT}" = "$3" ] || die "expected >$3< for >$1<; got >${OUTPUT}<"
+}
+
+check '-zsh' 0 'zsh'
+check '-bash' 0 'bash'
+
+# a shell running a script is not a login shell
+check 'zsh' 1 ''
+check 'bash' 1 ''
+check '/bin/zsh' 1 ''
+check '/bin/bash' 1 ''
+
+check '-sh' 1 ''
+check '-fish' 1 ''
+check 'make' 1 ''
+check '' 1 ''
+
+# `ps` failing, or not supporting these options, is not a login shell
+OUTPUT="$(PATH="${MOCK_BIN}:${PATH}" nvm_invoking_login_shell)" && die "expected failure when ps fails; got >${OUTPUT}<"
+
+cleanup

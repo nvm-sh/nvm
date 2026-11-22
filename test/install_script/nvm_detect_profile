@@ -3,6 +3,8 @@
 setup () {
   HOME="."
   NVM_ENV=testing \. ../../install.sh
+  # the shell running these tests is not the one being simulated
+  nvm_invoking_login_shell() { return 1; }
   ZDOTDIR="$HOME/zdotdir"
   mkdir -p zdotdir
   touch ".bashrc"
@@ -68,6 +70,28 @@ fi
 NVM_DETECT_PROFILE="$(SHELL="/usr/bin/zsh" PROFILE="test_profile" nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
   die "nvm_detect_profile ignored \$PROFILE"
+fi
+
+#
+# Confirm the login shell that ran the installer overrides $SHELL
+#
+
+# a zsh login shell should pick zsh's profile even when $SHELL is bash
+NVM_DETECT_PROFILE="$(nvm_invoking_login_shell() { nvm_echo zsh; }; SHELL="/bin/bash" PROFILE= nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$ZDOTDIR/.zshrc" ]; then
+  die "nvm_detect_profile didn't pick \$ZDOTDIR/.zshrc for a zsh login shell"
+fi
+
+# a bash login shell should pick bash's profile even when $SHELL is zsh
+NVM_DETECT_PROFILE="$(nvm_invoking_login_shell() { nvm_echo bash; }; SHELL="/bin/zsh" PROFILE= nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/.bashrc" ]; then
+  die "nvm_detect_profile didn't pick \$HOME/.bashrc for a bash login shell"
+fi
+
+# $PROFILE should still override the login shell
+NVM_DETECT_PROFILE="$(nvm_invoking_login_shell() { nvm_echo zsh; }; SHELL="/bin/bash" PROFILE="test_profile" nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "test_profile" ]; then
+  die "nvm_detect_profile ignored \$PROFILE with a login shell"
 fi
 
 #

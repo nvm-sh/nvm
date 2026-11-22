@@ -353,6 +353,18 @@ nvm_try_profile() {
   nvm_echo "${1}"
 }
 
+# The login shell that ran this script, like the one `curl ... | bash` was typed into,
+# which `$SHELL` misses when a terminal runs a shell other than the account's.
+# A script's shell is never a login shell, so a script that runs this one doesn't count.
+nvm_invoking_login_shell() {
+  local NVM_INVOKING_SHELL
+  NVM_INVOKING_SHELL="$(command ps -o comm= -p "${PPID-}" 2>/dev/null)" || return 1
+  case "${NVM_INVOKING_SHELL}" in
+    -bash | -zsh) nvm_echo "${NVM_INVOKING_SHELL#-}" ;;
+    *) return 1 ;;
+  esac
+}
+
 #
 # Detect profile file if not specified as environment variable
 # (eg: PROFILE=~/.myprofile)
@@ -373,13 +385,16 @@ nvm_detect_profile() {
   local DETECTED_PROFILE
   DETECTED_PROFILE=''
 
-  if [ "${SHELL#*bash}" != "$SHELL" ]; then
+  local NVM_PROFILE_SHELL
+  NVM_PROFILE_SHELL="$(nvm_invoking_login_shell)" || NVM_PROFILE_SHELL="${SHELL-}"
+
+  if [ "${NVM_PROFILE_SHELL#*bash}" != "${NVM_PROFILE_SHELL}" ]; then
     if [ -f "$HOME/.bashrc" ]; then
       DETECTED_PROFILE="$HOME/.bashrc"
     elif [ -f "$HOME/.bash_profile" ]; then
       DETECTED_PROFILE="$HOME/.bash_profile"
     fi
-  elif [ "${SHELL#*zsh}" != "$SHELL" ]; then
+  elif [ "${NVM_PROFILE_SHELL#*zsh}" != "${NVM_PROFILE_SHELL}" ]; then
     if [ -f "${ZDOTDIR:-${HOME}}/.zshrc" ]; then
       DETECTED_PROFILE="${ZDOTDIR:-${HOME}}/.zshrc"
     elif [ -f "${ZDOTDIR:-${HOME}}/.zprofile" ]; then
@@ -601,7 +616,7 @@ nvm_do_install() {
 nvm_reset() {
   unset -f nvm_has nvm_has_executable nvm_install_dir nvm_latest_version nvm_profile_is_bash_or_zsh \
     nvm_source nvm_node_version nvm_download install_nvm_from_git nvm_install_node \
-    install_nvm_as_script nvm_try_profile nvm_detect_profile nvm_is_wsl nvm_check_global_modules \
+    install_nvm_as_script nvm_try_profile nvm_invoking_login_shell nvm_detect_profile nvm_is_wsl nvm_check_global_modules \
     nvm_do_install nvm_reset nvm_default_install_dir nvm_grep nvm_profile_has_line
 }
 
