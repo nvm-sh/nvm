@@ -102,6 +102,10 @@ jobs:
       run:
           shell: wsl-bash {0}
     runs-on: windows-latest
+    # a passing run takes about 2 minutes. The runner sometimes freezes while
+    # starting WSL2 (actions/runner-images#14938); no step timeout can fire then,
+    # and GitHub would only give up on it after 45 minutes
+    timeout-minutes: 10
     env:
       WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
     strategy:
@@ -148,33 +152,47 @@ jobs:
       # For Ubuntu: `additional-packages` can't retry, so install in a separate step
       - if: ${{ !startsWith(matrix.wsl-distrib, 'Debian') }}
         uses: Vampire/setup-wsl@v7
+        timeout-minutes: 3
         with:
           distribution: ${{ matrix.wsl-distrib }}
-      # mirror outages can outlast apt's own retries, so retry update+install with
-      # backoff for about 10 minutes (as .github/scripts/apt-install.sh does; this
-      # job has no checkout)
+      # Ubuntu's images already have these packages, so apt only upgrades them;
+      # a slow mirror (25 kB/s has been seen) must not hold the job for that
       - if: ${{ !startsWith(matrix.wsl-distrib, 'Debian') }}
         name: 'Install packages with retries'
         shell: 'wsl-bash {0}'
+        timeout-minutes: 5
         run: |
           # never prompt: an upgrade (e.g. libssl asking to restart services) would wait forever
           export DEBIAN_FRONTEND=noninteractive
+          apt_options=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::Languages=none)
+          install_options=(-o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install --yes)
+          packages=(bash git curl ca-certificates wget)
+          have_all=1
+          for cmd in bash git curl wget; do
+            command -v "${cmd}" >/dev/null || have_all=0
+          done
+          [ -f /etc/ssl/certs/ca-certificates.crt ] || have_all=0
+          if [ "${have_all}" = 1 ]; then
+            if ! { timeout 60 apt-get "${apt_options[@]}" update && timeout 60 apt-get "${apt_options[@]}" "${install_options[@]}" "${packages[@]}"; } < /dev/null; then
+              echo '::warning::could not upgrade the preinstalled packages; continuing with the ones in the image'
+            fi
+            exit 0
+          fi
           attempt=1
-          delay=15
+          delay=5
           while true; do
-            apt-get -o Acquire::Retries=5 update < /dev/null || true
-            if apt-get -o Acquire::Retries=5 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install --yes bash git curl ca-certificates wget < /dev/null; then
+            timeout 120 apt-get "${apt_options[@]}" update < /dev/null || true
+            if timeout 120 apt-get "${apt_options[@]}" "${install_options[@]}" "${packages[@]}" < /dev/null; then
               break
             fi
-            if [ "${attempt}" -ge 8 ]; then
+            if [ "${attempt}" -ge 3 ]; then
               echo "apt-get install failed after ${attempt} attempts" >&2
               exit 1
             fi
-            echo "apt-get install failed (attempt ${attempt}/8); retrying in ${delay}s" >&2
+            echo "apt-get install failed (attempt ${attempt}/3); retrying in ${delay}s" >&2
             sleep "${delay}"
             attempt=$((attempt + 1))
             delay=$((delay * 2))
-            if [ "${delay}" -gt 120 ]; then delay=120; fi
           done
 
       # For Debian, install without packages: `additional-packages` would run
@@ -182,6 +200,7 @@ jobs:
       # see https://github.com/Vampire/setup-wsl/issues/76
       - if: ${{ startsWith(matrix.wsl-distrib, 'Debian') }}
         uses: Vampire/setup-wsl@v7
+        timeout-minutes: 3
         with:
           distribution: ${{ matrix.wsl-distrib }}
       # Debian's mirror layout shifts as a release ages out of LTS: main moves to
@@ -191,6 +210,7 @@ jobs:
       - if: ${{ startsWith(matrix.wsl-distrib, 'Debian') }}
         name: 'Point apt at whichever mirrors still carry this release'
         shell: 'wsl-bash {0}'
+        timeout-minutes: 1
         run: |
           codename="$(. /etc/os-release && printf '%s' "${VERSION_CODENAME-}")"
           if [ -z "${codename}" ]; then
@@ -211,6 +231,7 @@ jobs:
       - if: ${{ startsWith(matrix.wsl-distrib, 'Debian') }}
         name: 'Install packages with retries'
         shell: 'wsl-bash {0}'
+        timeout-minutes: 5
         run: |
           retry() {
             local n=0
@@ -243,6 +264,7 @@ jobs:
           fi
 
       - name: Retrieve nvm on WSL
+        timeout-minutes: 5
         run: |
           if [ -z "${{ matrix.method }}" ]; then
             curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | bash
@@ -262,6 +284,8 @@ jobs:
       run:
           shell: wsl-bash {0}
     runs-on: windows-latest
+    # see wsl_matrix
+    timeout-minutes: 10
     env:
       WSLENV: NVM_INSTALL_GITHUB_REPO:NVM_INSTALL_VERSION:/p
       NVM_NODEJS_ORG_MIRROR: https://unofficial-builds.nodejs.org/download/release
@@ -285,11 +309,13 @@ jobs:
           - 'script'
     steps:
       - uses: Vampire/setup-wsl@v7
+        timeout-minutes: 3
         with:
           distribution: ${{ matrix.wsl-distrib }}
           additional-packages: bash git curl ca-certificates wget
 
       - name: Retrieve nvm on WSL
+        timeout-minutes: 5
         run: |
           if [ -z "${{ matrix.method }}" ]; then
             curl -fsSLo- "https://raw.githubusercontent.com/${NVM_INSTALL_GITHUB_REPO}/${NVM_INSTALL_VERSION}/install.sh" | bash
