@@ -4221,10 +4221,20 @@ nvm_download_artifact() {
   UNVERIFIED_TARBALL="${UNVERIFIED_DIR}/${SLUG}.${COMPRESSION}"
 
   nvm_err "Downloading $(nvm_sanitize_url "${TARBALL_URL}")..."
+  local DOWNLOAD_STATUS
   # stdout is reserved for the tarball path, so nothing the downloader prints may reach it
   nvm_download -L -C - "${PROGRESS_BAR}" "${TARBALL_URL}" -o "${UNVERIFIED_TARBALL}" >&2 || {
+    DOWNLOAD_STATUS=$?
     command rm -rf "${UNVERIFIED_DIR}" "${tmpdir}"
     nvm_err "download from $(nvm_sanitize_url "${TARBALL_URL}") failed"
+    # curl returns 23 when it cannot write the output file.
+    if [ "${DOWNLOAD_STATUS}" -eq 23 ] && [ "$(nvm_get_os)" = 'win' ]; then
+      case "$(command curl -V 2>/dev/null)" in
+        'curl '*'(Windows)'*)
+          nvm_err 'Native Windows curl may not be able to write POSIX paths. Install curl for your shell environment and put it first on PATH.'
+        ;;
+      esac
+    fi
     return 4
   }
 
