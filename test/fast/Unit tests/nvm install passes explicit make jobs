@@ -1,0 +1,98 @@
+#!/bin/sh
+
+# Exercise both argument orders through the real source installer, without
+# compiling Node.js. The installation suites still cover a real source build.
+
+WORK="$(mktemp -d)" || exit 1
+trap 'command rm -rf "${WORK}"' 0
+
+die () { echo "$@" >&2; exit 1; }
+
+NVM_DIR="${WORK}"
+export NVM_DIR
+: nvm.sh
+\. ../../../nvm.sh --no-use
+
+unset npm_config_prefix NPM_CONFIG_PREFIX
+unset MAKEFLAGS MFLAGS MAKEOVERRIDES
+
+# Record the job count for each actual make invocation and delegate to make.
+# Use a file because nvm_install_source runs the build in a subshell.
+record_make () (
+  tool="$1"
+  shift
+  phase='build'
+  jobs=''
+  pending=0
+  seen=0
+  for arg do
+    if [ "${pending}" -eq 1 ]; then
+      jobs="${arg}"
+      pending=0
+    else
+      case "${arg}" in
+        -j)
+          [ "${seen}" -eq 0 ] || die 'duplicate -j argument'
+          seen=1
+          pending=1
+        ;;
+        -j*) die "unexpected make jobs argument: ${arg}" ;;
+        install) phase='install' ;;
+      esac
+    fi
+  done
+  [ "${seen}" -eq 1 ] && [ "${pending}" -eq 0 ] || die 'missing explicit make job count'
+  printf '%s: %s\n' "${phase}" "${jobs}" >> "${NVM_DIR}/make.log" || exit 1
+  command "${tool}" "$@"
+)
+
+make () { record_make make "$@"; }
+gmake () { record_make gmake "$@"; }
+
+# The fake source tree has no npm; do not use or install the host's npm.
+nvm_install_npm_if_needed () { return 0; }
+nvm_print_npm_version () { :; }
+
+# Fail if an offline test unexpectedly tries to download anything.
+nvm_download () {
+  echo 'unexpected download' >> "${NVM_DIR}/download.log"
+  return 1
+}
+
+run () (
+  EXPECTED="$1"
+  shift
+  NVM_DIR="${WORK}/nvm-${EXPECTED}"
+  export NVM_DIR
+
+  # Use the same Node.js version as the real source-build tests.
+  NVM_TEST_VERSION='v0.10.7'
+  SLUG="$(nvm_get_download_slug node source "${NVM_TEST_VERSION}")" || exit 1
+  CACHE_DIR="$(nvm_cache_dir)/src/${SLUG}"
+  STAGING="${NVM_DIR}/staging"
+  command mkdir -p "${STAGING}/${SLUG}" "${CACHE_DIR}" || exit 1
+  command cp ../../fixtures/fake-source-tarball/configure ../../fixtures/fake-source-tarball/Makefile "${STAGING}/${SLUG}/" || exit 1
+  command chmod +x "${STAGING}/${SLUG}/configure" || exit 1
+  printf '%s\n' "${NVM_TEST_VERSION}" > "${STAGING}/${SLUG}/VERSION" || exit 1
+  (cd "${STAGING}" && command tar -czf "${CACHE_DIR}/${SLUG}.tar.gz" "${SLUG}") || exit 1
+
+  # A conflicting inherited count makes ignoring -j observable.
+  NVM_MAKE_JOBS=9
+  export NVM_MAKE_JOBS
+  nvm install "$@" --offline "${NVM_TEST_VERSION}" || die "nvm install $* failed"
+
+  [ ! -e "${NVM_DIR}/download.log" ] || die 'offline install tried to download'
+  nvm_is_version_installed "${NVM_TEST_VERSION}" || die 'version not installed'
+  # The isolated NVM_DIR has no nvm-exec wrapper; test the installed binary.
+  NODE_PATH="$(nvm_version_path "${NVM_TEST_VERSION}")/bin/node"
+  ACTUAL="$("${NODE_PATH}" --version)" || die 'installed node failed'
+  [ "${ACTUAL}" = "${NVM_TEST_VERSION}" ] || die "unexpected node version: ${ACTUAL}"
+
+  ACTUAL="$(cat "${NVM_DIR}/make.log")" || die 'missing make invocations'
+  EXPECTED_LOG="$(printf 'build: %s\ninstall: %s' "${EXPECTED}" "${EXPECTED}")"
+  [ "${ACTUAL}" = "${EXPECTED_LOG}" ] || die "expected >${EXPECTED_LOG}<, got >${ACTUAL}<"
+)
+
+run 1 -s -j 1 || die 'source install with -s -j 1 failed'
+run 2 -j 2 -s || die 'source install with -j 2 -s failed'
+run 8 -s -j 8 || die 'source install with -s -j 8 failed'
