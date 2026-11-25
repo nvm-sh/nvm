@@ -349,7 +349,7 @@ nvm_wget_with_auth_header() {
         nvm_echo
       fi
       nvm_echo "header = Authorization: ${1-}"
-    } > "${NVM_WGETRC}" || exit 1
+    } >| "${NVM_WGETRC}" || exit 1
     shift
     WGETRC="${NVM_WGETRC}"
     export WGETRC
@@ -2876,7 +2876,7 @@ nvm_record_lts_status() {
       }
       for (i = 1; i <= rows; i++) { print versions[i], lts[versions[i]] }
     }
-  ' > "${NVM_LTS_STATUS_TMP}"; then
+  ' >| "${NVM_LTS_STATUS_TMP}"; then
     command mv -f "${NVM_LTS_STATUS_TMP}" "${NVM_LTS_STATUS_PATH}" 2>/dev/null && return 0
   fi
   command rm -f "${NVM_LTS_STATUS_TMP}"
