@@ -4363,7 +4363,14 @@ nvm_get_make_jobs() {
   local NVM_CPU_CORES
   case "_${NVM_OS}" in
     "_linux")
-      NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
+      # /proc/cpuinfo can describe CPUs outside the process's affinity mask.
+      # GNU nproc also honors OpenMP settings, which are unrelated to make.
+      # Remove them from the child environment even if the shell variables are readonly.
+      # Keep nproc optional, including when it fails or returns an invalid count.
+      if ! NVM_CPU_CORES="$(command env -u OMP_NUM_THREADS -u OMP_THREAD_LIMIT nproc 2>/dev/null)" \
+        || ! nvm_is_natural_num "${NVM_CPU_CORES}"; then
+        NVM_CPU_CORES="$(nvm_grep -c -E '^processor.+: [0-9]+' /proc/cpuinfo)"
+      fi
     ;;
     "_freebsd" | "_darwin" | "_openbsd")
       NVM_CPU_CORES="$(sysctl -n hw.ncpu)"
