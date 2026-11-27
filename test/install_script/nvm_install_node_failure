@@ -1,0 +1,73 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+NVM_ENV=testing \. ../../install.sh
+
+TEST_DIR="$(mktemp -d)" || die 'Unable to create temporary directory'
+trap 'rm -rf "${TEST_DIR}"' 0
+export HOME="${TEST_DIR}"
+export NVM_DIR="${TEST_DIR}/nvm"
+export PROFILE=/dev/null
+export METHOD=script
+unset NVM_SOURCE NVM_INSTALL_VERSION NVM_INSTALL_GITHUB_REPO
+mkdir -p "${NVM_DIR}/alias" || die 'Unable to create installation directory'
+printf '%s\n' 'v20.1.0' > "${NVM_DIR}/alias/stable" || die 'Unable to create local stable alias'
+
+# Exercise the installer without downloading nvm or installing real Node.js versions.
+nvm_download() {
+  case "$2" in
+    */nvm.sh)
+      cat > "$4" <<'NVM_SH'
+nvm() {
+  [ "$1" = install ] && [ "$2" = "$NODE_VERSION" ] || return 99
+  : > "${NVM_DIR}/node-install-called"
+  return "$TEST_NODE_STATUS"
+}
+nvm_version() {
+  case "$1" in
+    current) printf '%s\n' "$TEST_NODE_CURRENT" ;;
+    stable) cat "${NVM_DIR}/alias/stable" ;;
+    --lts) printf '%s\n' 'N/A'; return 3 ;;
+    *) printf '%s\n' 'v22.1.0' ;;
+  esac
+}
+NVM_SH
+    ;;
+    *) : > "$4" ;;
+  esac
+}
+nvm_check_global_modules() { return 0; }
+
+check_install() {
+  NODE_VERSION="$1"
+  TEST_NODE_STATUS="$2"
+  TEST_NODE_CURRENT="$3"
+  EXPECTED_STATUS="$4"
+  rm -f "${NVM_DIR}/node-install-called"
+  EXIT_CODE=0
+  OUTPUT="$(nvm_do_install 2>&1)" || EXIT_CODE=$?
+  [ "${EXIT_CODE}" = "${EXPECTED_STATUS}" ] || die "Expected exit ${EXPECTED_STATUS}, got ${EXIT_CODE}: ${OUTPUT}"
+  echo "${OUTPUT}" | grep -Fq 'Close and reopen your terminal' || die "Missing nvm setup instructions: ${OUTPUT}"
+  if [ -z "${NODE_VERSION}" ]; then
+    [ ! -e "${NVM_DIR}/node-install-called" ] || die 'Unexpected Node.js installation without NODE_VERSION'
+  else
+    [ -f "${NVM_DIR}/node-install-called" ] || die 'Node.js installation was not attempted'
+    if [ "${EXPECTED_STATUS}" = 0 ]; then
+      echo "${OUTPUT}" | grep -Fq 'has been successfully installed' || die "Missing Node.js success message: ${OUTPUT}"
+    else
+      echo "${OUTPUT}" | grep -Fq 'Failed to install Node.js' || die "Missing Node.js failure message: ${OUTPUT}"
+      ! echo "${OUTPUT}" | grep -Fq 'has been successfully installed' || die "Unexpected Node.js success message: ${OUTPUT}"
+    fi
+  fi
+}
+
+check_install '22.1.0' 23 system 23
+# Even if the requested version is already active, a failed install is not a success.
+check_install '22.1.0' 23 v22.1.0 23
+check_install '22.1.0' 0 v22.1.0 0
+# Remote stable can differ from a user-defined local stable alias.
+check_install stable 0 v22.1.0 0
+# nvm install accepts --lts, but nvm_version does not accept this bare flag.
+check_install --lts 0 v22.1.0 0
+check_install '' 23 system 0

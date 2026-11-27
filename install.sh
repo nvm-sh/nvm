@@ -269,15 +269,14 @@ nvm_install_node() {
   fi
 
   nvm_echo "=> Installing Node.js version $NODE_VERSION_LOCAL"
-  nvm install "$NODE_VERSION_LOCAL"
-  local CURRENT_NVM_NODE
-
-  CURRENT_NVM_NODE="$(nvm_version current)"
-  if [ "$(nvm_version "$NODE_VERSION_LOCAL")" = "$CURRENT_NVM_NODE" ]; then
-    nvm_echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
-  else
+  local NVM_INSTALL_STATUS
+  nvm install "$NODE_VERSION_LOCAL" || {
+    NVM_INSTALL_STATUS=$?
     nvm_echo >&2 "Failed to install Node.js $NODE_VERSION_LOCAL"
-  fi
+    return "$NVM_INSTALL_STATUS"
+  }
+  # The install selects and activates a version; local aliases can resolve differently.
+  nvm_echo "=> Node.js version $NODE_VERSION_LOCAL has been successfully installed"
 }
 
 install_nvm_as_script() {
@@ -600,7 +599,9 @@ nvm_do_install() {
 
   nvm_check_global_modules
 
-  nvm_install_node
+  local NVM_NODE_STATUS
+  NVM_NODE_STATUS=0
+  nvm_install_node || NVM_NODE_STATUS=$?
 
   nvm_reset
 
@@ -609,6 +610,7 @@ nvm_do_install() {
   if ${BASH_OR_ZSH} ; then
     command printf "${COMPLETION_STR}"
   fi
+  return "$NVM_NODE_STATUS"
 }
 
 #
