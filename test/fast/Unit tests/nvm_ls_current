@@ -20,8 +20,6 @@ fi
 
 rm -rf "$TEST_DIR"
 mkdir "$TEST_DIR"
-# Ensure that the system version of which is used, not node_modules/.bin/which
-ln -s "$(PATH=$(echo $PATH | tr ":" "\n" | grep -v "node_modules/.bin" | tr "\n" ":") command which which)" "$TEST_DIR/which"
 ln -s "$(command which dirname)" "$TEST_DIR/dirname"
 ln -s "$(command which printf)" "$TEST_DIR/printf"
 

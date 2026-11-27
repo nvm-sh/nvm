@@ -2224,7 +2224,7 @@ nvm_alias() {
 
 nvm_ls_current() {
   local NVM_LS_CURRENT_NODE_PATH
-  if ! NVM_LS_CURRENT_NODE_PATH="$(command which node 2>/dev/null)"; then
+  if ! NVM_LS_CURRENT_NODE_PATH="$(unalias node 2>/dev/null || true; unset -f node 2>/dev/null || true; command -v node)"; then
     nvm_echo 'none'
   elif nvm_tree_contains_path "$(nvm_version_dir iojs)" "${NVM_LS_CURRENT_NODE_PATH}"; then
     nvm_add_iojs_prefix "$(iojs --version 2>/dev/null)"
@@ -6792,7 +6792,7 @@ nvm() {
       if [ "_${VERSION}" = '_system' ]; then
         if nvm_has_system_iojs >/dev/null 2>&1 || nvm_has_system_node >/dev/null 2>&1; then
           local NVM_BIN
-          NVM_BIN="$(nvm use system >/dev/null 2>&1 && command which node)"
+          NVM_BIN="$(nvm use system >/dev/null 2>&1 && { unalias node 2>/dev/null || true; unset -f node 2>/dev/null || true; command -v node; })"
           if [ -n "${NVM_BIN}" ]; then
             nvm_echo "${NVM_BIN}"
             return
