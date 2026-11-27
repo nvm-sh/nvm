@@ -1,0 +1,39 @@
+#!/bin/sh
+
+cleanup () {
+  rm -rf "${TEST_DIR}"
+}
+
+die () { echo "$@" ; cleanup ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+TEST_DIR="$(pwd)/nvm_check_file_permissions_tmp"
+cleanup
+
+# a writable tree passes, and its directories are traversed
+mkdir -p "${TEST_DIR}/tree/dir/sub"
+touch "${TEST_DIR}/tree/file" "${TEST_DIR}/tree/dir/file" "${TEST_DIR}/tree/dir/sub/file"
+
+OUTPUT="$(NVM_DEBUG=1; nvm_check_file_permissions "${TEST_DIR}/tree" 2>&1)" || die "expected a writable tree to pass; got '${OUTPUT}'"
+case "${OUTPUT}" in
+  *"${TEST_DIR}/tree/dir/sub"*) ;;
+  *) die "expected '${TEST_DIR}/tree/dir/sub' to be traversed; got '${OUTPUT}'" ;;
+esac
+
+# a symlinked directory is not traversed (#3099)
+mkdir -p "${TEST_DIR}/target/deep"
+ln -s "${TEST_DIR}/target" "${TEST_DIR}/tree/link"
+
+OUTPUT="$(NVM_DEBUG=1; nvm_check_file_permissions "${TEST_DIR}/tree" 2>&1)" || die "expected a tree with a symlinked directory to pass; got '${OUTPUT}'"
+case "${OUTPUT}" in
+  *"${TEST_DIR}/tree/link/"*) die "expected the symlinked directory not to be traversed; got '${OUTPUT}'" ;;
+esac
+
+# a symlink cycle does not recurse forever (#3099)
+# this runs only after the check above, so a regression fails there instead of hanging here
+ln -s .. "${TEST_DIR}/tree/dir/sub/cycle"
+nvm_check_file_permissions "${TEST_DIR}/tree" || die 'expected a tree with a symlink cycle to pass'
+
+cleanup
