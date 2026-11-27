@@ -7015,7 +7015,10 @@ nvm() {
         VERSION="system"
       else
         VERSION="$(nvm_version "${PROVIDED_VERSION}")" ||:
-        if [ "_${VERSION}" = '_N/A' ] && nvm_explain_excluded_version "${PROVIDED_VERSION}"; then
+        if [ "_${VERSION}" = '_N/A' ]; then
+          if ! nvm_explain_excluded_version "${PROVIDED_VERSION}"; then
+            nvm_err "Version '${PROVIDED_VERSION}' is not installed."
+          fi
           return 3
         fi
       fi
