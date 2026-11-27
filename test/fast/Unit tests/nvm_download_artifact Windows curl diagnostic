@@ -1,0 +1,56 @@
+#!/bin/sh
+
+: nvm.sh
+NVM_ENV=testing \. ../../../nvm.sh
+\. ../../common.sh
+
+die () { echo "$@" ; exit 1; }
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/nvm-windows-curl.XXXXXX")" || exit 1
+trap 'command rm -rf "${WORK}"' EXIT
+NVM_DIR="${WORK}/nvm"
+NVM_OFFLINE=0
+
+nvm_get_mirror() { echo 'https://node.example.invalid/dist'; }
+nvm_get_checksum_binary() { echo 'sha256sum'; }
+nvm_get_checksum() { echo 'checksum'; }
+nvm_get_os() { echo "${TEST_OS}"; }
+
+make_fake_curl "${WORK}/bin" 'exit "${TEST_CURL_EXIT}"' || die 'could not create curl fixture'
+PATH="${WORK}/bin:${PATH}"
+export PATH TEST_CURL_EXIT
+
+assert_download_failure() {
+  try_err nvm_download_artifact node binary std v20.0.0
+  [ "${CAPTURED_EXIT_CODE}" = 4 ] || die "expected artifact failure (4), got ${CAPTURED_EXIT_CODE}"
+}
+
+TEST_OS=win
+TEST_CURL_EXIT=23
+VERSION_MESSAGE='curl 8.23.0 (Windows) libcurl/8.23.0 Schannel'
+HINT='Install curl for your shell environment'
+assert_download_failure
+case "${CAPTURED_STDERR}" in
+  *"${HINT}"*) ;;
+  *) die "the native Windows curl write failure needs a diagnostic; got: ${CAPTURED_STDERR}" ;;
+esac
+
+TEST_OS=linux
+assert_download_failure
+case "${CAPTURED_STDERR}" in
+  *"${HINT}"*) die 'the diagnostic should not appear on Linux' ;;
+esac
+
+TEST_OS=win
+VERSION_MESSAGE='curl 8.23.0 (x86_64-pc-cygwin) libcurl/8.23.0'
+assert_download_failure
+case "${CAPTURED_STDERR}" in
+  *"${HINT}"*) die 'the diagnostic should not appear with Cygwin curl' ;;
+esac
+
+VERSION_MESSAGE='curl 8.23.0 (Windows) libcurl/8.23.0 Schannel'
+TEST_CURL_EXIT=22
+assert_download_failure
+case "${CAPTURED_STDERR}" in
+  *"${HINT}"*) die 'the diagnostic should not appear for an HTTP failure' ;;
+esac
