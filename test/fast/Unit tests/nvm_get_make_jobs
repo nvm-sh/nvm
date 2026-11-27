@@ -125,6 +125,88 @@ run win
 assert_jobs 1 'no probes'
 assert_nagged 'no probes'
 
+# Linux prefers the CPUs available to the process over the host CPU count.
+# Mock /proc/cpuinfo without replacing grep for any other purpose.
+(
+  PROC_COUNT=16
+  PROC_LOG="${TMP_DIR}/proc-probe"
+  nvm_grep () {
+    if [ "${4-}" = '/proc/cpuinfo' ]; then
+      echo probed >> "${PROC_LOG}"
+      nvm_echo "${PROC_COUNT}"
+    else
+      GREP_OPTIONS='' command grep "$@"
+    fi
+  }
+
+  shim nproc 'echo 4'
+  run linux
+  assert_jobs 3 'linux uses available CPUs'
+  [ ! -e "${PROC_LOG}" ] || die 'linux used /proc/cpuinfo despite a valid nproc result'
+  assert_not_nagged 'linux uses nproc'
+
+  shim nproc 'echo 1'
+  run linux
+  assert_jobs 1 'linux restricted to one CPU'
+
+  shim nproc 'echo 2'
+  run linux
+  assert_jobs 1 'linux restricted to two CPUs'
+
+  # GNU nproc honors OpenMP variables; neither should influence make jobs,
+  # and neither should be modified in the caller.
+  export OMP_NUM_THREADS=99 OMP_THREAD_LIMIT=1
+  shim nproc 'if [ -n "${OMP_NUM_THREADS+x}${OMP_THREAD_LIMIT+x}" ]; then echo 1; else echo 4; fi'
+  run linux
+  assert_jobs 3 'linux ignores OpenMP settings'
+  [ "${OMP_NUM_THREADS}" = 99 ] && [ "${OMP_THREAD_LIMIT}" = 1 ] || die 'OpenMP settings changed in caller'
+  [ ! -e "${PROC_LOG}" ] || die 'linux consulted /proc/cpuinfo despite successful nproc'
+
+  # Readonly settings must not prevent the affinity-aware probe from running.
+  (
+    readonly OMP_NUM_THREADS OMP_THREAD_LIMIT
+    run linux
+    assert_jobs 3 'linux ignores readonly OpenMP settings'
+    [ "${OMP_NUM_THREADS}" = 99 ] && [ "${OMP_THREAD_LIMIT}" = 1 ] || die 'readonly OpenMP settings changed'
+    [ ! -e "${PROC_LOG}" ] || die 'readonly OpenMP settings caused a fallback'
+    assert_no_probe_noise 'linux readonly OpenMP settings'
+  ) || die 'readonly OpenMP settings test failed'
+
+  shim_absent nproc
+  run linux
+  assert_jobs 15 'linux falls back when nproc is missing'
+  [ -e "${PROC_LOG}" ] || die 'linux did not consult /proc/cpuinfo'
+  assert_no_probe_noise 'linux missing nproc'
+  assert_not_nagged 'linux missing nproc'
+
+  for INVALID in '' 0 invalid; do
+    shim nproc "echo '${INVALID}'"
+    run linux
+    assert_jobs 15 "linux falls back for invalid nproc result '${INVALID}'"
+    assert_not_nagged 'linux invalid nproc'
+  done
+
+  shim nproc 'echo 4; echo PROBE_NOISE >&2; exit 1'
+  run linux
+  assert_jobs 15 'linux ignores output from a failed nproc'
+  assert_no_probe_noise 'linux failed nproc'
+
+  # A failed fallback still uses the existing single-job behavior.
+  PROC_COUNT=0
+  run linux
+  assert_jobs 1 'linux no valid probe'
+  assert_nagged 'linux no valid probe'
+
+  # Explicit jobs bypass both probes, even on a restricted Linux host.
+  rm -f "${PROC_LOG}"
+  shim nproc 'echo PROBE_NOISE >&2; echo 1'
+  run linux 7
+  assert_jobs 7 'linux explicit jobs'
+  [ ! -e "${PROC_LOG}" ] || die 'explicit jobs probed /proc/cpuinfo'
+  assert_stdout 'number of `make` jobs: 7' 'linux explicit jobs'
+  assert_no_probe_noise 'linux explicit jobs'
+) || die 'Linux CPU detection tests failed'
+
 # the named arms keep priority: darwin asks `sysctl`, not `getconf`
 shim getconf 'echo 99'
 shim sysctl 'echo 4'
