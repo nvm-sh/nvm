@@ -127,6 +127,16 @@ assert_cleaned_up 'with a missing $WGETRC'
 unset WGETRC
 rm -f "$HOME/.wgetrc"
 
+# given a shell with noclobber set
+reset_logs
+(
+  set -o noclobber
+  nvm_wget_with_auth_header 'Bearer test-token' 'https://example.com/dist/index.tab'
+) || die 'noclobber: expected exit code 0, got nonzero'
+# then the config is still written, though mktemp already created the file
+[ "$(cat "$WORK/wgetrc")" = 'header = Authorization: Bearer test-token' ] || die "noclobber: expected only the header in the config, got >$(cat "$WORK/wgetrc")<"
+assert_cleaned_up 'noclobber'
+
 # given a header value with shell metacharacters
 reset_logs
 nvm_wget_with_auth_header 'Bearer $HOME `id` $(id) *' 'https://example.com/dist/index.tab' || die 'metacharacters: expected exit code 0, got nonzero'

@@ -82,4 +82,13 @@ printf '<html>\n<body>v24.11.0 Not Found</body>\n</html>\n' | nvm_record_lts_sta
 [ $? = 1 ] || die 'nvm_record_lts_status should reject content without index rows'
 recorded v24.11.0 krypton
 
+# a shell with noclobber set still records, though mktemp already created the file
+(
+  NVM_DIR="${TMP_DIR}/noclobber"
+  mkdir -p "${NVM_DIR}" || die 'could not create a noclobber NVM_DIR'
+  set -o noclobber
+  row v24.11.0 Krypton | nvm_record_lts_status || die 'nvm_record_lts_status should record with noclobber set'
+  recorded v24.11.0 krypton
+) || exit 1
+
 cleanup
