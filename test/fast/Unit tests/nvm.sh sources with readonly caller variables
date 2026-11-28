@@ -1,0 +1,80 @@
+#!/bin/sh
+
+# Regression test for https://github.com/nvm-sh/nvm/issues/3584
+#
+# A caller (very often a CI build script) may make a variable readonly, most
+# notably `readonly VERSION=...` used to pin a version. When nvm.sh declared a
+# local of the same name, bash rejected the declaration and dash aborted the
+# script outright, so sourcing failed and the build broke.
+#
+# Sourcing also runs `nvm use` for the `default` alias, so a collision can
+# leave sourcing returning 0 while the default is never activated. The names
+# are derived from nvm.sh itself, so an unprefixed local added there fails this
+# test instead of failing a user's shell.
+
+die () { echo "$@" ; exit 1; }
+
+NVM_SH_PATH="$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)/nvm.sh"
+[ -r "${NVM_SH_PATH}" ] || die "cannot find nvm.sh at ${NVM_SH_PATH}"
+
+# The shell urchin is running this test in.
+if [ -n "${BASH_VERSION-}" ]; then
+  NVM_TEST_SHELL=bash
+elif [ -n "${ZSH_VERSION-}" ]; then
+  NVM_TEST_SHELL=zsh
+elif [ -n "${KSH_VERSION-}" ]; then
+  NVM_TEST_SHELL=mksh
+else
+  NVM_TEST_SHELL=sh
+fi
+command -v "${NVM_TEST_SHELL}" >/dev/null 2>&1 || die "shell ${NVM_TEST_SHELL} is not available"
+
+NVM_TEST_DIR="$(mktemp -d)" || die 'could not create a temporary directory'
+cleanup () {
+  case "${NVM_TEST_DIR-}" in
+    /*) rm -rf "${NVM_TEST_DIR}" ;;
+  esac
+}
+trap cleanup 0
+
+# A fixture with an installed version and a `default` alias, so that sourcing
+# runs the startup `nvm use` and has something to activate.
+NVM_FAKE_DIR="${NVM_TEST_DIR}/nvm"
+mkdir -p "${NVM_FAKE_DIR}/versions/node/v14.21.3/bin" "${NVM_FAKE_DIR}/alias" || die 'fixture setup failed'
+command printf '#!/bin/sh\necho v14.21.3\n' > "${NVM_FAKE_DIR}/versions/node/v14.21.3/bin/node" || die 'fixture setup failed'
+chmod +x "${NVM_FAKE_DIR}/versions/node/v14.21.3/bin/node" || die 'fixture setup failed'
+command printf 'v14.21.3' > "${NVM_FAKE_DIR}/alias/default" || die 'fixture setup failed'
+# the startup `nvm use --only=alpha,lts,non-lts,iojs` classifies the default
+# version through this file, so record the shape a real `nvm ls-remote` writes
+command printf 'v14.21.3 -\n' > "${NVM_FAKE_DIR}/.lts-status" || die 'fixture setup failed'
+
+# Every unprefixed local name nvm.sh declares. `NVM_`-prefixed names are nvm's
+# own namespace; IFS, PREFIX and TMPDIR are shell or install contracts that a
+# caller may reasonably make readonly, and nvm cannot use other names for them.
+NVM_NAMES="$(command grep -E '^[[:space:]]*local[[:space:]]' "${NVM_SH_PATH}" \
+  | command sed -e 's/^[[:space:]]*local[[:space:]]\{1,\}//' \
+  | command sed -e "s/'[^']*'//g" -e 's/"[^"]*"//g' -e 's/#.*//' \
+  | command tr ' \t' '\n\n' \
+  | command sed -e 's/=.*//' \
+  | command grep -E '^[A-Za-z_][A-Za-z0-9_]*$' \
+  | command grep -v '^NVM_' \
+  | command sort -u \
+  | command grep -vE '^(IFS|PREFIX|TMPDIR)$')"
+
+[ -n "${NVM_NAMES}" ] || die 'could not derive local names from nvm.sh'
+
+for NVM_NAME in ${NVM_NAMES}; do
+  NVM_GOT="$(cd "${NVM_TEST_DIR}" && env -i \
+    PATH="${PATH}" HOME="${HOME}" NVM_DIR="${NVM_FAKE_DIR}" \
+    "${NVM_TEST_SHELL}" -c "
+      readonly ${NVM_NAME}=caller_value
+      . '${NVM_SH_PATH}' >/dev/null
+      printf 'after-source=%s ' \"\$(nvm current)\"
+      nvm use default >/dev/null 2>&1
+      printf 'use=%s ' \"\$?\"
+      printf 'after-use=%s' \"\$(nvm current)\"
+    " 2>/dev/null)" ||:
+
+  [ "${NVM_GOT}" = 'after-source=v14.21.3 use=0 after-use=v14.21.3' ] || \
+    die "with readonly ${NVM_NAME}, sourcing nvm.sh and \`nvm use default\` did not activate the default version in ${NVM_TEST_SHELL}: got >${NVM_GOT}<"
+done
