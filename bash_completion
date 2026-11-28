@@ -144,6 +144,7 @@ __nvm_options() {
     which) flags="--silent ${only}" ;;
     version | reinstall-packages | copy-packages) flags="${only}" ;;
     deactivate) flags='--silent' ;;
+    prune) flags='--minor --dry-run --force' ;;
     *) return 0 ;;
   esac
   # Only split our fixed option lists, never user-supplied words.
@@ -163,7 +164,7 @@ __nvm_candidates() {
       *)
         __nvm_complete help install uninstall use run exec alias unalias \
           reinstall-packages current list ls list-remote ls-remote install-latest-npm \
-          cache deactivate unload version version-remote which debug set-colors
+          cache deactivate unload version version-remote which prune debug set-colors
         ;;
     esac
     return 0

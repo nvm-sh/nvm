@@ -1,0 +1,54 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+. ../../nvm.sh
+
+nvm_ls() {
+  echo "       v18.0.0"
+  echo "       v18.1.0"
+  echo "       v18.2.0"
+}
+
+# Ignore any aliases in the real NVM_DIR.
+nvm_alias_path() {
+  echo /nonexistent
+}
+
+nvm_ls_current() {
+  echo "none"
+}
+
+nvm_is_version_installed() {
+  return 0
+}
+
+ATTEMPTED_VERSIONS=""
+nvm() {
+  if [ "$1" = "uninstall" ]; then
+    ATTEMPTED_VERSIONS="${ATTEMPTED_VERSIONS} $2"
+    [ "$2" != v18.0.0 ]
+    return
+  fi
+  echo "nvm called with unexpected args: $*"
+}
+
+OUTPUT="$(nvm_prune --force 2>&1; echo "exit: $?"; echo "attempted:${ATTEMPTED_VERSIONS}")"
+
+EXPECTED="Pruning old versions...
+These versions will be removed:
+  v18.0.0
+  v18.1.0
+Failed to uninstall v18.0.0.
+Uninstalled v18.1.0.
+Pruned 1 version(s); 1 failed.
+exit: 1
+attempted: v18.0.0 v18.1.0"
+[ "${OUTPUT}" = "${EXPECTED}" ] || die "expected >${EXPECTED}<, got >${OUTPUT}<"
+
+STDERR="$(nvm_prune --force 2>&1 >/dev/null)"
+EXPECTED_STDERR="Failed to uninstall v18.0.0.
+Pruned 1 version(s); 1 failed."
+[ "${STDERR}" = "${EXPECTED_STDERR}" ] || die "expected stderr >${EXPECTED_STDERR}<, got >${STDERR}<"
+
+echo "All tests passed"
