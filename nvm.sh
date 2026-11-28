@@ -5017,30 +5017,87 @@ nvm_ls_cached() {
     | nvm_sort_versions
 }
 
-# args: pattern
+# args: pattern, optional minimum version, skip binary, skip source
 # Resolves a version pattern to a single version using only locally
 # installed versions and cached downloads. No network access.
 nvm_offline_version() {
   local PATTERN
   PATTERN="${1-}"
 
-  # First try locally installed versions
+  # First try locally installed versions.
   local VERSION
   VERSION="$(nvm_version "${PATTERN}")"
-  if [ "_${VERSION}" != '_N/A' ]; then
-    nvm_echo "${VERSION}"
-    return 0
+  if [ "_${VERSION}" = '_N/A' ]; then
+    VERSION="$(nvm_ls_cached "${PATTERN}" | command tail -1)"
+    if [ -z "${VERSION}" ]; then
+      nvm_echo 'N/A'
+      return 3
+    fi
+  elif [ -n "${2-}" ] && nvm_is_below_min_version "${VERSION}" "${2}"; then
+    # Match nvm_version's special handling of node and current before resolving aliases.
+    case "${PATTERN}" in
+      '' | current) nvm_echo "${VERSION}"; return 0 ;;
+      node | node-) PATTERN='stable' ;;
+    esac
+    local NVM_CACHE_PATTERN
+    case "${PATTERN}" in
+      iojs) NVM_CACHE_PATTERN='iojs-' ;;
+      *) NVM_CACHE_PATTERN="$(nvm_resolve_alias "${PATTERN}" 2>/dev/null)" || NVM_CACHE_PATTERN="${PATTERN}" ;;
+    esac
+    case "${NVM_CACHE_PATTERN}" in
+      node | node-) NVM_CACHE_PATTERN="$(nvm_resolve_alias stable 2>/dev/null)" || NVM_CACHE_PATTERN='stable' ;;
+      iojs) NVM_CACHE_PATTERN='iojs-' ;;
+    esac
+    # Cache lookup does not interpret alias flags. Never discard them to find a match.
+    case "${NVM_CACHE_PATTERN}" in
+      --* | '∞') nvm_echo "${VERSION}"; return 0 ;;
+    esac
+
+    local NVM_CACHED_VERSIONS
+    case "${NVM_CACHE_PATTERN}" in
+      stable | unstable)
+        # As in nvm_print_implicit_alias, only pre-1.0 odd minor Node releases are unstable.
+        NVM_CACHED_VERSIONS="$(nvm_ls_cached '' | command awk -F. -v requested="${NVM_CACHE_PATTERN}" '
+          /^v[0-9]+[.]/ {
+            stable = ($1 != "v0" || $2 % 2 == 0);
+            if ((requested == "stable" && stable) || (requested == "unstable" && !stable)) { print }
+          }
+        ')"
+      ;;
+      *) NVM_CACHED_VERSIONS="$(nvm_ls_cached "${NVM_CACHE_PATTERN}")" ;;
+    esac
+    NVM_CACHED_VERSIONS="$(nvm_filter_min_versions "${2}" "${NVM_CACHED_VERSIONS}" | command awk '
+      NF { versions[++n] = $0 }
+      END { for (i = n; i > 0; i--) print versions[i] }
+    ')"
+    local NVM_CACHE_OS
+    NVM_CACHE_OS="$(nvm_get_os)"
+    local NVM_CANDIDATE
+    local NVM_CANDIDATE_FLAVOR
+    local NVM_CANDIDATE_VERSION
+    # Newest first. A cache directory alone is not an available archive.
+    # Use the same offline artifact lookup as installation, respecting -s/-b.
+    while IFS= read -r NVM_CANDIDATE; do
+      [ -n "${NVM_CANDIDATE}" ] || continue
+      NVM_CANDIDATE_FLAVOR='node'
+      if nvm_is_iojs_version "${NVM_CANDIDATE}"; then
+        NVM_CANDIDATE_FLAVOR='iojs'
+      fi
+      NVM_CANDIDATE_VERSION="$(nvm_strip_iojs_prefix "${NVM_CANDIDATE}")"
+      if { [ "${3:-0}" -ne 1 ] && [ "${NVM_CACHE_OS}" != freebsd ] && [ "${NVM_CACHE_OS}" != openbsd ] \
+        && { [ "${NVM_CACHE_OS}" != sunos ] || nvm_has_solaris_binary "${NVM_CANDIDATE}"; } \
+        && nvm_is_cached_artifact "$(NVM_OFFLINE=1 nvm_download_artifact "${NVM_CANDIDATE_FLAVOR}" binary std "${NVM_CANDIDATE_VERSION}" 2>/dev/null)"; } \
+        || { [ "${4:-0}" -ne 1 ] && [ "${NVM_CACHE_OS}" != win ] && nvm_is_cached_artifact "$(NVM_OFFLINE=1 nvm_download_artifact "${NVM_CANDIDATE_FLAVOR}" source std "${NVM_CANDIDATE_VERSION}" 2>/dev/null)"; }; then
+        VERSION="${NVM_CANDIDATE}"
+        break
+      fi
+    done <<EOF_CACHE
+${NVM_CACHED_VERSIONS}
+EOF_CACHE
   fi
 
-  # Then try cached downloads
-  VERSION="$(nvm_ls_cached "${PATTERN}" | command tail -1)"
-  if [ -n "${VERSION}" ]; then
-    nvm_echo "${VERSION}"
-    return 0
-  fi
-
-  nvm_echo 'N/A'
-  return 3
+  # Preserve a below-minimum match so the installer can explain its rejection.
+  nvm_echo "${VERSION}"
 }
 
 nvm() {
@@ -5646,7 +5703,7 @@ nvm() {
             return 3
           fi
         fi
-        VERSION="$(nvm_offline_version "${OFFLINE_PATTERN}")"
+        VERSION="$(nvm_offline_version "${OFFLINE_PATTERN}" "${NVM_MIN_VERSION}" "${nobinary}" "${nosource}")"
         EXIT_CODE="$?"
       else
         VERSION="$(NVM_VERSION_ONLY=true NVM_LTS="${LTS-}" nvm_remote_version "${provided_version}")"
