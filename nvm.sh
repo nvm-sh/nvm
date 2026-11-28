@@ -6102,8 +6102,11 @@ nvm() {
       CACHE_DIR="$(nvm_cache_dir)"
       command rm -rf \
         "${CACHE_DIR}/bin/${SLUG_BINARY}/files" \
-        "${CACHE_DIR}/src/${SLUG_SOURCE}/files" \
-        "${VERSION_PATH}" 2>/dev/null
+        "${CACHE_DIR}/src/${SLUG_SOURCE}/files" 2>/dev/null || :
+      if ! command rm -rf "${VERSION_PATH}"; then
+        nvm_err "Failed to uninstall ${VERSION}. Check \"${VERSION_PATH}\" for remaining files."
+        return 1
+      fi
       nvm_echo "${NVM_SUCCESS_MSG}"
 
       # rm any aliases that point to uninstalled version.

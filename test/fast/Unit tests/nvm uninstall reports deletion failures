@@ -1,0 +1,79 @@
+#!/bin/sh
+
+if [ "$(command id -u)" = '0' ]; then
+  echo 'running as root, which may uninstall any version; skipping'
+  exit 0
+fi
+
+TMP_DIR=''
+VERSION_PATH=''
+CACHE_FILES=''
+cleanup () {
+  if [ -n "${VERSION_PATH}" ] && [ -d "${VERSION_PATH}/bin" ]; then
+    chmod u+w "${VERSION_PATH}/bin"
+  fi
+  if [ -n "${CACHE_FILES}" ] && [ -d "${CACHE_FILES}" ]; then
+    chmod u+w "${CACHE_FILES}"
+  fi
+  case "${TMP_DIR}" in
+    /*) rm -rf "${TMP_DIR}" ;;
+  esac
+}
+
+die () { echo "$@" ; exit 1; }
+
+TMP_DIR="$(mktemp -d)" || die 'could not create a temporary directory'
+trap '
+  STATUS=$?
+  cleanup || [ "${STATUS}" -ne 0 ] || STATUS=1
+  exit "${STATUS}"
+' 0
+
+# Check normal diagnostics, independently of the caller's debug setting.
+unset NVM_DEBUG
+NVM_DIR="${TMP_DIR}/nvm"
+export NVM_DIR
+mkdir -p "${NVM_DIR}/alias" || die 'could not create alias dir'
+
+: nvm.sh
+\. ../../../nvm.sh --no-use
+\. ../../common.sh
+
+make_fake_node v20.1.1 || die 'could not make fake node'
+nvm_make_alias one v20.1.1 || die 'could not create alias'
+VERSION_PATH="$(nvm_version_path v20.1.1)"
+chmod a-w "${VERSION_PATH}/bin" || die 'could not make bin dir read-only'
+
+OUTPUT="$(set +x; nvm uninstall v20.1.1 2>"${TMP_DIR}/stderr")" && STATUS=0 || STATUS=$?
+[ "${STATUS}" -eq 1 ] || die "expected uninstall to fail; got status ${STATUS}, output: ${OUTPUT}"
+[ -z "${OUTPUT}" ] || die "unexpected stdout from failed uninstall: ${OUTPUT}"
+command grep -F -q "Failed to uninstall v20.1.1. Check \"${VERSION_PATH}\" for remaining files." "${TMP_DIR}/stderr" || die 'missing uninstall failure message and version path'
+command grep -F -q '/bin/node' "${TMP_DIR}/stderr" || die 'missing rm failure details for node'
+nvm_is_version_installed v20.1.1 || die 'node should still be installed'
+[ "$(nvm_alias one)" = 'v20.1.1' ] || die 'alias should be kept after failed uninstall'
+
+# A failure confined to the cache must not prevent a successful uninstall.
+chmod u+w "${VERSION_PATH}/bin" || die 'could not restore permissions'
+# Isolate cache error handling from the download slug format.
+nvm_get_download_slug() { nvm_echo 'uninstall-cache-fixture'; }
+CACHE_SLUG="$(nvm_get_download_slug)"
+CACHE_FILES="$(nvm_cache_dir)/src/${CACHE_SLUG}/files"
+mkdir -p "${CACHE_FILES}/writable" || die 'could not create cache dir'
+: > "${CACHE_FILES}/cached-file" || die 'could not create cached file'
+: > "${CACHE_FILES}/writable/removable-file" || die 'could not create removable cache file'
+chmod a-w "${CACHE_FILES}" || die 'could not make cache dir read-only'
+(
+  set +x
+  set -e
+  if nvm_is_zsh; then
+    setopt err_return
+  fi
+  nvm uninstall v20.1.1 >/dev/null 2>"${TMP_DIR}/retry-stderr"
+)
+STATUS=$?
+[ "${STATUS}" -eq 0 ] || die "uninstall failed with a cache-only error: $(cat "${TMP_DIR}/retry-stderr")"
+[ ! -s "${TMP_DIR}/retry-stderr" ] || die 'cache cleanup errors should remain silent'
+[ -f "${CACHE_FILES}/cached-file" ] || die 'cached file should remain to demonstrate the cache cleanup failure'
+[ ! -e "${CACHE_FILES}/writable/removable-file" ] || die 'cache cleanup did not reach the protected directory'
+[ ! -d "${VERSION_PATH}" ] || die 'version directory should be removed'
+[ ! -f "$(nvm_alias_path)/one" ] || die 'alias should be removed after successful uninstall'
