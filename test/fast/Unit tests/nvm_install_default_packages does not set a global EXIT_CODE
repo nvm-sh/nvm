@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# `nvm_install_default_packages` used to assign `EXIT_CODE` without declaring
+# it, so it landed in `nvm()`'s `local EXIT_CODE`; once that local was
+# prefixed, the assignment fell through to the caller's shell and overwrote
+# their own `EXIT_CODE`.
+
+die () { echo "$@" ; exit 1; }
+
+: nvm.sh
+\. ../../../nvm.sh
+
+nvm_get_default_packages() {
+  return 0
+}
+
+EXIT_CODE=caller_value
+nvm_install_default_packages >/dev/null 2>&1
+[ "${EXIT_CODE}" = 'caller_value' ] || die "nvm_install_default_packages set EXIT_CODE in the caller's shell: >${EXIT_CODE}<"
