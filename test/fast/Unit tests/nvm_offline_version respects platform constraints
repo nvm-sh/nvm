@@ -1,0 +1,57 @@
+#!/bin/sh
+
+TEST_DIR=''
+cleanup() { [ -z "${TEST_DIR}" ] || command rm -rf "${TEST_DIR}"; }
+die() { echo "$@" >&2; exit 1; }
+trap 'cleanup' 0
+
+\. ../../../nvm.sh --no-use
+\. ../../common.sh
+
+unset NVM_ONLY NVM_ONLY_SELECTED
+TEST_DIR="$(mktemp -d)" || die 'could not create temporary directory'
+NVM_DIR="${TEST_DIR}"
+export NVM_DIR
+
+# Mock the platform, not archive lookup or version resolution.
+nvm_get_os() { nvm_echo "${TEST_OS}"; }
+nvm_get_arch() { nvm_echo x64; }
+nvm_download() {
+  nvm_echo unexpected > "${TEST_DIR}/network-attempted"
+  return 1
+}
+
+cache_archive() {
+  local SLUG
+  SLUG="$(nvm_get_download_slug "$1" "$2" "$3")"
+  local CACHE_SUBDIR
+  case "$2" in binary) CACHE_SUBDIR=bin ;; source) CACHE_SUBDIR=src ;; esac
+  local ARCHIVE_DIR
+  ARCHIVE_DIR="$(nvm_cache_dir)/${CACHE_SUBDIR}/${SLUG}"
+  command mkdir -p "${ARCHIVE_DIR}" && nvm_echo placeholder > "${ARCHIVE_DIR}/${SLUG}.$(nvm_get_artifact_compression "$3")"
+}
+
+# Keep a usable binary on Windows even when a newer source archive is cached.
+TEST_OS=win
+make_fake_node v22.10.0 || die 'could not create installed Node version'
+cache_archive node binary v22.11.0 || die 'could not cache Windows binary'
+cache_archive node source v22.12.0 || die 'could not cache source archive'
+[ "$(nvm_offline_version 22 22.11 0 0)" = v22.11.0 ] || die 'Windows selected an unsupported source archive'
+
+# BSD dispatch does not install binaries, even if a cache has been preseeded.
+for TEST_OS in freebsd openbsd; do
+  cache_archive node source v22.12.0 || die 'could not cache BSD source archive'
+  cache_archive node binary v22.13.0 || die 'could not cache BSD binary'
+  [ "$(nvm_offline_version 22 22.11 0 0)" = v22.12.0 ] || die "${TEST_OS} selected an unsupported binary archive"
+done
+
+# Solaris cannot install binaries for io.js releases before 3.3.1.
+TEST_OS=sunos
+make_fake_iojs v1.0.0 || die 'could not create installed io.js version'
+cache_archive iojs source v2.5.0 || die 'could not cache io.js source archive'
+cache_archive iojs binary v3.2.0 || die 'could not cache io.js binary'
+[ "$(nvm_offline_version iojs 2 0 0)" = iojs-v2.5.0 ] || die 'Solaris selected an unsupported io.js binary'
+cache_archive iojs binary v3.3.1 || die 'could not cache supported Solaris binary'
+[ "$(nvm_offline_version iojs 2 0 0)" = iojs-v3.3.1 ] || die 'Solaris skipped a supported io.js binary'
+
+[ ! -e "${TEST_DIR}/network-attempted" ] || die 'unexpected network access'

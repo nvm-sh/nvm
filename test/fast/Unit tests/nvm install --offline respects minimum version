@@ -1,0 +1,120 @@
+#!/bin/sh
+
+TEST_NVM_DIR=''
+cleanup() {
+  [ -z "${TEST_NVM_DIR}" ] || rm -rf "${TEST_NVM_DIR}"
+}
+die() { echo "$@" ; exit 1; }
+trap 'cleanup' 0
+
+\. ../../../nvm.sh --no-use
+\. ../../common.sh
+
+unset NVM_MIN NVM_ONLY NVM_ONLY_SELECTED NVM_NO_SOURCE_FALLBACK NVM_INSTALL_THIRD_PARTY_HOOK
+unset npm_config_prefix NPM_CONFIG_PREFIX PREFIX
+TEST_NVM_DIR="$(mktemp -d)" || die 'could not create temporary NVM_DIR'
+NVM_DIR="${TEST_NVM_DIR}"
+export NVM_DIR
+
+cache_archive() {
+  local SLUG
+  SLUG="$(nvm_get_download_slug "${3:-node}" "$1" "$2")"
+  local CACHE_SUBDIR
+  case "$1" in binary) CACHE_SUBDIR=bin ;; source) CACHE_SUBDIR=src ;; esac
+  local ARCHIVE_DIR
+  ARCHIVE_DIR="$(nvm_cache_dir)/${CACHE_SUBDIR}/${SLUG}"
+  mkdir -p "${ARCHIVE_DIR}" && nvm_echo placeholder > "${ARCHIVE_DIR}/${SLUG}.$(nvm_get_artifact_compression "$2")"
+}
+
+# The real offline artifact lookup must succeed before the mocked build/extraction.
+install_fake_cached_node() {
+  local TARBALL
+  TARBALL="$(nvm_download_artifact "$1" "$2" std "$3")" || return 1
+  nvm_is_cached_artifact "${TARBALL}" && make_fake_node "$3"
+}
+nvm_install_source() { install_fake_cached_node "$1" source "$3"; }
+nvm_install_binary() { install_fake_cached_node "$1" binary "$3"; }
+nvm_install_npm_if_needed() { return 0; }
+nvm_download() {
+  echo 'unexpected download' > "${TEST_NVM_DIR}/network-attempted"
+  return 1
+}
+
+make_fake_node v22.10.0 || die 'could not create installed version'
+cache_archive source v22.11.0 || die 'could not cache source archive'
+cache_archive binary v22.12.0 || die 'could not cache binary archive'
+mkdir -p "$(nvm_cache_dir)/src/node-v22.13.0" || die 'could not create incomplete cache entry'
+
+assert_install() {
+  local EXPECTED_VERSION
+  EXPECTED_VERSION="$1"
+  shift
+  nvm install --offline "$@" > "${TEST_NVM_DIR}/output" 2>&1 \
+    || die "offline install $* failed: $(cat "${TEST_NVM_DIR}/output")"
+  [ "$(nvm current)" = "${EXPECTED_VERSION}" ] \
+    || die "offline install $*: expected ${EXPECTED_VERSION}, got $(nvm current)"
+}
+
+# Preserve installed-first selection, including when the installed version meets the minimum.
+assert_install v22.10.0 -s -j 1 22
+NVM_MIN=22.11
+assert_install v22.10.0 -s -j 1 22 --min=22.10
+! nvm_is_version_installed v22.11.0 || die 'the cached version should not have been installed'
+
+# A directory without its archive does not qualify, so keep the minimum diagnostic.
+EXIT_CODE=0
+OUTPUT="$(nvm install --offline -s -j 1 --min=22.13 22 2>&1)" || EXIT_CODE=$?
+[ "${EXIT_CODE}" = 3 ] || die "no usable version at minimum: expected exit 3, got ${EXIT_CODE}: ${OUTPUT}"
+case "${OUTPUT}" in
+  *'below the minimum version 22.13'*) ;;
+  *) die "expected the minimum-version diagnostic, got ${OUTPUT}" ;;
+esac
+
+# Resolve plain version aliases before searching the cache, even if their name looks numeric.
+nvm alias team 22 >/dev/null || die 'could not create alias'
+nvm alias 23 team >/dev/null || die 'could not create numeric alias'
+cache_archive source v23.0.0 || die 'could not cache unrelated source archive'
+[ "$(nvm_offline_version 23 22.11 1 0)" = 'v22.11.0' ] || die 'cache lookup ignored the alias target'
+
+# The configured minimum excludes the installed version, but not the cached source.
+assert_install v22.11.0 -s -j 1 team
+nvm_is_version_installed v22.11.0 || die 'the cached source version should have been installed'
+
+# A newer source archive must not hide a qualifying cached binary.
+cache_archive source v22.14.0 || die 'could not cache newer source archive'
+assert_install v22.12.0 -b --min=22.12 22
+cache_archive binary v22.15.0 || die 'could not cache newer binary archive'
+cache_archive source v22.16.0 || die 'could not cache newer source archive'
+NVM_NO_SOURCE_FALLBACK=1
+assert_install v22.15.0 --min=22.15 22
+unset NVM_NO_SOURCE_FALLBACK
+
+# Built-in aliases must search their eligible cached releases, not literal alias names.
+cache_archive source v24.0.0 || die 'could not cache newer stable version'
+nvm alias recommended node >/dev/null || die 'could not create node alias'
+for PATTERN in stable node node- recommended; do
+  [ "$(nvm_offline_version "${PATTERN}" 24 1 0)" = 'v24.0.0' ] || die "cache lookup ignored ${PATTERN}"
+done
+# A stored stable alias also takes precedence when reached through node.
+nvm alias stable 22 >/dev/null || die 'could not override stable alias'
+for PATTERN in stable node recommended; do
+  [ "$(nvm_offline_version "${PATTERN}" 22.16 1 0)" = 'v22.16.0' ] || die "cache lookup ignored the stable override for ${PATTERN}"
+done
+nvm unalias stable >/dev/null || die 'could not remove stable override'
+assert_install v24.0.0 -s -j 1 --min=24 stable
+
+# Keep historical 0.x stable/unstable classification and io.js flavor isolation.
+(
+  NVM_DIR="${TEST_NVM_DIR}/legacy"
+  mkdir -p "${NVM_DIR}" || exit 1
+  make_fake_node v0.10.0 && make_fake_node v0.11.0 || exit 1
+  cache_archive source v0.12.1 && cache_archive source v0.13.1 || exit 1
+  [ "$(nvm_offline_version stable 0.12 1 0)" = 'v0.12.1' ] || exit 1
+  cache_archive source v24.0.0 || exit 1
+  [ "$(nvm_offline_version unstable 0.12 1 0)" = 'v0.13.1' ] || exit 1
+  make_fake_iojs v3.0.0 && cache_archive source v3.3.1 iojs || exit 1
+  [ "$(nvm_offline_version iojs 3.1 1 0)" = 'iojs-v3.3.1' ] || exit 1
+) || die 'implicit alias fallback selected the wrong release or flavor'
+
+[ ! -e "${TEST_NVM_DIR}/network-attempted" ] || die 'offline install attempted a download'
+
