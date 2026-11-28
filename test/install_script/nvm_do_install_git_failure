@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# install.sh must be sourced by bash.
+[ -n "${BASH_VERSION-}" ] || exec bash "$0" "$@"
+
+die () { echo "$@" ; exit 1; }
+
+NVM_ENV=testing \. "$(dirname "$0")/../../install.sh"
+
+TEST_DIR="$(mktemp -d)" || die 'Unable to create temporary directory'
+trap 'rm -rf "${TEST_DIR}"' 0
+export HOME="${TEST_DIR}"
+export NVM_DIR="${TEST_DIR}/nvm"
+export NVM_SOURCE="${TEST_DIR}/new-source"
+export PROFILE="${TEST_DIR}/.bashrc"
+unset NVM_INSTALL_VERSION NVM_INSTALL_GITHUB_REPO NODE_VERSION
+
+command git init -q "${NVM_DIR}" || die 'Unable to initialize repository'
+command git --git-dir="${NVM_DIR}/.git" remote add origin "${TEST_DIR}/old-source" || die 'Unable to add origin'
+# A concurrent git operation can prevent the installer from adding its remote.
+: > "${NVM_DIR}/.git/config.lock"
+: > "${PROFILE}"
+printf '%s\n' ': > "${NVM_DIR}/sourced"' > "${NVM_DIR}/nvm.sh"
+
+# Do not invoke the system npm if the installer incorrectly continues.
+nvm_check_global_modules() { return 0; }
+
+for METHOD in '' git; do
+  EXIT_CODE=0
+  OUTPUT="$(nvm_do_install 2>&1)" || EXIT_CODE=$?
+  [ "${EXIT_CODE}" = '2' ] || die "Expected exit 2 for METHOD=${METHOD}, got ${EXIT_CODE}: ${OUTPUT}"
+  [ ! -s "${PROFILE}" ] || die 'The installer modified the profile after failing'
+  [ ! -e "${NVM_DIR}/sourced" ] || die 'The installer sourced nvm.sh after failing'
+done

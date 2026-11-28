@@ -1,0 +1,34 @@
+#!/bin/sh
+
+die () { echo "$@" ; exit 1; }
+
+INSTALLER="$(dirname "$0")/../../install.sh"
+TEST_DIR="$(mktemp -d)" || die 'Unable to create temporary directory'
+trap 'rm -rf "${TEST_DIR}"' 0
+export HOME="${TEST_DIR}"
+export NVM_DIR="${TEST_DIR}/nvm"
+export NVM_SOURCE="${TEST_DIR}/source"
+export NVM_INSTALL_VERSION=v0.0.1
+export PROFILE="${TEST_DIR}/.bashrc"
+export METHOD=git
+unset NVM_ENV NVM_INSTALL_GITHUB_REPO NODE_VERSION
+
+command git -c init.defaultBranch=master init -q "${NVM_SOURCE}" || die 'Unable to initialize source'
+# Record sourcing without invoking the system npm if the installer continues.
+printf '%s\n' ': > "${NVM_DIR}/sourced"' 'nvm_check_global_modules() { return 0; }' > "${NVM_SOURCE}/nvm.sh" || die 'Unable to write nvm.sh'
+command git -C "${NVM_SOURCE}" add nvm.sh || die 'Unable to add fixture'
+command git -C "${NVM_SOURCE}" -c user.name=test -c user.email=test@example.invalid -c commit.gpgsign=false commit -qm fixture || die 'Unable to commit fixture'
+command git -C "${NVM_SOURCE}" tag "${NVM_INSTALL_VERSION}" || die 'Unable to tag fixture'
+command git clone -q -o origin -b master "${NVM_SOURCE}" "${NVM_DIR}" || die 'Unable to clone fixture'
+command git -C "${NVM_DIR}" config core.filesRefLockTimeout 0 || die 'Unable to set ref lock timeout'
+: > "${NVM_DIR}/.git/refs/heads/master.lock" || die 'Unable to lock master'
+: > "${PROFILE}" || die 'Unable to create profile'
+
+# The version can be checked out, but deleting master fails after checkout.
+EXIT_CODE=0
+OUTPUT="$(bash -e "${INSTALLER}" 2>&1)" || EXIT_CODE=$?
+[ "${EXIT_CODE}" != '0' ] || die "Expected bash -e to fail: ${OUTPUT}"
+! command git -C "${NVM_DIR}" symbolic-ref -q HEAD || die 'The installer did not reach checkout'
+command git -C "${NVM_DIR}" show-ref --verify --quiet refs/heads/master || die 'The locked branch was deleted'
+[ ! -s "${PROFILE}" ] || die 'The installer modified the profile after failing'
+[ ! -e "${NVM_DIR}/sourced" ] || die 'The installer sourced nvm.sh after failing'

@@ -197,7 +197,7 @@ install_nvm_from_git() {
         NVM_REMOTE_SUFFIX=$((NVM_REMOTE_SUFFIX + 1))
         NVM_REMOTE_NAME="nvm-origin-${NVM_REMOTE_SUFFIX}"
       done
-      command git --git-dir="${INSTALL_DIR}/.git" remote add "${NVM_REMOTE_NAME}" "${NVM_GIT_SOURCE}" || return 2
+      command git --git-dir="${INSTALL_DIR}/.git" remote add "${NVM_REMOTE_NAME}" "${NVM_GIT_SOURCE}" || exit 2
     fi
   else
     fetch_error="Failed to fetch origin with $NVM_VERSION. Please report this!"
